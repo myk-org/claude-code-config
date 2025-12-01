@@ -6,10 +6,168 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager (used for running hook scripts)
 
-## Quick Start
+## Installation
+
+### Option 1: Clone directly to ~/.claude
+
+> **⚠️ If `~/.claude` already exists**, back it up first! See [backup instructions](#backup-existing-config) below.
 
 ```bash
 git clone https://github.com/myk-org/claude-code-config ~/.claude
+```
+
+**See also:**
+- [Backup Existing Config](#backup-existing-config) - If you have an existing ~/.claude
+- [GNU Stow Integration](#integration-with-dotfiles-gnu-stow) - For dotfiles users
+
+### Option 2: Clone as a regular git repo
+
+Clone to any location (e.g., `~/git/`), then set up ~/.claude using one of these methods:
+
+```bash
+git clone https://github.com/myk-org/claude-code-config ~/git/claude-code-config
+```
+
+**Then choose how to use it:**
+- [Symlink Approach](#symlink-approach) - Symlink components to ~/.claude
+- [Copy Approach](#copy-approach) - Copy files to ~/.claude
+
+---
+
+#### Backup Existing Config
+
+If you have an existing `~/.claude` directory:
+
+```bash
+# Backup existing config
+mv ~/.claude ~/.claude.backup
+
+# Clone the repo
+git clone https://github.com/myk-org/claude-code-config ~/.claude
+
+# Copy your private files back (examples - adjust to your setup)
+# Private agents:
+cp ~/.claude.backup/agents/my-private-agent.md ~/.claude/agents/
+# MCP server configs:
+cp -r ~/.claude.backup/servers/code-execution/configs/* ~/.claude/servers/code-execution/configs/
+# Any other private files you have...
+
+# Remove backup after verifying everything works
+rm -rf ~/.claude.backup
+```
+
+#### Symlink Approach
+
+Clone to a different location and symlink into your existing `~/.claude`:
+
+```bash
+# Clone to ~/git/ (or your preferred location)
+git clone https://github.com/myk-org/claude-code-config ~/git/claude-code-config
+
+# Create ~/.claude if it doesn't exist
+mkdir -p ~/.claude
+
+# Symlink each component
+ln -sf ~/git/claude-code-config/agents ~/.claude/agents
+ln -sf ~/git/claude-code-config/commands ~/.claude/commands
+ln -sf ~/git/claude-code-config/scripts ~/.claude/scripts
+ln -sf ~/git/claude-code-config/servers ~/.claude/servers
+ln -sf ~/git/claude-code-config/settings.json ~/.claude/settings.json
+ln -sf ~/git/claude-code-config/statusline.sh ~/.claude/statusline.sh
+```
+
+**Note:** Your private configs in `~/.claude/servers/code-execution/configs/` will be inside the symlinked directory. You may want to keep configs outside the repo.
+
+#### Copy Approach
+
+Clone to a different location and copy files to your existing `~/.claude`:
+
+```bash
+# Clone to a temp location
+git clone https://github.com/myk-org/claude-code-config /tmp/claude-code-config
+
+# Copy to ~/.claude (won't overwrite existing files)
+cp -rn /tmp/claude-code-config/* ~/.claude/
+
+# Or force overwrite (careful with private configs!)
+# cp -r /tmp/claude-code-config/* ~/.claude/
+
+# Clean up
+rm -rf /tmp/claude-code-config
+```
+
+**Updating with this approach:**
+```bash
+git clone https://github.com/myk-org/claude-code-config /tmp/claude-code-config
+cp -r /tmp/claude-code-config/agents ~/.claude/
+cp -r /tmp/claude-code-config/scripts ~/.claude/
+# ... selectively copy what you need
+rm -rf /tmp/claude-code-config
+```
+
+## Integration with Dotfiles (GNU Stow)
+
+If you manage your dotfiles with GNU Stow, use this **clone + overlay** approach.
+
+### How It Works
+
+```
+Step 1: git clone this repo directly to ~/.claude (base config)
+Step 2: stow your dotfiles (private .claude files overlay on top)
+```
+
+### Directory Structure
+
+**This repo (cloned directly to ~/.claude):**
+```
+~/.claude/                    ← git clone destination
+├── agents/                   # Public agents (from this repo)
+├── commands/                 # Commands
+├── scripts/                  # Public scripts
+├── servers/                  # Server configs
+├── settings.json             # Base settings
+└── statusline.sh
+```
+
+**Your dotfiles (private overlay via stow):**
+```
+dotfiles/
+├── .zshrc
+├── .config/
+└── .claude/                  # Only YOUR private additions
+    ├── agents/               # Private agents
+    │   ├── my-private-agent.md
+    │   └── company-specific-agent.md
+    ├── scripts/              # Private scripts
+    │   └── my-helper.sh
+    ├── commands/             # Private commands
+    │   └── my-workflow.md
+    └── servers/
+        └── code-execution/
+            └── configs/      # Your MCP server configs
+                ├── my-server.json
+                └── company-internal-service.json
+```
+
+### Setup
+
+> **Note:** If `~/.claude` already exists, see [Option 1](#option-1-fresh-install-recommended-for-new-setups) for backup instructions before cloning.
+
+```bash
+# 1. Clone this repo to ~/.claude
+git clone https://github.com/myk-org/claude-code-config ~/.claude
+
+# 2. Stow your dotfiles (overlays private files)
+cd ~/dotfiles && stow -t ~ .
+```
+
+### Updating
+
+```bash
+# Update base config:
+cd ~/.claude && git pull
+
+# Your private files from dotfiles remain untouched
 ```
 
 ## What's Included
