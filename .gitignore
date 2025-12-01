@@ -11,6 +11,23 @@
 .claude/plans/
 .claude/history.jsonl
 
+# Python cache
+**/__pycache__/
+**/*.pyc
+
 # OS files
 .DS_Store
 Thumbs.db
+
+# Allow important .claude files (override global gitignore)
+!.claude/
+!.claude/agents/
+!.claude/agents/**
+!.claude/commands/
+!.claude/commands/**
+!.claude/scripts/
+!.claude/scripts/**
+!.claude/servers/
+!.claude/servers/**
+!.claude/settings.json
+!.claude/statusline.sh
