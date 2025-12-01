@@ -1,0 +1,16 @@
+# User-specific configuration
+.claude.json
+.claude/settings.local.json
+
+# Generated/session data
+.claude/debug/
+.claude/projects/
+.claude/todos/
+.claude/file-history/
+.claude/shell-snapshots/
+.claude/plans/
+.claude/history.jsonl
+
+# OS files
+.DS_Store
+Thumbs.db
