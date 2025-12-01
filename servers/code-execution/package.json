@@ -1,0 +1,34 @@
+{
+  "name": "@claude/code-execution-server",
+  "version": "1.0.0",
+  "description": "Generic UTCP code-mode server for multiple MCP integrations",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "utcp",
+    "mcp",
+    "code-mode",
+    "code-execution"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@utcp/code-mode": "^1.0.5",
+    "@utcp/mcp": "^1.0.16",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
