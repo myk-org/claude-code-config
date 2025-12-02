@@ -2,7 +2,7 @@
 debug
 projects
 todos
-file-history/
+file-history
 shell-snapshots
 plans
 history.jsonl
@@ -12,7 +12,7 @@ pairup_sessions
 plugins
 session-env
 statsig
-settings.json.bak
+settings.local.json
 servers/code-execution/configs/archon.json
 servers/code-execution/configs/chrome-devtools.json
 servers/code-execution/configs/github-metrics.json
