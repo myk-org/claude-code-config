@@ -74,7 +74,7 @@ When Task tool/agents are unavailable, replace agent routing with direct impleme
 
 ### Step 1: Get CodeRabbit comments using the extraction script
 
-SCRIPT_PATHS = ~/dotfiles/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/dotfiles/.claude/commands/scripts/general/get-pr-info.sh
+SCRIPT_PATHS = ~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/.claude/commands/scripts/general/get-pr-info.sh
 
 ### 🎯 CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
 

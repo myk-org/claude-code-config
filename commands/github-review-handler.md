@@ -6,8 +6,8 @@ skipConfirmation: true
 
 **Description:** Finds and processes human reviewer comments from the current branch's GitHub PR.
 
-SCRIPT_PATHS = ~/dotfiles/.claude/commands/scripts/github-review-handler/get-human-reviews.sh
-~/dotfiles/.claude/commands/scripts/general/get-pr-info.sh
+SCRIPT_PATHS = ~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh
+~/.claude/commands/scripts/general/get-pr-info.sh
 
 ## 🚨 CRITICAL: SESSION ISOLATION & FLOW ENFORCEMENT
 
