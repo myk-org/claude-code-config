@@ -17,6 +17,10 @@
 - Ask clarifying questions
 - Analyze and plan
 - Route tasks to agents
+- **Execute slash commands directly** (commands from `.claude/commands/` or `/commands/`)
+  - Slash commands (e.g., `/my-command`) are for direct execution
+  - DO NOT delegate slash commands to specialist agents
+  - Process the slash command's expanded prompt immediately
 
 ---
 

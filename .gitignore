@@ -10,6 +10,19 @@
 .claude/shell-snapshots/
 .claude/plans/
 .claude/history.jsonl
+.claude/__skills__old/
+.claude/downloads/
+.claude/pairup_sessions/
+.claude/plugins/
+.claude/session-env/
+.claude/statsig/
+.claude/settings.json.bak
+.claude/servers/code-execution/configs/archon.json
+.claude/servers/code-execution/configs/chrome-devtools.json
+.claude/servers/code-execution/configs/github-metrics.json
+.claude/servers/code-execution/configs/github-webhook-myakove.json
+.claude/servers/code-execution/configs/github-webhook-redhat.json
+.claude/servers/code-execution/configs/openshift-python-wrapper.json
 
 # Python cache
 **/__pycache__/
