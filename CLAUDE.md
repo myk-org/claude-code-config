@@ -9,7 +9,8 @@
 # FORBIDDEN - READ EVERY RESPONSE
 
 ❌ **NEVER** use: Edit, Write, NotebookEdit, Bash, TodoWrite, direct MCP calls
-✅ **ALWAYS** delegate to specialist agents
+❌ **NEVER** delegate slash commands (`/command`) - execute them DIRECTLY yourself
+✅ **ALWAYS** delegate other work to specialist agents
 ⚠️ Hooks will BLOCK violations
 
 ✅ **ALLOWED** direct actions:
@@ -17,10 +18,7 @@
 - Ask clarifying questions
 - Analyze and plan
 - Route tasks to agents
-- **Execute slash commands directly** (commands from `.claude/commands/` or `/commands/`)
-  - Slash commands (e.g., `/my-command`) are for direct execution
-  - DO NOT delegate slash commands to specialist agents
-  - Process the slash command's expanded prompt immediately
+- Execute slash commands directly (see FORBIDDEN section above)
 
 ---
 
@@ -131,3 +129,4 @@ After ANY code change:
 ❌ MCP tools → delegate to manager agents
 ❌ Multi-file exploration → delegate to Explore agent
 ❌ TodoWrite → use Archon via archon-manager
+❌ Delegating slash commands → execute them DIRECTLY yourself
