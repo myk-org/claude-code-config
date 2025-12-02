@@ -1,28 +1,24 @@
-# User-specific configuration
-.claude.json
-.claude/settings.local.json
-
 # Generated/session data
-.claude/debug/
-.claude/projects/
-.claude/todos/
-.claude/file-history/
-.claude/shell-snapshots/
-.claude/plans/
-.claude/history.jsonl
-.claude/__skills__old/
-.claude/downloads/
-.claude/pairup_sessions/
-.claude/plugins/
-.claude/session-env/
-.claude/statsig/
-.claude/settings.json.bak
-.claude/servers/code-execution/configs/archon.json
-.claude/servers/code-execution/configs/chrome-devtools.json
-.claude/servers/code-execution/configs/github-metrics.json
-.claude/servers/code-execution/configs/github-webhook-myakove.json
-.claude/servers/code-execution/configs/github-webhook-redhat.json
-.claude/servers/code-execution/configs/openshift-python-wrapper.json
+debug/
+projects/
+todos/
+file-history/
+shell-snapshots/
+plans/
+history.jsonl
+__skills__old/
+downloads/
+pairup_sessions/
+plugins/
+session-env/
+statsig/
+settings.json.bak
+servers/code-execution/configs/archon.json
+servers/code-execution/configs/chrome-devtools.json
+servers/code-execution/configs/github-metrics.json
+servers/code-execution/configs/github-webhook-myakove.json
+servers/code-execution/configs/github-webhook-redhat.json
+servers/code-execution/configs/openshift-python-wrapper.json
 
 # Python cache
 **/__pycache__/
@@ -31,16 +27,3 @@
 # OS files
 .DS_Store
 Thumbs.db
-
-# Allow important .claude files (override global gitignore)
-!.claude/
-!.claude/agents/
-!.claude/agents/**
-!.claude/commands/
-!.claude/commands/**
-!.claude/scripts/
-!.claude/scripts/**
-!.claude/servers/
-!.claude/servers/**
-!.claude/settings.json
-!.claude/statusline.sh
