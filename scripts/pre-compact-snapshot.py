@@ -38,9 +38,10 @@ def validate_transcript_path(transcript_path: str) -> bool:
         path = Path(transcript_path).resolve()
 
         # Allowed directories: ~/.claude, /tmp/claude
+        # Resolve to handle symlinks (e.g., via stow)
         allowed_dirs = [
-            Path.home() / ".claude",
-            Path("/tmp/claude"),
+            (Path.home() / ".claude").resolve(),
+            Path("/tmp/claude").resolve(),
         ]
 
         # Check if path is within any allowed directory
