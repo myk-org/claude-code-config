@@ -47,11 +47,25 @@ def extract_from_transcript(transcript_path: str) -> dict:
     """Extract tasks and decisions from conversation transcript."""
     result = {"tasks": [], "decisions": [], "current_focus": ""}
 
-    if not transcript_path or not Path(transcript_path).exists():
+    # DEBUG: Check file existence and path
+    print(f"DEBUG: extract_from_transcript called with: {transcript_path!r}", file=sys.stderr)
+
+    if not transcript_path:
+        print(f"DEBUG: transcript_path is empty or None", file=sys.stderr)
+        return result
+
+    path_obj = Path(transcript_path)
+    file_exists = path_obj.exists()
+    print(f"DEBUG: File exists: {file_exists}", file=sys.stderr)
+
+    if not file_exists:
         return result
 
     # Security: validate path is within expected directories
-    if not validate_transcript_path(transcript_path):
+    path_valid = validate_transcript_path(transcript_path)
+    print(f"DEBUG: Path validation passed: {path_valid}", file=sys.stderr)
+
+    if not path_valid:
         print(f"Security: Transcript path outside allowed directories: {transcript_path}", file=sys.stderr)
         return result
 
@@ -60,12 +74,19 @@ def extract_from_transcript(transcript_path: str) -> dict:
 
         # Security: check file size before reading
         file_size = path.stat().st_size
+        print(f"DEBUG: File size: {file_size} bytes", file=sys.stderr)
+
         if file_size > MAX_TRANSCRIPT_SIZE:
             print(f"Transcript file too large: {file_size} bytes (max {MAX_TRANSCRIPT_SIZE})", file=sys.stderr)
             return result
 
         # Read with explicit encoding and error handling
         content = path.read_text(encoding='utf-8', errors='replace')
+
+        # DEBUG: Print sample of content
+        content_sample = content[:500] if len(content) > 500 else content
+        print(f"DEBUG: Transcript content sample (first 500 chars):\n{content_sample}", file=sys.stderr)
+        print(f"DEBUG: Total content length: {len(content)} chars", file=sys.stderr)
 
         # Extract tasks (completed, in-progress patterns)
         # Limit match length to prevent ReDoS
@@ -122,6 +143,10 @@ def main():
     session_id = hook_input.get("session_id", "unknown")
     transcript_path = hook_input.get("transcript_path", "")
     working_dir = os.environ.get("PWD", os.getcwd())
+
+    # DEBUG: Print hook_input details
+    print(f"DEBUG: hook_input keys: {list(hook_input.keys())}", file=sys.stderr)
+    print(f"DEBUG: transcript_path = {transcript_path!r}", file=sys.stderr)
 
     # Extract from transcript
     extracted = extract_from_transcript(transcript_path)
