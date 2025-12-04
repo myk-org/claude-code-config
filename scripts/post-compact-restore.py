@@ -8,15 +8,14 @@ from pathlib import Path
 STATE_DIR = Path.home() / ".claude" / "state"
 
 
-def get_snapshot_file() -> Path:
+def get_snapshot_file(session_id: str) -> Path:
     """Get session-specific snapshot file path."""
-    session_id = os.environ.get("CLAUDE_SESSION_ID", "unknown")
     return STATE_DIR / f"{session_id}-snapshot.json"
 
 
-def load_snapshot() -> dict:
+def load_snapshot(session_id: str) -> dict:
     """Load pre-compaction snapshot."""
-    snapshot_file = get_snapshot_file()
+    snapshot_file = get_snapshot_file(session_id)
     if not snapshot_file.exists():
         print(f"Snapshot file not found: {snapshot_file}", file=sys.stderr)
         return {}
@@ -68,7 +67,20 @@ def format_context(snapshot: dict) -> str:
 
 
 def main():
-    snapshot = load_snapshot()
+    # Read hook input to get session_id
+    try:
+        hook_input = json.loads(sys.stdin.read())
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse hook input JSON: {e}", file=sys.stderr)
+        hook_input = {}
+    except Exception as e:
+        print(f"Failed to read hook input: {e}", file=sys.stderr)
+        hook_input = {}
+
+    # Extract session_id from stdin JSON input (not environment variables)
+    session_id = hook_input.get("session_id", "unknown")
+
+    snapshot = load_snapshot(session_id)
 
     if not snapshot:
         print(json.dumps({"status": "no_snapshot_found"}))

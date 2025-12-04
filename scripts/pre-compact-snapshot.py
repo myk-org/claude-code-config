@@ -15,9 +15,8 @@ FOCUS_CONTEXT_CHARS = 5000
 MAX_TRANSCRIPT_SIZE = 10 * 1024 * 1024  # 10MB
 
 
-def get_snapshot_file() -> Path:
+def get_snapshot_file(session_id: str) -> Path:
     """Get session-specific snapshot file path."""
-    session_id = os.environ.get("CLAUDE_SESSION_ID", "unknown")
     return STATE_DIR / f"{session_id}-snapshot.json"
 
 
@@ -112,11 +111,16 @@ def main():
     # Read hook input
     try:
         hook_input = json.loads(sys.stdin.read())
-    except Exception:
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse hook input JSON: {e}", file=sys.stderr)
+        hook_input = {}
+    except Exception as e:
+        print(f"Failed to read hook input: {e}", file=sys.stderr)
         hook_input = {}
 
-    transcript_path = os.environ.get("CLAUDE_TRANSCRIPT_PATH", "")
-    session_id = os.environ.get("CLAUDE_SESSION_ID", "unknown")
+    # Extract from stdin JSON input (not environment variables)
+    session_id = hook_input.get("session_id", "unknown")
+    transcript_path = hook_input.get("transcript_path", "")
     working_dir = os.environ.get("PWD", os.getcwd())
 
     # Extract from transcript
@@ -134,7 +138,7 @@ def main():
         "current_focus": extracted["current_focus"],
     }
 
-    snapshot_file = get_snapshot_file()
+    snapshot_file = get_snapshot_file(session_id)
     snapshot_file.write_text(json.dumps(snapshot, indent=2), encoding='utf-8')
 
     # Allow compaction to proceed
