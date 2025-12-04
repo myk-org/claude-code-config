@@ -34,6 +34,28 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run ~/.claude/scripts/pre-compact-snapshot.py"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run ~/.claude/scripts/post-compact-restore.py"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

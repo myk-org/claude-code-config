@@ -1,0 +1,6 @@
+# Ignore all snapshot files (runtime data)
+*-snapshot.json
+
+# Keep the directory structure
+!.gitkeep
+!.gitignore
