@@ -163,10 +163,10 @@ Proceed directly to execution (no confirmation needed since user already approve
 
    ```bash
    # For each addressed comment, post a threaded reply using its comment_id:
-   ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "Done" --comment-id <comment_id>
+   ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "Done" --comment-id <comment_id> --resolve
 
    # Example with real values:
-   ~/.claude/scripts/reply-to-pr-review.sh "myorg/myrepo" "123" "Done" --comment-id 2594758132
+   ~/.claude/scripts/reply-to-pr-review.sh "myorg/myrepo" "123" "Done" --comment-id 2594758132 --resolve
    ```
 
    **Where to get values:**
