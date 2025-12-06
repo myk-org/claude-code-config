@@ -152,7 +152,6 @@ After ANY code change:
 | Area | Rules |
 |------|-------|
 | **Git (via git-expert)** | Branches: `feature/`, `fix/`, `hotfix/`, `refactor/`<br>Never: work on main, `git add .`, `--no-verify`, PR without confirmation |
-| **Gitignore** | When creating files in `servers/`, `agents/`, `commands/`, or `scripts/`:<br>MUST add explicit unignore entry in `.gitignore`<br>Format: `!path/to/new/file.ext`<br>Example: `!commands/my-new-command.md` |
 | **Python** | Use `uv run` / `uvx` (never `python` or `pip` directly) |
 | **Temp files** | `/tmp/claude/` (never in project directory) |
 
