@@ -13,12 +13,74 @@ plugins
 session-env
 statsig
 settings.local.json
-servers/code-execution/configs/archon.json
-servers/code-execution/configs/chrome-devtools.json
-servers/code-execution/configs/github-metrics.json
-servers/code-execution/configs/github-webhook-myakove.json
-servers/code-execution/configs/github-webhook-redhat.json
-servers/code-execution/configs/openshift-python-wrapper.json
+
+# Exclude directories by default (synced from elsewhere)
+servers/
+agents/
+commands/
+scripts/
+
+# But explicitly include tracked files
+# servers/code-execution/
+!servers/code-execution/.gitignore
+!servers/code-execution/COMMANDS.md
+!servers/code-execution/COMPARISON.md
+!servers/code-execution/INDEX.md
+!servers/code-execution/PROJECT_SUMMARY.md
+!servers/code-execution/QUICKSTART.md
+!servers/code-execution/README.md
+!servers/code-execution/USAGE.md
+!servers/code-execution/configs/example.json.example
+!servers/code-execution/package-lock.json
+!servers/code-execution/package.json
+!servers/code-execution/setup.sh
+!servers/code-execution/src/server.ts
+!servers/code-execution/src/types.ts
+!servers/code-execution/tsconfig.json
+!servers/code-execution/verify.sh
+
+# agents/
+!agents/api-documenter.md
+!agents/bash-expert.md
+!agents/code-reviewer.md
+!agents/codebase-refactor-analyst.md
+!agents/debugger.md
+!agents/docker-expert.md
+!agents/frontend-expert.md
+!agents/general-purpose.md
+!agents/git-expert.md
+!agents/go-expert.md
+!agents/java-expert.md
+!agents/jenkins-expert.md
+!agents/kubernetes-expert.md
+!agents/pr-comment-manager.md
+!agents/python-expert.md
+!agents/technical-documentation-writer.md
+!agents/test-automator.md
+!agents/test-runner.md
+
+# commands/
+!commands/code-review.md
+!commands/find-todos.md
+!commands/github-coderabbitai-review-handler.md
+!commands/github-review-handler.md
+!commands/scripts/general/get-pr-info.sh
+!commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
+!commands/scripts/github-review-handler/get-human-reviews.sh
+!commands/todos-to-issues.md
+!commands/undo.md
+
+# scripts/
+!scripts/get-coderabbit-comments.sh
+!scripts/get-human-reviews.sh
+!scripts/get-pr-info.sh
+!scripts/inject-claude.sh
+!scripts/my-notifier.sh
+!scripts/post-compact-restore.py
+!scripts/pre-compact-snapshot.py
+!scripts/reply-to-pr-review.sh
+!scripts/rule-enforcer.py
+!scripts/rule-injector.py
 
 # Python cache
 **/__pycache__/

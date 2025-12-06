@@ -25,51 +25,6 @@ workflow.**
 
 ---
 
-## 🔧 CRITICAL: Task Tool & Agent Availability Check
-
-**BEFORE proceeding with the workflow, check if Task tool and agents are available:**
-
-1. **Check Task Tool Availability**: Determine if you have access to the `Task` tool (or `todo_write` tool)
-2. **Check Agent Availability**: Determine if you have access to specialized agents (python-expert, git-expert,
-   test-automator, etc.)
-
-**If Task tool AND agents are available:**
-
-- ✅ Use the standard workflow with Task tool and agent routing as described below
-- ✅ Create tasks using `todo_write` or `Task` tool
-- ✅ Route work to appropriate agents (python-expert, git-expert, test-automator, etc.)
-
-**If Task tool OR agents are NOT available:**
-
-- ⚠️ **FALLBACK MODE**: Handle all tasks directly yourself
-- ⚠️ Do NOT attempt to use Task tool or route to agents
-- ⚠️ Implement code changes directly using available tools (read_file, search_replace, write, etc.)
-- ⚠️ Run tests directly using available tools (run_terminal_cmd, etc.)
-- ⚠️ Handle git operations directly if git-expert agent is not available (but prefer git-expert if available)
-
-**Fallback Instructions for Direct Implementation:**
-
-When Task tool/agents are unavailable, replace agent routing with direct implementation:
-
-- **Instead of**: "Create TodoWrite task with appropriate agent assignment"
-  - **Do**: Track the task mentally or in a simple list, then implement directly
-
-- **Instead of**: "Route to appropriate specialists using Task tool"
-  - **Do**: Implement the changes directly using read_file, search_replace, write tools
-
-- **Instead of**: "Use Task tool to run all tests WITH coverage"
-  - **Do**: Run tests directly using run_terminal_cmd (e.g., `uv run pytest --cov`)
-
-- **Instead of**: "Use Task tool to commit changes"
-  - **Do**: Use git-expert agent if available, otherwise handle git operations directly (but prefer git-expert)
-
-- **Instead of**: "Use Task tool to push changes"
-  - **Do**: Use git-expert agent if available, otherwise handle git operations directly (but prefer git-expert)
-
-**The workflow phases remain the same, but execution method adapts based on available tools.**
-
----
-
 ## Instructions
 
 ### Step 1: Get CodeRabbit comments using the extraction script
@@ -115,15 +70,16 @@ EVERYTHING.**
 
 The script returns structured JSON containing:
 
+- `metadata`: Contains `owner`, `repo`, `pr_number`, `review_id` for use in reply scripts
 - `summary`: Counts of actionable, nitpicks, duplicates, outside_diff_range (if any), and total
 - `actionable_comments`: Array of HIGH priority issues with AI instructions (body contains direct AI prompts)
-  - Each has: priority, title, file, body (body = AI instruction to execute)
+  - Each has: comment_id, priority, title, file, body (body = AI instruction to execute)
 - `nitpick_comments`: Array of LOW priority style/maintainability issues with clean descriptions
-  - Each has: priority, title, file, line, body
+  - Each has: comment_id, priority, title, file, line, body
 - `duplicate_comments`: Array of MEDIUM priority duplicates (only present if any exist)
-  - Each has: priority, title, file, line, body
+  - Each has: comment_id, priority, title, file, line, body
 - `outside_diff_range_comments`: Array of LOW priority comments on code outside the diff (only present if any exist)
-  - Each has: priority, title, file, line, body
+  - Each has: comment_id, priority, title, file, line, body
 
 ### Step 2.5: Filter Positive Comments from Duplicates
 
@@ -181,22 +137,35 @@ For ALL comment types, use this unified format:
 Do you want to address this comment? (yes/no/skip/all)
 ```
 
+**🔄 CRITICAL: Track Comment Outcomes for Reply**
+
+For EVERY comment presented, track the outcome for the final reply:
+- **Comment ID**: The `comment_id` from JSON (needed for threaded replies)
+- **Comment number**: Sequential (1, 2, 3...)
+- **Title**: The comment title
+- **File**: The file path
+- **Outcome**: Will be one of: `addressed`, `not_addressed`, `skipped`
+- **Reason**: Required for `not_addressed` and `skipped` outcomes
+
+When user responds:
+- **"yes"**: Outcome will be set after execution (addressed or not_addressed)
+- **"no" or "skip"**: MUST ask user: "Please provide a brief reason for skipping this comment:"
+  - Set outcome = `skipped`, reason = user's response
+  - If user doesn't provide reason, use "User chose to skip"
+- **"all"**: Track all remaining as pending execution
+
 **For each "yes" response:**
 
-- **If Task tool available**: Create a TodoWrite task with appropriate agent assignment
-- **If Task tool NOT available**: Track the task mentally/in a list for direct implementation later
-- Show confirmation: "✅ Task created: [brief description]" (or "✅ Task tracked: [brief description]" if no
-  Task tool)
+- Create a task with appropriate agent assignment
+- Show confirmation: "✅ Task created: [brief description]"
 - **DO NOT execute the task - Continue to next comment immediately**
 
 **For "all" response:**
 
-- **If Task tool available**: Create TodoWrite tasks for the current comment AND **ALL remaining comments
-  across ALL priority levels** automatically
-- **If Task tool NOT available**: Track all remaining tasks mentally/in a list for direct implementation
+- Create tasks for the current comment AND **ALL remaining comments across ALL priority levels** automatically
 - **CRITICAL**: "all" means process EVERY remaining comment (HIGH, MEDIUM, and LOW priority) - do NOT skip any
   priority level
-- Show summary: "✅ Created/tracked tasks for current comment + X remaining comments (Y HIGH, Z MEDIUM, W LOW)"
+- Show summary: "✅ Created tasks for current comment + X remaining comments (Y HIGH, Z MEDIUM, W LOW)"
 - **Skip to Phase 2 immediately**
 
 **For "no" or "skip" responses:**
@@ -225,21 +194,18 @@ After ALL comments have been reviewed in Phase 1:
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
 1. **Process all approved tasks:**
-   - **🚨 CRITICAL**: Process ALL tasks created/tracked during Phase 1, regardless of priority level
-   - **NEVER skip LOW priority tasks** - if a task was created/tracked in Phase 1, it MUST be executed in
-     Phase 2
+   - **🚨 CRITICAL**: Process ALL tasks created during Phase 1, regardless of priority level
+   - **NEVER skip LOW priority tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
    - **HIGH Priority (Actionable)**: Execute AI instructions directly using body as prompt
-   - **MEDIUM Priority (Duplicates)**:
-     - **If Task tool/agents available**: Route to appropriate specialists using Task tool
-     - **If Task tool/agents NOT available**: Implement changes directly using read_file, search_replace,
-       write tools
-   - **LOW Priority (Nitpicks/Outside Diff)**:
-     - **If Task tool/agents available**: Route to appropriate specialists using Task tool
-     - **If Task tool/agents NOT available**: Implement changes directly using read_file, search_replace,
-       write tools
+   - **MEDIUM Priority (Duplicates)**: Route to appropriate specialists to implement the changes
+   - **LOW Priority (Nitpicks/Outside Diff)**: Route to appropriate specialists to implement the changes
    - Process multiple tasks in parallel when possible
    - Mark each task as completed after finishing
    - **Track unimplemented changes**: If AI decides NOT to make changes for an approved task, track the reason
+
+   **Update outcome tracking after each task:**
+   - If changes were made successfully: Set outcome = `addressed`
+   - If AI decided NOT to make changes: Set outcome = `not_addressed`, reason = [explanation of why]
 
 1. **Review unimplemented changes (MANDATORY CHECKPOINT):**
 
@@ -276,31 +242,76 @@ Proceed directly to execution (no confirmation needed since user already approve
    - **If user says "no"**: Re-implement the changes as requested
    - **If user says "yes"**: Proceed to Phase 4 (testing and commit)
 
-   **If ALL approved tasks were implemented**: Proceed directly to Phase 4
+   **If ALL approved tasks were implemented**: Proceed directly to Phase 3.5
 
    **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
+
+### Step 5: PHASE 3.5 - Post CodeRabbit Reply
+
+**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), generate and post reply to PR.
+
+**STEP 1**: Generate reply message using this format:
+
+```markdown
+## CodeRabbit Review Response
+
+### Addressed
+| Title | File |
+|-------|------|
+| [title] | `[file]` |
+
+### Not Addressed
+| Title | File | Reason |
+|-------|------|--------|
+| [title] | `[file]` | [reason] |
+
+### Skipped
+| Title | File | Reason |
+|-------|------|--------|
+| [title] | `[file]` | [reason] |
+
+---
+*Automated response from CodeRabbit Review Handler*
+```
+
+**Notes on format:**
+- Only include sections that have items (if no skipped items, omit "Skipped" section)
+- Include count in header: "### Addressed (3)"
+- File paths should be in backticks for code formatting
+
+**STEP 2**: Post threaded replies to each addressed comment using `comment_id` from the JSON:
+
+```bash
+# For each addressed comment, post a threaded reply:
+~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "Done" --comment-id <comment_id>
+
+# Example with real values from metadata:
+~/.claude/scripts/reply-to-pr-review.sh "myorg/myrepo" "123" "Done" --comment-id 2594758132
+```
+
+**Where to get values:**
+- `<owner>/<repo>`: From JSON `metadata.owner` + "/" + `metadata.repo`
+- `<pr_number>`: From JSON `metadata.pr_number`
+- `<comment_id>`: From each comment's `comment_id` field
+
+**STEP 3**: Confirm replies were posted successfully before proceeding.
+
+**CHECKPOINT**: Reply posted to PR
 
 1. **Post-execution workflow (PHASES 4 & 5 - MANDATORY CHECKPOINTS):**
 
    **PHASE 4: Testing & Commit**
-   - **STEP 1** (REQUIRED):
-     - **If Task tool/agents available**: Use Task tool to run all tests WITH coverage
-     - **If Task tool/agents NOT available**: Run tests directly using run_terminal_cmd (e.g., `uv run pytest --cov`)
+   - **STEP 1** (REQUIRED): Run all tests WITH coverage
    - **STEP 2** (REQUIRED): Check BOTH test results AND coverage results:
      - **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
        the changes? (yes/no)"
-       - If user says "yes":
-         - **If git-expert agent available**: Use git-expert agent to commit changes
-         - **If git-expert agent NOT available**: Handle git commit directly (but prefer git-expert if
-           available)
+       - If user says "yes": Commit the changes
        - If user says "no": Acknowledge and proceed to Phase 5 checkpoint (ask about push anyway)
      - **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
-       - **If Task tool/agents available**: Use Task tool to analyze coverage gaps and add missing tests
-       - **If Task tool/agents NOT available**: Analyze coverage gaps and add missing tests directly
+       - Analyze coverage gaps and add missing tests
        - Re-run tests with coverage until BOTH pass
      - **If tests fail**:
-       - **If Task tool/agents available**: Use Task tool to analyze and fix test failures
-       - **If Task tool/agents NOT available**: Analyze and fix test failures directly
+       - Analyze and fix test failures
        - Re-run until tests pass
    - **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
@@ -308,14 +319,12 @@ Proceed directly to execution (no confirmation needed since user already approve
    - **STEP 1** (REQUIRED): After successful commit (or commit decline), MUST ask: "Changes committed
      successfully. Do you want to push the changes to remote? (yes/no)"
      - If no commit was made, ask: "Do you want to push any existing commits to remote? (yes/no)"
-   - **STEP 2** (REQUIRED): If user says "yes":
-     - **If git-expert agent available**: Use git-expert agent to push changes to remote
-     - **If git-expert agent NOT available**: Handle git push directly (but prefer git-expert if available)
+   - **STEP 2** (REQUIRED): If user says "yes": Push the changes to remote
    - **CHECKPOINT**: Push confirmation MUST be asked - this is the final step of the workflow
 
 **🚨 CRITICAL WORKFLOW - STRICT PHASE SEQUENCE:**
 
-This workflow has **5 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
+This workflow has **6 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
 that CANNOT be skipped:
 
 ### PHASE 1: Collection Phase
@@ -338,33 +347,33 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
+### PHASE 3.5: Post CodeRabbit Reply (NEW)
+
+- Generate summary reply from tracked outcomes
+- Post reply to PR using reply script
+- **CHECKPOINT**: Reply posted successfully
+
 ### PHASE 4: Testing & Commit Phase
 
-- **MANDATORY STEP 1**:
-  - **If Task tool/agents available**: Run tests WITH coverage via Task tool
-  - **If Task tool/agents NOT available**: Run tests directly using run_terminal_cmd (e.g., `uv run pytest --cov`)
+- **MANDATORY STEP 1**: Run all tests WITH coverage
 - **MANDATORY STEP 2**: Check BOTH tests AND coverage - only proceed if BOTH pass
   - If tests pass BUT coverage fails - FIX coverage gaps (this is a FAILURE)
   - If tests fail - FIX test failures
 - **MANDATORY STEP 3**: Once BOTH pass, MUST ask user: "All tests and coverage pass. Do you want to commit the
   changes? (yes/no)"
-- **MANDATORY STEP 4**: If user says yes:
-  - **If git-expert agent available**: Use git-expert agent to commit changes
-  - **If git-expert agent NOT available**: Handle git commit directly (but prefer git-expert if available)
+- **MANDATORY STEP 4**: If user says yes: Commit the changes
 - **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
 ### PHASE 5: Push Phase
 
 - **MANDATORY STEP 1**: After successful commit, MUST ask user: "Changes committed successfully. Do you want to
   push the changes to remote? (yes/no)"
-- **MANDATORY STEP 2**: If user says yes:
-  - **If git-expert agent available**: Use git-expert agent to push changes
-  - **If git-expert agent NOT available**: Handle git push directly (but prefer git-expert if available)
+- **MANDATORY STEP 2**: If user says yes: Push the changes to remote
 - **CHECKPOINT**: Push confirmation asked (even if user declined)
 
 **🚨 ENFORCEMENT RULES:**
 
-- **NEVER skip phases** - all 5 phases are mandatory
+- **NEVER skip phases** - all 6 phases are mandatory
 - **NEVER skip checkpoints** - each phase must reach its checkpoint before proceeding
 - **NEVER skip confirmations** - commit and push confirmations are REQUIRED even if previously discussed
 - **NEVER assume** - always ask for confirmation, never assume user wants to commit/push
@@ -372,6 +381,5 @@ that CANNOT be skipped:
 
 **If tests OR coverage fail**:
 
-- **If Task tool/agents available**: Use Task tool to analyze and fix failures (add tests for coverage gaps)
-- **If Task tool/agents NOT available**: Analyze and fix failures directly (add tests for coverage gaps)
+- Analyze and fix failures (add tests for coverage gaps)
 - Re-run tests with coverage until BOTH pass before proceeding to Phase 3's commit confirmation.

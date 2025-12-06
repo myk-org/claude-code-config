@@ -69,6 +69,7 @@ for review_id in $(echo "$HUMAN_REVIEWS" | jq -r '.[].id'); do
   REVIEW_COMMENTS=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$review_id/comments" |
     jq --arg reviewer "$REVIEWER" '[.[] |
       {
+        comment_id: .id,
         reviewer: $reviewer,
         file: .path,
         line: (.line // .original_line // ""),
@@ -85,6 +86,7 @@ PR_COMMENTS=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" |
   jq --arg bot_user "coderabbitai[bot]" --arg latest_date "$LATEST_COMMIT_DATE" '[.[] |
     select(.user.login != $bot_user and (.body | length) > 10 and .created_at > $latest_date) |
     {
+      comment_id: .id,
       reviewer: .user.login,
       file: .path,
       line: (.line // .original_line // ""),
@@ -103,6 +105,11 @@ TOTAL_COUNT=$(echo "$ALL_COMMENTS" | jq '. | length')
 
 # Build final JSON
 JSON_OUTPUT="{"
+JSON_OUTPUT="$JSON_OUTPUT\"metadata\": {"
+JSON_OUTPUT="$JSON_OUTPUT\"owner\": \"$OWNER\","
+JSON_OUTPUT="$JSON_OUTPUT\"repo\": \"$REPO\","
+JSON_OUTPUT="$JSON_OUTPUT\"pr_number\": $PR_NUMBER"
+JSON_OUTPUT="$JSON_OUTPUT},"
 JSON_OUTPUT="$JSON_OUTPUT\"summary\": {"
 JSON_OUTPUT="$JSON_OUTPUT\"total\": $TOTAL_COUNT"
 JSON_OUTPUT="$JSON_OUTPUT},"

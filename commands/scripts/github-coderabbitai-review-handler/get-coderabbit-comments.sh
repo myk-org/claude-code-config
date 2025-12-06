@@ -110,6 +110,7 @@ REVIEW_BODY=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$REVIEW_ID" -
 # Extract actionable comments with AI prompts
 ACTIONABLE_COMMENTS=$(echo "$INLINE_COMMENTS" | jq '[.[] |
   {
+    comment_id: .id,
     priority: "HIGH",
     title: (.body | split("\n")[2] | ltrimstr("**") | rtrimstr("**")),
     file: .path,
@@ -603,6 +604,12 @@ TOTAL_COUNT=$((ACTIONABLE_COUNT + NITPICK_COUNT + DUPLICATE_COUNT + OUTSIDE_DIFF
 
 # Build JSON dynamically
 JSON_OUTPUT="{"
+JSON_OUTPUT="$JSON_OUTPUT\"metadata\": {"
+JSON_OUTPUT="$JSON_OUTPUT\"review_id\": \"$REVIEW_ID\","
+JSON_OUTPUT="$JSON_OUTPUT\"owner\": \"$OWNER\","
+JSON_OUTPUT="$JSON_OUTPUT\"repo\": \"$REPO\","
+JSON_OUTPUT="$JSON_OUTPUT\"pr_number\": \"$PR_NUMBER\""
+JSON_OUTPUT="$JSON_OUTPUT},"
 JSON_OUTPUT="$JSON_OUTPUT\"summary\": {"
 if [ "$ACTIONABLE_COUNT" -gt 0 ]; then
   JSON_OUTPUT="$JSON_OUTPUT\"actionable\": $ACTIONABLE_COUNT,"
