@@ -6,8 +6,8 @@ skipConfirmation: true
 
 **Description:** Finds and processes human reviewer comments from the current branch's GitHub PR.
 
-SCRIPT_PATHS = ~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh
-~/.claude/commands/scripts/general/get-pr-info.sh
+MAIN_SCRIPT = ~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh
+PR_INFO_SCRIPT = ~/.claude/commands/scripts/general/get-pr-info.sh
 
 ## 🚨 CRITICAL: SESSION ISOLATION & FLOW ENFORCEMENT
 
@@ -31,7 +31,7 @@ workflow.**
 
 ```bash
 # Call the human review extraction script with PR info script path
-{{SCRIPT_PATHS}}
+$MAIN_SCRIPT $PR_INFO_SCRIPT
 ```
 
 ### Step 2: Process the JSON output

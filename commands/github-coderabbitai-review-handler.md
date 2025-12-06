@@ -29,14 +29,15 @@ workflow.**
 
 ### Step 1: Get CodeRabbit comments using the extraction script
 
-SCRIPT_PATHS = ~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/.claude/commands/scripts/general/get-pr-info.sh
+MAIN_SCRIPT = ~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
+PR_INFO_SCRIPT = ~/.claude/commands/scripts/general/get-pr-info.sh
 
 ### 🎯 CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
 
 **ALWAYS use this exact command format:**
 
 ```bash
-{{SCRIPT_PATHS}} <USER_INPUT_IF_PROVIDED>
+$MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
@@ -47,20 +48,20 @@ SCRIPT_PATHS = ~/.claude/commands/scripts/github-coderabbitai-review-handler/get
 
 ```bash
 # User provided: 3379917343
-{{SCRIPT_PATHS}} 3379917343
+$MAIN_SCRIPT $PR_INFO_SCRIPT 3379917343
 
 # User provided: https://github.com/owner/repo/pull/123#pullrequestreview-3379917343
-{{SCRIPT_PATHS}} "https://github.com/owner/repo/pull/123#pullrequestreview-3379917343"
+$MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-3379917343"
 
 # User provided: 6c544434d69b2ef76441949cfe839167b7de775a
-{{SCRIPT_PATHS}} 6c544434d69b2ef76441949cfe839167b7de775a
+$MAIN_SCRIPT $PR_INFO_SCRIPT 6c544434d69b2ef76441949cfe839167b7de775a
 ```
 
 **If user provides NO input:**
 
 ```bash
 # Gets latest commit comments automatically
-{{SCRIPT_PATHS}}
+$MAIN_SCRIPT $PR_INFO_SCRIPT
 ```
 
 **THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The scripts handle
