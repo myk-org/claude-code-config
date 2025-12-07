@@ -60,7 +60,6 @@ scripts/
 
 # commands/
 !commands/code-review.md
-!commands/find-todos.md
 !commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md
 !commands/github-review-handler.md
@@ -70,8 +69,6 @@ scripts/
 !commands/scripts/github-pr-review/get-pr-diff.sh
 !commands/scripts/github-pr-review/post-pr-inline-comment.sh
 !commands/scripts/github-review-handler/get-human-reviews.sh
-!commands/todos-to-issues.md
-!commands/undo.md
 
 # scripts/
 !scripts/inject-claude.sh

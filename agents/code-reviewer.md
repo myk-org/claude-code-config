@@ -14,16 +14,37 @@ When invoked:
 2. Focus on modified files
 3. Begin review immediately
 
-Review checklist:
+## Review Focus Areas
 
-- Code is simple and readable
-- Functions and variables are well-named
-- No duplicated code
-- Proper error handling
-- No exposed secrets or API keys
-- Input validation implemented
-- Good test coverage
-- Performance considerations addressed
+**CRITICAL Priority:**
+- Security vulnerabilities (injection attacks, auth bypass, data exposure)
+- Hardcoded secrets, credentials, API keys, tokens
+- Logic errors that cause incorrect behavior or data corruption
+- Breaking changes to public APIs without proper handling
+
+**WARNING Priority:**
+- Missing error handling or input validation
+- Resource leaks (files, connections, handles not closed)
+- Race conditions or concurrency issues
+- Unhandled edge cases or boundary conditions
+- Type mismatches or unsafe type operations
+- Incorrect exception handling (swallowing errors, wrong types)
+
+**SUGGESTION Priority:**
+- Duplicate code that should be refactored
+- Misleading or unclear variable/function names
+- Dead code or unused variables
+- Missing documentation for public APIs or complex logic
+- Inconsistent naming conventions
+- Performance improvements (N+1 queries, unnecessary iterations)
+- Overly complex code that could be simplified
+
+**🚨 Local CLAUDE.md Rules (STRICT ENFORCEMENT):**
+- Read the LOCAL CLAUDE.md file in the project root
+- **ANY violation of project CLAUDE.md rules is CRITICAL severity**
+- Project-specific rules OVERRIDE general suggestions
+- If CLAUDE.md says "never do X" - finding X is CRITICAL
+- If CLAUDE.md says "always do Y" - missing Y is CRITICAL
 
 Provide feedback organized by priority:
 

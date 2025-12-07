@@ -197,6 +197,24 @@ cd ~/.claude && git pull
 | `api-documenter` | OpenAPI/Swagger specs |
 | `general-purpose` | Fallback for unspecified tasks |
 
+## Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/github-pr-review` | Review a GitHub PR and post inline comments. Posts as single review with summary. |
+| `/github-review-handler` | Process human reviewer comments from a PR. |
+| `/github-coderabbitai-review-handler` | Process CodeRabbit AI review comments. |
+| `/code-review` | Run code review on local changes. |
+
+### `/github-pr-review` Features
+
+- Auto-detect PR from current branch or accept PR number/URL
+- Reads project CLAUDE.md for review rules
+- Deep code review (security, bugs, error handling, performance)
+- User selection - choose which findings to post
+- Single review thread with summary table
+- Inline comments with severity badges, suggestions, AI prompts
+
 ## MCP Servers
 
 The `.claude/servers/` directory contains MCP (Model Context Protocol) server implementations.
