@@ -7,7 +7,6 @@ skipConfirmation: true
 **Description:** Finds and processes human reviewer comments from the current branch's GitHub PR.
 
 MAIN_SCRIPT = ~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh
-PR_INFO_SCRIPT = ~/.claude/commands/scripts/general/get-pr-info.sh
 
 ## 🚨 CRITICAL: SESSION ISOLATION & FLOW ENFORCEMENT
 
@@ -29,10 +28,36 @@ workflow.**
 
 ### Step 1: Get human review comments using the extraction script
 
+### 🎯 CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
+
+**ALWAYS use this exact command format:**
+
 ```bash
-# Call the human review extraction script with PR info script path
-$MAIN_SCRIPT $PR_INFO_SCRIPT
+$MAIN_SCRIPT $ARGUMENTS
 ```
+
+**That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
+
+---
+
+**If user provides input (PR number or URL):**
+
+```bash
+# User provided: 85
+$MAIN_SCRIPT 85
+
+# User provided: https://github.com/owner/repo/pull/123
+$MAIN_SCRIPT "https://github.com/owner/repo/pull/123"
+```
+
+**If user provides NO input:**
+
+```bash
+# Auto-detect from current git context - requires being in a git repo with an open PR
+$MAIN_SCRIPT
+```
+
+Note: The script will auto-detect the repository from the current git context when only a PR number is provided.
 
 ### Step 2: Process the JSON output
 

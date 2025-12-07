@@ -1,42 +1,90 @@
 #!/bin/bash
+set -euo pipefail
 
 # Script to extract human reviewer comments for processing
-# Usage: get-human-reviews.sh <pr-info-script-path>
-#   OR:  get-human-reviews.sh <owner/repo> <pr_number>
+# Usage: get-human-reviews.sh <owner/repo> <pr_number>
+#        get-human-reviews.sh https://github.com/owner/repo/pull/123
+#        get-human-reviews.sh <pr_number>
 
-if [ $# -eq 1 ]; then
-  # Single argument: path to pr-info script
-  PR_INFO_SCRIPT="$1"
+show_usage() {
+    cat <<EOF
+Usage:
+  $0 <owner/repo> <pr_number>
+  $0 https://github.com/owner/repo/pull/123
+  $0 <pr_number>
 
-  if [ ! -f "$PR_INFO_SCRIPT" ]; then
-    echo "❌ Error: PR info script not found: $PR_INFO_SCRIPT"
-    exit 1
-  fi
+Examples:
+  $0 myakove/my-repo 123
+  $0 https://github.com/myakove/my-repo/pull/123
+  $0 194
 
-  # Call the pr-info script and parse output
-  PR_INFO=$("$PR_INFO_SCRIPT")
-  if [ $? -ne 0 ]; then
-    echo "❌ Error: Failed to get PR information"
-    exit 1
-  fi
+Description:
+  Fetches human review comments on a PR (excludes CodeRabbit bot).
 
-  # Parse the output (space-separated: REPO_FULL_NAME PR_NUMBER)
-  REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
-  PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
+  Output: JSON with metadata, summary, and comments array
 
-elif [ $# -eq 2 ]; then
-  # Two arguments: direct repo and PR number (backwards compatibility)
-  REPO_FULL_NAME="$1"
-  PR_NUMBER="$2"
+  When using just PR number, repo is determined from current git context.
 
-else
-  echo "Usage: $0 <pr-info-script-path>"
-  echo "   OR: $0 <owner/repo> <pr_number>"
-  exit 1
+Options:
+  -h, --help    Show this help message
+
+EOF
+}
+
+# Check for help flag
+if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
+    show_usage
+    exit 0
 fi
 
-OWNER=$(echo "$REPO_FULL_NAME" | cut -d'/' -f1)
-REPO=$(echo "$REPO_FULL_NAME" | cut -d'/' -f2)
+# Parse arguments
+if [[ $# -eq 2 ]]; then
+    # Two args: owner/repo and pr_number
+    REPO_FULL_NAME="$1"
+    PR_NUMBER="$2"
+
+elif [[ $# -eq 1 ]]; then
+    INPUT="$1"
+
+    # Check if it's a GitHub URL
+    if [[ "$INPUT" =~ github\.com/([^/]+)/([^/]+)/pull/([0-9]+) ]]; then
+        REPO_FULL_NAME="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+        PR_NUMBER="${BASH_REMATCH[3]}"
+
+    # Check if it's just a number (PR number only - get repo from current git context)
+    elif [[ "$INPUT" =~ ^[0-9]+$ ]]; then
+        PR_NUMBER="$INPUT"
+        REPO_FULL_NAME=$(gh repo view --json owner,name -q '.owner.login + "/" + .name' 2>/dev/null)
+        if [[ -z "$REPO_FULL_NAME" ]]; then
+            echo "❌ Error: Could not determine repository. Run from a git repo or provide full URL." >&2
+            exit 1
+        fi
+
+    else
+        echo "❌ Error: Invalid input format: $INPUT" >&2
+        show_usage >&2
+        exit 1
+    fi
+
+else
+    show_usage >&2
+    exit 1
+fi
+
+# Validate repository format (owner/repo)
+if [[ ! "$REPO_FULL_NAME" =~ ^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$ ]]; then
+    echo "❌ Error: Invalid repository format. Expected 'owner/repo', got: $REPO_FULL_NAME" >&2
+    exit 1
+fi
+
+# Validate PR number is numeric
+if [[ ! "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+    echo "❌ Error: PR number must be numeric, got: $PR_NUMBER" >&2
+    exit 1
+fi
+
+OWNER="${REPO_FULL_NAME%%/*}"
+REPO="${REPO_FULL_NAME##*/}"
 
 # Step 1: Get the latest commit SHA and timestamp
 LATEST_COMMIT_SHA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER" --jq '.head.sha')
