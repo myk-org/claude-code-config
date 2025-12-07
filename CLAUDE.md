@@ -132,6 +132,8 @@ After ANY code change:
 
 ## Archon (via archon-manager) - REPLACES BUILTIN TOOLS
 
+> **NOTE:** This entire Archon section only applies if `mcp__archon__*` tools are available. If Archon MCP is not configured, skip this section entirely and use TodoWrite for task tracking.
+
 **Archon is your task manager AND knowledge base. NEVER use TodoWrite.**
 
 ### Task Management
@@ -147,13 +149,9 @@ After ANY code change:
 - **Store documents:** ALL specs/plans go in Archon, not codebase
 - **RAG queries:** Keep SHORT (2-5 keywords)
 
-## Workflows
+## Temp Files
 
-| Area | Rules |
-|------|-------|
-| **Git (via git-expert)** | Branches: `feature/`, `fix/`, `hotfix/`, `refactor/`<br>Never: work on main, `git add .`, `--no-verify`, PR without confirmation |
-| **Python** | Use `uv run` / `uvx` (never `python` or `pip` directly) |
-| **Temp files** | `/tmp/claude/` (never in project directory) |
+**ALL temp files MUST go to `/tmp/claude/`** - NEVER create temp files in project directory.
 
 ---
 
@@ -163,5 +161,5 @@ After ANY code change:
 ❌ Git commands → delegate to git-expert
 ❌ MCP tools → delegate to manager agents
 ❌ Multi-file exploration → delegate to Explore agent
-❌ TodoWrite → use Archon via archon-manager
+❌ TodoWrite → use Archon via archon-manager (only if Archon MCP available)
 ❌ Delegating slash commands → execute them AND their internal operations DIRECTLY (see SLASH COMMAND EXECUTION section)
