@@ -156,6 +156,10 @@ else
     COMMENTS_JSON=$(cat "$JSON_SOURCE")
   fi
 
+  # Sanitize JSON - remove any lines before the JSON array starts
+  # This handles cases where "STDIN" or other text gets prepended by hooks/shell
+  COMMENTS_JSON=$(echo "$COMMENTS_JSON" | sed -n '/^\[/,$p')
+
   # Validate JSON format
   if ! echo "$COMMENTS_JSON" | jq -e 'if type == "array" then true else false end' &>/dev/null; then
     echo "❌ Error: JSON input must be an array of comments" >&2
