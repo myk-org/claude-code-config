@@ -53,7 +53,6 @@ scripts/
 !agents/java-expert.md
 !agents/jenkins-expert.md
 !agents/kubernetes-expert.md
-!agents/pr-comment-manager.md
 !agents/python-expert.md
 !agents/technical-documentation-writer.md
 !agents/test-automator.md
@@ -63,17 +62,18 @@ scripts/
 !commands/code-review.md
 !commands/find-todos.md
 !commands/github-coderabbitai-review-handler.md
+!commands/github-pr-review.md
 !commands/github-review-handler.md
 !commands/scripts/general/get-pr-info.sh
 !commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
+!commands/scripts/github-pr-review/get-claude-md.sh
+!commands/scripts/github-pr-review/get-pr-diff.sh
+!commands/scripts/github-pr-review/post-pr-inline-comment.sh
 !commands/scripts/github-review-handler/get-human-reviews.sh
 !commands/todos-to-issues.md
 !commands/undo.md
 
 # scripts/
-!scripts/get-coderabbit-comments.sh
-!scripts/get-human-reviews.sh
-!scripts/get-pr-info.sh
 !scripts/inject-claude.sh
 !scripts/my-notifier.sh
 !scripts/post-compact-restore.py

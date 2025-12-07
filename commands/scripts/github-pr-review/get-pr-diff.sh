@@ -12,22 +12,27 @@ done
 # Script: get-pr-diff.sh
 # Purpose: Fetch PR diff and metadata needed for code review
 # Usage: get-pr-diff.sh <owner/repo> <pr_number>
-#        get-pr-diff.sh <pr-info-script-path>
+#        get-pr-diff.sh https://github.com/owner/repo/pull/123
+#        get-pr-diff.sh <pr_number>
 
 show_usage() {
     cat <<EOF
 Usage:
   $0 <owner/repo> <pr_number>
-  $0 <pr-info-script-path>
+  $0 https://github.com/owner/repo/pull/123
+  $0 <pr_number>
 
 Examples:
   $0 myakove/my-repo 123
-  $0 /path/to/get-pr-info.sh
+  $0 https://github.com/myakove/my-repo/pull/123
+  $0 194
 
 Description:
   Fetches PR diff and metadata needed for code review.
 
   Output: JSON with metadata, diff, and files array
+
+  When using just PR number, repo is determined from current git context.
 
 Options:
   -h, --help    Show this help message
@@ -41,55 +46,44 @@ if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
     exit 0
 fi
 
-# Validate number of arguments
-if [[ $# -lt 1 ]] || [[ $# -gt 2 ]]; then
-    echo "❌ Error: Invalid number of arguments" >&2
-    show_usage
-    exit 1
-fi
-
-# Determine if we have a script path or direct arguments
-if [[ $# -eq 1 ]]; then
-    # Single argument - treat as pr-info script path
-    PR_INFO_SCRIPT="$1"
-
-    if [[ ! -f "$PR_INFO_SCRIPT" ]]; then
-        echo "❌ Error: PR info script not found: $PR_INFO_SCRIPT" >&2
-        exit 1
-    fi
-
-    if [[ ! -x "$PR_INFO_SCRIPT" ]]; then
-        echo "❌ Error: PR info script is not executable: $PR_INFO_SCRIPT" >&2
-        exit 1
-    fi
-
-    # Execute the script to get owner/repo and pr_number
-    if ! PR_INFO=$("$PR_INFO_SCRIPT" 2>&1); then
-        echo "❌ Error: PR info script failed to execute" >&2
-        echo "$PR_INFO" >&2
-        exit 1
-    fi
-
-    if [[ -z "$PR_INFO" ]]; then
-        echo "❌ Error: PR info script returned empty output" >&2
-        exit 1
-    fi
-
-    read -r REPO_FULL_NAME PR_NUMBER <<< "$PR_INFO"
-
-    # Validate we got both values
-    if [[ -z "$REPO_FULL_NAME" ]] || [[ -z "$PR_NUMBER" ]]; then
-        echo "❌ Error: PR info script did not return valid data: $PR_INFO" >&2
-        exit 1
-    fi
-
-elif [[ $# -eq 2 ]]; then
-    # Two arguments - direct owner/repo and pr_number
+# Parse arguments
+if [[ $# -eq 2 ]]; then
+    # Two args: owner/repo and pr_number
     REPO_FULL_NAME="$1"
     PR_NUMBER="$2"
+
+elif [[ $# -eq 1 ]]; then
+    INPUT="$1"
+
+    # Check if it's a GitHub URL
+    if [[ "$INPUT" =~ github\.com/([^/]+)/([^/]+)/pull/([0-9]+) ]]; then
+        REPO_FULL_NAME="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+        PR_NUMBER="${BASH_REMATCH[3]}"
+
+    # Check if it's just a number (PR number only - get repo from current git context)
+    elif [[ "$INPUT" =~ ^[0-9]+$ ]]; then
+        PR_NUMBER="$INPUT"
+        # Get repo from current git context (same approach as get-pr-info.sh)
+        REPO_FULL_NAME=$(gh repo view --json owner,name -q '.owner.login + "/" + .name' 2>/dev/null)
+        if [[ -z "$REPO_FULL_NAME" ]]; then
+            echo "❌ Error: Could not determine repository. Run from a git repo or provide full URL." >&2
+            exit 1
+        fi
+
+    else
+        echo "❌ Error: Invalid input format: $INPUT" >&2
+        echo "" >&2
+        echo "Expected formats:" >&2
+        echo "  $0 <owner/repo> <pr_number>" >&2
+        echo "  $0 https://github.com/owner/repo/pull/123" >&2
+        echo "  $0 <pr_number>" >&2
+        exit 1
+    fi
+
 else
-    echo "❌ Error: Invalid number of arguments" >&2
-    show_usage
+    echo "Usage: $0 <owner/repo> <pr_number>" >&2
+    echo "       $0 https://github.com/owner/repo/pull/123" >&2
+    echo "       $0 <pr_number>" >&2
     exit 1
 fi
 
@@ -147,13 +141,7 @@ FILES_DATA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/files" 2>&1) || {
 }
 
 # Process files data to extract relevant fields
-FILES_ARRAY=$(echo "$FILES_DATA" | jq '[.[] | {
-    path: .filename,
-    status: .status,
-    additions: .additions,
-    deletions: .deletions,
-    patch: .patch // ""
-}]')
+FILES_ARRAY=$(echo "$FILES_DATA" | jq '[.[] | {path: .filename, status: .status, additions: .additions, deletions: .deletions, patch: (.patch // "")}]')
 
 # Escape diff content for JSON
 DIFF_ESCAPED=$(echo "$PR_DIFF" | jq -Rs .)
