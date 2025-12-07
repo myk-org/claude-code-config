@@ -213,17 +213,13 @@ Your choice:
 
 **🚨 CRITICAL: Only proceed if user selected findings in Step 5.**
 
-**For each selected finding, post an inline comment:**
+**Post all selected findings as a single review (like CodeRabbit):**
 
-```bash
-$POST_COMMENT_SCRIPT "$owner/$repo" "$pr_number" "$file_path" "$line" "$comment_body" "$head_sha"
-```
+1. Build a JSON array of comments
+2. Write to temp file
+3. Call the script with the file path
 
-**Building the comment body:**
-
-Construct the comment body as a STRING internally (do NOT run bash commands to build it). Then pass the complete string to the script.
-
-**Comment format template:**
+**Comment format template for each finding:**
 
 ```
 ### [SEVERITY] Title
@@ -251,82 +247,63 @@ Description of the issue.
 </details>
 ```
 
-**Rules:**
-- Build the comment body string INTERNALLY - do NOT run bash commands like `COMMENT_BODY=$(...)`
+**Rules for building comment bodies:**
 - Only include "Committable suggestion" section if suggestion is NOT "none"
 - Always include "Prompt for AI Agents" section
-- Pass the complete string directly to the script
+- Escape quotes and special characters for JSON
 
-**Then call the script ONCE per finding:**
+**Step-by-step execution:**
 
-```bash
-$POST_COMMENT_SCRIPT "owner/repo" "123" "src/db.py" "42" "<your comment body string>" "abc123sha"
+**STEP 1**: Build JSON array with this structure:
+```json
+[
+  {
+    "path": "src/main.py",
+    "line": 42,
+    "body": "### [CRITICAL] SQL Injection Vulnerability\n\nDescription..."
+  },
+  {
+    "path": "src/utils.py",
+    "line": 15,
+    "body": "### [WARNING] Missing error handling\n\nDescription..."
+  }
+]
 ```
 
-**Example call (single line for the script, body is the 5th argument):**
+**STEP 2**: Write the JSON to a temp file using the Write tool:
+- File path: `/tmp/claude/pr-review-comments.json`
+- Content: The JSON array you built in STEP 1
 
-The comment body can contain newlines - pass it as a quoted string argument to the script.
-
-**Example with real values:**
-
-For a finding with:
-- severity: CRITICAL
-- title: SQL Injection Vulnerability
-- file: src/db.py
-- line: 42
-- description: User input directly concatenated into SQL query
-- suggestion: query = cursor.execute("SELECT * FROM users WHERE name = ?", (user_input,))
-- ai_prompt: In src/db.py at line 42, replace string concatenation with parameterized query
-
-Build the comment body string internally (as text), then call:
-
+**STEP 3**: Call the script with the temp file path:
 ```bash
-$POST_COMMENT_SCRIPT "owner/repo" "123" "src/db.py" "42" "### [CRITICAL] SQL Injection Vulnerability
-
-User input directly concatenated into SQL query. This allows attackers to execute arbitrary SQL commands.
-
----
-
-<details>
-<summary>📝 Committable suggestion</summary>
-
-‼️ **IMPORTANT:** Carefully review the code before committing.
-
-\`\`\`suggestion
-query = cursor.execute(\"SELECT * FROM users WHERE name = ?\", (user_input,))
-\`\`\`
-
-</details>
-
-<details>
-<summary>🤖 Prompt for AI Agents</summary>
-
-In src/db.py at line 42, replace string concatenation with parameterized query. Change \`query = \"SELECT * FROM users WHERE name = '\" + user_input + \"'\"\` to use \`cursor.execute()\` with placeholders.
-
-</details>" "abc123sha"
+$POST_COMMENT_SCRIPT "$owner_repo" "$pr_number" "$head_sha" /tmp/claude/pr-review-comments.json
 ```
 
-**If finding has NO suggestion (suggestion = "none"):**
+**🚨 CRITICAL**:
+- Use the Write tool to create the temp file - do NOT use bash heredoc or echo
+- Do NOT use stdin (`-`) - always use a file path
+- The Write tool reliably creates the file without interference
 
-Omit the "Committable suggestion" section entirely - only include the title, description, and AI prompt sections
-
-**Show progress for each comment:**
+**Show progress:**
 ```text
-📤 Posting comment 1 of X: src/main.py:42 - SQL injection vulnerability
-✅ Posted successfully
+📤 Posting review with X comment(s) to PR #<pr_number>
+✅ Review posted successfully
+
+Comments posted:
+  - src/main.py:42 - SQL injection vulnerability
+  - src/utils.py:15 - Missing error handling
 ```
 
 **Or if error:**
 ```text
-❌ Failed to post comment: [error message]
+❌ Failed to post review: [error message]
 ```
 
 **Track results:**
-- Count successful posts
-- Count failures
 - Store which findings were posted
+- Note any failures
 
-**CHECKPOINT**: All selected comments posted (or attempted). **On failure:** Show errors in summary.
+**CHECKPOINT**: Review with all selected comments posted. **On failure:** Show errors in summary.
 
 ### Step 7: Summary
 
