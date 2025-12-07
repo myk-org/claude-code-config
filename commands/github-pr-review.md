@@ -81,16 +81,36 @@ The script checks local files first, then upstream GitHub. Returns empty if not 
 
 **Analyze the PR diff applying project rules from CLAUDE.md.**
 
-Review the diff for:
-1. Code quality and best practices
-2. Potential bugs or logic errors
-3. Security vulnerabilities (SQL injection, XSS, hardcoded credentials, etc.)
-4. Performance issues
-5. Missing error handling
-6. Code that violates CLAUDE.md rules (if any were found)
-7. Resource leaks or improper cleanup
-8. Race conditions or concurrency issues
-9. Type safety issues (missing type hints, incorrect types, mypy/typing errors)
+**🔍 REVIEW FOCUS AREAS:**
+
+**CRITICAL Priority:**
+- Security vulnerabilities (injection attacks, auth bypass, data exposure)
+- Hardcoded secrets, credentials, API keys, tokens
+- Logic errors that cause incorrect behavior or data corruption
+- Breaking changes to public APIs without proper handling
+
+**WARNING Priority:**
+- Missing error handling or input validation
+- Resource leaks (files, connections, handles not closed)
+- Race conditions or concurrency issues
+- Unhandled edge cases or boundary conditions
+- Type mismatches or unsafe type operations
+- Incorrect exception handling (swallowing errors, wrong types)
+
+**SUGGESTION Priority:**
+- Duplicate code that should be refactored
+- Misleading or unclear variable/function names
+- Dead code or unused variables
+- Missing documentation for public APIs or complex logic
+- Inconsistent naming conventions
+- Performance improvements (N+1 queries, unnecessary iterations)
+- Overly complex code that could be simplified
+
+**🚨 CLAUDE.md Rules (STRICT ENFORCEMENT):**
+- **ANY violation of project CLAUDE.md rules is CRITICAL severity**
+- Project-specific rules OVERRIDE general suggestions
+- If CLAUDE.md says "never do X" - finding X is CRITICAL
+- If CLAUDE.md says "always do Y" - missing Y is CRITICAL
 
 **For each issue found, document in this format:**
 
