@@ -66,16 +66,19 @@
   "enabledPlugins": {},
   "alwaysThinkingEnabled": true,
   "allowedTools": [
-    "mcp__archon*",
-    "mcp__github-webhook*",
-    "mcp__openshift*",
     "Edit(/tmp/claude/**)",
     "Write(/tmp/claude/**)",
     "Bash(mkdir -p /tmp/claude*)",
     "Bash(claude *)",
     "Bash(sed -n *)",
     "Bash(grep *)",
-    "Grep"
+    "Grep",
+    "Bash(~/.claude/commands/scripts/general/get-pr-info.sh*)",
+    "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh*)",
+    "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh*)",
+    "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh*)",
+    "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh*)",
+    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh*)"
   ],
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309
