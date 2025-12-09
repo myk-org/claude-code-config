@@ -236,12 +236,12 @@ Proceed directly to execution (no confirmation needed since user already approve
 
      ```text
      Do you approve proceeding without these changes? (yes/no)
-     - yes: Proceed to Phase 4 (testing and commit)
+     - yes: Proceed to Phase 3.5 (Post CodeRabbit Reply)
      - no: Reconsider and implement the changes
      ```
 
    - **If user says "no"**: Re-implement the changes as requested
-   - **If user says "yes"**: Proceed to Phase 4 (testing and commit)
+   - **If user says "yes"**: Proceed to Phase 3.5 (Post CodeRabbit Reply)
 
    **If ALL approved tasks were implemented**: Proceed directly to Phase 3.5
 
@@ -280,20 +280,28 @@ Proceed directly to execution (no confirmation needed since user already approve
 - Include count in header: "### Addressed (3)"
 - File paths should be in backticks for code formatting
 
-**STEP 2**: Post threaded replies to each addressed comment using `comment_id` from the JSON:
+**STEP 2**: Post threaded replies to ALL comments:
 
+**For ADDRESSED comments** - reply with "Done" and resolve:
 ```bash
-# For each addressed comment, post a threaded reply:
 ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "Done" --comment-id <comment_id> --resolve
+```
 
-# Example with real values from metadata:
-~/.claude/scripts/reply-to-pr-review.sh "myorg/myrepo" "123" "Done" --comment-id 2594758132 --resolve
+**For NOT ADDRESSED comments** - reply with reason and resolve:
+```bash
+~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "<reason>" --comment-id <comment_id> --resolve
+```
+
+**For SKIPPED comments** - reply with reason and resolve:
+```bash
+~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "<reason>" --comment-id <comment_id> --resolve
 ```
 
 **Where to get values:**
 - `<owner>/<repo>`: From JSON `metadata.owner` + "/" + `metadata.repo`
 - `<pr_number>`: From JSON `metadata.pr_number`
 - `<comment_id>`: From each comment's `comment_id` field
+- `<reason>`: The tracked reason for not_addressed or skipped outcomes
 
 **STEP 3**: Confirm replies were posted successfully before proceeding.
 
