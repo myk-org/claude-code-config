@@ -4,7 +4,7 @@ skipConfirmation: true
 
 # GitHub PR Review Command
 
-**Description:** Reviews a GitHub PR and posts inline review comments on selected findings.
+**Description:** Reviews a GitHub PR and posts inline review comments on selected findings using a multi-agent architecture.
 
 ---
 
@@ -30,66 +30,163 @@ skipConfirmation: true
 
 ---
 
+## Architecture Overview
+
+```
+PHASE 1a: Data Fetching (bash-expert agent)
+  → Run scripts to fetch PR diff and CLAUDE.md
+  → Return JSON with metadata, diff, files, claude_md_content
+
+PHASE 1b: Code Analysis (code-reviewer agent)
+  → Receive diff + CLAUDE.md from Phase 1a
+  → Perform full code review analysis
+  → Return JSON with findings array
+
+PHASE 2: User Selection (MAIN CONVERSATION - cannot delegate)
+  → Present findings list to user
+  → Wait for user selection (all/none/specific numbers)
+  → Parse selection
+
+PHASE 3: Post Comments (bash-expert agent)
+  → Receive selected findings + metadata
+  → Write JSON to /tmp/claude/pr-review-comments.json
+  → Run post-pr-inline-comment.sh
+  → Return success/failure for each
+
+PHASE 4: Summary (MAIN CONVERSATION)
+  → Display final summary
+```
+
+---
+
 ## Instructions
 
-### Script Paths
+### PHASE 1a: Data Fetching (DELEGATE TO bash-expert)
+
+**Route to `bash-expert` agent with this prompt:**
+
+```markdown
+# PR Data Fetching Task
+
+Execute these scripts to fetch PR information and project CLAUDE.md files.
+
+## Script Paths
 
 ```bash
 GET_DIFF_SCRIPT=~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh
-POST_COMMENT_SCRIPT=~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh
 GET_CLAUDE_MD_SCRIPT=~/.claude/commands/scripts/github-pr-review/get-claude-md.sh
 ```
 
-### Step 1: Get PR Diff and Metadata
+## Step 1: Get PR Diff and Metadata
 
-**Run the diff script with the provided arguments:**
+Run the diff script with the provided arguments:
 
 ```bash
-# Pass arguments directly - the script handles URL, PR number, or auto-detection
-$GET_DIFF_SCRIPT $ARGUMENTS
+$GET_DIFF_SCRIPT {ARGUMENTS}
 ```
+
+Arguments to pass: `{ARGUMENTS}`
 
 If no arguments provided, the script will auto-detect from current git context.
 
-**The script returns JSON with:**
+The script returns JSON with:
 - `metadata`: Contains `owner`, `repo`, `pr_number`, `head_sha`
 - `diff`: Full unified diff of the PR
 - `files`: Array of changed files
 
-**Store these values for later steps:**
-- `owner_repo` = metadata.owner + "/" + metadata.repo
-- `pr_number` = metadata.pr_number
-- `head_sha` = metadata.head_sha (required for posting comments)
+Store the complete JSON output.
 
-**CHECKPOINT**: PR diff retrieved successfully. **On failure:** Show script error and abort.
+## Step 2: Read Project CLAUDE.md Files
 
-### Step 2: Read Project CLAUDE.md Files
-
-**Run the script to fetch CLAUDE.md (uses same args as Step 1):**
+Run the script to fetch CLAUDE.md (uses same args as Step 1):
 
 ```bash
-CLAUDE_CONTENT=$($GET_CLAUDE_MD_SCRIPT $ARGUMENTS)
+CLAUDE_CONTENT=$($GET_CLAUDE_MD_SCRIPT {ARGUMENTS})
 ```
 
 The script checks local files first, then upstream GitHub. Returns empty if not found.
 
-**Use `$CLAUDE_CONTENT` in Step 3 as review context (may be empty).**
+## Output Format
 
-**CHECKPOINT**: CLAUDE.md search complete. Proceed to Step 3.
+Return a single JSON object combining both outputs:
 
-### Step 3: PHASE 1 - Perform Code Review (ANALYSIS ONLY)
+```json
+{
+  "metadata": {
+    "owner": "...",
+    "repo": "...",
+    "pr_number": 123,
+    "head_sha": "abc123..."
+  },
+  "diff": "<full unified diff>",
+  "files": ["path/to/file1.py", "path/to/file2.js"],
+  "claude_md_content": "<content from CLAUDE.md or empty string>"
+}
+```
 
-**Analyze the PR diff applying project rules from CLAUDE.md.**
+If either script fails, include an "error" field with the error message.
+```
 
-**🔍 REVIEW FOCUS AREAS:**
+**Replace `{ARGUMENTS}` with:** `$ARGUMENTS` (the actual arguments passed to this command)
 
-**CRITICAL Priority:**
+**Store the agent's JSON response for Phase 1b.**
+
+**If agent returns malformed JSON:**
+- Show error: "Failed to parse agent response. Expected valid JSON."
+- Display first 500 characters of raw agent output
+- Abort workflow
+
+**CHECKPOINT**: PR data retrieved successfully.
+- **On failure:** Show error and abort.
+- **On empty diff (no files changed):** Show "PR has no changes to review" and complete workflow.
+
+---
+
+### PHASE 1b: Code Analysis (DELEGATE TO code-reviewer)
+
+**Route to `code-reviewer` agent with this prompt:**
+
+```markdown
+ultrathink
+
+# PR Code Review Analysis Task
+
+Perform a comprehensive code review of this pull request.
+
+## PR Information
+
+**Metadata:**
+```json
+{METADATA}
+```
+
+**Changed Files:**
+```
+{FILES}
+```
+
+**Project CLAUDE.md Rules:**
+```
+{CLAUDE_MD_CONTENT}
+```
+
+**Full PR Diff:**
+```diff
+{DIFF}
+```
+
+## Review Criteria
+
+### CRITICAL Priority
+
 - Security vulnerabilities (injection attacks, auth bypass, data exposure)
 - Hardcoded secrets, credentials, API keys, tokens
 - Logic errors that cause incorrect behavior or data corruption
 - Breaking changes to public APIs without proper handling
+- **ANY violation of project CLAUDE.md rules is CRITICAL severity**
 
-**WARNING Priority:**
+### WARNING Priority
+
 - Missing error handling or input validation
 - Resource leaks (files, connections, handles not closed)
 - Race conditions or concurrency issues
@@ -97,7 +194,8 @@ The script checks local files first, then upstream GitHub. Returns empty if not 
 - Type mismatches or unsafe type operations
 - Incorrect exception handling (swallowing errors, wrong types)
 
-**SUGGESTION Priority:**
+### SUGGESTION Priority
+
 - Duplicate code that should be refactored
 - Misleading or unclear variable/function names
 - Dead code or unused variables
@@ -106,83 +204,169 @@ The script checks local files first, then upstream GitHub. Returns empty if not 
 - Performance improvements (N+1 queries, unnecessary iterations)
 - Overly complex code that could be simplified
 
-**🚨 CLAUDE.md Rules (STRICT ENFORCEMENT):**
-- **ANY violation of project CLAUDE.md rules is CRITICAL severity**
+## CLAUDE.md Rules Enforcement (STRICT)
+
 - Project-specific rules OVERRIDE general suggestions
 - If CLAUDE.md says "never do X" - finding X is CRITICAL
 - If CLAUDE.md says "always do Y" - missing Y is CRITICAL
+- Enforce all rules defined in the CLAUDE.md content provided above
 
-**For each issue found, document in this format:**
+## Analysis Rules
 
-```
----FINDING---
-FILE: <exact file path>
-LINE: <line number in the new version of the file>
-SEVERITY: <CRITICAL|WARNING|SUGGESTION>
-TITLE: <brief title, max 50 chars>
-DESCRIPTION: <detailed description of the issue and how to fix it>
-AI_PROMPT: <specific actionable instruction for AI agents to fix this issue>
-SUGGESTION: <exact replacement code, or "none" if no simple fix>
----END---
-```
-
-**Rules:**
 1. LINE must be the line number in the NEW version of the file (right side of diff)
-2. Only include findings for lines that are part of the diff (added or modified lines)
+2. Only include findings for lines that are part of the diff (added or modified lines with `+` prefix)
 3. Include specific code suggestions when applicable
-4. AI_PROMPT must provide precise, actionable instructions
+4. AI_PROMPT must provide precise, actionable instructions for AI agents to fix the issue
 5. SUGGESTION should contain exact replacement code only when a simple fix is possible
 6. Prioritize critical issues and security vulnerabilities over style suggestions
 7. Be specific about what needs to change and why
 
-**Parse all findings from your analysis and store:**
-- `file`: File path
-- `line`: Line number (in new version)
-- `severity`: CRITICAL, WARNING, or SUGGESTION
-- `title`: Brief title
-- `description`: Detailed description
-- `ai_prompt`: Specific actionable fix instructions for AI agents
-- `suggestion`: Exact replacement code (or null/empty if not applicable)
+## Output Format
 
-**CHECKPOINT**: All findings documented and parsed. **On failure:** Abort workflow.
+Return a JSON object with this structure:
 
-### Step 4: PHASE 2 - Present Findings to User (SELECTION PHASE)
+```json
+{
+  "findings": [
+    {
+      "id": 1,
+      "file": "path/to/file.py",
+      "line": 42,
+      "severity": "CRITICAL",
+      "title": "SQL injection vulnerability",
+      "description": "The query concatenates user input directly without parameterization, allowing SQL injection attacks. Use parameterized queries instead.",
+      "ai_prompt": "Replace the string concatenation in the SQL query with parameterized query using placeholders. Use the database driver's parameter binding mechanism to safely pass the user_input value.",
+      "suggestion": "cursor.execute('SELECT * FROM users WHERE id = ?', (user_input,))"
+    },
+    {
+      "id": 2,
+      "file": "path/to/file.py",
+      "line": 88,
+      "severity": "WARNING",
+      "title": "Missing error handling",
+      "description": "The file operation does not handle potential IOError exceptions, which could crash the application if the file is locked or permissions are denied.",
+      "ai_prompt": "Wrap the file operation in a try-except block to catch IOError and handle it gracefully by logging the error and returning an appropriate error response.",
+      "suggestion": "try:\n    with open(filename, 'r') as f:\n        return f.read()\nexcept IOError as e:\n    logger.error(f'Failed to read file: {e}')\n    raise"
+    },
+    {
+      "id": 3,
+      "file": "path/to/utils.js",
+      "line": 120,
+      "severity": "SUGGESTION",
+      "title": "Consider using async/await",
+      "description": "The Promise chain could be more readable using async/await syntax.",
+      "ai_prompt": "Convert the Promise chain to use async/await syntax. Declare the function as async and use await for the fetch call and json parsing.",
+      "suggestion": ""
+    }
+  ],
+  "summary": {
+    "critical": 1,
+    "warning": 1,
+    "suggestion": 1,
+    "total": 3
+  }
+}
+```
+
+**Rules for findings:**
+- Each finding MUST have a unique sequential id
+- file: Exact path from the diff
+- line: Line number in NEW version (right side of diff)
+- severity: One of "CRITICAL", "WARNING", "SUGGESTION"
+- title: Brief title (max 50 chars)
+- description: Detailed description of the issue and how to fix it
+- ai_prompt: Specific actionable instruction for AI agents to fix this issue
+- suggestion: Exact replacement code if simple fix exists, otherwise empty string
+
+**If no issues found, return:**
+```json
+{
+  "findings": [],
+  "summary": {
+    "critical": 0,
+    "warning": 0,
+    "suggestion": 0,
+    "total": 0
+  }
+}
+```
+
+Return ONLY the JSON object, no additional commentary.
+```
+
+**Replace placeholders:**
+- `{METADATA}` = metadata object from Phase 1a
+- `{FILES}` = files array from Phase 1a (joined with newlines)
+- `{CLAUDE_MD_CONTENT}` = claude_md_content from Phase 1a (or "No CLAUDE.md found" if empty)
+- `{DIFF}` = diff content from Phase 1a
+
+**Parse the agent's JSON response.**
+
+**If agent returns malformed JSON:**
+- Show error: "Failed to parse agent response. Expected valid JSON."
+- Display first 500 characters of raw agent output
+- Abort workflow
+
+**CHECKPOINT**: Code review analysis complete. **On failure:** Show error and abort.
+
+---
+
+### PHASE 2: User Selection (MAIN CONVERSATION - DO NOT DELEGATE)
 
 ## ⛔ STOP - MANDATORY USER INTERACTION ⛔
 
 **YOU MUST STOP HERE AND WAIT FOR USER INPUT.**
 
-Do NOT proceed to Step 5 or Step 6 until the user has responded.
+Do NOT proceed to Phase 3 until the user has responded.
 Do NOT post any comments without user selection.
 
 ---
 
-**🚨 CRITICAL: This is the SELECTION phase. Do NOT post ANY comments yet. Only present and collect decisions.**
+**If findings array is empty:**
 
-**If no findings were found:**
 ```text
-✅ No issues found in PR #<pr_number>
+✅ No issues found in PR #{pr_number}
 
 The code-reviewer agent did not identify any critical issues, warnings, or suggestions.
 ```
+
 Stop here - workflow complete.
 
-**If findings exist, present as a simple numbered list:**
+---
+
+**If findings exist, present findings with full details:**
+
+Display each finding grouped by severity (CRITICAL first, then WARNING, then SUGGESTION):
 
 ```text
-📋 Found X issues in PR #<pr_number> (<owner>/<repo>):
+📋 Found {total} issue(s) in PR #{pr_number} ({owner}/{repo}):
 
-CRITICAL Issues:
-1. [CRITICAL] src/main.py:42 - SQL injection vulnerability
-2. [CRITICAL] src/auth.py:15 - Hardcoded credentials
+───────────────────────────
+[{id}] {severity}
+───────────────────────────
+FILE: {file}
+LINE: {line}
+TITLE: {title}
+DESCRIPTION: {description}
+AI_PROMPT: {ai_prompt}
+SUGGESTION: {suggestion or "none"}
+───────────────────────────
 
-WARNINGS:
-3. [WARNING] src/utils.py:88 - Missing error handling
-4. [WARNING] src/api.py:120 - Unchecked null pointer
+───────────────────────────
+[{id}] {severity}
+───────────────────────────
+FILE: {file}
+LINE: {line}
+TITLE: {title}
+DESCRIPTION: {description}
+AI_PROMPT: {ai_prompt}
+SUGGESTION: {suggestion or "none"}
+───────────────────────────
 
-SUGGESTIONS:
-5. [SUGGESTION] src/handlers.py:200 - Consider using async
-6. [SUGGESTION] src/db.py:55 - Could cache this query
+... (repeat for each finding)
+
+───────────────────────────
+📋 Summary: {critical} CRITICAL, {warning} WARNING, {suggestion} SUGGESTION
 
 Which findings should be posted as PR comments?
 Options:
@@ -192,6 +376,12 @@ Options:
 
 Your choice:
 ```
+
+**Display rules:**
+- Group findings by severity (all CRITICAL, then all WARNING, then all SUGGESTION)
+- Show complete details for each finding
+- If suggestion field is empty string, display "none"
+- Preserve line breaks in description and ai_prompt fields
 
 **MANDATORY**: Wait for user response before proceeding.
 
@@ -204,47 +394,87 @@ Your choice:
 
 **CHECKPOINT**: User has made a selection. **On failure:** Re-prompt user for valid input.
 
-### Step 5: Parse User Selection
+---
+
+### Parse User Selection
 
 **User input options:**
 
 **"all" or "ALL":**
 - Select ALL findings for posting
-- Proceed to Step 6
+- Proceed to Phase 3
 
 **"none" or "NONE":**
 - Skip posting phase entirely
-- Jump to Step 7 (summary) with "no comments posted"
+- Jump to Phase 4 (summary) with "no comments posted"
 
 **Specific numbers (e.g., "1 4 10 3" or "1,4,10,3"):**
-- Parse numbers (split by spaces or commas)
-- Validate each number exists in findings list
+- Parse numbers (split by spaces or commas, trim whitespace)
+- Validate each number exists in findings list (1 to total)
 - Select only those findings
-- If any invalid numbers, show error and ask again
-- Proceed to Step 6
+- If any invalid numbers, show error and ask again:
+  ```
+  ❌ Invalid selection. Found invalid numbers: {invalid_list}
+  Valid range is 1-{total}. Please try again:
+  ```
+- Proceed to Phase 3
 
 **Invalid input:**
 - Show error: "Invalid input. Please enter 'all', 'none', or specific numbers like '1 3 5'"
 - Ask again
 
+**Parsing Rules (for specific numbers):**
+1. Trim whitespace from input
+2. Split by BOTH comma AND space (regex: `/[,\s]+/`)
+3. Remove empty strings from result
+4. Convert each to integer
+5. Deduplicate if user enters same number twice
+6. Validate all are in range [1, total]
+7. If ANY is invalid, reject entire input and re-prompt
+
 **CHECKPOINT**: Valid selection parsed. **On failure:** Re-prompt user for valid input.
 
-### Step 6: PHASE 3 - Post Inline Comments (EXECUTION PHASE)
+---
 
-**🚨 CRITICAL: Only proceed if user selected findings in Step 5.**
+### PHASE 3: Post Comments (DELEGATE TO bash-expert)
 
-**Post all selected findings as a single review (like CodeRabbit):**
+**Only proceed if user selected findings (not "none").**
 
-1. Build a JSON array of comments
-2. Write to temp file
-3. Call the script with the file path
+**Route to `bash-expert` agent with this prompt:**
 
-**Comment format template for each finding:**
+```markdown
+# Post PR Review Comments Task
 
+Post inline review comments to GitHub PR using the provided findings.
+
+## Metadata
+
+```json
+{
+  "owner_repo": "{owner}/{repo}",
+  "pr_number": {pr_number},
+  "head_sha": "{head_sha}"
+}
 ```
-### [SEVERITY] Title
 
-Description of the issue.
+## Selected Findings
+
+```json
+{SELECTED_FINDINGS}
+```
+
+## Instructions
+
+### Step 1: Build Comment Bodies
+
+For each finding, build a comment body using this template:
+
+**If finding has non-empty suggestion:**
+
+```markdown
+### [{severity}] {title}
+
+{description}
 
 ---
 
@@ -254,7 +484,7 @@ Description of the issue.
 ‼️ **IMPORTANT:** Carefully review the code before committing.
 
 ```suggestion
-<replacement code here>
+{suggestion}
 ```
 
 </details>
@@ -262,83 +492,143 @@ Description of the issue.
 <details>
 <summary>🤖 Prompt for AI Agents</summary>
 
-<AI prompt instructions here>
+{ai_prompt}
 
 </details>
 ```
 
-**Rules for building comment bodies:**
-- Only include "Committable suggestion" section if suggestion is NOT "none"
-- Always include "Prompt for AI Agents" section
-- Escape quotes and special characters for JSON
+**If finding has empty suggestion:**
 
-**Step-by-step execution:**
+```markdown
+### [{severity}] {title}
 
-**STEP 1**: Build JSON array with this structure:
+{description}
+
+---
+
+<details>
+<summary>🤖 Prompt for AI Agents</summary>
+
+{ai_prompt}
+
+</details>
+```
+
+### Step 2: Build JSON Array
+
+Create a JSON array with this structure:
+
 ```json
 [
   {
-    "path": "src/main.py",
+    "path": "path/to/file.py",
     "line": 42,
-    "body": "### [CRITICAL] SQL Injection Vulnerability\n\nDescription..."
+    "body": "<comment body from template>"
   },
   {
-    "path": "src/utils.py",
-    "line": 15,
-    "body": "### [WARNING] Missing error handling\n\nDescription..."
+    "path": "path/to/file.js",
+    "line": 88,
+    "body": "<comment body from template>"
   }
 ]
 ```
 
-**STEP 2**: Write the JSON to a temp file using the Write tool:
-- File path: `/tmp/claude/pr-review-comments.json`
-- Content: The JSON array you built in STEP 1
+**CRITICAL**: Properly escape all special characters for JSON (quotes, newlines, backslashes).
 
-**STEP 3**: Call the script with the temp file path:
+### Step 3: Write JSON to Temp File
+
+Use the Write tool to create the file:
+- Path: `/tmp/claude/pr-review-comments.json`
+- Content: The JSON array from Step 2
+
+**IMPORTANT**: Use the Write tool directly (not bash commands like heredoc or echo) to ensure proper JSON escaping.
+
+### Step 4: Post Comments
+
+Run the post script:
+
 ```bash
-$POST_COMMENT_SCRIPT "$owner_repo" "$pr_number" "$head_sha" /tmp/claude/pr-review-comments.json
+POST_SCRIPT=~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh
+$POST_SCRIPT "{owner_repo}" "{pr_number}" "{head_sha}" /tmp/claude/pr-review-comments.json
 ```
 
-**🚨 CRITICAL**:
-- Use the Write tool to create the temp file - do NOT use bash heredoc or echo
-- Do NOT use stdin (`-`) - always use a file path
-- The Write tool reliably creates the file without interference
+### Output Format
 
-**Show progress:**
-```text
-📤 Posting review with X comment(s) to PR #<pr_number>
-✅ Review posted successfully
+Return a JSON object with the results:
 
-Comments posted:
-  - src/main.py:42 - SQL injection vulnerability
-  - src/utils.py:15 - Missing error handling
+```json
+{
+  "status": "success",
+  "posted": [
+    {"id": 1, "file": "path/to/file.py", "line": 42, "status": "success"},
+    {"id": 2, "file": "path/to/file.js", "line": 88, "status": "success"}
+  ],
+  "failed": [],
+  "review_url": "https://github.com/{owner}/{repo}/pull/{pr_number}"
+}
 ```
 
-**Or if error:**
-```text
-❌ Failed to post review: [error message]
+**If any comments fail, include them in the "failed" array:**
+
+```json
+{
+  "status": "partial",
+  "posted": [...],
+  "failed": [
+    {"id": 3, "file": "path/to/file.py", "line": 120, "status": "failed", "error": "Line not part of diff"}
+  ],
+  "review_url": "..."
+}
 ```
 
-**Track results:**
-- Store which findings were posted
-- Note any failures
+**If all comments fail:**
 
-**CHECKPOINT**: Review with all selected comments posted. **On failure:** Show errors in summary.
+```json
+{
+  "status": "failed",
+  "posted": [],
+  "failed": [...],
+  "error": "Full error message from script"
+}
+```
 
-### Step 7: Summary
+Show progress while working:
+```
+📤 Posting review with {count} comment(s) to PR #{pr_number}
+```
 
-**Show final summary:**
+Return ONLY the JSON object after completion.
+```
+
+**Replace placeholders:**
+- `{owner}`, `{repo}`, `{pr_number}`, `{head_sha}` from metadata
+- `{SELECTED_FINDINGS}` = JSON array of selected findings
+
+**Parse the agent's JSON response.**
+
+**If agent returns malformed JSON:**
+- Show error: "Failed to parse agent response. Expected valid JSON."
+- Display first 500 characters of raw agent output
+- Abort workflow
+
+**CHECKPOINT**: Comments posted. **On failure:** Show errors in summary.
+
+---
+
+### PHASE 4: Summary (MAIN CONVERSATION)
+
+**Display final summary based on results:**
 
 ```text
 ## ✅ PR Review Complete
 
-**PR**: #<pr_number> (<owner>/<repo>)
+**PR**: #{pr_number} ({owner}/{repo})
 
 **Review Results:**
-- Total findings: X
-- Comments posted: Y
-- Skipped: Z
-- Failed: W (if any)
+- Total findings: {total_findings}
+- Comments posted: {posted_count}
+- Skipped: {skipped_count}
+- Failed: {failed_count} (if any)
 
 **Posted comments:**
 ✅ [CRITICAL] src/main.py:42 - SQL injection vulnerability
@@ -349,8 +639,14 @@ Comments posted:
 ⏭️ [SUGGESTION] src/db.py:55 - Could cache this query
 
 **Failed (if any):**
-❌ [WARNING] src/handlers.py:120 - Failed: [error message]
+❌ [WARNING] src/handlers.py:120 - Failed: Line not part of diff
 ```
+
+**Calculate counts:**
+- `total_findings` = total from Phase 1b summary
+- `posted_count` = length of posted array from Phase 3 (or 0 if user selected "none")
+- `skipped_count` = findings NOT selected by user
+- `failed_count` = length of failed array from Phase 3
 
 **Workflow complete.**
 
@@ -359,48 +655,49 @@ Comments posted:
 ## 🚨 ENFORCEMENT RULES
 
 **NEVER skip phases** - all phases are mandatory:
-1. Phase 1: Code Review (direct analysis)
-2. Phase 2: Present Findings and Get User Selection
-3. Phase 3: Post Selected Comments (only if user selected findings)
-4. Summary
+1. Phase 1a: Data Fetching (bash-expert agent)
+2. Phase 1b: Code Analysis (code-reviewer agent)
+3. Phase 2: User Selection (main conversation - CANNOT delegate)
+4. Phase 3: Post Comments (bash-expert agent - only if user selected findings)
+5. Phase 4: Summary (main conversation)
+
+**NEVER delegate Phase 2** - user interaction must happen in main conversation
 
 **NEVER post comments without user approval** - user MUST explicitly select which findings to post
 
 **NEVER modify files** - this is a review-only command (no code changes, no commits)
 
-**ALWAYS wait for user selection** before posting any comments
+**ALWAYS wait for user selection** in Phase 2 before proceeding to Phase 3
 
-**ALWAYS use the exact FINDING FORMAT** specified in Step 3 for documenting issues
+**ALWAYS validate agent responses** - ensure JSON is properly formatted before parsing
 
-**ALWAYS validate line numbers** - only comment on lines that are part of the diff (new or modified lines)
-
-**ALWAYS include head_sha** when posting comments - required for GitHub API
+**ALWAYS use Write tool for temp file** in Phase 3 - never bash heredoc or echo
 
 ---
 
 ## Error Handling
 
-**If PR parsing fails:**
-- Show error message
+**If Phase 1a (data fetching) fails:**
+- Show error message from bash-expert agent
 - Ask user to verify PR exists and is accessible
 - Abort workflow
 
-**If get-pr-diff.sh fails:**
-- Show error message
-- Ask user to verify PR number and permissions
-- Abort workflow
-
-**If code review analysis fails:**
-- Show error message
+**If Phase 1b (code review) fails:**
+- Show error message from code-reviewer agent
 - Ask user if they want to retry
 - Do not proceed to posting phase
 
-**If posting individual comment fails:**
-- Log the failure
-- Continue posting other comments
-- Show all failures in summary
+**If Phase 3 (posting) fails partially:**
+- Continue workflow
+- Show failed comments in Phase 4 summary
+- Suggest checking GitHub permissions
 
-**If all comment posts fail:**
-- Show error summary
+**If Phase 3 (posting) fails completely:**
+- Show error summary in Phase 4
 - Suggest checking GitHub permissions
 - Suggest checking head_sha validity
+
+**If user provides invalid selection:**
+- Re-prompt with clear error message
+- Show valid options again
+- Wait for corrected input
