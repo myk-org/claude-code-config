@@ -184,20 +184,30 @@ Proceed directly to execution (no confirmation needed since user already approve
    - Include count in header: "### Addressed (3)"
    - File paths should be in backticks for code formatting
 
-   - **STEP 2** (REQUIRED): For each comment that was addressed, post a threaded reply:
+   - **STEP 2** (REQUIRED): Post threaded replies to ALL comments:
 
+   **For ADDRESSED comments** - reply with "Done" and resolve:
    ```bash
-   # For each addressed comment, post a threaded reply using its comment_id:
    ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "Done" --comment-id <comment_id> --resolve
+   ```
 
-   # Example with real values:
-   ~/.claude/scripts/reply-to-pr-review.sh "myorg/myrepo" "123" "Done" --comment-id 2594758132 --resolve
+   **For NOT ADDRESSED comments** - reply with reason (NO resolve):
+   ```bash
+   ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "<reason>" --comment-id <comment_id>
+   ```
+
+   **For SKIPPED comments** - reply with reason (NO resolve):
+   ```bash
+   ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "<reason>" --comment-id <comment_id>
    ```
 
    **Where to get values:**
    - `<owner>/<repo>`: From JSON `metadata.owner` + "/" + `metadata.repo`
    - `<pr_number>`: From JSON `metadata.pr_number`
    - `<comment_id>`: From each comment's `comment_id` field
+   - `<reason>`: The tracked reason for not_addressed or skipped outcomes
+
+   **Key difference from CodeRabbit handler:** Human reviewer comments that are not addressed or skipped do NOT get resolved - only replied to. This allows the human reviewer to follow up.
 
    - **CHECKPOINT**: Replies posted to PR
 
