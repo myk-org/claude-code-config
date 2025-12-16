@@ -7,4 +7,4 @@ input_json=$(cat)
 notification_message=$(echo "$input_json" | jq -r '.message')
 
 # Send the notification
-notify-send --wait "Claude: $notification_message"
+notify-send --icon="" --wait "Claude: $notification_message"
