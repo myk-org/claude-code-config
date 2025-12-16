@@ -1,138 +1,106 @@
-# How to Use UTCP Code-Mode with Claude Code
+# How to Use UTCP Code-Mode
 
-## ✅ Setup Complete!
+## Overview
 
-The Archon UTCP Code-Mode MCP server is now configured in your Claude Code.
+The UTCP Code-Mode server enables batched TypeScript code execution with MCP server tools available as async functions.
 
 ## How It Works
 
 ```
-User: "Get all high priority tasks and generate a summary report"
+Your Application
   ↓
-Claude Code calls MCP tool: call_tool_chain
+Calls: client.callToolChain(typescript_code)
   ↓
-@utcp/code-mode-mcp executes TypeScript:
-  const tasks = await archon.find_tasks({ status: 'todo' });
-  const highPri = tasks.tasks.filter(t => t.priority > 80);
-  return { count: highPri.length, tasks: highPri.map(t => t.title) };
+UTCP Code-Mode Server executes TypeScript:
+  const items = await myserver.list_items({ status: 'active' });
+  const filtered = items.filter(i => i.priority > 80);
+  return { count: filtered.length, items: filtered.map(i => i.title) };
   ↓
-Results back to Claude
+Results returned to your application
   ↓
-Claude writes the summary report
+Process the results
 ```
 
-## Available Tool
+## Available Functionality
 
-Claude Code now has access to **`call_tool_chain`** which executes TypeScript code with `archon.*` functions available.
+The server provides **`callToolChain`** which executes TypeScript code with your configured MCP server tools available as async functions.
 
-### All Archon Functions Available
+### MCP Server Functions
 
-The TypeScript code can call any Archon MCP tool:
-- `archon.health_check()`
-- `archon.find_tasks({ status, project_id, limit, ... })`
-- `archon.get_task({ task_id })`
-- `archon.create_task({ project_id, title, description, ... })`
-- `archon.update_task({ task_id, status, assignee, ... })`
-- `archon.delete_task({ task_id })`
-- `archon.list_projects({ limit, ... })`
-- `archon.get_project({ project_id })`
-- `archon.project_status({ project_id })`
-- `archon.rag_search_knowledge_base({ query, limit, ... })`
-- `archon.rag_search_code_examples({ query, limit })`
-- `archon.rag_get_sources()`
-- And all other tools exposed by Archon MCP
+The TypeScript code can call any tool exposed by your configured MCP servers. Function names correspond to the tool names provided by your MCP server. For example:
+
+- `myserver.health_check()`
+- `myserver.list_items({ status, limit, ... })`
+- `myserver.get_item({ id })`
+- `myserver.create_item({ title, description, ... })`
+- `myserver.update_item({ id, status, ... })`
+- And any other tools your MCP server exposes
 
 ## Example Usage
 
 ### Simple Query
-```
-You: "Show me my TODO tasks"
-
-Claude writes and executes:
-const tasks = await archon.find_tasks({ status: 'todo' });
-return tasks;
+```typescript
+const { result } = await client.callToolChain(`
+  const items = await myserver.list_items({ status: 'active' });
+  return items;
+`);
 ```
 
 ### Batched Operations
-```
-You: "Get project status and all todo tasks for that project"
-
-Claude writes and executes:
-const project = await archon.get_project({ project_id: 'proj-id' });
-const tasks = await archon.find_tasks({
-  project_id: project.id,
-  status: 'todo'
-});
-return { project, tasks };
+```typescript
+const { result } = await client.callToolChain(`
+  const project = await myserver.get_project({ id: 'proj-id' });
+  const items = await myserver.list_items({
+    project_id: project.id,
+    status: 'active'
+  });
+  return { project, items };
+`);
 ```
 
 ### Complex Workflow
-```
-You: "Find high priority tasks, search for related docs, and create a summary"
+```typescript
+const { result } = await client.callToolChain(`
+  const items = await myserver.list_items({ status: 'pending' });
+  const urgent = items.filter(i => i.priority > 80);
 
-Claude writes and executes:
-const tasks = await archon.find_tasks({ status: 'todo' });
-const urgent = tasks.tasks.filter(t => t.priority > 80);
+  const details = await Promise.all(
+    urgent.map(item =>
+      myserver.get_item_details({
+        id: item.id,
+        include_metadata: true
+      })
+    )
+  );
 
-const searches = await Promise.all(
-  urgent.map(task =>
-    archon.rag_search_knowledge_base({
-      query: task.title,
-      limit: 3
-    })
-  )
-);
-
-return {
-  urgentCount: urgent.length,
-  tasks: urgent.map((task, i) => ({
-    title: task.title,
-    relatedDocs: searches[i].results.length
-  }))
-};
-```
-
-## Restart Required
-
-**IMPORTANT:** Restart Claude Code to load the new MCP server:
-
-```bash
-# If running in terminal
-Ctrl+C and restart: claude
-
-# Changes take effect on next launch
+  return {
+    urgentCount: urgent.length,
+    items: urgent.map((item, i) => ({
+      title: item.title,
+      details: details[i]
+    }))
+  };
+`);
 ```
 
-## Verification
+## Benefits Over Traditional Approach
 
-After restart, check that the MCP server loaded:
-
-```bash
-claude
-
-# In Claude Code:
-/mcp
-# You should see "archon-codemode" in the list
-```
-
-## Benefits Over CLI Approach
-
-### CLI Skill (Current)
+### Traditional CLI/Direct Tools
 - Sequential operations: call → wait → call → wait
-- Each operation is a separate Bash command
-- Context grows with each call
+- Each operation is a separate invocation
+- Must process data client-side
 - Good for: Simple, single operations
 
-### UTCP Code-Mode (New)
+### UTCP Code-Mode
 - Batched operations: single code block, multiple calls
-- In-sandbox data processing before returning to Claude
-- Claude can write complex business logic in TypeScript
+- In-sandbox data processing before returning
+- Complex business logic in TypeScript
 - Good for: Complex workflows, data transformation, multi-step operations
 
-## Both Work Together!
+## Hybrid Approach
 
-You can use both:
-- **CLI Skill**: Quick single operations via `archon skill`
-- **UTCP Code-Mode**: Complex batched workflows when Claude needs to write TypeScript
+You can combine both approaches:
+- **Direct tools**: Quick single operations
+- **UTCP Code-Mode**: Complex batched workflows and data processing
 
-Claude will choose the best approach based on the task.
+Choose the best approach based on your task requirements.
