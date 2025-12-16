@@ -145,11 +145,4 @@ Before delivering analysis:
 - [ ] Quick wins highlighted
 - [ ] Long-term improvements separated
 
-## Archon Integration
-
-Before analysis:
-1. Search for refactoring patterns: `rag_search_knowledge_base(query="refactoring patterns code quality")`
-2. Check project refactoring history
-3. Update Archon with findings and patterns
-
 Provide specific, actionable recommendations with clear before/after examples where helpful. Include rationale for each suggestion and potential risks or considerations for implementation. Structure your findings in a clear, prioritized format that enables developers to tackle improvements incrementally. Focus on high-impact, low-risk improvements first.

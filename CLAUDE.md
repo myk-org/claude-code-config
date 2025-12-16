@@ -78,7 +78,6 @@
 | Debugging | `debugger` |
 | API docs | `api-documenter` |
 | **MCP Tools** |
-| `mcp__archon__*` | `archon-manager` |
 | `mcp__github-webhook-logs-*__*` | `webhook-logs-manager` |
 | `mcp__openshift-python-wrapper__*` | `openshift-manager` |
 | `mcp__chrome-devtools__*` | `chrome-devtool-manager` |
@@ -130,25 +129,6 @@ After ANY code change:
 ❌ WRONG: Agent1 → wait → Agent2 → wait → Agent3
 ✅ RIGHT: Agent1 + Agent2 + Agent3 in ONE message
 
-## Archon (via archon-manager) - REPLACES BUILTIN TOOLS
-
-> **NOTE:** This entire Archon section only applies if `mcp__archon__*` tools are available. If Archon MCP is not configured, skip this section entirely and use TodoWrite for task tracking.
-
-**Archon is your task manager AND knowledge base. NEVER use TodoWrite.**
-
-### Task Management
-**Before ANY work:** Route to `archon-manager` agent
-
-1. Check/create task
-2. Update status to `doing`
-3. Do work via specialist agents
-4. Update status to `review` → `done`
-
-### RAG Knowledge Base
-- **Search knowledge:** Query Archon for specs, docs, context
-- **Store documents:** ALL specs/plans go in Archon, not codebase
-- **RAG queries:** Keep SHORT (2-5 keywords)
-
 ## Temp Files
 
 **ALL temp files MUST go to `/tmp/claude/`** - NEVER create temp files in project directory.
@@ -161,5 +141,5 @@ After ANY code change:
 ❌ Git commands → delegate to git-expert
 ❌ MCP tools → delegate to manager agents
 ❌ Multi-file exploration → delegate to Explore agent
-❌ TodoWrite → use Archon via archon-manager (only if Archon MCP available)
+❌ TodoWrite → delegate to specialist agents with context
 ❌ Delegating slash commands → execute them AND their internal operations DIRECTLY (see SLASH COMMAND EXECUTION section)

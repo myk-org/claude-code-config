@@ -113,9 +113,3 @@ Before returning results:
 - [ ] Performance metrics included (execution time)
 - [ ] Coverage data extracted if available
 - [ ] Clear summary of pass/fail/skip counts
-
-## Archon Integration
-
-Before execution:
-1. Check for test patterns: `rag_search_knowledge_base(query="test execution patterns")`
-2. Update Archon with test failure patterns for future reference

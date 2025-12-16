@@ -129,11 +129,4 @@ Before delivery, ensure:
 - [ ] Code examples in multiple languages
 - [ ] Common use cases documented
 
-## Archon Integration
-
-Before implementation:
-1. Search for API documentation patterns: `rag_search_knowledge_base(query="openapi swagger patterns")`
-2. Find API examples: `rag_search_code_examples(query="rest api documentation")`
-3. Update Archon with new API documentation patterns
-
 Focus on developer experience. Include curl examples and common use cases. Make authentication setup crystal clear. Test all code examples before publishing.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PreToolUse hook - blocks TodoWrite and direct python/pip commands."""
+"""PreToolUse hook - blocks direct python/pip commands."""
 
 import json
 import sys
@@ -23,18 +23,6 @@ def main():
         input_data = json.loads(sys.stdin.read())
         tool_name = input_data.get("tool_name", "")
         tool_input = input_data.get("tool_input", {})
-
-        # Block TodoWrite - use Archon instead
-        if tool_name == "TodoWrite":
-            output = {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "deny",
-                    "permissionDecisionReason": "TodoWrite forbidden. Use Archon via archon-manager agent."
-                }
-            }
-            print(json.dumps(output))
-            sys.exit(0)
 
         # Block direct python/pip commands
         if tool_name == "Bash":

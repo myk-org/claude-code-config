@@ -1,6 +1,6 @@
-# Archon UTCP Code-Mode Server
+# UTCP Code-Mode Server
 
-A UTCP (Universal Tool Calling Protocol) code-mode server that provides direct, batched access to the Archon MCP server for task management, knowledge base search, and project operations.
+A UTCP (Universal Tool Calling Protocol) code-mode server that provides direct, batched access to MCP servers through TypeScript code execution. Configure any MCP server integration and execute complex workflows with batching and conditional logic.
 
 ## What is UTCP Code-Mode?
 
@@ -13,33 +13,33 @@ UTCP code-mode is a powerful protocol that allows you to:
 
 ### UTCP vs Traditional CLI Approach
 
-| Feature | UTCP Code-Mode | CLI Wrapper (archon_query.py) |
-|---------|----------------|-------------------------------|
+| Feature | UTCP Code-Mode | CLI Wrapper |
+|---------|----------------|-------------|
 | **Batching** | ✅ Multiple operations in one call | ❌ One operation per invocation |
 | **Conditional Logic** | ✅ Execute logic in sandbox | ❌ Requires multiple calls |
 | **Data Processing** | ✅ Transform data server-side | ❌ Must process client-side |
 | **Network Efficiency** | ✅ Minimal round-trips | ❌ One round-trip per operation |
 | **Complex Workflows** | ✅ Full TypeScript capabilities | ⚠️ Limited to script logic |
-| **Type Safety** | ✅ Full TypeScript types | ⚠️ Python type hints only |
+| **Type Safety** | ✅ Full TypeScript types | ⚠️ Limited type safety |
 
 ### Example: The Power of Batching
 
 **Traditional CLI (3 separate calls):**
 ```bash
-python archon_query.py health_check
-python archon_query.py find_tasks --status todo
-python archon_query.py list_projects
+mcp-tool health_check
+mcp-tool list_items --status active
+mcp-tool list_projects
 ```
 Result: 3 network round-trips, ~600-900ms total
 
 **UTCP Code-Mode (1 batched call):**
 ```typescript
 const { result } = await client.callToolChain(`
-  const health = await archon.health_check();
-  const tasks = await archon.find_tasks({ status: "todo" });
-  const projects = await archon.list_projects({});
+  const health = await mcp.health_check();
+  const items = await mcp.list_items({ status: "active" });
+  const projects = await mcp.list_projects({});
 
-  return { health, taskCount: tasks.tasks.length, projects };
+  return { health, itemCount: items.length, projects };
 `);
 ```
 Result: 1 network round-trip, ~200-300ms total ⚡
@@ -57,18 +57,17 @@ Result: 1 network round-trip, ~200-300ms total ⚡
 ┌─────────────────────────▼───────────────────────────────────┐
 │                  UTCP Code-Mode Server                       │
 │  • Executes TypeScript in sandboxed environment             │
-│  • Provides Archon tools as async functions                 │
+│  • Provides MCP tools as async functions                    │
 │  • Handles batching and orchestration                       │
 └─────────────────────────┬───────────────────────────────────┘
                           │
-                          │ MCP Protocol (HTTP)
+                          │ MCP Protocol
                           │
 ┌─────────────────────────▼───────────────────────────────────┐
-│                  Archon MCP Server                           │
-│  http://localhost:8051                                 │
-│  • Task management                                          │
-│  • RAG knowledge base                                       │
-│  • Project operations                                       │
+│                  Your MCP Server(s)                          │
+│  • Configure any MCP server                                 │
+│  • Multiple servers supported                               │
+│  • Tools available as async functions                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -78,7 +77,7 @@ Result: 1 network round-trip, ~200-300ms total ⚡
 
 - Node.js 18.0.0 or higher
 - npm, yarn, or pnpm
-- Access to Archon MCP server (default: http://localhost:8051)
+- One or more MCP servers to connect to
 
 ### Setup
 
@@ -95,21 +94,33 @@ npm run type-check
 
 ## Configuration
 
-The server can be configured via environment variables:
+### MCP Server Configuration
 
-```bash
-# Archon MCP server URL (default: http://localhost:8051)
-export ARCHON_SERVER_URL="http://localhost:8051"
+Create JSON configuration files in the `configs/` directory. Each file defines one or more MCP server connections:
 
-# Request timeout in milliseconds (default: 30000)
-export ARCHON_TIMEOUT="30000"
-
-# Number of retry attempts (default: 3)
-export ARCHON_RETRY_ATTEMPTS="3"
-
-# Delay between retries in milliseconds (default: 1000)
-export ARCHON_RETRY_DELAY="1000"
+```json
+{
+  "manual_call_templates": [
+    {
+      "name": "myserver",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "myserver": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-fetch", "http://localhost:8051"],
+            "env": {
+              "MCP_SERVER_URL": "http://localhost:8051"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
 ```
+
+The server automatically loads all `.json` files from the `configs/` directory at startup. See `configs/example.json.example` for a complete example.
 
 ## Usage
 
@@ -123,21 +134,6 @@ npm start
 npm run dev
 ```
 
-### Running Examples
-
-The repository includes three comprehensive example files:
-
-```bash
-# Simple single operations
-npm run example:simple
-
-# Batched multi-operations
-npm run example:batched
-
-# Complex workflows with conditional logic
-npm run example:complex
-```
-
 ### Programmatic Usage
 
 ```typescript
@@ -146,12 +142,13 @@ import { CodeModeUtcpClient } from '@utcp/code-mode';
 // Create and configure client
 const client = await CodeModeUtcpClient.create();
 
+// Register your MCP server
 await client.registerManual({
-  name: 'archon',
+  name: 'myserver',
   call_template_type: 'mcp',
   config: {
     mcpServers: {
-      archon: {
+      myserver: {
         command: 'npx',
         args: ['-y', '@modelcontextprotocol/server-fetch', 'http://localhost:8051'],
         env: {
@@ -162,167 +159,116 @@ await client.registerManual({
   }
 });
 
-// Execute TypeScript code with Archon tools
+// Execute TypeScript code with MCP tools
 const { result } = await client.callToolChain(`
-  const health = await archon.health_check();
-  const tasks = await archon.find_tasks({ status: "todo", limit: 10 });
+  // Call MCP server tools as async functions
+  const health = await myserver.health_check();
+  const items = await myserver.list_items({ status: "active", limit: 10 });
 
+  // Process and transform data
   return {
     healthy: health.success,
-    urgentTasks: tasks.tasks.filter(t => t.priority > 80).length
+    totalItems: items.length,
+    activeItems: items.filter(i => i.status === "active").length
   };
 `);
 
 console.log(result);
 ```
 
-## Available Archon Tools
+## Using MCP Tools
 
-All Archon MCP tools are available as async functions within the code-mode sandbox:
+All MCP server tools registered through configuration files are available as async functions within the code-mode sandbox. The function names correspond to the tool names exposed by your MCP server.
 
-### Task Management
+### Example: Calling MCP Tools
 
 ```typescript
-// Find tasks with filters
-const tasks = await archon.find_tasks({
-  status: "todo",
-  priority_min: 70,
-  project_id: "proj-123",
-  limit: 20
-});
+// If you registered an MCP server named 'myserver', its tools are available:
+const { result } = await client.callToolChain(`
+  // Health check (if your MCP server provides this)
+  const health = await myserver.health_check();
 
-// Create a new task
-const newTask = await archon.create_task({
-  title: "Implement feature X",
-  description: "Detailed description",
-  project_id: "proj-123",
-  priority: 80,
-  status: "todo"
-});
+  // List items (example tool)
+  const items = await myserver.list_items({
+    status: "active",
+    limit: 20
+  });
 
-// Update task
-const updated = await archon.update_task({
-  task_id: "task-456",
-  status: "doing",
-  priority: 85
-});
+  // Get specific item
+  const item = await myserver.get_item({ id: "item-123" });
 
-// Get task by ID
-const task = await archon.get_task({ task_id: "task-456" });
-
-// Delete task
-await archon.delete_task({ task_id: "task-456" });
+  // Process data before returning
+  return {
+    healthy: health.success,
+    totalItems: items.length,
+    item: item
+  };
+`);
 ```
 
-### Project Management
+### Multiple MCP Servers
+
+You can register and use multiple MCP servers in the same code execution:
 
 ```typescript
-// List projects
-const projects = await archon.list_projects({ limit: 10 });
+const { result } = await client.callToolChain(`
+  // Call tools from different MCP servers
+  const data1 = await server1.get_data();
+  const data2 = await server2.fetch_info();
 
-// Get project details
-const project = await archon.get_project({ project_id: "proj-123" });
-
-// Create project
-const newProject = await archon.create_project({
-  name: "New Project",
-  description: "Project description",
-  github_repo: "https://github.com/user/repo"
-});
-
-// Update project
-await archon.update_project({
-  project_id: "proj-123",
-  status: "active"
-});
-```
-
-### Knowledge Base (RAG)
-
-```typescript
-// Search knowledge base
-const results = await archon.rag_search_knowledge_base({
-  query: "authentication patterns",
-  limit: 5,
-  min_score: 0.7
-});
-
-// Find code examples
-const examples = await archon.rag_code_examples({
-  query: "React hooks",
-  language: "typescript",
-  limit: 3
-});
-
-// Get documentation sources
-const sources = await archon.rag_get_sources();
-
-// Search specific documentation
-const docs = await archon.rag_search_docs({
-  query: "API design",
-  source_id: "source-123",
-  limit: 5
-});
-```
-
-### System Operations
-
-```typescript
-// Health check
-const health = await archon.health_check();
-
-// Get system info
-const info = await archon.get_system_info();
+  // Combine and process results
+  return {
+    combined: [...data1, ...data2],
+    total: data1.length + data2.length
+  };
+`);
 ```
 
 ## Example Use Cases
 
-### 1. Dashboard Data Aggregation
+### 1. Batching Multiple Operations
 
 ```typescript
 const { result } = await client.callToolChain(`
-  const [health, todoTasks, doingTasks, projects] = await Promise.all([
-    archon.health_check(),
-    archon.find_tasks({ status: "todo" }),
-    archon.find_tasks({ status: "doing" }),
-    archon.list_projects({ limit: 10 })
+  // Execute multiple operations in parallel
+  const [status, items, projects] = await Promise.all([
+    myserver.get_status(),
+    myserver.list_items({ status: "active" }),
+    myserver.list_projects({ limit: 10 })
   ]);
 
+  // Process and aggregate results
   return {
     system: {
-      healthy: health.success,
-      uptime_hours: (health.uptime_seconds / 3600).toFixed(1)
+      healthy: status.success,
+      uptime: status.uptime
     },
-    tasks: {
-      todo: todoTasks.tasks.length,
-      doing: doingTasks.tasks.length,
-      urgent: todoTasks.tasks.filter(t => t.priority > 80).length
-    },
-    projects: {
-      total: projects.projects.length,
-      active: projects.projects.filter(p => p.status === 'active').length
+    statistics: {
+      totalItems: items.length,
+      activeItems: items.filter(i => i.active).length,
+      totalProjects: projects.length
     }
   };
 `);
 ```
 
-### 2. Intelligent Task Prioritization
+### 2. Conditional Logic and Data Processing
 
 ```typescript
 const { result } = await client.callToolChain(`
-  const tasks = await archon.find_tasks({ status: "todo" });
+  const items = await myserver.list_items({ status: "pending" });
 
   // Group by priority level
-  const critical = tasks.tasks.filter(t => t.priority >= 90);
-  const high = tasks.tasks.filter(t => t.priority >= 70 && t.priority < 90);
-  const medium = tasks.tasks.filter(t => t.priority >= 40 && t.priority < 70);
-  const low = tasks.tasks.filter(t => t.priority < 40);
+  const critical = items.filter(i => i.priority >= 90);
+  const high = items.filter(i => i.priority >= 70 && i.priority < 90);
+  const medium = items.filter(i => i.priority >= 40 && i.priority < 70);
+  const low = items.filter(i => i.priority < 40);
 
-  // Check for overdue tasks (older than 7 days with priority > 50)
+  // Check for stale items (older than 7 days with high priority)
   const now = Date.now();
-  const overdue = tasks.tasks.filter(t => {
-    const age = (now - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24);
-    return age > 7 && t.priority > 50;
+  const stale = items.filter(i => {
+    const age = (now - new Date(i.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    return age > 7 && i.priority > 50;
   });
 
   return {
@@ -332,105 +278,98 @@ const { result } = await client.callToolChain(`
       medium: medium.length,
       low: low.length
     },
-    alerts: overdue.length > 0 ? [
-      { level: 'WARNING', message: \`\${overdue.length} overdue tasks need attention\` }
+    alerts: stale.length > 0 ? [
+      { level: 'WARNING', message: \`\${stale.length} stale items need attention\` }
     ] : [],
-    topPriority: critical.slice(0, 5).map(t => ({
-      id: t.task_id,
-      title: t.title,
-      priority: t.priority,
-      project: t.project_name
+    topPriority: critical.slice(0, 5).map(i => ({
+      id: i.id,
+      title: i.title,
+      priority: i.priority
     }))
   };
 `);
 ```
 
-### 3. Multi-Source Knowledge Search
+### 3. Parallel Searches with Aggregation
 
 ```typescript
 const { result } = await client.callToolChain(`
-  // Search multiple topics in parallel
-  const [authResults, apiResults, testResults] = await Promise.all([
-    archon.rag_search_knowledge_base({ query: "authentication", limit: 3 }),
-    archon.rag_search_knowledge_base({ query: "REST API", limit: 3 }),
-    archon.rag_search_knowledge_base({ query: "testing", limit: 3 })
+  // Search multiple categories in parallel
+  const [results1, results2, results3] = await Promise.all([
+    myserver.search({ query: "category1", limit: 5 }),
+    myserver.search({ query: "category2", limit: 5 }),
+    myserver.search({ query: "category3", limit: 5 })
   ]);
 
   // Aggregate and rank all results
   const allResults = [
-    ...authResults.results.map(r => ({ ...r, topic: 'auth' })),
-    ...apiResults.results.map(r => ({ ...r, topic: 'api' })),
-    ...testResults.results.map(r => ({ ...r, topic: 'testing' }))
+    ...results1.map(r => ({ ...r, category: 'category1' })),
+    ...results2.map(r => ({ ...r, category: 'category2' })),
+    ...results3.map(r => ({ ...r, category: 'category3' }))
   ];
 
-  // Sort by score
+  // Sort by relevance score
   allResults.sort((a, b) => b.score - a.score);
 
   return {
     total_results: allResults.length,
-    by_topic: {
-      auth: authResults.total_results,
-      api: apiResults.total_results,
-      testing: testResults.total_results
+    by_category: {
+      category1: results1.length,
+      category2: results2.length,
+      category3: results3.length
     },
-    top_results: allResults.slice(0, 5).map(r => ({
-      topic: r.topic,
-      score: r.score,
-      source: r.metadata.source,
-      preview: r.content.substring(0, 100)
-    }))
+    top_results: allResults.slice(0, 10)
   };
 `);
 ```
 
-### 4. Project Health Monitoring
+### 4. Complex Multi-Step Workflows
 
 ```typescript
 const { result } = await client.callToolChain(`
-  const projects = await archon.list_projects({});
+  const projects = await myserver.list_projects({});
 
-  const projectHealth = [];
-  for (const project of projects.projects) {
-    const tasks = await archon.find_tasks({ project_id: project.project_id });
+  const projectMetrics = [];
+  for (const project of projects) {
+    const items = await myserver.list_items({ project_id: project.id });
 
-    // Calculate health metrics
-    const totalTasks = tasks.tasks.length;
-    const todoCount = tasks.tasks.filter(t => t.status === 'todo').length;
-    const doneCount = tasks.tasks.filter(t => t.status === 'done').length;
+    // Calculate completion metrics
+    const total = items.length;
+    const completed = items.filter(i => i.status === 'done').length;
+    const pending = items.filter(i => i.status === 'pending').length;
 
-    const completionRate = totalTasks > 0 ? (doneCount / totalTasks * 100).toFixed(1) : 0;
-    const todoRate = totalTasks > 0 ? (todoCount / totalTasks * 100).toFixed(1) : 0;
+    const completionRate = total > 0 ? (completed / total * 100).toFixed(1) : 0;
 
-    // Health score (0-100)
+    // Calculate health score
     let score = 100;
-    if (parseFloat(todoRate) > 70) score -= 30;  // Too many TODOs
-    if (parseFloat(completionRate) < 20) score -= 20;  // Low completion
+    if (pending / total > 0.7) score -= 30;
+    if (completionRate < 20) score -= 20;
 
-    projectHealth.push({
+    projectMetrics.push({
       name: project.name,
-      id: project.project_id,
+      id: project.id,
       health_score: Math.max(0, score),
       metrics: {
-        total_tasks: totalTasks,
+        total_items: total,
         completion_rate: completionRate + '%',
-        todo_rate: todoRate + '%'
+        pending_count: pending
       },
       status: score >= 70 ? 'Healthy' : score >= 40 ? 'Fair' : 'Needs Attention'
     });
   }
 
   // Sort by health score
-  projectHealth.sort((a, b) => b.health_score - a.health_score);
+  projectMetrics.sort((a, b) => b.health_score - a.health_score);
 
   return {
-    total_projects: projectHealth.length,
-    average_health: (projectHealth.reduce((sum, p) => sum + p.health_score, 0) / projectHealth.length).toFixed(1),
-    projects: projectHealth
+    total_projects: projectMetrics.length,
+    average_health: (projectMetrics.reduce((sum, p) => sum + p.health_score, 0) / projectMetrics.length).toFixed(1),
+    projects: projectMetrics
   };
 `);
 ```
 
-## When to Use UTCP vs Archon Skill
+## When to Use UTCP Code-Mode
 
 ### Use UTCP Code-Mode When:
 
@@ -441,29 +380,21 @@ const { result } = await client.callToolChain(`
 ✅ You're building **automated systems** or **integrations**
 ✅ **Performance is critical** (minimize round-trips)
 
-### Use Archon Skill When:
+### Use Traditional CLI/Direct Tools When:
 
 ✅ You need **interactive CLI operations**
 ✅ You want **simple, one-off queries**
-✅ You prefer **Python scripting** environment
+✅ You prefer **simpler scripting** environments
 ✅ You need **command-line arguments** parsing
 ✅ You want **human-readable output** formatting
-✅ You're working in **Claude Code sessions**
 
 ### Hybrid Approach:
 
-You can use both! The Archon skill is great for ad-hoc queries and exploration, while UTCP code-mode excels at automated workflows and complex data operations.
+You can use both! Traditional tools are great for ad-hoc queries and exploration, while UTCP code-mode excels at automated workflows and complex data operations.
 
 ## TypeScript Types
 
-All Archon responses are fully typed. See `src/types.ts` for complete type definitions:
-
-- `ArchonTask` - Task object with all fields
-- `ArchonProject` - Project object
-- `ArchonSearchResult` - RAG search result
-- `ArchonRAGResponse` - Complete RAG response
-- `ArchonHealthCheck` - System health status
-- And more...
+Define your own TypeScript types for MCP server responses. See `src/types.ts` for type definition patterns. You can create interfaces for your MCP server's data structures to get full type safety.
 
 ## Error Handling
 
@@ -472,13 +403,13 @@ UTCP code-mode provides error handling within the sandbox:
 ```typescript
 const { result } = await client.callToolChain(`
   try {
-    const task = await archon.get_task({ task_id: "task-123" });
-    return { success: true, task };
+    const item = await myserver.get_item({ id: "item-123" });
+    return { success: true, item };
   } catch (error) {
     return {
       success: false,
       error: error.message,
-      fallback: "Task not found, returning defaults"
+      fallback: "Item not found, returning defaults"
     };
   }
 `);
@@ -496,14 +427,14 @@ const { result } = await client.callToolChain(`
 
 ### Connection Issues
 
-If you can't connect to Archon MCP server:
+If you can't connect to your MCP server:
 
 ```bash
-# Check if server is running
-curl http://localhost:8051/health
+# Check if your MCP server is running
+curl http://localhost:8051/health  # Adjust URL to your server
 
-# Verify environment variables
-echo $ARCHON_SERVER_URL
+# Verify configuration files in configs/
+ls -la configs/*.json
 
 # Check server logs
 npm start 2>&1 | tee server.log
@@ -519,13 +450,11 @@ npm run type-check
 npm run build
 ```
 
-### Example Failures
+### Configuration Issues
 
 ```bash
-# Run individual examples for debugging
-npm run example:simple
-npm run example:batched
-npm run example:complex
+# Verify config files are valid JSON
+for f in configs/*.json; do echo "$f" && cat "$f" | jq .; done
 ```
 
 ## Development
@@ -533,18 +462,15 @@ npm run example:complex
 ### Project Structure
 
 ```
-.claude/servers/archon/
+servers/code-execution/
 ├── package.json          # Dependencies and scripts
 ├── tsconfig.json         # TypeScript configuration
 ├── README.md            # This file
-├── src/
-│   ├── server.ts        # Main UTCP server
-│   ├── config.ts        # Configuration management
-│   └── types.ts         # TypeScript type definitions
-└── examples/
-    ├── simple.ts        # Simple operation examples
-    ├── batched.ts       # Batched operation examples
-    └── complex.ts       # Complex workflow examples
+├── configs/             # MCP server configurations
+│   └── *.json          # JSON config files
+└── src/
+    ├── server.ts        # Main UTCP server
+    └── types.ts         # TypeScript type definitions
 ```
 
 ### Building
@@ -557,17 +483,9 @@ npm run build
 ls dist/
 ```
 
-### Adding New Examples
+### Adding New MCP Servers
 
-Create a new file in `examples/` and add a script to `package.json`:
-
-```json
-{
-  "scripts": {
-    "example:myexample": "tsx examples/myexample.ts"
-  }
-}
-```
+Create a new JSON file in `configs/` directory with your MCP server configuration. The server will automatically load it on startup.
 
 ## License
 
@@ -577,9 +495,9 @@ MIT
 
 For issues or questions:
 
-1. Check the examples in `examples/`
-2. Review Archon MCP server documentation
-3. Verify server connectivity with health check
+1. Review your MCP server documentation
+2. Verify server connectivity with health check
+3. Check configuration files in `configs/`
 4. Check server logs for errors
 
 ## Contributing
@@ -587,10 +505,9 @@ For issues or questions:
 Contributions welcome! Please ensure:
 
 - TypeScript compiles without errors (`npm run type-check`)
-- Examples run successfully
 - Types are properly defined
 - Documentation is updated
 
 ---
 
-**Built with ❤️ using UTCP Code-Mode and Archon MCP Server**
+**Built with UTCP Code-Mode**

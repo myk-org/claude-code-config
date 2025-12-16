@@ -1,5 +1,5 @@
 #!/bin/bash
-# Archon UTCP Server Setup Script
+# UTCP Code-Mode Server Setup Script
 
 set -e
 
@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Archon UTCP Server Setup"
+echo "UTCP Code-Mode Server Setup"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -31,15 +31,15 @@ fi
 echo "✓ npm version: $(npm --version)"
 echo ""
 
-# Check Archon server connectivity
-echo "Checking Archon MCP server connectivity..."
-ARCHON_URL="${ARCHON_SERVER_URL:-http://localhost:8051}"
-if curl -sf "$ARCHON_URL/health" > /dev/null 2>&1; then
-    echo "✓ Archon server is reachable at $ARCHON_URL"
+# Check for config files
+echo "Checking MCP server configurations..."
+if [ -d "configs" ] && [ "$(ls -A configs/*.json 2>/dev/null)" ]; then
+    CONFIG_COUNT=$(ls -1 configs/*.json 2>/dev/null | wc -l)
+    echo "✓ Found $CONFIG_COUNT MCP server configuration(s)"
 else
-    echo "⚠️  Warning: Cannot reach Archon server at $ARCHON_URL"
-    echo "   The server may be down or the URL may be incorrect."
-    echo "   You can set ARCHON_SERVER_URL environment variable to override."
+    echo "⚠️  Warning: No configuration files found in configs/ directory"
+    echo "   Create JSON config files in configs/ to define your MCP servers."
+    echo "   See configs/example.json.example for reference."
 fi
 echo ""
 
@@ -70,12 +70,6 @@ echo "✓ Setup complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Next steps:"
-echo "  1. Start the server:        npm start"
-echo "  2. Run simple examples:     npm run example:simple"
-echo "  3. Run batched examples:    npm run example:batched"
-echo "  4. Run complex examples:    npm run example:complex"
-echo ""
-echo "Configuration:"
-echo "  Server URL: $ARCHON_URL"
-echo "  (Set ARCHON_SERVER_URL to override)"
+echo "  1. Configure MCP servers in configs/ directory"
+echo "  2. Start the server:        npm start"
 echo ""
