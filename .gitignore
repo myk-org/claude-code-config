@@ -86,3 +86,6 @@ scripts/
 # OS files
 .DS_Store
 Thumbs.db
+
+# General
+stats-cache.json
