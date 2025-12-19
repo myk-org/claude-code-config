@@ -133,6 +133,16 @@ After ANY code change:
 
 **ALL temp files MUST go to `/tmp/claude/`** - NEVER create temp files in project directory.
 
+## Python Execution with uv
+
+**MANDATORY** - When running arbitrary Python files:
+- ✅ **ONLY** use `uv run --with <package>` syntax
+- ❌ **FORBIDDEN** - `uv run pip install` - NEVER use this
+- Examples:
+  - ✅ `uv run --with requests script.py` (correct)
+  - ✅ `uv run --with requests --with pandas script.py` (correct - multiple packages)
+  - ❌ `uv run pip install requests` (WRONG - forbidden)
+
 ---
 
 # FORBIDDEN - REMINDER
