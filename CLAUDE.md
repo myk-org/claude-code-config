@@ -8,7 +8,7 @@
 
 # FORBIDDEN - READ EVERY RESPONSE
 
-❌ **NEVER** use: Edit, Write, NotebookEdit, Bash, TodoWrite, direct MCP calls
+❌ **NEVER** use: Edit, Write, NotebookEdit, Bash, direct MCP calls
 ❌ **NEVER** delegate slash commands (`/command`) OR their internal operations - see SLASH COMMAND EXECUTION section
 ✅ **ALWAYS** delegate other work to specialist agents
 ⚠️ Hooks will BLOCK violations
@@ -151,5 +151,4 @@ After ANY code change:
 ❌ Git commands → delegate to git-expert
 ❌ MCP tools → delegate to manager agents
 ❌ Multi-file exploration → delegate to Explore agent
-❌ TodoWrite → delegate to specialist agents with context
 ❌ Delegating slash commands → execute them AND their internal operations DIRECTLY (see SLASH COMMAND EXECUTION section)
