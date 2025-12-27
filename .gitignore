@@ -90,3 +90,6 @@ Thumbs.db
 # General
 stats-cache.json
 .mcp.json
+
+# Allow personal project-specific CLAUDE.md files
+CLAUDE.md

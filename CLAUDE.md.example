@@ -1,0 +1,189 @@
+# Personal Claude Configuration Template
+
+This is a template for your personal `CLAUDE.md` file. Copy this to `CLAUDE.md` and customize it to your preferences.
+
+> **Note**: Orchestrator rules (agent routing, delegation, etc.) auto-load from `.claude/rules/` - you don't need to include them here. This file is for YOUR personal preferences only.
+
+---
+
+## Code Style Preferences
+
+<!-- Customize how you want code written -->
+
+```
+# Example preferences:
+- Use single quotes for strings in JavaScript/TypeScript
+- Prefer list comprehensions over map/filter in Python
+- Maximum line length: 100 characters
+- Use trailing commas in multi-line structures
+- Prefer explicit type annotations in TypeScript
+```
+
+---
+
+## Communication Preferences
+
+<!-- How you want Claude to communicate with you -->
+
+```
+# Example preferences:
+- Be concise - skip explanations unless I ask
+- Always explain complex decisions
+- Use technical terminology freely
+- Provide context for breaking changes
+- Highlight security implications
+```
+
+---
+
+## Project Context
+
+<!-- Information about your typical working environment -->
+
+```
+# Example context:
+- Primary projects located in: ~/git/
+- Default Python version: 3.11
+- Default Node version: 20 LTS
+- Timezone: UTC-5 (EST)
+- Preferred package managers: uv (Python), npm (Node)
+```
+
+---
+
+## Tools & Environment
+
+<!-- Your specific tool preferences and environment setup -->
+
+```
+# Example preferences:
+- Editor: VSCode with Pylance
+- Terminal: zsh with oh-my-zsh
+- Container runtime: Podman (not Docker)
+- Cloud provider: AWS
+- Preferred testing frameworks:
+  - Python: pytest
+  - JavaScript: Jest
+  - Go: standard testing package
+```
+
+---
+
+## Custom Personal Rules
+
+<!-- Any other personal rules or preferences -->
+
+```
+# Example rules:
+- Always run tests before committing
+- Use conventional commits format
+- Create feature branches from 'develop' not 'main'
+- Never commit .env files (even examples - use .env.template)
+- Log all database migrations with timestamps
+```
+
+---
+
+## Rule Overrides
+
+<!-- Override or disable specific orchestrator rules from .claude/rules/ -->
+
+Sometimes you need to customize orchestrator behavior for your personal workflow without modifying the rules files themselves. Use these override patterns:
+
+### Disabling Rules Completely
+
+```
+# IGNORE RULE: 20-code-review-loop.md
+# Reason: Working on quick prototypes, skip mandatory code review
+
+# IGNORE RULE: 30-parallel-execution.md
+# Reason: Prefer sequential execution for debugging
+```
+
+### Overriding Specific Behaviors
+
+```
+# OVERRIDE: Allow direct Bash usage
+# For simple commands (ls, pwd, cd), allow orchestrator to use Bash directly
+# instead of delegating to bash-expert
+
+# OVERRIDE: Disable mandatory test runs
+# Skip automatic test execution after code changes during exploration phase
+
+# OVERRIDE: Allow temp files in project directory
+# For this project, allow temp files in ./tmp/ instead of /tmp/claude/
+```
+
+### Modifying Agent Routing
+
+```
+# ROUTE OVERRIDE: Python tests
+# Route Python test execution to test-automator instead of python-expert
+
+# ROUTE OVERRIDE: Markdown documentation
+# Route all .md files to general-purpose instead of technical-documentation-writer
+
+# ROUTE OVERRIDE: Quick fixes
+# For minor typos or formatting, skip code review and allow direct edits
+```
+
+### Conditional Rule Modifications
+
+```
+# CONDITIONAL: Code review for critical files only
+# Only enforce code review for files in: src/core/, src/security/
+# Skip review for: tests/, docs/, scripts/
+
+# CONDITIONAL: Parallel execution by context
+# Allow sequential execution for debugging sessions
+# Require parallel execution for feature development
+```
+
+### Example Personal Override Configuration
+
+```
+# My Custom Workflow Overrides
+
+# 1. Skip code review for documentation
+IGNORE RULE: 20-code-review-loop.md
+SCOPE: **/*.md, docs/**/*
+
+# 2. Allow direct bash for git commands
+OVERRIDE: Git operations can use Bash directly
+REASON: Git commands are simple and don't need git-expert delegation
+
+# 3. Custom test routing
+ROUTE OVERRIDE: All test files (test_*.py, *_test.go) → test-automator
+BYPASS: python-expert, go-expert for test execution
+
+# 4. Relax temp file restrictions for data science work
+OVERRIDE: Allow temp files in ./data/temp/ for Jupyter notebooks
+CLEANUP: Auto-delete files older than 24 hours
+```
+
+### How Overrides Work
+
+1. **Precedence**: Personal CLAUDE.md overrides take precedence over rules files
+2. **Scope**: Use file patterns or directory paths to limit override scope
+3. **Reason**: Document WHY you're overriding (helps future you)
+4. **Temporary**: Consider if override should be permanent or temporary
+
+### Best Practices
+
+- Use overrides sparingly - rules exist for good reasons
+- Document your overrides clearly with REASON comments
+- Review overrides periodically - remove obsolete ones
+- Consider if your override should be a rule improvement instead
+- Use SCOPE to limit blast radius of overrides
+
+---
+
+## Template Usage
+
+1. Copy this file: `cp CLAUDE.md.example CLAUDE.md`
+2. Remove sections you don't need
+3. Customize the remaining sections
+4. Add your own sections as needed
+5. Commit `CLAUDE.md` to your personal projects or keep it local
+
+**Remember**: This file is for personal preferences only. Orchestrator behavior is controlled by `.claude/rules/*.md` files, but you can override specific behaviors using the Rule Overrides section above.
