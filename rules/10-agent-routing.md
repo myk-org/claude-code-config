@@ -20,6 +20,7 @@
 | Tests | `test-automator` |
 | Debugging | `debugger` |
 | API docs | `api-documenter` |
+| Documentation fetching | `docs-fetcher` |
 | **MCP Tools** |
 | `mcp__github-webhook-logs-*__*` | `webhook-logs-manager` |
 | `mcp__openshift-python-wrapper__*` | `openshift-manager` |
@@ -34,6 +35,24 @@ Examples:
 - Running Python tests? → `python-expert` (not bash-expert)
 - Editing Python files? → `python-expert` (even with sed/awk)
 - Shell script creation? → `bash-expert`
+
+## Documentation Fetching (MANDATORY)
+
+BEFORE writing code that uses external libraries/frameworks:
+1. SPAWN `docs-fetcher` agent to get current best practices
+2. WAIT for docs context before implementing
+
+**Triggers - MUST fetch docs when:**
+- User mentions a framework by name (FastAPI, Django, React, Express, etc.)
+- Task involves library-specific patterns (OAuth, WebSockets, ORM, etc.)
+- You're unsure about current API or best practices
+- Working with a library you haven't used recently in this conversation
+
+**Exceptions - Skip docs fetching when:**
+- Standard library only (no external dependencies)
+- User explicitly says "skip docs" or "I know the API"
+- Simple operations with obvious patterns
+- Already fetched docs for this library in current conversation
 
 ## Fallback
 

@@ -195,7 +195,27 @@ cd ~/.claude && git pull
 | `code-reviewer` | Code quality, security review |
 | `technical-documentation-writer` | Documentation |
 | `api-documenter` | OpenAPI/Swagger specs |
+| `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |
 | `general-purpose` | Fallback for unspecified tasks |
+
+### Automatic Documentation Fetching
+
+When specialist agents work with external libraries or frameworks, they can automatically fetch the latest documentation through the `docs-fetcher` agent. This ensures that code follows current best practices and uses up-to-date APIs.
+
+**Key features:**
+- Prioritizes `llms.txt` files (LLM-optimized documentation)
+- Falls back to official documentation sites
+- Caches results for faster subsequent access
+- Provides context-relevant excerpts to specialist agents
+
+**Example workflow:**
+```
+python-expert working with FastAPI
+         ↓
+    docs-fetcher fetches FastAPI docs
+         ↓
+python-expert uses current best practices
+```
 
 ## Slash Commands
 
