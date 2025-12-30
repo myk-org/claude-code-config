@@ -38,21 +38,58 @@ Examples:
 
 ## Documentation Fetching (MANDATORY)
 
-BEFORE writing code that uses external libraries/frameworks:
-1. SPAWN `docs-fetcher` agent to get current best practices
-2. WAIT for docs context before implementing
+### Rule: NEVER Fetch Docs Directly
 
-**Triggers - MUST fetch docs when:**
-- User mentions a framework by name (FastAPI, Django, React, Express, etc.)
-- Task involves library-specific patterns (OAuth, WebSockets, ORM, etc.)
-- You're unsure about current API or best practices
-- Working with a library you haven't used recently in this conversation
+**The orchestrator MUST delegate ALL documentation fetching to `docs-fetcher` agent.**
 
-**Exceptions - Skip docs fetching when:**
+❌ **FORBIDDEN** - Orchestrator using WebFetch for external docs:
+```
+WebFetch(https://react.dev/...)
+WebFetch(https://fastapi.tiangolo.com/...)
+WebFetch(https://ohmyposh.dev/...)
+```
+
+✅ **REQUIRED** - Delegate to docs-fetcher:
+```
+Task(subagent_type="docs-fetcher", prompt="Fetch Oh My Posh configuration docs...")
+```
+
+### Why This Matters
+
+- docs-fetcher tries `llms.txt` first (optimized for LLMs)
+- docs-fetcher extracts only relevant sections
+- docs-fetcher provides structured, actionable output
+- Direct WebFetch wastes tokens on full HTML pages
+
+### When to Spawn docs-fetcher
+
+**MUST delegate when:**
+- Fetching library/framework documentation (React, FastAPI, Django, etc.)
+- Looking up configuration guides (Oh My Posh, Starship, etc.)
+- Getting API references or usage examples
+- User asks about external tool documentation
+- You need current best practices for a library
+
+**Exceptions - Skip docs-fetcher when:**
 - Standard library only (no external dependencies)
 - User explicitly says "skip docs" or "I know the API"
 - Simple operations with obvious patterns
 - Already fetched docs for this library in current conversation
+
+### Workflow
+
+```
+Need external docs?
+       ↓
+  ┌────────────────────────────────────┐
+  │  DELEGATE to docs-fetcher agent    │
+  │  DO NOT use WebFetch directly      │
+  └────────────────────────────────────┘
+       ↓
+Wait for structured response
+       ↓
+Use context for implementation
+```
 
 ## Fallback
 
