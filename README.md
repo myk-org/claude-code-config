@@ -172,9 +172,11 @@ cd ~/.claude && git pull
 
 ## What's Included
 
-- **23 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
+- **24 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
+- **5 slash commands** including codebase analysis and PR review workflows
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
+- **MCP server integrations** (code execution, graphiti-memory)
 - **Status line** integration
 
 ## Agents
@@ -196,6 +198,7 @@ cd ~/.claude && git pull
 | `technical-documentation-writer` | Documentation |
 | `api-documenter` | OpenAPI/Swagger specs |
 | `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |
+| `graphiti-memory-manager` | Manages graphiti-memory MCP server for knowledge graph operations (add episodes, search nodes/facts, manage graph data) |
 | `general-purpose` | Fallback for unspecified tasks |
 
 ### Automatic Documentation Fetching
@@ -221,10 +224,23 @@ python-expert uses current best practices
 
 | Command | Description |
 |---------|-------------|
+| `/analyze-project` | Analyze codebase and store all entities, relationships, and context in graphiti-memory. Supports incremental updates and deep AST parsing. |
 | `/github-pr-review` | Review a GitHub PR and post inline comments. Posts as single review with summary. |
 | `/github-review-handler` | Process human reviewer comments from a PR. |
 | `/github-coderabbitai-review-handler` | Process CodeRabbit AI review comments. |
 | `/code-review` | Run code review on local changes. |
+
+### `/analyze-project` Features
+
+- **Incremental Updates** - Only analyzes changed files since last run
+- **Deep AST Parsing** - Extracts functions, classes, imports, dependencies
+- **Batch Processing** - Handles large codebases efficiently
+- **Usage Options**:
+  - `/analyze-project` - Analyze current directory (incremental)
+  - `/analyze-project --full` - Full analysis, ignoring previous state
+  - `/analyze-project --name custom-name` - Use custom group ID for isolation
+- **Persistent Memory** - Knowledge graph persists across Claude sessions
+- **Relationship Mapping** - Tracks entity relationships and dependencies
 
 ### `/github-pr-review` Features
 
@@ -238,6 +254,11 @@ python-expert uses current best practices
 ## MCP Servers
 
 The `.claude/servers/` directory contains MCP (Model Context Protocol) server implementations.
+
+### Available MCP Servers
+
+1. **Code Execution Server** - UTCP-based code execution layer for tool chaining
+2. **Graphiti Memory Server** - Knowledge graph storage for persistent memory across sessions
 
 ### Code Execution Server
 
@@ -333,6 +354,70 @@ npm install
 3. Restart Claude Code for the changes to take effect.
 
 See `configs/example.json.example` for a config template.
+
+### Graphiti Memory Server
+
+The Graphiti Memory Server enables persistent knowledge graph storage across Claude sessions.
+
+**Key features:**
+- **Knowledge Graph Storage** - Stores entities, relationships, and facts in a graph database
+- **Semantic Search** - Search for nodes and facts using natural language queries
+- **Episode Management** - Add episodes (events/observations) that automatically extract entities and relationships
+- **Persistent Memory** - Knowledge persists across sessions, enabling long-term context
+- **Group Isolation** - Multiple projects can have separate knowledge graphs
+
+**Use cases:**
+- Project analysis and codebase understanding (via `/analyze-project`)
+- Long-term memory of user preferences and decisions
+- Tracking relationships between code entities
+- Building context over multiple sessions
+
+**Prerequisites:**
+
+To use `/analyze-project` and graphiti-memory features, you need to set up the Graphiti MCP server:
+
+**Graphiti MCP Server**: https://github.com/getzep/graphiti/tree/main/mcp_server
+
+Follow the installation instructions in the repository to configure the MCP server, including:
+- Neo4j database setup (local or remote)
+- OpenAI API key configuration
+- Server installation and configuration
+
+**Setup:**
+
+The graphiti-memory server is configured in `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "graphiti-memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-graphiti-memory"
+      ],
+      "env": {
+        "NEO4J_URI": "bolt://localhost:7687",
+        "NEO4J_USER": "neo4j",
+        "NEO4J_PASSWORD": "your-password",
+        "GRAPHITI_DEFAULT_GROUP_ID": "default"
+      }
+    }
+  }
+}
+```
+
+**Prerequisites:**
+- Neo4j database running (local or remote)
+- OpenAI API key (for entity extraction)
+
+**Management:**
+
+The `graphiti-memory-manager` agent provides high-level operations:
+- Add episodes with automatic entity extraction
+- Search for nodes and facts
+- Manage graph data (delete edges/episodes)
+- Clear graph data
 
 ### Creating an Agent for Your MCP Server
 
