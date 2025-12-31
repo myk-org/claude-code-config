@@ -51,6 +51,7 @@ scripts/
 !agents/general-purpose.md
 !agents/git-expert.md
 !agents/go-expert.md
+!agents/graphiti-memory-manager.md
 !agents/java-expert.md
 !agents/jenkins-expert.md
 !agents/kubernetes-expert.md
@@ -60,6 +61,7 @@ scripts/
 !agents/test-runner.md
 
 # commands/
+!commands/analyze-project.md
 !commands/code-review.md
 !commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md

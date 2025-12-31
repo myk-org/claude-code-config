@@ -22,10 +22,11 @@
 | API docs | `api-documenter` |
 | Documentation fetching | `docs-fetcher` |
 | **MCP Tools** |
-| `mcp__github-webhook-logs-*__*` | `webhook-logs-manager` |
-| `mcp__openshift-python-wrapper__*` | `openshift-manager` |
 | `mcp__chrome-devtools__*` | `chrome-devtool-manager` |
 | `mcp__github-metrics__*` | `github-metrics-manager` |
+| `mcp__github-webhook-logs-*__*` | `webhook-logs-manager` |
+| `mcp__graphiti-memory__*` | `graphiti-memory-manager` |
+| `mcp__openshift-python-wrapper__*` | `openshift-manager` |
 
 ## Routing by Intent, Not Tool
 
