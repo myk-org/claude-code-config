@@ -376,7 +376,7 @@ The Graphiti Memory Server enables persistent knowledge graph storage across Cla
 
 To use `/analyze-project` and graphiti-memory features, you need to set up the Graphiti MCP server:
 
-**Graphiti MCP Server**: https://github.com/getzep/graphiti/tree/main/mcp_server
+**Graphiti MCP Server**: [Graphiti MCP server repository](https://github.com/getzep/graphiti/tree/main/mcp_server)
 
 Follow the installation instructions in the repository to configure the MCP server, including:
 - Neo4j database setup (local or remote)
