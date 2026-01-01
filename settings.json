@@ -99,7 +99,8 @@
       "mcp__graphiti-memory__get_entity_edge",
       "mcp__graphiti-memory__delete_episode",
       "mcp__graphiti-memory__delete_entity_edge",
-      "mcp__graphiti-memory__clear_graph"
+      "mcp__graphiti-memory__clear_graph",
+      "Bash(find:*)"
     ]
   },
   "feedbackSurveyState": {

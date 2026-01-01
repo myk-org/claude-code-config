@@ -40,7 +40,7 @@ Analyzes a codebase and stores all entities, relationships, and context in the g
 ## Storage Locations
 
 **Persistent files** (survive reboots, project-specific):
-- Location: `${PWD}/.claude/analyze-project/`
+- Location: `${PWD}/.analyze-project/`
 - Contains: `previous_hashes.json`, `project_info.json`
 - Should be added to `.gitignore`
 
@@ -116,10 +116,10 @@ Initialize project analysis with the following steps:
    - Java: Maven, Gradle
 
 6. Create directories:
-   - mkdir -p "${PWD}/.claude/analyze-project"  (persistent)
+   - mkdir -p "${PWD}/.analyze-project"  (persistent)
    - mkdir -p /tmp/claude/analyze-project       (temporary)
 
-7. Write project info to ${PWD}/.claude/analyze-project/project_info.json:
+7. Write project info to ${PWD}/.analyze-project/project_info.json:
    {
      "project_name": "...",
      "group_id": "...",
@@ -151,7 +151,7 @@ Display: `🔍 Phase 2: Checking for previous analysis...`
 ```
 Check for previous analysis of the project.
 
-1. Read project info from ${PWD}/.claude/analyze-project/project_info.json
+1. Read project info from ${PWD}/.analyze-project/project_info.json
 2. Extract GROUP_ID and PROJECT_NAME
 3. Call search_nodes with:
    - query: "project metadata ${PROJECT_NAME}"
@@ -187,7 +187,7 @@ Display: `🔍 Phase 3: Discovering source files...`
 ```
 Discover source files for analysis:
 
-1. Read project_info.json from ${PWD}/.claude/analyze-project/
+1. Read project_info.json from ${PWD}/.analyze-project/
 2. Determine file patterns based on project_type:
    - Python: **/*.py
    - Node.js: **/*.{js,ts,jsx,tsx,mjs,cjs}
@@ -227,7 +227,7 @@ Display: `🔍 Phase 4: Calculating changes...`
 ```
 Calculate file changes for incremental analysis:
 
-1. Read project_info.json from ${PWD}/.claude/analyze-project/
+1. Read project_info.json from ${PWD}/.analyze-project/
 2. Check IS_FULL_ANALYSIS flag
 3. If IS_FULL_ANALYSIS is true:
    - Copy all_files.txt to files_to_analyze.txt
@@ -238,13 +238,13 @@ Calculate file changes for incremental analysis:
 5. Calculate SHA256 hash for each file:
    sha256sum "$file" | cut -d' ' -f1
 
-6. Write current hashes to ${PWD}/.claude/analyze-project/current_hashes.json:
+6. Write current hashes to ${PWD}/.analyze-project/current_hashes.json:
    {
      "path/to/file.py": "sha256hash",
      ...
    }
 
-7. Check if ${PWD}/.claude/analyze-project/previous_hashes.json exists:
+7. Check if ${PWD}/.analyze-project/previous_hashes.json exists:
    - If NOT exists: This is first analysis, analyze all files
    - If exists: Compare hashes to find changed files
 
@@ -418,7 +418,7 @@ Display: `🔍 Phase 7: Storing analysis in graphiti-memory...`
 ```
 Store project metadata episode.
 
-1. Read project_info.json from ${PWD}/.claude/analyze-project/
+1. Read project_info.json from ${PWD}/.analyze-project/
 2. Read analysis statistics from all analysis_batch_*.json files
 3. Count total classes, functions, files, API endpoints
 
@@ -458,7 +458,7 @@ Store project metadata episode.
 Store file episodes for all analyzed files.
 
 1. Read all analysis_batch_*.json files from /tmp/claude/analyze-project/
-2. Read current_hashes.json from ${PWD}/.claude/analyze-project/ for file hashes
+2. Read current_hashes.json from ${PWD}/.analyze-project/ for file hashes
 3. For each analyzed file, prepare episode JSON:
    {
      "type": "file",
@@ -560,8 +560,8 @@ Store relationship episodes from the relationship mapping.
 ```
 Store file hash metadata for future incremental updates.
 
-1. Read current_hashes.json from ${PWD}/.claude/analyze-project/
-2. Read project_info.json from ${PWD}/.claude/analyze-project/ for metadata
+1. Read current_hashes.json from ${PWD}/.analyze-project/
+2. Read project_info.json from ${PWD}/.analyze-project/ for metadata
 3. Prepare metadata JSON:
    {
      "type": "metadata",
@@ -582,7 +582,7 @@ Store file hash metadata for future incremental updates.
    - source: "json"
    - source_description: "File hash metadata for incremental updates"
 
-5. Copy ${PWD}/.claude/analyze-project/current_hashes.json to ${PWD}/.claude/analyze-project/previous_hashes.json
+5. Copy ${PWD}/.analyze-project/current_hashes.json to ${PWD}/.analyze-project/previous_hashes.json
    for next incremental run
 
 6. Return:
@@ -602,7 +602,7 @@ Display: `🔍 Phase 8: Verifying storage and generating summary...`
 ```
 Verify storage and provide comprehensive summary.
 
-1. Read project_info.json from ${PWD}/.claude/analyze-project/
+1. Read project_info.json from ${PWD}/.analyze-project/
 2. Extract GROUP_ID and PROJECT_NAME
 
 3. Verify data was stored by calling search_nodes multiple times:
@@ -679,10 +679,10 @@ If API endpoints exist, include top 5 in response:
 
 ```
 💡 Storage locations:
-   Persistent: ${PWD}/.claude/analyze-project/ (hashes, project info)
+   Persistent: ${PWD}/.analyze-project/ (hashes, project info)
    Temporary:  /tmp/claude/analyze-project/ (batch files, can be deleted)
 
-   Add .claude/analyze-project/ to your .gitignore if not already present.
+   Add .analyze-project/ to your .gitignore if not already present.
 ```
 
 ---
