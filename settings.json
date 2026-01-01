@@ -98,6 +98,19 @@
     "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh*)",
     "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh*)"
   ],
+  "permissions": {
+    "allow": [
+      "mcp__graphiti-memory__get_status",
+      "mcp__graphiti-memory__search_nodes",
+      "mcp__graphiti-memory__search_memory_facts",
+      "mcp__graphiti-memory__add_memory",
+      "mcp__graphiti-memory__get_episodes",
+      "mcp__graphiti-memory__get_entity_edge",
+      "mcp__graphiti-memory__delete_episode",
+      "mcp__graphiti-memory__delete_entity_edge",
+      "mcp__graphiti-memory__clear_graph"
+    ]
+  },
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309
   }
