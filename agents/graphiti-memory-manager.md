@@ -1,8 +1,6 @@
 ---
 name: graphiti-memory-manager
 description: MUST BE USED for all graphiti-memory MCP operations including knowledge graph management, entity/relationship storage, memory search, and episode management. Specializes in graph-based knowledge storage and retrieval.
-tools: Read, Bash, mcp__graphiti-memory__get_status, mcp__graphiti-memory__search_nodes, mcp__graphiti-memory__search_memory_facts, mcp__graphiti-memory__add_memory, mcp__graphiti-memory__get_episodes, mcp__graphiti-memory__get_entity_edge, mcp__graphiti-memory__delete_episode, mcp__graphiti-memory__delete_entity_edge, mcp__graphiti-memory__clear_graph
-permissionMode: bypassPermissions
 ---
 
 > **You ARE the specialist. Do the work directly. The orchestrator already routed this task to you.**
