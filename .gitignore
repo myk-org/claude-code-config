@@ -74,6 +74,7 @@ scripts/
 !commands/scripts/github-review-handler/get-human-reviews.sh
 
 # scripts/
+!scripts/git-protection.py
 !scripts/inject-claude.sh
 !scripts/my-notifier.sh
 !scripts/post-compact-restore.py
