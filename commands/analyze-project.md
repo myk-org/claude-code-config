@@ -102,6 +102,9 @@ The script will:
 4. Write project_info.json
 
 Display the script output directly to the user.
+
+**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
 ```
 
 **Display agent response.**
@@ -164,6 +167,9 @@ Discover source files using the find-source-files.sh script:
 4. Return summary:
    ✅ Found: <count> source files
    📄 File list: ${TEMP_DIR}/all_files.txt
+
+**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
 ```
 
 **Display agent response.**
@@ -203,6 +209,9 @@ Calculate file changes using the helper scripts:
 
 6. If files_to_analyze is 0, add:
    ✅ No changes detected - project is up to date!
+
+**IMPORTANT: If any script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
 ```
 
 **Display agent response.**
@@ -325,6 +334,9 @@ Build relationship maps from code analysis results.
 
 3. Read the merged analysis from ${TEMP_DIR}/all_analysis.json
 
+**IMPORTANT: If any script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
+
 4. Extract relationships:
 
    a. Import dependencies:
@@ -412,6 +424,9 @@ Run the prepare-episodes script to create batches:
 uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py files
 
 Display the script output directly to the user.
+
+**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
 ```
 
 **Display agent response.**
@@ -449,6 +464,9 @@ Run the prepare-episodes script to create batches:
 uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py classes
 
 Display the script output directly to the user.
+
+**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
 ```
 
 **Display agent response.**
@@ -486,6 +504,9 @@ Run the prepare-episodes script to create batches:
 uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py relationships
 
 Display the script output directly to the user.
+
+**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
 ```
 
 **Display agent response.**
@@ -645,6 +666,9 @@ Run the cleanup script:
 ~/.claude/commands/scripts/analyze-project/cleanup.sh
 
 Display the script output.
+
+**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
 ```
 
 **Display agent response.**
@@ -667,6 +691,15 @@ Display the script output.
 - `0` = Success
 - `1` = Usage error (wrong arguments) - display help, do NOT create issue
 - `2` = Script logic error (bug) - ask user about creating issue
+
+**CRITICAL: Agent Behavior on Script Errors**
+
+When delegating to agents that run scripts (bash-expert, etc.), include this instruction:
+
+> **If the script fails, DO NOT attempt to fix it.**
+> Just report the error output and exit code. The orchestrator will handle error recovery.
+
+This prevents agents from trying to "help" by modifying scripts, which violates the error handling protocol.
 
 **If a script exits with code 2 (script bug):**
 
@@ -740,6 +773,22 @@ EOF
 1. Display the error message to user
 2. Attempt to continue with remaining phases if possible
 3. Display partial results if some phases completed
+
+---
+
+## Standard Script Delegation Format
+
+When delegating a script execution, use this format:
+
+```
+Run the script:
+<script command>
+
+**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+Report the full error output and exit code, then stop.
+```
+
+This instruction MUST be included in every delegation that runs a script to ensure agents follow the error handling protocol and do not attempt to modify scripts on failure.
 
 ---
 
