@@ -19,7 +19,11 @@ def load_project_info(path: Path) -> dict[str, Any]:
     """Load and parse project_info.json file."""
     try:
         with path.open() as f:
-            return json.load(f)
+            data = json.load(f)
+        if "temp_dir" not in data:
+            print(f"❌ Error: temp_dir not found in {path}", file=sys.stderr)
+            sys.exit(2)
+        return data
     except FileNotFoundError:
         print(f"❌ Error: File not found: {path}", file=sys.stderr)
         sys.exit(2)
@@ -79,17 +83,17 @@ def show_batch_details(batches: list[list[dict[str, Any]]], batch_num: int) -> N
     print("Files in batch:")
 
     for idx, file_info in enumerate(batch, 1):
-        path = file_info.get("path", "Unknown")
+        file_path = file_info.get("file", "Unknown")
         lang = file_info.get("language", "Unknown")
-        print(f"  {idx}. {path} ({lang})")
+        print(f"  {idx}. {file_path} ({lang})")
 
-        # Show structure info if available
-        if "analysis" in file_info:
-            analysis = file_info["analysis"]
-            classes = len(analysis.get("classes", []))
-            functions = len(analysis.get("functions", []))
-            print(f"     Classes: {classes}, Functions: {functions}")
-        elif "error" in file_info:
+        # Show structure info
+        classes = len(file_info.get("classes", []))
+        functions = len(file_info.get("functions", []))
+        imports = len(file_info.get("imports", []))
+        print(f"     Classes: {classes}, Functions: {functions}, Imports: {imports}")
+
+        if "error" in file_info:
             print(f"     ⚠️  Error: {file_info['error']}")
 
 
@@ -120,20 +124,38 @@ def show_sample(batches: list[list[dict[str, Any]]]) -> None:
         file_info = batch[0]  # First file in batch
 
         print(f"\n=== Batch {batch_num} ({label}) ===")
-        print(f"  File: {file_info.get('path', 'Unknown')}")
+        print(f"  File: {file_info.get('file', 'Unknown')}")
         print(f"  Language: {file_info.get('language', 'Unknown')}")
 
-        if "analysis" in file_info:
-            analysis = file_info["analysis"]
-            classes = len(analysis.get("classes", []))
-            functions = len(analysis.get("functions", []))
-            print("  Has valid structure: ✅")
-            print(f"  Classes: {classes}, Functions: {functions}")
-        elif "error" in file_info:
-            print("  Has valid structure: ❌")
-            print(f"  Error: {file_info['error']}")
-        else:
-            print("  Has valid structure: ⚠️  Unknown")
+        classes = len(file_info.get("classes", []))
+        functions = len(file_info.get("functions", []))
+        imports = len(file_info.get("imports", []))
+
+        print("  Has valid structure: ✅")
+        print(f"  Classes: {classes}, Functions: {functions}, Imports: {imports}")
+
+        if "error" in file_info:
+            print(f"  ⚠️  Error: {file_info['error']}")
+
+
+def load_batch_files(temp_dir: Path) -> list[list[dict[str, Any]]]:
+    """Load all analysis batch files from temp_dir."""
+    batch_files = sorted(temp_dir.glob("analysis_batch_*.json"))
+    if not batch_files:
+        print(f"❌ No analysis_batch_*.json files found in {temp_dir}", file=sys.stderr)
+        sys.exit(2)
+
+    batches = []
+    for batch_file in batch_files:
+        try:
+            with batch_file.open() as f:
+                batch_data = json.load(f)
+            batches.append(batch_data)
+        except json.JSONDecodeError as e:
+            print(f"❌ Invalid JSON in {batch_file}: {e}", file=sys.stderr)
+            sys.exit(2)
+
+    return batches
 
 
 def main() -> None:
@@ -152,8 +174,8 @@ Examples:
     parser.add_argument(
         "project_info",
         nargs="?",
-        default="project_info.json",
-        help="Path to project_info.json (default: project_info.json)"
+        default=None,
+        help="Path to project_info.json (default: ${PWD}/.analyze-project/project_info.json)"
     )
     parser.add_argument(
         "--batch",
@@ -169,15 +191,18 @@ Examples:
 
     args = parser.parse_args()
 
-    # Load project info
-    project_path = Path(args.project_info)
-    project_info = load_project_info(project_path)
+    # Determine project_info.json path
+    if args.project_info:
+        project_path = Path(args.project_info)
+    else:
+        project_path = Path.cwd() / ".analyze-project" / "project_info.json"
 
-    # Get batches
-    batches = project_info.get("batches", [])
-    if not batches:
-        print("❌ No batches found in project info", file=sys.stderr)
-        sys.exit(2)
+    # Load project info
+    project_info = load_project_info(project_path)
+    temp_dir = Path(project_info["temp_dir"])
+
+    # Load batch files from temp_dir
+    batches = load_batch_files(temp_dir)
 
     # Execute requested action
     if args.sample:

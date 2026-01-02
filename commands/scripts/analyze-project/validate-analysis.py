@@ -147,7 +147,7 @@ def main() -> int:
         print(f"❌ Error reading {project_info_path}: {e}", file=sys.stderr)
         return 1
 
-    batch_dir = Path(project_info.get("batch_dir", project_info_path.parent))
+    batch_dir = Path(project_info.get("temp_dir", project_info_path.parent))
 
     # Find all batch files
     batch_files = sorted(batch_dir.glob("analysis_batch_*.json"))
