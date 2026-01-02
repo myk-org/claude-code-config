@@ -77,6 +77,7 @@ scripts/
 !commands/scripts/analyze-project/init-analysis.sh
 !commands/scripts/analyze-project/merge-analysis.py
 !commands/scripts/analyze-project/prepare-episodes.py
+!commands/scripts/analyze-project/validate-analysis.py
 !commands/scripts/general/
 !commands/scripts/general/get-pr-info.sh
 !commands/scripts/github-coderabbitai-review-handler/

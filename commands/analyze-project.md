@@ -315,12 +315,17 @@ If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from p
 
 Build relationship maps from code analysis results.
 
-1. First, run the merge script to combine all analysis batches:
+1. First, validate all analysis batches:
+   uv run ~/.claude/commands/scripts/analyze-project/validate-analysis.py
+
+   If validation fails (exit code 2), STOP and report the errors to the user.
+
+2. Merge all analysis batches:
    uv run ~/.claude/commands/scripts/analyze-project/merge-analysis.py
 
-2. Read the merged analysis from ${TEMP_DIR}/all_analysis.json
+3. Read the merged analysis from ${TEMP_DIR}/all_analysis.json
 
-3. Extract relationships:
+4. Extract relationships:
 
    a. Import dependencies:
       - For each internal import: {source: file, target: imported_module, type: "imports"}
@@ -340,9 +345,9 @@ Build relationship maps from code analysis results.
       - Infer source file from test file name
       - Create: {source: test_file, target: source_file, type: "tests"}
 
-4. Write all relationships to ${TEMP_DIR}/relationships.json
+5. Write all relationships to ${TEMP_DIR}/relationships.json
 
-5. Calculate statistics and return summary:
+6. Calculate statistics and return summary:
    ✅ Relationship mapping complete:
       Import relationships: <count> files
       Class hierarchies: <count> classes
