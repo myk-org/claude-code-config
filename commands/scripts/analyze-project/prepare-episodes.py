@@ -97,11 +97,11 @@ def prepare_files_episodes(
     temp_dir: Path,
     group_id: str,
     project_name: str,
-    project_dir: Path
+    working_dir: Path
 ) -> tuple[List[Dict[str, Any]], Dict[str, int]]:
     """Prepare episodes from analysis batch files."""
     # Load file hashes
-    hashes_file = project_dir / ".analyze-project" / "current_hashes.json"
+    hashes_file = working_dir / ".analyze-project" / "current_hashes.json"
     hashes = load_json(hashes_file) if hashes_file.exists() else {}
 
     # Find all analysis batch files
@@ -226,7 +226,7 @@ def save_batches(
         batch = episodes[i:i + batch_size]
 
         # Save batch file
-        batch_filename = f"episodes_{episode_type}_batch_{batch_num:03d}.json"
+        batch_filename = f"episodes_{episode_type}_batch_{batch_num}.json"
         batch_path = temp_dir / batch_filename
         save_json(batch_path, batch)
         batch_files.append(batch_filename)
@@ -294,10 +294,10 @@ def main() -> None:
         temp_dir = Path(project_info.get("temp_dir", ""))
         group_id = project_info.get("group_id", "")
         project_name = project_info.get("project_name", "")
-        project_dir = Path(project_info.get("project_dir", ""))
+        working_dir = Path(project_info.get("working_dir", ""))
 
-        if not temp_dir or not group_id or not project_name:
-            error_exit("project_info.json missing required fields: temp_dir, group_id, project_name")
+        if not temp_dir or not group_id or not project_name or not working_dir:
+            error_exit("project_info.json missing required fields: temp_dir, group_id, project_name, working_dir")
 
         if not temp_dir.exists():
             error_exit(f"Temp directory does not exist: {temp_dir}")
@@ -306,7 +306,7 @@ def main() -> None:
         if episode_type == "relationships":
             episodes, breakdown = prepare_relationships_episodes(temp_dir, group_id, project_name)
         elif episode_type == "files":
-            episodes, breakdown = prepare_files_episodes(temp_dir, group_id, project_name, project_dir)
+            episodes, breakdown = prepare_files_episodes(temp_dir, group_id, project_name, working_dir)
         elif episode_type == "classes":
             episodes, breakdown = prepare_classes_episodes(temp_dir, group_id, project_name)
         else:

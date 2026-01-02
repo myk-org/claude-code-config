@@ -147,13 +147,13 @@ def main() -> int:
         print(f"❌ Error reading {project_info_path}: {e}", file=sys.stderr)
         return 1
 
-    batch_dir = Path(project_info.get("temp_dir", project_info_path.parent))
+    temp_dir = Path(project_info.get("temp_dir", project_info_path.parent))
 
     # Find all batch files
-    batch_files = sorted(batch_dir.glob("analysis_batch_*.json"))
+    batch_files = sorted(temp_dir.glob("analysis_batch_*.json"))
 
     if not batch_files:
-        print(f"⚠️  No analysis batch files found in {batch_dir}")
+        print(f"⚠️  No analysis batch files found in {temp_dir}")
         return 0
 
     print("🔍 Validating analysis batches against schema...")

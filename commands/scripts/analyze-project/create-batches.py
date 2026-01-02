@@ -181,7 +181,7 @@ def _write_batch(
     oversized: bool,
 ) -> None:
     """Write a single batch file and add to batches list."""
-    batch_file = temp_dir / f"file_batch_{batch_num:03d}.txt"
+    batch_file = temp_dir / f"file_batch_{batch_num}.txt"
 
     with open(batch_file, "w") as f:
         for file_path in files:

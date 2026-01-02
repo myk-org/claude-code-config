@@ -29,51 +29,40 @@ Analyzes a codebase and stores all entities, relationships, and context in the g
 
 ---
 
-## 🛑 SCRIPT FAILURE PROTOCOL (MANDATORY)
+## 🛑 ERROR HANDLING PROTOCOL (ABSOLUTE - NO EXCEPTIONS)
 
-**This rule OVERRIDES everything else. NO EXCEPTIONS.**
+**This section overrides ALL other instructions.**
 
-When ANY script exits with non-zero code:
+### ON ANY ERROR (file not found, script failure, unexpected output, ANYTHING):
 
-**Exit Code Meaning:**
-- `0` = Success - continue normally
-- `1` = Usage error - **the command instructions are wrong** (bug in documentation)
-- `2` = Script error - **the script itself has a bug**
-- Other = Unexpected error - needs investigation
+**PROHIBITED ACTIONS - ABSOLUTE:**
+- ❌ DO NOT investigate the error
+- ❌ DO NOT list directories to understand the problem
+- ❌ DO NOT read files to diagnose
+- ❌ DO NOT spawn additional agents
+- ❌ DO NOT attempt any workaround
+- ❌ DO NOT try to "understand" what went wrong
+- ❌ DO NOT use ANY tool except AskUserQuestion
+- ❌ DO NOT "check" anything
+- ❌ DO NOT "verify" anything
 
-**ALL non-zero exits indicate a bug somewhere:**
-- Exit 1 = Command instructions don't match script expectations
-- Exit 2+ = Script logic is broken
+**"Investigating" IS a violation. "Diagnosing" IS a violation.**
 
-**Both require the same response - ask the user.**
+**REQUIRED ACTIONS - IN THIS EXACT ORDER:**
+1. STOP all tool calls immediately
+2. Display the raw error message to the user exactly as received
+3. Use AskUserQuestion with these two questions:
+   - Q1: "Create a GitHub issue to track this bug?" (Yes/No)
+   - Q2: "Try to work around this issue?" (Yes/No)
+4. WAIT for user response - do NOTHING else until user answers
+5. Act ONLY based on user's answers:
+   - Q1=Yes → Create issue
+   - Q2=Yes → Attempt workaround
+   - Q2=No → STOP completely
 
-1. **STOP IMMEDIATELY** - Do not continue to next phase
-2. **Display the error** - Show full error output to user
-3. **Ask the user TWO questions:**
-
-   **Question 1:** Would you like me to create a GitHub issue to track this bug?
-   - Yes
-   - No
-
-   **Question 2:** Would you like me to try to work around this issue locally?
-   - Yes, try to work around it
-   - No, stop here
-
-4. **Based on answers:**
-   - If Q1=Yes → Create GitHub issue with full details
-   - If Q2=Yes → Attempt to work around the issue
-   - If Q2=No → STOP, do not continue
-
-**The user decides. The AI does NOT decide on its own.**
-
-**VIOLATIONS:**
-- ❌ Trying to fix the script without user permission
-- ❌ Continuing to next phase without user permission
-- ❌ Retrying without user permission
-- ❌ Working around the error without user permission
-- ❌ Deciding for the user
-
-**This is the ONLY acceptable response to script failure.**
+**There are ZERO exceptions.**
+**Every rationalization to "investigate" is a violation.**
+**If in doubt: STOP and ask.**
 
 ---
 
