@@ -224,6 +224,9 @@ Display: `🔍 Phase 5: Analyzing code...`
 ```
 Analyze source files batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
 
+**IMPORTANT: All temp files MUST go to ${TEMP_DIR}/**
+If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from project_info.json), NOT /tmp/claude/.
+
 1. Read ${TEMP_DIR}/files_to_analyze.txt (lines ${START} to ${END})
    (Get TEMP_DIR from project_info.json)
 2. For each file, extract structured data:
@@ -304,6 +307,9 @@ Display: `🔍 Phase 6: Mapping relationships...`
 **DELEGATE to general-purpose agent:**
 
 ```
+**IMPORTANT: All temp files MUST go to ${TEMP_DIR}/**
+If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from project_info.json), NOT /tmp/claude/.
+
 Build relationship maps from code analysis results.
 
 1. Read TEMP_DIR from project_info.json
