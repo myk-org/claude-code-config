@@ -222,7 +222,7 @@ Display: `🔍 Phase 5: Analyzing code...`
 - Java → `java-expert`
 - Unknown → `general-purpose`
 
-**Process in batches of 15 files. For each batch:**
+**Process in batches of 8 files. For each batch:**
 
 ```
 Analyze source files batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
