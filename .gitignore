@@ -75,6 +75,7 @@ scripts/
 !commands/scripts/analyze-project/detect-project.sh
 !commands/scripts/analyze-project/find-source-files.sh
 !commands/scripts/analyze-project/init-analysis.sh
+!commands/scripts/analyze-project/merge-analysis.py
 !commands/scripts/analyze-project/prepare-episodes.py
 !commands/scripts/general/
 !commands/scripts/general/get-pr-info.sh
