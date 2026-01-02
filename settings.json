@@ -111,6 +111,7 @@
       "mcp__graphiti-memory__delete_episode",
       "mcp__graphiti-memory__delete_entity_edge",
       "mcp__graphiti-memory__clear_graph",
+      "Read(~/.claude/commands/scripts/analyze-project/analysis_schema.json)",
       "Bash(~/.claude/commands/scripts/analyze-project/detect-project.sh:*)",
       "Bash(~/.claude/commands/scripts/analyze-project/find-source-files.sh:*)",
       "Bash(~/.claude/commands/scripts/analyze-project/calculate-hashes.sh:*)",
