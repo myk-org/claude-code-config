@@ -29,6 +29,54 @@ Analyzes a codebase and stores all entities, relationships, and context in the g
 
 ---
 
+## 🛑 SCRIPT FAILURE PROTOCOL (MANDATORY)
+
+**This rule OVERRIDES everything else. NO EXCEPTIONS.**
+
+When ANY script exits with non-zero code:
+
+**Exit Code Meaning:**
+- `0` = Success - continue normally
+- `1` = Usage error - **the command instructions are wrong** (bug in documentation)
+- `2` = Script error - **the script itself has a bug**
+- Other = Unexpected error - needs investigation
+
+**ALL non-zero exits indicate a bug somewhere:**
+- Exit 1 = Command instructions don't match script expectations
+- Exit 2+ = Script logic is broken
+
+**Both require the same response - ask the user.**
+
+1. **STOP IMMEDIATELY** - Do not continue to next phase
+2. **Display the error** - Show full error output to user
+3. **Ask the user TWO questions:**
+
+   **Question 1:** Would you like me to create a GitHub issue to track this bug?
+   - Yes
+   - No
+
+   **Question 2:** Would you like me to try to work around this issue locally?
+   - Yes, try to work around it
+   - No, stop here
+
+4. **Based on answers:**
+   - If Q1=Yes → Create GitHub issue with full details
+   - If Q2=Yes → Attempt to work around the issue
+   - If Q2=No → STOP, do not continue
+
+**The user decides. The AI does NOT decide on its own.**
+
+**VIOLATIONS:**
+- ❌ Trying to fix the script without user permission
+- ❌ Continuing to next phase without user permission
+- ❌ Retrying without user permission
+- ❌ Working around the error without user permission
+- ❌ Deciding for the user
+
+**This is the ONLY acceptable response to script failure.**
+
+---
+
 ## Usage
 
 - `/analyze-project` - Analyze current project (smart: full if no previous data, incremental otherwise)
@@ -349,17 +397,16 @@ REQUIRED fields for EACH file entry:
    CRITICAL: If a file has no classes or functions, use empty arrays: "classes": [], "functions": []
    DO NOT use null, undefined, or omit these fields. ALL fields are REQUIRED.
 
-🚨 **CRITICAL: ON SCRIPT FAILURE**
-- Exit code ≠ 0 → STOP IMMEDIATELY
-- DO NOT fix, modify, or work around
-- DO NOT continue to next step
-- ONLY report the error and exit code
-- The orchestrator handles error recovery
-
 6. Return summary:
    [Batch ${BATCH_NUM}/${TOTAL_BATCHES}] Analyzed: <count> files (<size>KB)
    Classes: <count>
    Functions: <count>
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **Note:** Batches are sized by content, not file count. An oversized batch (single large file) will have ⚠️ warning in manifest - consider using haiku model for those.
@@ -395,13 +442,6 @@ Build relationship maps from code analysis results.
 
 3. Read the merged analysis from ${TEMP_DIR}/all_analysis.json
 
-🚨 **CRITICAL: ON SCRIPT FAILURE**
-- Exit code ≠ 0 → STOP IMMEDIATELY
-- DO NOT fix, modify, or work around
-- DO NOT continue to next step
-- ONLY report the error and exit code
-- The orchestrator handles error recovery
-
 4. Extract relationships:
 
    a. Import dependencies:
@@ -430,6 +470,12 @@ Build relationship maps from code analysis results.
       Class hierarchies: <count> classes
       API endpoints: <count> endpoints
       Test mappings: <count> test files
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **Display agent response.**
@@ -475,6 +521,12 @@ Store project metadata episode.
 
 5. Return:
    ✅ Stored project metadata
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **Display agent response.**
@@ -514,6 +566,12 @@ Store file episodes from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
    - source_description: episode.source_description
 
 3. Return: ✅ Batch ${BATCH_NUM}: Stored X episodes
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **IMPORTANT: Spawn batch agents in parallel where possible to speed up processing.**
@@ -558,6 +616,12 @@ Store class episodes from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
    - source_description: episode.source_description
 
 3. Return: ✅ Batch ${BATCH_NUM}: Stored X episodes
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **IMPORTANT: Spawn batch agents in parallel where possible to speed up processing.**
@@ -602,6 +666,12 @@ Store relationship episodes from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
    - source_description: episode.source_description
 
 3. Return: ✅ Batch ${BATCH_NUM}: Stored X episodes
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **IMPORTANT: Spawn batch agents in parallel where possible to speed up processing.**
@@ -645,6 +715,12 @@ Store file hash metadata for future incremental updates.
 
 6. Return:
    ✅ Stored file hash metadata
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **Display agent response.**
@@ -730,6 +806,12 @@ If API endpoints exist, include top 5 in response:
    POST   /api/users
    GET    /api/users/{id}
    ... and <remaining_count> more
+
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
 ```
 
 **Display agent response as final output.**
@@ -854,6 +936,22 @@ EOF
 1. Display the error message to user
 2. Attempt to continue with remaining phases if possible
 3. Display partial results if some phases completed
+
+---
+
+## Standard Agent Error Instruction
+
+**EVERY delegation prompt to an agent MUST include this instruction:**
+
+```
+🚨 **ON ANY ERROR:**
+- DO NOT try to fix or work around
+- STOP immediately
+- Report the error back to the orchestrator
+- Let the orchestrator handle error recovery
+```
+
+This ensures agents don't try to "help" by fixing problems - they report back and let the orchestrator ask the user what to do.
 
 ---
 
