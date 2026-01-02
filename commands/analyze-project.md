@@ -121,6 +121,35 @@ Run this command again once graphiti-memory is properly configured.
 
 ---
 
+## User Confirmation
+
+**After confirming graphiti-memory is available, ask the user before proceeding:**
+
+Display:
+```
+⚠️ Project analysis can be token-consuming and time-consuming for large projects.
+
+This operation will:
+- Scan all source files in the project
+- Analyze code structure (classes, functions, imports)
+- Store analysis in graphiti-memory
+```
+
+**Use AskUserQuestion:**
+- Question: "Do you want to continue with the project analysis?"
+- Options:
+  - Yes, continue
+  - No, cancel
+
+**If user answers "No":**
+- Display: "Analysis cancelled."
+- STOP - do not proceed to Phase 1
+
+**If user answers "Yes":**
+- Continue to Phase 1
+
+---
+
 ## Phase 1: Project Initialization
 
 Display: `🔍 Phase 1: Initializing project analysis...`
