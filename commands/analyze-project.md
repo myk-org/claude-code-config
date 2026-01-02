@@ -91,19 +91,23 @@ Display: `🔍 Phase 1: Initializing project analysis...`
 **DELEGATE to bash-expert:**
 
 ```
-Run the init-analysis.sh script to initialize project analysis:
+Initialize project analysis:
 
-~/.claude/commands/scripts/analyze-project/init-analysis.sh ${ARGUMENTS}
+1. First, clean up any stale temp files from interrupted previous runs:
+   ~/.claude/commands/scripts/analyze-project/cleanup.sh
 
-The script will:
+2. Then run the init-analysis.sh script:
+   ~/.claude/commands/scripts/analyze-project/init-analysis.sh ${ARGUMENTS}
+
+The init-analysis script will:
 1. Parse --full and --name flags from arguments
 2. Detect project type, language, and framework
 3. Create .analyze-project/ and /tmp/claude/analyze-project/ directories
 4. Write project_info.json
 
-Display the script output directly to the user.
+Display the output from both scripts.
 
-**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
+**IMPORTANT: If any script fails (non-zero exit), DO NOT try to fix it.**
 Report the full error output and exit code, then stop.
 ```
 
