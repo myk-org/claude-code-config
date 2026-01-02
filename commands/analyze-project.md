@@ -107,8 +107,12 @@ The init-analysis script will:
 
 Display the output from both scripts.
 
-**IMPORTANT: If any script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 **Display agent response.**
@@ -172,8 +176,12 @@ Discover source files using the find-source-files.sh script:
    ✅ Found: <count> source files
    📄 File list: ${TEMP_DIR}/all_files.txt
 
-**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 **Display agent response.**
@@ -214,8 +222,12 @@ Calculate file changes using the helper scripts:
 6. If files_to_analyze is 0, add:
    ✅ No changes detected - project is up to date!
 
-**IMPORTANT: If any script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 **Display agent response.**
@@ -243,6 +255,20 @@ Analyze source files batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
 **IMPORTANT: All temp files MUST go to ${TEMP_DIR}/**
 If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from project_info.json), NOT /tmp/claude/.
 
+📋 **OUTPUT FORMAT: See schema at ~/.claude/commands/scripts/analyze-project/analysis_schema.json**
+
+REQUIRED fields for EACH file entry:
+- file (string): relative path - REQUIRED
+- language (string): "Python", "TypeScript", etc. - REQUIRED
+- purpose (string): brief description - REQUIRED
+- imports (object): {"internal": [...], "external": [...]} - REQUIRED
+- exports (array): exported symbols - REQUIRED
+- classes (array): class objects - REQUIRED, MUST BE ARRAY
+- functions (array): function objects - REQUIRED, MUST BE ARRAY
+- dependencies (array): external libs - REQUIRED
+
+⚠️ classes and functions MUST be arrays, NOT strings. Validation will fail otherwise.
+
 1. Read ${TEMP_DIR}/files_to_analyze.txt (lines ${START} to ${END})
    (Get TEMP_DIR from project_info.json)
 2. For each file, extract structured data:
@@ -267,18 +293,18 @@ If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from p
 3. Write analysis results to ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
    (Get TEMP_DIR from project_info.json)
 
-4. Format as JSON array with one object per file:
+4. Format as JSON array with one object per file (ALL FIELDS REQUIRED):
    [
      {
-       "file": "relative/path/to/file.py",
-       "language": "Python",
-       "purpose": "Brief description",
-       "imports": {
-         "internal": ["module1", "module2"],
-         "external": ["requests", "fastapi"]
+       "file": "relative/path/to/file.py",           // REQUIRED (string)
+       "language": "Python",                          // REQUIRED (string)
+       "purpose": "Brief description",                // REQUIRED (string)
+       "imports": {                                   // REQUIRED (object)
+         "internal": ["module1", "module2"],          // REQUIRED (array)
+         "external": ["requests", "fastapi"]          // REQUIRED (array)
        },
-       "exports": ["function_name", "ClassName"],
-       "classes": [
+       "exports": ["function_name", "ClassName"],     // REQUIRED (array)
+       "classes": [                                   // REQUIRED (array, even if empty)
          {
            "name": "ClassName",
            "docstring": "Class description",
@@ -287,7 +313,7 @@ If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from p
            "methods": [...]
          }
        ],
-       "functions": [
+       "functions": [                                 // REQUIRED (array, even if empty)
          {
            "name": "function_name",
            "parameters": ["param1: str", "param2: int = 0"],
@@ -297,9 +323,12 @@ If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from p
            "is_async": false
          }
        ],
-       "dependencies": ["requests", "fastapi"]
+       "dependencies": ["requests", "fastapi"]        // REQUIRED (array)
      }
    ]
+
+   CRITICAL: If a file has no classes or functions, use empty arrays: "classes": [], "functions": []
+   DO NOT use null, undefined, or omit these fields. ALL fields are REQUIRED.
 
 5. Return summary:
    [Batch ${BATCH_NUM}/${TOTAL_BATCHES}] Analyzed: <count> files
@@ -338,8 +367,12 @@ Build relationship maps from code analysis results.
 
 3. Read the merged analysis from ${TEMP_DIR}/all_analysis.json
 
-**IMPORTANT: If any script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 
 4. Extract relationships:
 
@@ -429,8 +462,12 @@ uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py files
 
 Display the script output directly to the user.
 
-**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 **Display agent response.**
@@ -469,8 +506,12 @@ uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py classes
 
 Display the script output directly to the user.
 
-**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 **Display agent response.**
@@ -509,8 +550,12 @@ uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py relationsh
 
 Display the script output directly to the user.
 
-**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 **Display agent response.**
@@ -671,8 +716,12 @@ Run the cleanup script:
 
 Display the script output.
 
-**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 **Display agent response.**
@@ -788,8 +837,12 @@ When delegating a script execution, use this format:
 Run the script:
 <script command>
 
-**IMPORTANT: If the script fails (non-zero exit), DO NOT try to fix it.**
-Report the full error output and exit code, then stop.
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
 This instruction MUST be included in every delegation that runs a script to ensure agents follow the error handling protocol and do not attempt to modify scripts on failure.

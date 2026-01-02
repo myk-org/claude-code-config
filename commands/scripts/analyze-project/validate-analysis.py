@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validate analysis batch files for correct structure and data types.
+"""Validate analysis batch files against JSON schema.
 
 Usage:
-    uv run validate-analysis.py [project_info.json]
+    uv run --with jsonschema validate-analysis.py [project_info.json]
 
 If project_info.json is not provided, defaults to ${PWD}/.analyze-project/project_info.json
 """
@@ -10,54 +10,77 @@ If project_info.json is not provided, defaults to ${PWD}/.analyze-project/projec
 import json
 import sys
 from pathlib import Path
-from typing import Any
+
+try:
+    from jsonschema import Draft7Validator, ValidationError
+except ImportError:
+    print("❌ Error: jsonschema library not found", file=sys.stderr)
+    print("Run with: uv run --with jsonschema validate-analysis.py", file=sys.stderr)
+    sys.exit(1)
 
 
-def validate_entry(entry: dict[str, Any], batch_file: str) -> list[str]:
-    """Validate a single file entry in an analysis batch.
+def load_schema() -> dict:
+    """Load the JSON schema from the script's directory."""
+    script_dir = Path(__file__).parent
+    schema_path = script_dir / "analysis_schema.json"
 
-    Returns list of error messages (empty if valid).
+    if not schema_path.exists():
+        print(f"❌ Error: Schema file not found at {schema_path}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(schema_path) as f:
+        return json.load(f)
+
+
+def format_schema_error(error: ValidationError, item_index: int | None = None) -> str:
+    """Format a schema validation error into a human-readable message.
+
+    Args:
+        error: The validation error
+        item_index: Optional index of the item in the array that failed
+
+    Returns:
+        Formatted error message
     """
-    errors = []
+    # Build the JSON path
+    path_parts = ["$"]
+    if item_index is not None:
+        path_parts.append(f"items[{item_index}]")
 
-    # Check required fields
-    required_fields = ["file", "language", "functions", "classes", "imports"]
-    for field in required_fields:
-        if field not in entry:
-            errors.append(f"Missing required field '{field}' in {entry.get('file', 'unknown file')}")
-            continue
+    for part in error.absolute_path:
+        if isinstance(part, int):
+            path_parts.append(f"[{part}]")
+        else:
+            path_parts.append(str(part))
 
-    # Type validation
-    if "file" in entry and not isinstance(entry["file"], str):
-        errors.append(f"'file' must be string, got {type(entry['file']).__name__}")
+    json_path = ".".join(path_parts)
 
-    if "language" in entry and not isinstance(entry["language"], str):
-        errors.append(f"'language' must be string in {entry.get('file', 'unknown')}")
-
-    # Critical: functions must be array, not string
-    if "functions" in entry:
-        if isinstance(entry["functions"], str):
-            errors.append(f"'functions' is string, not array in file {entry.get('file', 'unknown')}")
-        elif not isinstance(entry["functions"], list):
-            errors.append(f"'functions' must be array, got {type(entry['functions']).__name__} in {entry.get('file', 'unknown')}")
-
-    # Critical: classes must be array, not string
-    if "classes" in entry:
-        if isinstance(entry["classes"], str):
-            errors.append(f"'classes' is string, not array in file {entry.get('file', 'unknown')}")
-        elif not isinstance(entry["classes"], list):
-            errors.append(f"'classes' must be array, got {type(entry['classes']).__name__} in {entry.get('file', 'unknown')}")
-
-    # imports can be object or array
-    if "imports" in entry:
-        if not isinstance(entry["imports"], (dict, list)):
-            errors.append(f"'imports' must be object or array, got {type(entry['imports']).__name__} in {entry.get('file', 'unknown')}")
-
-    return errors
+    # Format the error message
+    if error.validator == "required":
+        missing_field = error.message.split("'")[1]
+        return f"{json_path}: missing required field '{missing_field}'"
+    elif error.validator == "type":
+        expected = error.validator_value
+        actual = type(error.instance).__name__
+        if actual == "str":
+            actual = "string"
+        elif actual == "dict":
+            actual = "object"
+        elif actual == "list":
+            actual = "array"
+        return f"{json_path}: expected {expected}, got {actual}"
+    elif error.validator == "additionalProperties":
+        return f"{json_path}: {error.message}"
+    else:
+        return f"{json_path}: {error.message}"
 
 
-def validate_batch_file(batch_path: Path) -> tuple[bool, int, list[str]]:
-    """Validate a single batch file.
+def validate_batch_file(batch_path: Path, validator: Draft7Validator) -> tuple[bool, int, list[str]]:
+    """Validate a single batch file against the schema.
+
+    Args:
+        batch_path: Path to the batch file
+        validator: Configured JSON schema validator
 
     Returns:
         (is_valid, file_count, errors)
@@ -77,20 +100,19 @@ def validate_batch_file(batch_path: Path) -> tuple[bool, int, list[str]]:
     except Exception as e:
         return False, 0, [f"Error reading file: {e}"]
 
-    # Check root is array
-    if not isinstance(data, list):
-        return False, 0, [f"Root must be array, got {type(data).__name__}"]
+    file_count = len(data) if isinstance(data, list) else 0
 
-    file_count = len(data)
+    # Validate against schema
+    validation_errors = sorted(validator.iter_errors(data), key=lambda e: e.path)
 
-    # Validate each entry
-    for idx, entry in enumerate(data):
-        if not isinstance(entry, dict):
-            errors.append(f"Entry {idx} must be object, got {type(entry).__name__}")
-            continue
+    for error in validation_errors:
+        # Determine item index if error is within an array item
+        item_index = None
+        if error.absolute_path and isinstance(error.absolute_path[0], int):
+            item_index = error.absolute_path[0]
 
-        entry_errors = validate_entry(entry, batch_path.name)
-        errors.extend(entry_errors)
+        formatted_error = format_schema_error(error, item_index)
+        errors.append(formatted_error)
 
     is_valid = len(errors) == 0
     return is_valid, file_count, errors
@@ -100,8 +122,12 @@ def main() -> int:
     """Main entry point."""
     # Parse arguments
     if len(sys.argv) > 2:
-        print("Usage: validate-analysis.py [project_info.json]", file=sys.stderr)
+        print("Usage: uv run --with jsonschema validate-analysis.py [project_info.json]", file=sys.stderr)
         return 1
+
+    # Load schema and create validator
+    schema = load_schema()
+    validator = Draft7Validator(schema)
 
     # Determine project_info.json path
     if len(sys.argv) == 2:
@@ -130,7 +156,7 @@ def main() -> int:
         print(f"⚠️  No analysis batch files found in {batch_dir}")
         return 0
 
-    print("🔍 Validating analysis batches...")
+    print("🔍 Validating analysis batches against schema...")
 
     # Validate each batch
     total_valid = 0
@@ -139,14 +165,14 @@ def main() -> int:
     all_errors: dict[str, list[str]] = {}
 
     for batch_path in batch_files:
-        is_valid, file_count, errors = validate_batch_file(batch_path)
+        is_valid, file_count, errors = validate_batch_file(batch_path, validator)
         total_files += file_count
 
         if is_valid:
             print(f"✅ {batch_path.name}: {file_count} files, valid")
             total_valid += 1
         else:
-            print(f"❌ {batch_path.name}: Error - {errors[0] if errors else 'unknown error'}")
+            print(f"❌ {batch_path.name}: Schema violation")
             total_invalid += 1
             all_errors[batch_path.name] = errors
 
@@ -158,13 +184,14 @@ def main() -> int:
     print(f"  Invalid: {total_invalid}")
     print(f"  Total files: {total_files}")
 
-    # Print all errors
+    # Print all errors in the requested format
     if all_errors:
         print()
-        print("Errors found:")
+        print("Schema violations:")
         for batch_name, errors in all_errors.items():
+            print(f"❌ {batch_name}: Schema violation")
             for error in errors:
-                print(f"  - {batch_name}: {error}")
+                print(f"   - {error}")
         return 2
 
     return 0

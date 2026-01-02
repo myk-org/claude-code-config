@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Analysis Batch File",
+  "description": "Schema for analysis_batch_*.json files produced by code analysis agents",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["file", "language", "purpose", "imports", "exports", "classes", "functions", "dependencies"],
+    "properties": {
+      "file": {
+        "type": "string",
+        "description": "Relative path to the source file"
+      },
+      "language": {
+        "type": "string",
+        "description": "Programming language (Python, TypeScript, JavaScript, Go, Java, etc.)"
+      },
+      "purpose": {
+        "type": "string",
+        "description": "Brief description of what the file does"
+      },
+      "imports": {
+        "type": "object",
+        "required": ["internal", "external"],
+        "properties": {
+          "internal": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Internal module imports"
+          },
+          "external": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "External library imports"
+          }
+        }
+      },
+      "exports": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "Exported symbols (functions, classes, constants)"
+      },
+      "classes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {"type": "string"},
+            "docstring": {"type": "string"},
+            "decorators": {"type": "array", "items": {"type": "string"}},
+            "inherits": {"type": "array", "items": {"type": "string"}},
+            "methods": {"type": "array"}
+          }
+        },
+        "description": "Class definitions - MUST be array, NOT string"
+      },
+      "functions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {"type": "string"},
+            "parameters": {"type": "array", "items": {"type": "string"}},
+            "return_type": {"type": "string"},
+            "docstring": {"type": "string"},
+            "decorators": {"type": "array", "items": {"type": "string"}},
+            "is_async": {"type": "boolean"}
+          }
+        },
+        "description": "Function definitions - MUST be array, NOT string"
+      },
+      "dependencies": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "External libraries used"
+      }
+    }
+  }
+}

@@ -92,7 +92,12 @@
     "Bash(~/.claude/commands/scripts/analyze-project/find-source-files.sh*)",
     "Bash(~/.claude/commands/scripts/analyze-project/calculate-hashes.sh*)",
     "Bash(~/.claude/commands/scripts/analyze-project/compare-hashes.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh*)"
+    "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh*)",
+    "Bash(~/.claude/commands/scripts/analyze-project/cleanup.sh*)",
+    "Bash(uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py*)",
+    "Bash(uv run ~/.claude/commands/scripts/analyze-project/merge-analysis.py*)",
+    "Bash(uv run --with jsonschema ~/.claude/commands/scripts/analyze-project/validate-analysis.py*)",
+    "Bash(uv run ~/.claude/commands/scripts/analyze-project/inspect-analysis.py*)"
   ],
   "permissions": {
     "allow": [
@@ -109,7 +114,12 @@
       "Bash(~/.claude/commands/scripts/analyze-project/find-source-files.sh:*)",
       "Bash(~/.claude/commands/scripts/analyze-project/calculate-hashes.sh:*)",
       "Bash(~/.claude/commands/scripts/analyze-project/compare-hashes.sh:*)",
-      "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh:*)"
+      "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh:*)",
+      "Bash(~/.claude/commands/scripts/analyze-project/cleanup.sh:*)",
+      "Bash(uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py:*)",
+      "Bash(uv run ~/.claude/commands/scripts/analyze-project/merge-analysis.py:*)",
+      "Bash(uv run --with jsonschema ~/.claude/commands/scripts/analyze-project/validate-analysis.py:*)",
+      "Bash(uv run ~/.claude/commands/scripts/analyze-project/inspect-analysis.py:*)"
     ]
   },
   "feedbackSurveyState": {

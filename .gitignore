@@ -69,6 +69,7 @@ scripts/
 !commands/github-review-handler.md
 !commands/scripts/
 !commands/scripts/analyze-project/
+!commands/scripts/analyze-project/analysis_schema.json
 !commands/scripts/analyze-project/calculate-hashes.sh
 !commands/scripts/analyze-project/cleanup.sh
 !commands/scripts/analyze-project/compare-hashes.sh
