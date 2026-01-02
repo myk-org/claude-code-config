@@ -2,9 +2,11 @@
 """
 prepare-episodes.py - Convert analysis data into episodes for graphiti-memory
 
-Usage: uv run prepare-episodes.py <episode_type> [project_info.json]
+Usage: uv run prepare-episodes.py <episode_type> [--batch-size N] [project_info.json]
 
 Where episode_type is one of: relationships, files, classes
+Options:
+  --batch-size N   Split episodes into batches of N (default: 20)
 If project_info.json is not provided, defaults to ${PWD}/.analyze-project/project_info.json
 
 Exit codes:
@@ -13,6 +15,7 @@ Exit codes:
   2 = script error
 """
 
+import argparse
 import json
 import sys
 import traceback
@@ -203,34 +206,88 @@ def prepare_classes_episodes(
     return episodes, dict(type_counts)
 
 
+def save_batches(
+    temp_dir: Path,
+    episode_type: str,
+    episodes: List[Dict[str, Any]],
+    batch_size: int
+) -> List[str]:
+    """
+    Save episodes in batches and return list of batch filenames.
+
+    Also creates a manifest file with metadata about the batches.
+    """
+    total_episodes = len(episodes)
+    batch_files = []
+
+    # Split into batches
+    for i in range(0, total_episodes, batch_size):
+        batch_num = (i // batch_size) + 1
+        batch = episodes[i:i + batch_size]
+
+        # Save batch file
+        batch_filename = f"episodes_{episode_type}_batch_{batch_num:03d}.json"
+        batch_path = temp_dir / batch_filename
+        save_json(batch_path, batch)
+        batch_files.append(batch_filename)
+
+    # Create manifest
+    manifest = {
+        "type": episode_type,
+        "total_episodes": total_episodes,
+        "batch_size": batch_size,
+        "total_batches": len(batch_files),
+        "batches": batch_files
+    }
+
+    manifest_filename = f"episodes_{episode_type}_manifest.json"
+    manifest_path = temp_dir / manifest_filename
+    save_json(manifest_path, manifest)
+
+    return batch_files
+
+
 def main() -> None:
     """Main entry point."""
     try:
         # Parse arguments
-        if len(sys.argv) < 2 or len(sys.argv) > 3:
-            error_exit(
-                "Usage: prepare-episodes.py <episode_type> [project_info.json]\n"
-                "Where episode_type is one of: relationships, files, classes\n"
-                "If project_info.json is not provided, defaults to ${PWD}/.analyze-project/project_info.json",
-                code=1
-            )
+        parser = argparse.ArgumentParser(
+            description="Convert analysis data into episodes for graphiti-memory",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="If project_info.json is not provided, defaults to ${PWD}/.analyze-project/project_info.json"
+        )
+        parser.add_argument(
+            "episode_type",
+            choices=["relationships", "files", "classes"],
+            help="Type of episodes to prepare"
+        )
+        parser.add_argument(
+            "--batch-size",
+            type=int,
+            default=20,
+            help="Number of episodes per batch file (default: 20)"
+        )
+        parser.add_argument(
+            "project_info",
+            nargs="?",
+            default=None,
+            help="Path to project_info.json"
+        )
 
-        episode_type = sys.argv[1]
+        args = parser.parse_args()
+
+        episode_type = args.episode_type
+        batch_size = args.batch_size
 
         # Default to ${PWD}/.analyze-project/project_info.json if not provided
-        if len(sys.argv) == 3:
-            project_info_file = Path(sys.argv[2])
+        if args.project_info:
+            project_info_file = Path(args.project_info)
         else:
             project_info_file = Path.cwd() / ".analyze-project" / "project_info.json"
 
-        # Validate episode type
-        valid_types = ["relationships", "files", "classes"]
-        if episode_type not in valid_types:
-            error_exit(
-                f"Invalid episode_type: {episode_type}\n"
-                f"Must be one of: {', '.join(valid_types)}",
-                code=1
-            )
+        # Validate batch size
+        if batch_size < 1:
+            error_exit("batch_size must be at least 1", code=1)
 
         # Load project info
         project_info = load_json(project_info_file)
@@ -255,13 +312,14 @@ def main() -> None:
         else:
             error_exit(f"Unknown episode_type: {episode_type}")
 
-        # Save episodes
-        output_file = temp_dir / f"episodes_{episode_type}.json"
-        save_json(output_file, episodes)
+        # Save episodes in batches
+        batch_files = save_batches(temp_dir, episode_type, episodes, batch_size)
+        manifest_file = temp_dir / f"episodes_{episode_type}_manifest.json"
 
         # Print summary
         print(f"✅ Prepared {len(episodes)} episodes (type: {episode_type})")
-        print(f"📄 Output: {output_file}")
+        print(f"📦 Split into {len(batch_files)} batches of {batch_size}")
+        print(f"📄 Manifest: {manifest_file}")
         print()
         print("Breakdown:")
         for key, count in sorted(breakdown.items()):

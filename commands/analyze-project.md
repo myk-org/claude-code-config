@@ -395,72 +395,114 @@ Store project metadata episode.
 
 ### 7.2: Store File Episodes
 
-**DELEGATE to graphiti-memory-manager:**
+**DELEGATE to bash-expert:**
 
 ```
-Store file episodes for all analyzed files.
+Run the prepare-episodes script to create batches:
 
-1. Read project_info.json from ${PWD}/.analyze-project/ to get TEMP_DIR and GROUP_ID
+uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py files
 
-2. Run the prepare-episodes script:
-   uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py files
-
-3. Read the generated episodes from ${TEMP_DIR}/episodes_files.json
-
-4. For each episode in batches of 20:
-   Call add_memory with the episode data (name, episode_body, group_id, source, source_description)
-
-5. Return summary:
-   ✅ Stored <count> file episodes
+Display the script output directly to the user.
 ```
 
 **Display agent response.**
+
+**For each batch file listed in the manifest, DELEGATE to graphiti-memory-manager:**
+
+```
+Store file episodes from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
+
+1. Read ${TEMP_DIR}/episodes_files_batch_${BATCH_NUM}.json
+2. For each episode in the batch, call add_memory with:
+   - name: episode.name
+   - episode_body: episode.episode_body
+   - group_id: episode.group_id
+   - source: episode.source
+   - source_description: episode.source_description
+
+3. Return: ✅ Batch ${BATCH_NUM}: Stored X episodes
+```
+
+**IMPORTANT: Spawn batch agents in parallel where possible to speed up processing.**
+
+**After all batches complete, display summary:**
+```
+✅ Stored <total> file episodes across <batch_count> batches
+```
 
 ### 7.3: Store Class Episodes
 
-**DELEGATE to graphiti-memory-manager:**
+**DELEGATE to bash-expert:**
 
 ```
-Store class episodes for all classes found in analysis.
+Run the prepare-episodes script to create batches:
 
-1. Read project_info.json from ${PWD}/.analyze-project/ to get TEMP_DIR and GROUP_ID
+uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py classes
 
-2. Run the prepare-episodes script:
-   uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py classes
-
-3. Read the generated episodes from ${TEMP_DIR}/episodes_classes.json
-
-4. For each episode in batches of 30:
-   Call add_memory with the episode data (name, episode_body, group_id, source, source_description)
-
-5. Return summary:
-   ✅ Stored <count> class episodes
+Display the script output directly to the user.
 ```
 
 **Display agent response.**
+
+**For each batch file listed in the manifest, DELEGATE to graphiti-memory-manager:**
+
+```
+Store class episodes from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
+
+1. Read ${TEMP_DIR}/episodes_classes_batch_${BATCH_NUM}.json
+2. For each episode in the batch, call add_memory with:
+   - name: episode.name
+   - episode_body: episode.episode_body
+   - group_id: episode.group_id
+   - source: episode.source
+   - source_description: episode.source_description
+
+3. Return: ✅ Batch ${BATCH_NUM}: Stored X episodes
+```
+
+**IMPORTANT: Spawn batch agents in parallel where possible to speed up processing.**
+
+**After all batches complete, display summary:**
+```
+✅ Stored <total> class episodes across <batch_count> batches
+```
 
 ### 7.4: Store Relationship Episodes
 
-**DELEGATE to graphiti-memory-manager:**
+**DELEGATE to bash-expert:**
 
 ```
-Store relationship episodes from the relationship mapping.
+Run the prepare-episodes script to create batches:
 
-1. Read project_info.json from ${PWD}/.analyze-project/ to get TEMP_DIR and GROUP_ID
+uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py relationships
 
-2. Run the prepare-episodes script:
-   uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py relationships
-
-3. Read the generated episodes from ${TEMP_DIR}/episodes_relationships.json
-
-4. For each episode in batches of 50:
-   Call add_memory with the episode data (name, episode_body, group_id, source, source_description)
-
-5. Return summary:
-   ✅ Stored <count> relationship episodes
+Display the script output directly to the user.
 ```
 
 **Display agent response.**
+
+**For each batch file listed in the manifest, DELEGATE to graphiti-memory-manager:**
+
+```
+Store relationship episodes from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
+
+1. Read ${TEMP_DIR}/episodes_relationships_batch_${BATCH_NUM}.json
+2. For each episode in the batch, call add_memory with:
+   - name: episode.name
+   - episode_body: episode.episode_body
+   - group_id: episode.group_id
+   - source: episode.source
+   - source_description: episode.source_description
+
+3. Return: ✅ Batch ${BATCH_NUM}: Stored X episodes
+```
+
+**IMPORTANT: Spawn batch agents in parallel where possible to speed up processing.**
+
+**After all batches complete, display summary:**
+```
+✅ Stored <total> relationship episodes across <batch_count> batches
+```
 
 ### 7.5: Store File Hash Metadata
 
