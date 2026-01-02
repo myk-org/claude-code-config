@@ -31,9 +31,8 @@ Analyzes a codebase and stores all entities, relationships, and context in the g
 
 ## Usage
 
-- `/analyze-project` - Analyze current project (incremental if exists)
+- `/analyze-project` - Analyze current project (smart: full if no previous data, incremental otherwise)
 - `/analyze-project --full` - Force full re-analysis
-- `/analyze-project --name custom-name` - Use custom group_id
 
 ---
 
@@ -45,9 +44,10 @@ Analyzes a codebase and stores all entities, relationships, and context in the g
 - Should be added to `.gitignore`
 
 **Temporary files** (session-only, discarded):
-- Location: `/tmp/claude/analyze-project/`
+- Location: `/tmp/claude/analyze-project/${PROJECT_HASH}/` (where PROJECT_HASH is first 8 chars of sha256 of working directory)
 - Contains: batch analysis files, intermediate data
 - Automatically cleaned up by system
+- Each project gets its own temp directory to prevent conflicts when analyzing multiple projects simultaneously
 
 ---
 
@@ -91,51 +91,17 @@ Display: `🔍 Phase 1: Initializing project analysis...`
 **DELEGATE to bash-expert:**
 
 ```
-Initialize project analysis with the following steps:
+Run the init-analysis.sh script to initialize project analysis:
 
-1. Parse arguments from: ${ARGUMENTS}
-   - Check for --full flag (sets IS_FULL_ANALYSIS=true)
-   - Check for --name <custom-name> (sets CUSTOM_NAME)
+~/.claude/commands/scripts/analyze-project/init-analysis.sh ${ARGUMENTS}
 
-2. Determine project name:
-   - If CUSTOM_NAME is set, use it as PROJECT_NAME
-   - Otherwise, use $(basename "$PWD") as PROJECT_NAME
+The script will:
+1. Parse --full and --name flags from arguments
+2. Detect project type, language, and framework
+3. Create .analyze-project/ and /tmp/claude/analyze-project/ directories
+4. Write project_info.json
 
-3. Set GROUP_ID="${PROJECT_NAME}"
-
-4. Detect project type by checking for configuration files:
-   - Python: pyproject.toml, setup.py, requirements.txt
-   - Node.js: package.json
-   - Go: go.mod
-   - Java: pom.xml, build.gradle
-   - Rust: Cargo.toml
-
-5. Detect framework from dependencies:
-   - Python: FastAPI, Flask, Django
-   - Node.js: React, Vue, Angular, Express
-   - Java: Maven, Gradle
-
-6. Create directories:
-   - mkdir -p "${PWD}/.analyze-project"  (persistent)
-   - mkdir -p /tmp/claude/analyze-project       (temporary)
-
-7. Write project info to ${PWD}/.analyze-project/project_info.json:
-   {
-     "project_name": "...",
-     "group_id": "...",
-     "working_dir": "$PWD",
-     "is_full_analysis": true/false,
-     "project_type": "...",
-     "language": "...",
-     "framework": "..."
-   }
-
-8. Return a brief summary:
-   🏷️  Project: <project_name>
-   📂 Working directory: <pwd>
-   🔧 Type: <project_type> (<language>)
-   📦 Framework: <framework>
-   🔄 Mode: <Full Analysis / Incremental Analysis>
+Display the script output directly to the user.
 ```
 
 **Display agent response.**
@@ -185,33 +151,16 @@ Display: `🔍 Phase 3: Discovering source files...`
 **DELEGATE to bash-expert:**
 
 ```
-Discover source files for analysis:
+Discover source files using the find-source-files.sh script:
 
-1. Read project_info.json from ${PWD}/.analyze-project/
-2. Determine file patterns based on project_type:
-   - Python: **/*.py
-   - Node.js: **/*.{js,ts,jsx,tsx,mjs,cjs}
-   - Go: **/*.go
-   - Java: **/*.java
-   - Rust: **/*.rs
-   - Unknown: **/*.{py,js,ts,go,java,rs,c,cpp,h,hpp}
+1. Read project_info.json from ${PWD}/.analyze-project/ to get project_type and temp_dir
+2. Run the script (it will automatically use the project-specific temp directory):
+   ~/.claude/commands/scripts/analyze-project/find-source-files.sh "$PWD"
 
-3. Find all matching files recursively from current directory
-
-4. Apply smart filtering (EXCLUDE):
-   - node_modules/, vendor/, __pycache__/, .git/, .venv/, venv/, .tox/
-   - dist/, build/, target/, .gradle/, out/, .next/, .nuxt/, .cache/
-   - *.pyc, *.pyo, .eggs/, *.egg-info/
-   - .mypy_cache/, .pytest_cache/, coverage/, .coverage
-   - tmp/, temp/
-
-5. Write filtered file list to /tmp/claude/analyze-project/all_files.txt
-
-6. Count total files
-
-7. Return summary:
+3. The script outputs the file count to stdout
+4. Return summary:
    ✅ Found: <count> source files
-   📄 File list: /tmp/claude/analyze-project/all_files.txt
+   📄 File list: ${TEMP_DIR}/all_files.txt
 ```
 
 **Display agent response.**
@@ -225,47 +174,32 @@ Display: `🔍 Phase 4: Calculating changes...`
 **DELEGATE to bash-expert:**
 
 ```
-Calculate file changes for incremental analysis:
+Calculate file changes using the helper scripts:
 
-1. Read project_info.json from ${PWD}/.analyze-project/
-2. Check IS_FULL_ANALYSIS flag
-3. If IS_FULL_ANALYSIS is true:
-   - Copy all_files.txt to files_to_analyze.txt
+1. Read project_info.json from ${PWD}/.analyze-project/ to get IS_FULL_ANALYSIS flag and TEMP_DIR
+
+2. If IS_FULL_ANALYSIS is true:
+   - Copy all_files.txt to files_to_analyze.txt:
+     cp "${TEMP_DIR}/all_files.txt" "${TEMP_DIR}/files_to_analyze.txt"
    - Return: "Full analysis mode: all files will be analyzed"
    - SKIP remaining steps
 
-4. For incremental mode, read all_files.txt
-5. Calculate SHA256 hash for each file:
-   sha256sum "$file" | cut -d' ' -f1
+3. Calculate hashes for all files (script will automatically use project-specific temp dir):
+   ~/.claude/commands/scripts/analyze-project/calculate-hashes.sh
 
-6. Write current hashes to ${PWD}/.analyze-project/current_hashes.json:
-   {
-     "path/to/file.py": "sha256hash",
-     ...
-   }
+4. Compare with previous hashes (script will automatically use project-specific temp dir):
+   ~/.claude/commands/scripts/analyze-project/compare-hashes.sh
 
-7. Check if ${PWD}/.analyze-project/previous_hashes.json exists:
-   - If NOT exists: This is first analysis, analyze all files
-   - If exists: Compare hashes to find changed files
+5. The compare script outputs JSON summary. Parse and display:
+   📊 Change Summary:
+      New files: <new_files>
+      Changed files: <changed_files>
+      Deleted files: <deleted_files>
+      Unchanged files: <unchanged_files>
+      Files to analyze: <files_to_analyze>
 
-8. If previous_hashes.json exists, compare:
-   - New files: in current, not in previous
-   - Changed files: different hash
-   - Deleted files: in previous, not in current
-   - Unchanged files: same hash
-
-9. Write new + changed files to /tmp/claude/analyze-project/files_to_analyze.txt
-
-10. Return summary:
-    📊 Change Summary:
-       New files: <count>
-       Changed files: <count>
-       Deleted files: <count>
-       Unchanged files: <count>
-       Files to analyze: <count>
-
-11. If 0 files to analyze, add:
-    ✅ No changes detected - project is up to date!
+6. If files_to_analyze is 0, add:
+   ✅ No changes detected - project is up to date!
 ```
 
 **Display agent response.**
@@ -290,7 +224,8 @@ Display: `🔍 Phase 5: Analyzing code...`
 ```
 Analyze source files batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
 
-1. Read /tmp/claude/analyze-project/files_to_analyze.txt (lines ${START} to ${END})
+1. Read ${TEMP_DIR}/files_to_analyze.txt (lines ${START} to ${END})
+   (Get TEMP_DIR from project_info.json)
 2. For each file, extract structured data:
 
    a. Imports: All import statements (internal and external modules)
@@ -310,7 +245,8 @@ Analyze source files batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
    e. Dependencies: External libraries used
    f. Purpose: Brief description of what the file does
 
-3. Write analysis results to /tmp/claude/analyze-project/analysis_batch_${BATCH_NUM}.json
+3. Write analysis results to ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
+   (Get TEMP_DIR from project_info.json)
 
 4. Format as JSON array with one object per file:
    [
@@ -370,10 +306,11 @@ Display: `🔍 Phase 6: Mapping relationships...`
 ```
 Build relationship maps from code analysis results.
 
-1. Read all analysis batch files from /tmp/claude/analyze-project/analysis_batch_*.json
-2. Merge into single array of all file analysis data
+1. Read TEMP_DIR from project_info.json
+2. Read all analysis batch files from ${TEMP_DIR}/analysis_batch_*.json
+3. Merge into single array of all file analysis data
 
-3. Extract relationships:
+4. Extract relationships:
 
    a. Import dependencies:
       - For each internal import: {source: file, target: imported_module, type: "imports"}
@@ -393,9 +330,9 @@ Build relationship maps from code analysis results.
       - Infer source file from test file name
       - Create: {source: test_file, target: source_file, type: "tests"}
 
-4. Write all relationships to /tmp/claude/analyze-project/relationships.json
+5. Write all relationships to ${TEMP_DIR}/relationships.json
 
-5. Calculate statistics and return summary:
+6. Calculate statistics and return summary:
    ✅ Relationship mapping complete:
       Import relationships: <count> files
       Class hierarchies: <count> classes
@@ -457,9 +394,10 @@ Store project metadata episode.
 ```
 Store file episodes for all analyzed files.
 
-1. Read all analysis_batch_*.json files from /tmp/claude/analyze-project/
-2. Read current_hashes.json from ${PWD}/.analyze-project/ for file hashes
-3. For each analyzed file, prepare episode JSON:
+1. Read TEMP_DIR from ${PWD}/.analyze-project/project_info.json
+2. Read all analysis_batch_*.json files from ${TEMP_DIR}/
+3. Read current_hashes.json from ${PWD}/.analyze-project/ for file hashes
+4. For each analyzed file, prepare episode JSON:
    {
      "type": "file",
      "path": "${FILE_PATH}",
@@ -473,15 +411,15 @@ Store file episodes for all analyzed files.
      "file_hash": "${SHA256_HASH}"
    }
 
-4. Process in batches of 20 files
-5. For each batch, call add_memory:
+5. Process in batches of 20 files
+6. For each batch, call add_memory:
    - name: "file:${FILE_PATH}"
    - episode_body: <JSON string (properly escaped)>
    - group_id: "${GROUP_ID}"
    - source: "json"
    - source_description: "Source file: ${FILE_PATH}"
 
-6. Track progress and return final summary:
+7. Track progress and return final summary:
    ✅ Stored <count> file episodes
 ```
 
@@ -494,9 +432,10 @@ Store file episodes for all analyzed files.
 ```
 Store class episodes for all classes found in analysis.
 
-1. Read all analysis_batch_*.json files from /tmp/claude/analyze-project/
-2. Extract all classes from all files
-3. For each class, prepare episode JSON:
+1. Read TEMP_DIR from ${PWD}/.analyze-project/project_info.json
+2. Read all analysis_batch_*.json files from ${TEMP_DIR}/
+3. Extract all classes from all files
+4. For each class, prepare episode JSON:
    {
      "type": "class",
      "name": "${CLASS_NAME}",
@@ -508,15 +447,15 @@ Store class episodes for all classes found in analysis.
      "dependencies": [...]
    }
 
-4. Process in batches of 30 classes
-5. For each batch, call add_memory:
+5. Process in batches of 30 classes
+6. For each batch, call add_memory:
    - name: "class:${CLASS_NAME}"
    - episode_body: <JSON string (properly escaped)>
    - group_id: "${GROUP_ID}"
    - source: "json"
    - source_description: "Class definition: ${CLASS_NAME}"
 
-6. Return final summary:
+7. Return final summary:
    ✅ Stored <count> class episodes
 ```
 
@@ -529,8 +468,9 @@ Store class episodes for all classes found in analysis.
 ```
 Store relationship episodes from the relationship mapping.
 
-1. Read relationships.json from /tmp/claude/analyze-project/
-2. For each relationship, prepare episode JSON:
+1. Read TEMP_DIR from ${PWD}/.analyze-project/project_info.json
+2. Read relationships.json from ${TEMP_DIR}/
+3. For each relationship, prepare episode JSON:
    {
      "type": "relationship",
      "source": "${SOURCE}",
@@ -539,15 +479,15 @@ Store relationship episodes from the relationship mapping.
      "context": "${CONTEXT}"
    }
 
-3. Process in batches of 50 relationships
-4. For each batch, call add_memory:
+4. Process in batches of 50 relationships
+5. For each batch, call add_memory:
    - name: "relationship:${SOURCE}→${TARGET}"
    - episode_body: <JSON string (properly escaped)>
    - group_id: "${GROUP_ID}"
    - source: "json"
    - source_description: "${TYPE}: ${SOURCE} → ${TARGET}"
 
-5. Return final summary:
+6. Return final summary:
    ✅ Stored <count> relationship episodes
 ```
 
@@ -630,11 +570,12 @@ Verify storage and provide comprehensive summary.
       - max_nodes: 10
       - Report: ✅ Relationships (<count> found)
 
-4. Read relationships.json to extract API endpoints (if any)
+4. Read TEMP_DIR from project_info.json
+5. Read ${TEMP_DIR}/relationships.json to extract API endpoints (if any)
 
-5. Generate final summary with all statistics and example queries
+6. Generate final summary with all statistics and example queries
 
-6. Return formatted summary:
+7. Return formatted summary:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 Analysis Complete - Summary
@@ -680,7 +621,7 @@ If API endpoints exist, include top 5 in response:
 ```
 💡 Storage locations:
    Persistent: ${PWD}/.analyze-project/ (hashes, project info)
-   Temporary:  /tmp/claude/analyze-project/ (batch files, can be deleted)
+   Temporary:  ${TEMP_DIR}/ (batch files, can be deleted)
 
    Add .analyze-project/ to your .gitignore if not already present.
 ```
@@ -689,13 +630,83 @@ If API endpoints exist, include top 5 in response:
 
 ## Error Handling
 
+**Script Exit Codes:**
+- `0` = Success
+- `1` = Usage error (wrong arguments) - display help, do NOT create issue
+- `2` = Script logic error (bug) - ask user about creating issue
+
+**If a script exits with code 2 (script bug):**
+
+1. Display the error to the user:
+```
+❌ Script error detected in <script_name>
+
+Error output:
+<error_output>
+```
+
+2. Analyze the error and suggest a fix if the pattern is recognizable
+
+3. Ask the user if they want to create a GitHub issue:
+```
+Would you like me to create a GitHub issue to track this bug?
+- Yes, create an issue
+- No, I'll handle it manually
+```
+
+4. If user agrees, create the issue with comprehensive details:
+
+```bash
+gh issue create \
+  --repo myk-org/claude-code-config \
+  --title "🐛 analyze-project: <script_name> failed at line <line_number>" \
+  --body "$(cat <<'EOF'
+## Script Failure
+
+**Script:** `<script_name>`
+**Exit Code:** 2
+**Failed at:** Line <line_number>
+**Working Directory:** `${PWD}`
+
+## Error Output
+```
+<full_error_output>
+```
+
+## Context
+- Project: `<project_name>`
+- Phase: <phase_number>
+- Project Type: `<project_type>`
+
+## Suggested Fix
+<if recognizable error pattern, suggest what might fix it>
+<otherwise: "Requires investigation">
+
+## Steps to Reproduce
+1. Navigate to a similar project directory
+2. Run `/analyze-project`
+3. Observe the error at phase <phase_number>
+
+## Diagnostic Info
+<any additional context that would help debug>
+
+---
+*Auto-generated by /analyze-project command*
+EOF
+)"
+```
+
+5. Display the issue URL to the user
+
+**If exit code is 1 (usage error):**
+- Display the error message with correct usage
+- Do NOT offer to create issue (it's user error, not a bug)
+- Continue if possible, or provide instructions
+
 **If any agent returns an error:**
 1. Display the error message to user
-2. Log to /tmp/claude/analyze-project/errors.log
-3. Continue with remaining steps when possible
-4. Display partial results if some phases completed successfully
-
-**This ensures partial progress is saved even if some operations fail.**
+2. Attempt to continue with remaining phases if possible
+3. Display partial results if some phases completed
 
 ---
 

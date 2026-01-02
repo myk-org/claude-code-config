@@ -61,16 +61,28 @@ scripts/
 !agents/test-runner.md
 
 # commands/
+!commands/
 !commands/analyze-project.md
 !commands/code-review.md
 !commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md
 !commands/github-review-handler.md
+!commands/scripts/
+!commands/scripts/analyze-project/
+!commands/scripts/analyze-project/calculate-hashes.sh
+!commands/scripts/analyze-project/compare-hashes.sh
+!commands/scripts/analyze-project/detect-project.sh
+!commands/scripts/analyze-project/find-source-files.sh
+!commands/scripts/analyze-project/init-analysis.sh
+!commands/scripts/general/
 !commands/scripts/general/get-pr-info.sh
+!commands/scripts/github-coderabbitai-review-handler/
 !commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
+!commands/scripts/github-pr-review/
 !commands/scripts/github-pr-review/get-claude-md.sh
 !commands/scripts/github-pr-review/get-pr-diff.sh
 !commands/scripts/github-pr-review/post-pr-inline-comment.sh
+!commands/scripts/github-review-handler/
 !commands/scripts/github-review-handler/get-human-reviews.sh
 
 # scripts/

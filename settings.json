@@ -87,7 +87,12 @@
     "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh*)",
-    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh*)"
+    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh*)",
+    "Bash(~/.claude/commands/scripts/analyze-project/detect-project.sh*)",
+    "Bash(~/.claude/commands/scripts/analyze-project/find-source-files.sh*)",
+    "Bash(~/.claude/commands/scripts/analyze-project/calculate-hashes.sh*)",
+    "Bash(~/.claude/commands/scripts/analyze-project/compare-hashes.sh*)",
+    "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh*)"
   ],
   "permissions": {
     "allow": [
@@ -100,8 +105,11 @@
       "mcp__graphiti-memory__delete_episode",
       "mcp__graphiti-memory__delete_entity_edge",
       "mcp__graphiti-memory__clear_graph",
-      "Bash(find:*)",
-      "Bash(basename:*)"
+      "Bash(~/.claude/commands/scripts/analyze-project/detect-project.sh:*)",
+      "Bash(~/.claude/commands/scripts/analyze-project/find-source-files.sh:*)",
+      "Bash(~/.claude/commands/scripts/analyze-project/calculate-hashes.sh:*)",
+      "Bash(~/.claude/commands/scripts/analyze-project/compare-hashes.sh:*)",
+      "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh:*)"
     ]
   },
   "feedbackSurveyState": {
