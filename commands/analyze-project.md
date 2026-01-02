@@ -118,7 +118,7 @@ Display: `🔍 Phase 2: Checking for previous analysis...`
 Check for previous analysis of the project.
 
 1. Read project info from ${PWD}/.analyze-project/project_info.json
-2. Extract GROUP_ID and PROJECT_NAME
+2. Extract GROUP_ID, PROJECT_NAME, IS_FULL_ANALYSIS, and FULL_ANALYSIS_REASON
 3. Call search_nodes with:
    - query: "project metadata ${PROJECT_NAME}"
    - group_ids: ["${GROUP_ID}"]
@@ -130,14 +130,17 @@ Check for previous analysis of the project.
 5. If no nodes are found, respond with:
    📋 NOT_FOUND: No previous analysis exists
 
-6. Determine analysis mode:
-   - If --full flag was passed (IS_FULL_ANALYSIS=true):
-     → Add "Will perform full re-analysis (--full flag)"
-   - Else if NO previous analysis found (step 5 returned NOT_FOUND):
-     → Set IS_FULL_ANALYSIS=true in project_info.json
-     → Add "Will perform full analysis (no previous data)"
-   - Else (previous analysis exists, no --full flag):
-     → Add "Will perform incremental update"
+6. Read analysis mode from project_info.json (already set by init-analysis.sh):
+   - Read is_full_analysis and full_analysis_reason fields
+   - If full_analysis_reason == "user_flag":
+     → Display "Will perform full re-analysis (--full flag)"
+   - If full_analysis_reason == "no_hashes":
+     → Display "Will perform full analysis (no previous hashes)"
+   - If full_analysis_reason == "incremental":
+     → Display "Will perform incremental update"
+
+Note: The analysis mode is determined by init-analysis.sh based on --full flag
+and presence of previous_hashes.json. Phase 2 just reports it.
 ```
 
 **Display agent response.**
@@ -627,12 +630,25 @@ If API endpoints exist, include top 5 in response:
 
 **Display agent response as final output.**
 
+### 8.2: Cleanup Temp Files
+
+**DELEGATE to bash-expert:**
+
+```
+Run the cleanup script:
+~/.claude/commands/scripts/analyze-project/cleanup.sh
+
+Display the script output.
+```
+
+**Display agent response.**
+
 **Display cleanup notice:**
 
 ```
 💡 Storage locations:
    Persistent: ${PWD}/.analyze-project/ (hashes, project info)
-   Temporary:  ${TEMP_DIR}/ (batch files, can be deleted)
+   Temporary:  Cleaned up automatically after analysis
 
    Add .analyze-project/ to your .gitignore if not already present.
 ```

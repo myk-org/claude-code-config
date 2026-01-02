@@ -50,10 +50,13 @@ PREVIOUS_HASHES="$WORKING_DIR/.analyze-project/previous_hashes.json"
 # --full flag overrides this to force full re-analysis
 if [[ "$FORCE_FULL" == "true" ]]; then
     IS_FULL_ANALYSIS=true
+    FULL_REASON="user_flag"  # User passed --full
 elif [[ ! -f "$PREVIOUS_HASHES" ]]; then
     IS_FULL_ANALYSIS=true
+    FULL_REASON="no_hashes"  # No previous_hashes.json exists
 else
     IS_FULL_ANALYSIS=false
+    FULL_REASON="incremental"  # Has previous data, will do incremental
 fi
 
 # Use a temp file to update JSON
@@ -68,6 +71,7 @@ cat >> "$TEMP_FILE" <<EOF
   "project_name": "$PROJECT_NAME",
   "group_id": "$GROUP_ID",
   "is_full_analysis": $IS_FULL_ANALYSIS,
+  "full_analysis_reason": "$FULL_REASON",
   "temp_dir": "$TEMP_DIR"
 }
 EOF
@@ -84,7 +88,11 @@ echo ""
 echo "🏷️  Project: $PROJECT_NAME"
 echo "📂 Group ID: $GROUP_ID"
 if [[ "$IS_FULL_ANALYSIS" == "true" ]]; then
-    echo "🔄 Mode: Full Analysis"
+    if [[ "$FULL_REASON" == "user_flag" ]]; then
+        echo "🔄 Mode: Full Analysis (--full flag)"
+    else
+        echo "🔄 Mode: Full Analysis (no previous hashes)"
+    fi
 else
     echo "🔄 Mode: Incremental Analysis"
 fi
