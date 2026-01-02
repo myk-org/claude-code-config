@@ -241,8 +241,8 @@ def main() -> None:
     parser.add_argument(
         "project_info",
         nargs="?",
-        default="project_info.json",
-        help="Path to project_info.json (default: project_info.json)",
+        default=Path.cwd() / ".analyze-project" / "project_info.json",
+        help="Path to project_info.json (default: .analyze-project/project_info.json)",
     )
 
     args = parser.parse_args()
@@ -253,7 +253,7 @@ def main() -> None:
 
     # Extract paths
     temp_dir = Path(project_info["temp_dir"])
-    project_root = Path(project_info["project_root"])
+    project_root = Path(project_info.get("working_dir", Path.cwd()))
     files_to_analyze = temp_dir / "files_to_analyze.txt"
 
     # Get file sizes
