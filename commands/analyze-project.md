@@ -371,10 +371,10 @@ Display: `🔍 Phase 7: Storing analysis in graphiti-memory...`
 Store project metadata episode.
 
 1. Read project_info.json from ${PWD}/.analyze-project/
-2. Read analysis statistics from all analysis_batch_*.json files
-3. Count total classes, functions, files, API endpoints
+2. Read statistics from ${TEMP_DIR}/analysis_stats.json (already calculated by merge-analysis.py)
+   - The stats file contains: total_files, total_classes, total_functions, by_language, api_endpoints
 
-4. Prepare JSON:
+3. Prepare JSON:
    {
      "type": "project",
      "name": "${PROJECT_NAME}",
@@ -382,21 +382,21 @@ Store project metadata episode.
      "language": "${LANGUAGE}",
      "framework": "${FRAMEWORK}",
      "projectType": "${PROJECT_TYPE}",
-     "total_files": <count>,
-     "total_classes": <count>,
-     "total_functions": <count>,
-     "total_api_endpoints": <count>,
+     "total_files": <from stats>,
+     "total_classes": <from stats>,
+     "total_functions": <from stats>,
+     "total_api_endpoints": <from stats.api_endpoints count>,
      "analyzed_at": "${ISO_TIMESTAMP}"
    }
 
-5. Call add_memory with:
+4. Call add_memory with:
    - name: "${PROJECT_NAME}"
    - episode_body: <JSON string (properly escaped)>
    - group_id: "${GROUP_ID}"
    - source: "json"
    - source_description: "Project metadata"
 
-6. Return:
+5. Return:
    ✅ Stored project metadata
 ```
 

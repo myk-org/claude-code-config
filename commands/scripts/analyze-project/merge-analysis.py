@@ -107,6 +107,43 @@ def merge_batch_files(batch_files: List[Path]) -> List[Dict[str, Any]]:
     return all_analysis
 
 
+def calculate_statistics(data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate statistics from merged analysis data.
+
+    Args:
+        data: Merged analysis data
+
+    Returns:
+        Statistics dictionary
+    """
+    stats = {
+        "total_files": len(data),
+        "total_classes": 0,
+        "total_functions": 0,
+        "by_language": {},
+        "api_endpoints": 0,
+    }
+
+    for file_data in data:
+        # Count classes
+        classes = file_data.get("classes", [])
+        stats["total_classes"] += len(classes)
+
+        # Count functions
+        functions = file_data.get("functions", [])
+        stats["total_functions"] += len(functions)
+
+        # Count by language
+        language = file_data.get("language", "Unknown")
+        stats["by_language"][language] = stats["by_language"].get(language, 0) + 1
+
+        # Count API endpoints
+        api_endpoints = file_data.get("api_endpoints", [])
+        stats["api_endpoints"] += len(api_endpoints)
+
+    return stats
+
+
 def write_merged_file(output_path: Path, data: List[Dict[str, Any]]) -> None:
     """Write merged analysis to all_analysis.json.
 
@@ -116,6 +153,17 @@ def write_merged_file(output_path: Path, data: List[Dict[str, Any]]) -> None:
     """
     with open(output_path, "w") as f:
         json.dump(data, f, indent=2)
+
+
+def write_stats_file(output_path: Path, stats: Dict[str, Any]) -> None:
+    """Write statistics to analysis_stats.json.
+
+    Args:
+        output_path: Path to output file
+        stats: Statistics data
+    """
+    with open(output_path, "w") as f:
+        json.dump(stats, f, indent=2)
 
 
 def main() -> int:
@@ -150,14 +198,27 @@ def main() -> int:
         # Merge batch files
         all_analysis = merge_batch_files(batch_files)
 
+        # Calculate statistics
+        stats = calculate_statistics(all_analysis)
+
         # Write merged file
         output_path = temp_dir / "all_analysis.json"
         write_merged_file(output_path, all_analysis)
 
+        # Write stats file
+        stats_path = temp_dir / "analysis_stats.json"
+        write_stats_file(stats_path, stats)
+
         # Print summary
         print(f"✅ Merged {len(batch_files)} batch files into all_analysis.json")
-        print(f"📊 Total files analyzed: {len(all_analysis)}")
+        print("📊 Statistics:")
+        print(f"   Total files: {stats['total_files']}")
+        print(f"   Total classes: {stats['total_classes']}")
+        print(f"   Total functions: {stats['total_functions']}")
+        for language, count in sorted(stats['by_language'].items()):
+            print(f"   {language}: {count} files")
         print(f"📄 Output: {output_path}")
+        print(f"📄 Stats: {stats_path}")
 
         return 0
 
