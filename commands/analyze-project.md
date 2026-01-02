@@ -400,32 +400,17 @@ Store project metadata episode.
 ```
 Store file episodes for all analyzed files.
 
-1. Read TEMP_DIR from ${PWD}/.analyze-project/project_info.json
-2. Read all analysis_batch_*.json files from ${TEMP_DIR}/
-3. Read current_hashes.json from ${PWD}/.analyze-project/ for file hashes
-4. For each analyzed file, prepare episode JSON:
-   {
-     "type": "file",
-     "path": "${FILE_PATH}",
-     "language": "${LANGUAGE}",
-     "purpose": "${PURPOSE}",
-     "imports": {...},
-     "exports": [...],
-     "classes": ["ClassName1", "ClassName2"],
-     "functions": ["function1", "function2"],
-     "dependencies": [...],
-     "file_hash": "${SHA256_HASH}"
-   }
+1. Read project_info.json from ${PWD}/.analyze-project/ to get TEMP_DIR and GROUP_ID
 
-5. Process in batches of 20 files
-6. For each batch, call add_memory:
-   - name: "file:${FILE_PATH}"
-   - episode_body: <JSON string (properly escaped)>
-   - group_id: "${GROUP_ID}"
-   - source: "json"
-   - source_description: "Source file: ${FILE_PATH}"
+2. Run the prepare-episodes script:
+   uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py files
 
-7. Track progress and return final summary:
+3. Read the generated episodes from ${TEMP_DIR}/episodes_files.json
+
+4. For each episode in batches of 20:
+   Call add_memory with the episode data (name, episode_body, group_id, source, source_description)
+
+5. Return summary:
    ✅ Stored <count> file episodes
 ```
 
@@ -438,30 +423,17 @@ Store file episodes for all analyzed files.
 ```
 Store class episodes for all classes found in analysis.
 
-1. Read TEMP_DIR from ${PWD}/.analyze-project/project_info.json
-2. Read all analysis_batch_*.json files from ${TEMP_DIR}/
-3. Extract all classes from all files
-4. For each class, prepare episode JSON:
-   {
-     "type": "class",
-     "name": "${CLASS_NAME}",
-     "file": "${FILE_PATH}",
-     "docstring": "${DOCSTRING}",
-     "methods": [...],
-     "inherits": [...],
-     "decorators": [...],
-     "dependencies": [...]
-   }
+1. Read project_info.json from ${PWD}/.analyze-project/ to get TEMP_DIR and GROUP_ID
 
-5. Process in batches of 30 classes
-6. For each batch, call add_memory:
-   - name: "class:${CLASS_NAME}"
-   - episode_body: <JSON string (properly escaped)>
-   - group_id: "${GROUP_ID}"
-   - source: "json"
-   - source_description: "Class definition: ${CLASS_NAME}"
+2. Run the prepare-episodes script:
+   uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py classes
 
-7. Return final summary:
+3. Read the generated episodes from ${TEMP_DIR}/episodes_classes.json
+
+4. For each episode in batches of 30:
+   Call add_memory with the episode data (name, episode_body, group_id, source, source_description)
+
+5. Return summary:
    ✅ Stored <count> class episodes
 ```
 
@@ -474,26 +446,17 @@ Store class episodes for all classes found in analysis.
 ```
 Store relationship episodes from the relationship mapping.
 
-1. Read TEMP_DIR from ${PWD}/.analyze-project/project_info.json
-2. Read relationships.json from ${TEMP_DIR}/
-3. For each relationship, prepare episode JSON:
-   {
-     "type": "relationship",
-     "source": "${SOURCE}",
-     "target": "${TARGET}",
-     "relationship_type": "${TYPE}",
-     "context": "${CONTEXT}"
-   }
+1. Read project_info.json from ${PWD}/.analyze-project/ to get TEMP_DIR and GROUP_ID
 
-4. Process in batches of 50 relationships
-5. For each batch, call add_memory:
-   - name: "relationship:${SOURCE}→${TARGET}"
-   - episode_body: <JSON string (properly escaped)>
-   - group_id: "${GROUP_ID}"
-   - source: "json"
-   - source_description: "${TYPE}: ${SOURCE} → ${TARGET}"
+2. Run the prepare-episodes script:
+   uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py relationships
 
-6. Return final summary:
+3. Read the generated episodes from ${TEMP_DIR}/episodes_relationships.json
+
+4. For each episode in batches of 50:
+   Call add_memory with the episode data (name, episode_body, group_id, source, source_description)
+
+5. Return summary:
    ✅ Stored <count> relationship episodes
 ```
 
