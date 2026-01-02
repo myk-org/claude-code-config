@@ -240,20 +240,40 @@ Calculate file changes using the helper scripts:
 
 Display: `🔍 Phase 5: Analyzing code...`
 
-**DELEGATE to appropriate language expert (determine from project_info.json):**
+### 5.1: Create Smart Batches
+
+**DELEGATE to bash-expert:**
+
+```
+Create size-based batches for analysis:
+
+uv run ~/.claude/commands/scripts/analyze-project/create-batches.py
+
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
+
+Display the script output.
+```
+
+**Display agent response.**
+
+### 5.2: Analyze Each Batch
+
+**For each batch in batch_manifest.json, DELEGATE to appropriate language expert:**
 - Python → `python-expert`
 - JavaScript/TypeScript → `frontend-expert`
 - Go → `go-expert`
 - Java → `java-expert`
 - Unknown → `general-purpose`
 
-**Process in batches of 8 files. For each batch:**
-
 ```
-Analyze source files batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
+Analyze source files from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
 
 **IMPORTANT: All temp files MUST go to ${TEMP_DIR}/**
-If you create any helper scripts or intermediate files, use ${TEMP_DIR}/ (from project_info.json), NOT /tmp/claude/.
 
 📋 **OUTPUT FORMAT: See schema at ~/.claude/commands/scripts/analyze-project/analysis_schema.json**
 
@@ -269,9 +289,9 @@ REQUIRED fields for EACH file entry:
 
 ⚠️ classes and functions MUST be arrays, NOT strings. Validation will fail otherwise.
 
-1. Read ${TEMP_DIR}/files_to_analyze.txt (lines ${START} to ${END})
-   (Get TEMP_DIR from project_info.json)
-2. For each file, extract structured data:
+1. Read the file list from ${TEMP_DIR}/file_batch_${BATCH_NUM}.txt
+2. Read and analyze each file in the list
+3. For each file, extract structured data:
 
    a. Imports: All import statements (internal and external modules)
    b. Exports: All exported symbols (functions, classes, constants)
@@ -290,10 +310,9 @@ REQUIRED fields for EACH file entry:
    e. Dependencies: External libraries used
    f. Purpose: Brief description of what the file does
 
-3. Write analysis results to ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
-   (Get TEMP_DIR from project_info.json)
+4. Write analysis results to ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
 
-4. Format as JSON array with one object per file (ALL FIELDS REQUIRED):
+5. Format as JSON array with one object per file (ALL FIELDS REQUIRED):
    [
      {
        "file": "relative/path/to/file.py",           // REQUIRED (string)
@@ -330,11 +349,20 @@ REQUIRED fields for EACH file entry:
    CRITICAL: If a file has no classes or functions, use empty arrays: "classes": [], "functions": []
    DO NOT use null, undefined, or omit these fields. ALL fields are REQUIRED.
 
-5. Return summary:
-   [Batch ${BATCH_NUM}/${TOTAL_BATCHES}] Analyzed: <count> files
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
+
+6. Return summary:
+   [Batch ${BATCH_NUM}/${TOTAL_BATCHES}] Analyzed: <count> files (<size>KB)
    Classes: <count>
    Functions: <count>
 ```
+
+**Note:** Batches are sized by content, not file count. An oversized batch (single large file) will have ⚠️ warning in manifest - consider using haiku model for those.
 
 **Display batch progress after each delegation.**
 

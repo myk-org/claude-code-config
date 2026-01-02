@@ -73,6 +73,7 @@ scripts/
 !commands/scripts/analyze-project/calculate-hashes.sh
 !commands/scripts/analyze-project/cleanup.sh
 !commands/scripts/analyze-project/compare-hashes.sh
+!commands/scripts/analyze-project/create-batches.py
 !commands/scripts/analyze-project/detect-project.sh
 !commands/scripts/analyze-project/find-source-files.sh
 !commands/scripts/analyze-project/init-analysis.sh
