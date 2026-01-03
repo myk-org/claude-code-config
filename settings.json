@@ -77,6 +77,7 @@
   "allowedTools": [
     "Edit(/tmp/claude/**)",
     "Write(/tmp/claude/**)",
+    "Read(/tmp/claude/**)",
     "Bash(mkdir -p /tmp/claude*)",
     "Bash(claude *)",
     "Bash(sed -n *)",

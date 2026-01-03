@@ -5,6 +5,15 @@ Tree-sitter-based code analysis script.
 Extracts structured code data (classes, functions, imports, etc.) from source files
 using tree-sitter parsers instead of AI-based analysis.
 
+Supported languages:
+    - Python (.py): classes, functions, imports, exports, docstrings, decorators
+    - JavaScript/TypeScript (.js, .jsx, .ts, .tsx): classes, functions, imports
+    - Go (.go): (partial support)
+    - Java (.java): (partial support)
+    - Kotlin (.kt): (partial support)
+    - Bash (.sh, .bash): (partial support)
+    - Markdown (.md): headings, links, code blocks
+
 Usage:
     uv run --python 3.12 --with "tree-sitter==0.21.3" --with tree-sitter-languages analyze-code.py <file_path> [--output analysis.json]
     uv run --python 3.12 --with "tree-sitter==0.21.3" --with tree-sitter-languages analyze-code.py --batch <batch_file> [--output analysis.json]
@@ -51,6 +60,7 @@ LANGUAGE_MAP = {
     ".kt": "kotlin",
     ".sh": "bash",
     ".bash": "bash",
+    ".md": "markdown",
 }
 
 
@@ -471,6 +481,80 @@ def extract_javascript_classes(tree: Any, source_code: bytes) -> list[dict[str, 
     return classes
 
 
+def extract_markdown_headings(tree: Any, source_code: bytes) -> list[dict[str, Any]]:
+    """Extract headings from Markdown."""
+    headings = []
+
+    def traverse(node: Any) -> None:
+        if node.type == "atx_heading":
+            heading_data = {"level": 0, "text": ""}
+
+            # Determine heading level (h1, h2, h3, etc.)
+            for child in node.children:
+                if child.type.startswith("atx_h"):
+                    level_str = child.type.replace("atx_h", "").replace("_marker", "")
+                    heading_data["level"] = int(level_str)
+                elif child.type == "heading_content":
+                    heading_data["text"] = get_node_text(child, source_code).strip()
+
+            if heading_data["text"]:
+                headings.append(heading_data)
+
+        for child in node.children:
+            traverse(child)
+
+    traverse(tree.root_node)
+    return headings
+
+
+def extract_markdown_links(tree: Any, source_code: bytes) -> list[dict[str, str]]:
+    """Extract links from Markdown."""
+    links = []
+
+    def traverse(node: Any) -> None:
+        if node.type == "link":
+            link_data = {"text": "", "url": ""}
+
+            for child in node.children:
+                if child.type == "link_text":
+                    link_data["text"] = get_node_text(child, source_code)
+                elif child.type == "link_destination":
+                    link_data["url"] = get_node_text(child, source_code)
+
+            if link_data["url"]:
+                links.append(link_data)
+
+        for child in node.children:
+            traverse(child)
+
+    traverse(tree.root_node)
+    return links
+
+
+def extract_markdown_code_blocks(tree: Any, source_code: bytes) -> list[dict[str, Any]]:
+    """Extract code blocks from Markdown."""
+    code_blocks = []
+
+    def traverse(node: Any) -> None:
+        if node.type == "fenced_code_block":
+            code_data = {"language": "", "code": ""}
+
+            for child in node.children:
+                if child.type == "info_string":
+                    code_data["language"] = get_node_text(child, source_code).strip()
+                elif child.type == "code_fence_content":
+                    code_data["code"] = get_node_text(child, source_code).strip()
+
+            if code_data["code"]:
+                code_blocks.append(code_data)
+
+        for child in node.children:
+            traverse(child)
+
+    traverse(tree.root_node)
+    return code_blocks
+
+
 def analyze_file(file_path: Path, project_root: Path) -> dict[str, Any] | None:
     """Analyze a single file and extract structured data."""
     language = detect_language(file_path)
@@ -514,6 +598,14 @@ def analyze_file(file_path: Path, project_root: Path) -> dict[str, Any] | None:
             result["functions"] = extract_javascript_functions(tree, source_code)
             result["classes"] = extract_javascript_classes(tree, source_code)
             result["dependencies"] = sorted(set(result["imports"]["external"]))
+
+        elif language == "markdown":
+            # For Markdown, we extract different data structure
+            result["headings"] = extract_markdown_headings(tree, source_code)
+            result["links"] = extract_markdown_links(tree, source_code)
+            result["code_blocks"] = extract_markdown_code_blocks(tree, source_code)
+            # Extract external links as dependencies
+            result["dependencies"] = sorted(set([link["url"] for link in result["links"] if link["url"].startswith("http")]))
 
         # TODO: Add support for Go, Java, etc.
 
