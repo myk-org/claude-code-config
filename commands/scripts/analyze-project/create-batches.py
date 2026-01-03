@@ -150,7 +150,7 @@ def create_batches(
 
             # Add chunk files to batches
             for chunk_file in chunk_info["chunk_files"]:
-                chunk_path = Path(chunk_file)
+                chunk_path = temp_dir / chunk_file
                 chunk_size = chunk_path.stat().st_size
                 chunk_tokens = estimate_tokens(chunk_size)
 

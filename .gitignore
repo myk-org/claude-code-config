@@ -13,6 +13,7 @@ plugins
 session-env
 statsig
 settings.local.json
+.analyze-project/
 
 # Exclude directories by default (synced from elsewhere)
 servers/
