@@ -33,13 +33,14 @@ echo ""
 
 # Check for config files
 echo "Checking MCP server configurations..."
-if [ -d "configs" ] && [ "$(ls -A configs/*.json 2>/dev/null)" ]; then
-    CONFIG_COUNT=$(ls -1 configs/*.json 2>/dev/null | wc -l)
+CONFIG_DIR="$HOME/.claude/code-execution-configs"
+if [ -d "$CONFIG_DIR" ] && [ "$(ls -A $CONFIG_DIR/*.json 2>/dev/null)" ]; then
+    CONFIG_COUNT=$(ls -1 $CONFIG_DIR/*.json 2>/dev/null | wc -l)
     echo "✓ Found $CONFIG_COUNT MCP server configuration(s)"
 else
-    echo "⚠️  Warning: No configuration files found in configs/ directory"
-    echo "   Create JSON config files in configs/ to define your MCP servers."
-    echo "   See configs/example.json.example for reference."
+    echo "⚠️  Warning: No configuration files found in $CONFIG_DIR/ directory"
+    echo "   Create JSON config files in $CONFIG_DIR/ to define your MCP servers."
+    echo "   See $CONFIG_DIR/example.json.example for reference."
 fi
 echo ""
 
@@ -70,6 +71,6 @@ echo "✓ Setup complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Next steps:"
-echo "  1. Configure MCP servers in configs/ directory"
+echo "  1. Configure MCP servers in ~/.claude/code-execution-configs/ directory"
 echo "  2. Start the server:        npm start"
 echo ""

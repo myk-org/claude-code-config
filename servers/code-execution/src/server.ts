@@ -2,8 +2,9 @@
 /**
  * Generic UTCP Code-Mode Server for Multiple MCP Integrations
  *
- * This server dynamically loads all MCP server configurations from the configs/
- * directory and provides batched TypeScript execution with registered MCP tools.
+ * This server dynamically loads all MCP server configurations from the
+ * ~/.claude/code-execution-configs/ directory and provides batched TypeScript
+ * execution with registered MCP tools.
  */
 
 import '@utcp/mcp';  // Auto-registers MCP plugin
@@ -17,10 +18,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Load all MCP configurations from configs/ directory
+ * Load all MCP configurations from ~/.claude/code-execution-configs/ directory
  */
 function loadMCPConfigs(): MCPConfigFile['manual_call_templates'] {
-  const configsDir = path.join(__dirname, '..', 'configs');
+  const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+  const configsDir = path.join(homeDir, '.claude', 'code-execution-configs');
 
   if (!fs.existsSync(configsDir)) {
     throw new Error(`Configs directory not found: ${configsDir}`);
@@ -29,7 +31,7 @@ function loadMCPConfigs(): MCPConfigFile['manual_call_templates'] {
   const configFiles = fs.readdirSync(configsDir).filter(f => f.endsWith('.json'));
 
   if (configFiles.length === 0) {
-    throw new Error('No JSON config files found in configs/ directory');
+    throw new Error('No JSON config files found in ~/.claude/code-execution-configs/ directory');
   }
 
   const allTemplates: MCPConfigFile['manual_call_templates'] = [];
@@ -64,7 +66,7 @@ async function main() {
     console.log('Starting Generic UTCP Code-Mode Server...\n');
 
     // Load all MCP configurations
-    console.log('Loading MCP configurations from configs/ directory...');
+    console.log('Loading MCP configurations from ~/.claude/code-execution-configs/ directory...');
     const templates = loadMCPConfigs();
     console.log(`\n✓ Found ${templates.length} MCP server template(s)\n`);
 

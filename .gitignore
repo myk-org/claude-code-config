@@ -13,7 +13,6 @@ plugins
 session-env
 statsig
 settings.local.json
-.analyze-project/
 
 # Exclude directories by default (synced from elsewhere)
 servers/
@@ -31,7 +30,6 @@ scripts/
 !servers/code-execution/QUICKSTART.md
 !servers/code-execution/README.md
 !servers/code-execution/USAGE.md
-!servers/code-execution/configs/example.json.example
 !servers/code-execution/package-lock.json
 !servers/code-execution/package.json
 !servers/code-execution/setup.sh
@@ -63,28 +61,11 @@ scripts/
 
 # commands/
 !commands/
-!commands/analyze-project.md
 !commands/code-review.md
 !commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md
 !commands/github-review-handler.md
 !commands/scripts/
-!commands/scripts/analyze-project/
-!commands/scripts/analyze-project/analysis_schema.json
-!commands/scripts/analyze-project/analyze-code.py
-!commands/scripts/analyze-project/calculate-hashes.sh
-!commands/scripts/analyze-project/cleanup.sh
-!commands/scripts/analyze-project/compare-hashes.sh
-!commands/scripts/analyze-project/create-batches.py
-!commands/scripts/analyze-project/detect-project.sh
-!commands/scripts/analyze-project/find-source-files.sh
-!commands/scripts/analyze-project/init-analysis.sh
-!commands/scripts/analyze-project/inspect-analysis.py
-!commands/scripts/analyze-project/merge-analysis.py
-!commands/scripts/analyze-project/prepare-files-to-analyze.sh
-!commands/scripts/analyze-project/prepare-episodes.py
-!commands/scripts/analyze-project/split-large-files.py
-!commands/scripts/analyze-project/validate-analysis.py
 !commands/scripts/general/
 !commands/scripts/general/get-pr-info.sh
 !commands/scripts/github-coderabbitai-review-handler/

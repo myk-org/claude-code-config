@@ -1,6 +1,27 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "mcp__graphiti-memory__get_status",
+      "mcp__graphiti-memory__search_nodes",
+      "mcp__graphiti-memory__search_memory_facts",
+      "mcp__graphiti-memory__add_memory",
+      "mcp__graphiti-memory__get_episodes",
+      "mcp__graphiti-memory__get_entity_edge",
+      "mcp__graphiti-memory__delete_episode",
+      "mcp__graphiti-memory__delete_entity_edge",
+      "mcp__graphiti-memory__clear_graph",
+      "Read(/tmp/claude/**)",
+      "Edit(/tmp/claude/**)",
+      "Write(/tmp/claude/**)",
+      "Bash(mkdir -p /tmp/claude*)",
+      "Bash(claude:*)",
+      "Bash(sed -n:*)",
+      "Bash(grep:*)",
+      "Grep"
+    ]
+  },
   "hooks": {
     "Notification": [
       {
@@ -72,7 +93,14 @@
     "command": "bash ~/.claude/statusline.sh",
     "padding": 0
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "jdtls-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "lua-lsp@claude-plugins-official": true
+  },
   "alwaysThinkingEnabled": true,
   "allowedTools": [
     "Edit(/tmp/claude/**)",
@@ -88,50 +116,8 @@
     "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh*)",
-    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/detect-project.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/find-source-files.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/calculate-hashes.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/compare-hashes.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/cleanup.sh*)",
-    "Bash(~/.claude/commands/scripts/analyze-project/prepare-files-to-analyze.sh*)",
-    "Bash(uv run ~/.claude/commands/scripts/analyze-project/create-batches.py*)",
-    "Bash(uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py*)",
-    "Bash(uv run ~/.claude/commands/scripts/analyze-project/merge-analysis.py*)",
-    "Bash(uv run --with jsonschema ~/.claude/commands/scripts/analyze-project/validate-analysis.py*)",
-    "Bash(uv run ~/.claude/commands/scripts/analyze-project/inspect-analysis.py*)",
-    "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/split-large-files.py*)",
-    "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py*)"
+    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh*)"
   ],
-  "permissions": {
-    "allow": [
-      "mcp__graphiti-memory__get_status",
-      "mcp__graphiti-memory__search_nodes",
-      "mcp__graphiti-memory__search_memory_facts",
-      "mcp__graphiti-memory__add_memory",
-      "mcp__graphiti-memory__get_episodes",
-      "mcp__graphiti-memory__get_entity_edge",
-      "mcp__graphiti-memory__delete_episode",
-      "mcp__graphiti-memory__delete_entity_edge",
-      "mcp__graphiti-memory__clear_graph",
-      "Read(~/.claude/commands/scripts/analyze-project/analysis_schema.json)",
-      "Bash(~/.claude/commands/scripts/analyze-project/detect-project.sh:*)",
-      "Bash(~/.claude/commands/scripts/analyze-project/find-source-files.sh:*)",
-      "Bash(~/.claude/commands/scripts/analyze-project/calculate-hashes.sh:*)",
-      "Bash(~/.claude/commands/scripts/analyze-project/compare-hashes.sh:*)",
-      "Bash(~/.claude/commands/scripts/analyze-project/init-analysis.sh:*)",
-      "Bash(~/.claude/commands/scripts/analyze-project/cleanup.sh:*)",
-      "Bash(~/.claude/commands/scripts/analyze-project/prepare-files-to-analyze.sh:*)",
-      "Bash(uv run ~/.claude/commands/scripts/analyze-project/create-batches.py:*)",
-      "Bash(uv run ~/.claude/commands/scripts/analyze-project/prepare-episodes.py:*)",
-      "Bash(uv run ~/.claude/commands/scripts/analyze-project/merge-analysis.py:*)",
-      "Bash(uv run --with jsonschema ~/.claude/commands/scripts/analyze-project/validate-analysis.py:*)",
-      "Bash(uv run ~/.claude/commands/scripts/analyze-project/inspect-analysis.py:*)",
-      "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/split-large-files.py:*)",
-      "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py:*)"
-    ]
-  },
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309
   }

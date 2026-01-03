@@ -96,7 +96,7 @@ npm run type-check
 
 ### MCP Server Configuration
 
-Create JSON configuration files in the `configs/` directory. Each file defines one or more MCP server connections:
+Create JSON configuration files in the `~/.claude/code-execution-configs/` directory. Each file defines one or more MCP server connections:
 
 ```json
 {
@@ -120,7 +120,7 @@ Create JSON configuration files in the `configs/` directory. Each file defines o
 }
 ```
 
-The server automatically loads all `.json` files from the `configs/` directory at startup. See `configs/example.json.example` for a complete example.
+The server automatically loads all `.json` files from the `~/.claude/code-execution-configs/` directory at startup. See `~/.claude/code-execution-configs/example.json.example` for a complete example.
 
 ## Usage
 
@@ -433,8 +433,8 @@ If you can't connect to your MCP server:
 # Check if your MCP server is running
 curl http://localhost:8051/health  # Adjust URL to your server
 
-# Verify configuration files in configs/
-ls -la configs/*.json
+# Verify configuration files in ~/.claude/code-execution-configs/
+ls -la ~/.claude/code-execution-configs/*.json
 
 # Check server logs
 npm start 2>&1 | tee server.log
@@ -454,7 +454,7 @@ npm run build
 
 ```bash
 # Verify config files are valid JSON
-for f in configs/*.json; do echo "$f" && cat "$f" | jq .; done
+for f in ~/.claude/code-execution-configs/*.json; do echo "$f" && cat "$f" | jq .; done
 ```
 
 ## Development
@@ -466,11 +466,12 @@ servers/code-execution/
 ├── package.json          # Dependencies and scripts
 ├── tsconfig.json         # TypeScript configuration
 ├── README.md            # This file
-├── configs/             # MCP server configurations
-│   └── *.json          # JSON config files
 └── src/
     ├── server.ts        # Main UTCP server
     └── types.ts         # TypeScript type definitions
+
+~/.claude/code-execution-configs/  # MCP server configurations (at repo root)
+└── *.json                         # JSON config files
 ```
 
 ### Building
@@ -485,7 +486,7 @@ ls dist/
 
 ### Adding New MCP Servers
 
-Create a new JSON file in `configs/` directory with your MCP server configuration. The server will automatically load it on startup.
+Create a new JSON file in `~/.claude/code-execution-configs/` directory with your MCP server configuration. The server will automatically load it on startup.
 
 ## License
 
@@ -497,7 +498,7 @@ For issues or questions:
 
 1. Review your MCP server documentation
 2. Verify server connectivity with health check
-3. Check configuration files in `configs/`
+3. Check configuration files in `~/.claude/code-execution-configs/`
 4. Check server logs for errors
 
 ## Contributing

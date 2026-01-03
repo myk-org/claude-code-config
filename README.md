@@ -48,8 +48,9 @@ git clone https://github.com/myk-org/claude-code-config ~/.claude
 # Copy your private files back (examples - adjust to your setup)
 # Private agents:
 cp ~/.claude.backup/agents/my-private-agent.md ~/.claude/agents/
-# MCP server configs:
-cp -r ~/.claude.backup/servers/code-execution/configs/* ~/.claude/servers/code-execution/configs/
+# MCP server configs (if you had them):
+mkdir -p ~/.claude/code-execution-configs/
+cp -r ~/.claude.backup/code-execution-configs/* ~/.claude/code-execution-configs/
 # Any other private files you have...
 
 # Remove backup after verifying everything works
@@ -70,13 +71,14 @@ mkdir -p ~/.claude
 # Symlink each component
 ln -sf ~/git/claude-code-config/agents ~/.claude/agents
 ln -sf ~/git/claude-code-config/commands ~/.claude/commands
+ln -sf ~/git/claude-code-config/rules ~/.claude/rules
 ln -sf ~/git/claude-code-config/scripts ~/.claude/scripts
 ln -sf ~/git/claude-code-config/servers ~/.claude/servers
 ln -sf ~/git/claude-code-config/settings.json ~/.claude/settings.json
 ln -sf ~/git/claude-code-config/statusline.sh ~/.claude/statusline.sh
 ```
 
-**Note:** Your private configs in `~/.claude/servers/code-execution/configs/` will be inside the symlinked directory. You may want to keep configs outside the repo.
+**Note:** To use the code execution server with MCP server configs, create your own `~/.claude/code-execution-configs/` directory for your private config files (not part of this repo).
 
 #### Copy Approach
 
@@ -100,6 +102,8 @@ rm -rf /tmp/claude-code-config
 ```bash
 git clone https://github.com/myk-org/claude-code-config /tmp/claude-code-config
 cp -r /tmp/claude-code-config/agents ~/.claude/
+cp -r /tmp/claude-code-config/commands ~/.claude/
+cp -r /tmp/claude-code-config/rules ~/.claude/
 cp -r /tmp/claude-code-config/scripts ~/.claude/
 # ... selectively copy what you need
 rm -rf /tmp/claude-code-config
@@ -142,11 +146,9 @@ dotfiles/
     │   └── my-helper.sh
     ├── commands/             # Private commands
     │   └── my-workflow.md
-    └── servers/
-        └── code-execution/
-            └── configs/      # Your MCP server configs
-                ├── my-server.json
-                └── company-internal-service.json
+    └── code-execution-configs/  # Your MCP server configs
+        ├── my-server.json
+        └── company-internal-service.json
 ```
 
 ### Setup
@@ -173,7 +175,7 @@ cd ~/.claude && git pull
 ## What's Included
 
 - **24 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
-- **5 slash commands** including codebase analysis and PR review workflows
+- **4 slash commands** including PR review workflows
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
 - **MCP server integrations** (code execution, graphiti-memory)
@@ -224,23 +226,10 @@ python-expert uses current best practices
 
 | Command | Description |
 |---------|-------------|
-| `/analyze-project` | Analyze codebase and store all entities, relationships, and context in graphiti-memory. Supports incremental updates and deep AST parsing. |
 | `/github-pr-review` | Review a GitHub PR and post inline comments. Posts as single review with summary. |
 | `/github-review-handler` | Process human reviewer comments from a PR. |
 | `/github-coderabbitai-review-handler` | Process CodeRabbit AI review comments. |
 | `/code-review` | Run code review on local changes. |
-
-### `/analyze-project` Features
-
-- **Incremental Updates** - Only analyzes changed files since last run
-- **Deep AST Parsing** - Extracts functions, classes, imports, dependencies
-- **Batch Processing** - Handles large codebases efficiently
-- **Usage Options**:
-  - `/analyze-project` - Analyze current directory (incremental)
-  - `/analyze-project --full` - Full analysis, ignoring previous state
-  - `/analyze-project --name custom-name` - Use custom group ID for isolation
-- **Persistent Memory** - Knowledge graph persists across Claude sessions
-- **Relationship Mapping** - Tracks entity relationships and dependencies
 
 ### `/github-pr-review` Features
 
@@ -308,9 +297,14 @@ npm install
 
 ### Adding Server Configs
 
-1. Create a config file in `.claude/servers/code-execution/configs/`:
+1. Create your private configs directory and config file:
 
-```json
+```bash
+# Create your private configs directory (not part of this repo)
+mkdir -p ~/.claude/code-execution-configs/
+
+# Create a config file for your MCP server
+cat > ~/.claude/code-execution-configs/my-service.json << 'EOF'
 {
   "manual_call_templates": [
     {
@@ -333,6 +327,7 @@ npm install
     "tool_search_strategy_type": "tag_and_description_word_match"
   }
 }
+EOF
 ```
 
 2. Add the MCP server to Claude by editing `~/.claude.json`:
@@ -344,7 +339,7 @@ npm install
       "command": "npx",
       "args": ["@utcp/code-mode-mcp"],
       "env": {
-        "UTCP_CONFIG_FILE": "~/.claude/servers/code-execution/configs/my-service.json"
+        "UTCP_CONFIG_FILE": "~/.claude/code-execution-configs/my-service.json"
       }
     }
   }
@@ -353,7 +348,7 @@ npm install
 
 3. Restart Claude Code for the changes to take effect.
 
-See `configs/example.json.example` for a config template.
+**Note:** The `code-execution-configs/` directory is for your private MCP server configurations and is NOT part of this repository. Create it yourself in `~/.claude/` and add your own config files there.
 
 ### Graphiti Memory Server
 
@@ -367,21 +362,9 @@ The Graphiti Memory Server enables persistent knowledge graph storage across Cla
 - **Group Isolation** - Multiple projects can have separate knowledge graphs
 
 **Use cases:**
-- Project analysis and codebase understanding (via `/analyze-project`)
 - Long-term memory of user preferences and decisions
 - Tracking relationships between code entities
 - Building context over multiple sessions
-
-**Prerequisites:**
-
-To use `/analyze-project` and graphiti-memory features, you need to set up the Graphiti MCP server:
-
-**Graphiti MCP Server**: [Graphiti MCP server repository](https://github.com/getzep/graphiti/tree/main/mcp_server)
-
-Follow the installation instructions in the repository to configure the MCP server, including:
-- Neo4j database setup (local or remote)
-- OpenAI API key configuration
-- Server installation and configuration
 
 **Setup:**
 
