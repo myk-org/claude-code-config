@@ -81,6 +81,7 @@ scripts/
 !commands/scripts/analyze-project/init-analysis.sh
 !commands/scripts/analyze-project/inspect-analysis.py
 !commands/scripts/analyze-project/merge-analysis.py
+!commands/scripts/analyze-project/prepare-files-to-analyze.sh
 !commands/scripts/analyze-project/prepare-episodes.py
 !commands/scripts/analyze-project/split-large-files.py
 !commands/scripts/analyze-project/validate-analysis.py

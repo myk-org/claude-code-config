@@ -254,38 +254,32 @@ Discover source files using the find-source-files.sh script:
 
 ---
 
-## Phase 4: Calculate Changes (Incremental Mode)
+## Phase 4: Calculate Changes
 
 Display: `🔍 Phase 4: Calculating changes...`
 
 **DELEGATE to bash-expert:**
 
 ```
-Calculate file changes using the helper scripts:
+Run the Phase 4 scripts:
 
-1. Read project_info.json from ${PWD}/.analyze-project/ to get IS_FULL_ANALYSIS flag and TEMP_DIR
-
-2. If IS_FULL_ANALYSIS is true:
-   - Copy all_files.txt to files_to_analyze.txt:
-     cp "${TEMP_DIR}/all_files.txt" "${TEMP_DIR}/files_to_analyze.txt"
-   - Return: "Full analysis mode: all files will be analyzed"
-   - SKIP remaining steps
-
-3. Calculate hashes for all files (script will automatically use project-specific temp dir):
+1. Calculate hashes for all files:
    ~/.claude/commands/scripts/analyze-project/calculate-hashes.sh
 
-4. Compare with previous hashes (script will automatically use project-specific temp dir):
-   ~/.claude/commands/scripts/analyze-project/compare-hashes.sh
+2. Prepare files to analyze (handles both full and incremental mode):
+   ~/.claude/commands/scripts/analyze-project/prepare-files-to-analyze.sh
 
-5. The compare script outputs JSON summary. Parse and display:
-   📊 Change Summary:
-      New files: <new_files>
-      Changed files: <changed_files>
-      Deleted files: <deleted_files>
-      Unchanged files: <unchanged_files>
-      Files to analyze: <files_to_analyze>
+3. Parse the JSON output and display:
+   - Full mode: "Full analysis mode: all <count> files will be analyzed"
+   - Incremental mode:
+     📊 Change Summary:
+        New files: <new_files>
+        Changed files: <changed_files>
+        Deleted files: <deleted_files>
+        Unchanged files: <unchanged_files>
+        Files to analyze: <files_to_analyze>
 
-6. If files_to_analyze is 0, add:
+4. If files_to_analyze is 0:
    ✅ No changes detected - project is up to date!
 
 🚨 **CRITICAL: ON SCRIPT FAILURE**

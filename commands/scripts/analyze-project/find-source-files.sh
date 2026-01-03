@@ -96,6 +96,9 @@ for ptype in "${TYPES[@]}"; do
         rust)
             find . -type f -name '*.rs' "${EXCLUDES[@]}" >> "$OUTPUT_FILE"
             ;;
+        markdown)
+            find . -type f -name '*.md' "${EXCLUDES[@]}" >> "$OUTPUT_FILE"
+            ;;
         unknown|*)
             find . -type f \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.go' -o -name '*.java' -o -name '*.rs' -o -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) "${EXCLUDES[@]}" >> "$OUTPUT_FILE"
             ;;

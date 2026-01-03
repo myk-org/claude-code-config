@@ -85,6 +85,36 @@ if [[ -f "Cargo.toml" ]]; then
     LANGUAGES+=("Rust")
 fi
 
+# Detect Markdown projects
+# Count .md files (excluding common directories)
+MD_COUNT=$(find . -type f -name '*.md' \
+    -not -path '*/node_modules/*' \
+    -not -path '*/vendor/*' \
+    -not -path '*/.git/*' \
+    -not -path '*/.venv/*' \
+    -not -path '*/venv/*' \
+    -not -path '*/dist/*' \
+    -not -path '*/build/*' \
+    -not -path '*/target/*' 2>/dev/null | wc -l)
+
+# Count code files (excluding .md)
+CODE_COUNT=$(find . -type f \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.go' -o -name '*.java' -o -name '*.rs' -o -name '*.c' -o -name '*.cpp' \) \
+    -not -path '*/node_modules/*' \
+    -not -path '*/vendor/*' \
+    -not -path '*/__pycache__/*' \
+    -not -path '*/.git/*' \
+    -not -path '*/.venv/*' \
+    -not -path '*/venv/*' \
+    -not -path '*/dist/*' \
+    -not -path '*/build/*' \
+    -not -path '*/target/*' 2>/dev/null | wc -l)
+
+# If there are many .md files (>5) and they outnumber code files, it's a markdown project
+if [[ $MD_COUNT -gt 5 ]] && [[ $MD_COUNT -gt $CODE_COUNT ]]; then
+    PROJECT_TYPES+=("markdown")
+    LANGUAGES+=("Markdown")
+fi
+
 # Scan common subdirectories for additional project types (monorepo support)
 SUBDIRS=("frontend" "backend" "client" "server" "web" "app" "packages" "apps" "src")
 
