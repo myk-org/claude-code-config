@@ -247,8 +247,6 @@ def _split_large_file(
         str(temp_dir),
         "--max-tokens",
         str(max_tokens),
-        "--project-root",
-        str(project_root),
     ]
 
     try:
