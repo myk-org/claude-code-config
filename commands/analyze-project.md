@@ -899,18 +899,25 @@ This ensures agents don't try to "help" by fixing problems - they report back an
 When delegating a script execution, use this format:
 
 ```
-Run the script:
+Run the script and check the **actual exit code**:
+
 <script command>
+EXIT_CODE=$?
+echo "Exit code: $EXIT_CODE"
+
+**IMPORTANT:** The exit code is from `$?`, NOT from the script's stdout output.
+Scripts may print numbers to stdout (like file counts) - these are NOT exit codes.
 
 🚨 **CRITICAL: ON SCRIPT FAILURE**
 - Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT confuse stdout output with exit codes
 - DO NOT fix, modify, or work around
 - DO NOT continue to next step
 - ONLY report the error and exit code
 - The orchestrator handles error recovery
 ```
 
-This instruction MUST be included in every delegation that runs a script to ensure agents follow the error handling protocol and do not attempt to modify scripts on failure.
+This instruction MUST be included in every delegation that runs a script.
 
 ---
 
