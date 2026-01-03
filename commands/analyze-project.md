@@ -329,107 +329,34 @@ Display the script output.
 
 ### 5.2: Analyze Each Batch
 
-**For each batch in batch_manifest.json, DELEGATE to appropriate language expert:**
-- Python → `python-expert`
-- JavaScript/TypeScript → `frontend-expert`
-- Go → `go-expert`
-- Java → `java-expert`
-- Unknown → `general-purpose`
+**DELEGATE to bash-expert:**
 
 ```
-Analyze source files from batch ${BATCH_NUM} of ${TOTAL_BATCHES}.
+Analyze each batch using the tree-sitter-based script:
 
-**IMPORTANT: All temp files MUST go to ${TEMP_DIR}/**
+1. Read batch_manifest.json from ${TEMP_DIR} to get the list of batches
+2. For each batch file, run the analysis script:
+   uv run --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py --batch ${TEMP_DIR}/file_batch_${BATCH_NUM}.txt --output ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
 
-📋 **OUTPUT FORMAT: See schema at ~/.claude/commands/scripts/analyze-project/analysis_schema.json**
+3. Run all batches (can be run sequentially or in parallel if system supports it)
 
-REQUIRED fields for EACH file entry:
-- file (string): relative path - REQUIRED
-- language (string): "Python", "TypeScript", etc. - REQUIRED
-- purpose (string): brief description - REQUIRED
-- imports (object): {"internal": [...], "external": [...]} - REQUIRED
-- exports (array): exported symbols - REQUIRED
-- classes (array): class objects - REQUIRED, MUST BE ARRAY
-- functions (array): function objects - REQUIRED, MUST BE ARRAY
-- dependencies (array): external libs - REQUIRED
+4. Display progress for each batch:
+   [Batch ${BATCH_NUM}/${TOTAL_BATCHES}] Analyzed: <count> files
 
-⚠️ classes and functions MUST be arrays, NOT strings. Validation will fail otherwise.
+5. After all batches complete, display summary:
+   ✅ Code analysis complete: <total_files> files analyzed
 
-1. Read the file list from ${TEMP_DIR}/file_batch_${BATCH_NUM}.txt
-2. Read and analyze each file in the list
-3. For each file, extract structured data:
-
-   a. Imports: All import statements (internal and external modules)
-   b. Exports: All exported symbols (functions, classes, constants)
-   c. Classes:
-      - Name
-      - Methods (name, parameters, return type, docstring)
-      - Decorators/annotations
-      - Inheritance (base classes)
-      - Docstring/description
-   d. Functions:
-      - Name
-      - Parameters with types
-      - Return type
-      - Docstring/description
-      - Decorators/annotations
-   e. Dependencies: External libraries used
-   f. Purpose: Brief description of what the file does
-
-4. Write analysis results to ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
-
-5. Format as JSON array with one object per file (ALL FIELDS REQUIRED):
-   [
-     {
-       "file": "relative/path/to/file.py",           // REQUIRED (string)
-       "language": "Python",                          // REQUIRED (string)
-       "purpose": "Brief description",                // REQUIRED (string)
-       "imports": {                                   // REQUIRED (object)
-         "internal": ["module1", "module2"],          // REQUIRED (array)
-         "external": ["requests", "fastapi"]          // REQUIRED (array)
-       },
-       "exports": ["function_name", "ClassName"],     // REQUIRED (array)
-       "classes": [                                   // REQUIRED (array, even if empty)
-         {
-           "name": "ClassName",
-           "docstring": "Class description",
-           "decorators": ["@dataclass"],
-           "inherits": ["BaseClass"],
-           "methods": [...]
-         }
-       ],
-       "functions": [                                 // REQUIRED (array, even if empty)
-         {
-           "name": "function_name",
-           "parameters": ["param1: str", "param2: int = 0"],
-           "return_type": "str",
-           "docstring": "Function description",
-           "decorators": ["@app.get('/endpoint')"],
-           "is_async": false
-         }
-       ],
-       "dependencies": ["requests", "fastapi"]        // REQUIRED (array)
-     }
-   ]
-
-   CRITICAL: If a file has no classes or functions, use empty arrays: "classes": [], "functions": []
-   DO NOT use null, undefined, or omit these fields. ALL fields are REQUIRED.
-
-6. Return summary:
-   [Batch ${BATCH_NUM}/${TOTAL_BATCHES}] Analyzed: <count> files (<size>KB)
-   Classes: <count>
-   Functions: <count>
-
-🚨 **ON ANY ERROR:**
-- DO NOT try to fix or work around
-- STOP immediately
-- Report the error back to the orchestrator
-- Let the orchestrator handle error recovery
+🚨 **CRITICAL: ON SCRIPT FAILURE**
+- Exit code ≠ 0 → STOP IMMEDIATELY
+- DO NOT fix, modify, or work around
+- DO NOT continue to next step
+- ONLY report the error and exit code
+- The orchestrator handles error recovery
 ```
 
-**Note:** Batches are sized by content, not file count. An oversized batch (single large file) will have ⚠️ warning in manifest - consider using haiku model for those.
+**Display agent response.**
 
-**Display batch progress after each delegation.**
+**Note:** The analyze-code.py script uses tree-sitter for deterministic AST-based extraction. No AI interpretation is needed - the script extracts classes, functions, imports, etc. directly from the code.
 
 **Display final summary:**
 ```

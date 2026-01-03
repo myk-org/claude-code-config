@@ -70,6 +70,7 @@ scripts/
 !commands/scripts/
 !commands/scripts/analyze-project/
 !commands/scripts/analyze-project/analysis_schema.json
+!commands/scripts/analyze-project/analyze-code.py
 !commands/scripts/analyze-project/calculate-hashes.sh
 !commands/scripts/analyze-project/cleanup.sh
 !commands/scripts/analyze-project/compare-hashes.sh
@@ -80,6 +81,7 @@ scripts/
 !commands/scripts/analyze-project/inspect-analysis.py
 !commands/scripts/analyze-project/merge-analysis.py
 !commands/scripts/analyze-project/prepare-episodes.py
+!commands/scripts/analyze-project/split-large-files.py
 !commands/scripts/analyze-project/validate-analysis.py
 !commands/scripts/general/
 !commands/scripts/general/get-pr-info.sh

@@ -4,16 +4,26 @@ Split large source files by top-level definitions.
 
 For files too large to analyze in one pass, splits them into smaller chunks
 where each chunk contains one or more top-level definitions (classes, functions).
+
+Uses tree-sitter for robust parsing across multiple languages.
 """
 
 import argparse
-import ast
 import json
-import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+try:
+    from tree_sitter_languages import get_language, get_parser
+except ImportError:
+    print(
+        "❌ Error: tree-sitter-languages not installed. "
+        "Run: uv add tree-sitter-languages",
+        file=sys.stderr,
+    )
+    sys.exit(2)
 
 
 def estimate_tokens(content: str) -> int:
@@ -56,292 +66,354 @@ class ChunkManifest:
     chunks: list[ChunkInfo]
 
 
-def detect_language(file_path: Path) -> str:
-    """Detect language from file extension."""
-    ext = file_path.suffix.lower()
-
-    lang_map = {
-        ".py": "Python",
-        ".js": "JavaScript",
-        ".jsx": "JavaScript",
-        ".ts": "TypeScript",
-        ".tsx": "TypeScript",
-        ".go": "Go",
-        ".java": "Java",
-        ".kt": "Kotlin",
-        ".rb": "Ruby",
-        ".php": "PHP",
-        ".c": "C",
-        ".cpp": "C++",
-        ".cc": "C++",
-        ".h": "C/C++ Header",
-        ".hpp": "C++ Header",
-        ".cs": "C#",
-        ".rs": "Rust",
-        ".swift": "Swift",
-        ".m": "Objective-C",
-    }
-
-    return lang_map.get(ext, "Unknown")
+# Language mapping: file extension -> (tree-sitter language name, display name)
+LANGUAGE_MAP = {
+    ".py": ("python", "Python"),
+    ".js": ("javascript", "JavaScript"),
+    ".jsx": ("javascript", "JavaScript"),
+    ".ts": ("typescript", "TypeScript"),
+    ".tsx": ("tsx", "TypeScript"),
+    ".go": ("go", "Go"),
+    ".java": ("java", "Java"),
+    ".kt": ("kotlin", "Kotlin"),
+    ".rb": ("ruby", "Ruby"),
+    ".php": ("php", "PHP"),
+    ".c": ("c", "C"),
+    ".cpp": ("cpp", "C++"),
+    ".cc": ("cpp", "C++"),
+    ".h": ("c", "C/C++ Header"),
+    ".hpp": ("cpp", "C++ Header"),
+    ".cs": ("c_sharp", "C#"),
+    ".rs": ("rust", "Rust"),
+    ".swift": ("swift", "Swift"),
+}
 
 
-def extract_imports_python(content: str) -> str:
-    """Extract all import statements from Python source."""
-    try:
-        tree = ast.parse(content)
-        import_lines = []
+# Node types for top-level definitions per language
+DEFINITION_NODES = {
+    "python": ["class_definition", "function_definition", "decorated_definition"],
+    "javascript": [
+        "class_declaration",
+        "function_declaration",
+        "lexical_declaration",  # const/let
+        "variable_declaration",  # var
+        "export_statement",
+    ],
+    "typescript": [
+        "class_declaration",
+        "function_declaration",
+        "lexical_declaration",
+        "variable_declaration",
+        "export_statement",
+        "interface_declaration",
+        "type_alias_declaration",
+    ],
+    "tsx": [
+        "class_declaration",
+        "function_declaration",
+        "lexical_declaration",
+        "variable_declaration",
+        "export_statement",
+        "interface_declaration",
+        "type_alias_declaration",
+    ],
+    "go": [
+        "function_declaration",
+        "method_declaration",
+        "type_declaration",
+        "const_declaration",
+        "var_declaration",
+    ],
+    "java": [
+        "class_declaration",
+        "interface_declaration",
+        "method_declaration",
+        "field_declaration",
+        "enum_declaration",
+    ],
+    "kotlin": [
+        "class_declaration",
+        "function_declaration",
+        "object_declaration",
+        "property_declaration",
+    ],
+    "ruby": [
+        "class",
+        "module",
+        "method",
+    ],
+    "php": [
+        "class_declaration",
+        "function_definition",
+        "trait_declaration",
+        "interface_declaration",
+    ],
+    "c": [
+        "function_definition",
+        "struct_specifier",
+        "enum_specifier",
+        "type_definition",
+    ],
+    "cpp": [
+        "function_definition",
+        "class_specifier",
+        "struct_specifier",
+        "enum_specifier",
+        "namespace_definition",
+    ],
+    "c_sharp": [
+        "class_declaration",
+        "interface_declaration",
+        "method_declaration",
+        "struct_declaration",
+        "enum_declaration",
+    ],
+    "rust": [
+        "function_item",
+        "struct_item",
+        "enum_item",
+        "trait_item",
+        "impl_item",
+        "mod_item",
+    ],
+    "swift": [
+        "class_declaration",
+        "function_declaration",
+        "struct_declaration",
+        "protocol_declaration",
+        "extension_declaration",
+    ],
+}
 
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.Import, ast.ImportFrom)):
-                # Get line number and extract from source
-                start_line = node.lineno - 1
-                end_line = node.end_lineno if node.end_lineno else start_line + 1
-                lines = content.split("\n")
-                import_lines.extend(lines[start_line:end_line])
 
-        return "\n".join(import_lines) if import_lines else ""
+# Node types for import statements per language
+IMPORT_NODES = {
+    "python": ["import_statement", "import_from_statement"],
+    "javascript": ["import_statement", "export_statement"],
+    "typescript": ["import_statement", "export_statement"],
+    "tsx": ["import_statement", "export_statement"],
+    "go": ["import_declaration"],
+    "java": ["import_declaration"],
+    "kotlin": ["import_header"],
+    "ruby": ["method_call"],  # require statements
+    "php": ["namespace_use_declaration"],
+    "c": ["preproc_include"],
+    "cpp": ["preproc_include", "using_declaration"],
+    "c_sharp": ["using_directive"],
+    "rust": ["use_declaration"],
+    "swift": ["import_declaration"],
+}
 
-    except SyntaxError:
-        # If parsing fails, try simple regex
-        import_pattern = re.compile(r"^(import\s+.+|from\s+.+import\s+.+)", re.MULTILINE)
-        imports = import_pattern.findall(content)
-        return "\n".join(imports)
 
-
-def parse_python(content: str) -> tuple[list[Definition], str]:
+def detect_language(file_path: Path) -> tuple[str, str] | None:
     """
-    Parse Python source and extract top-level definitions.
+    Detect language from file extension.
 
     Returns:
-        tuple: (list of definitions, imports string)
+        tuple: (tree-sitter language name, display name) or None if unsupported
     """
+    ext = file_path.suffix.lower()
+    return LANGUAGE_MAP.get(ext)
+
+
+def get_node_name(node: Any, source_bytes: bytes) -> str:
+    """
+    Extract the name/identifier from a tree-sitter node.
+
+    Looks for common name fields like 'name', 'declarator', 'pattern', etc.
+    """
+    # Try common name fields
+    name_fields = ["name", "declarator", "pattern", "value"]
+
+    for field in name_fields:
+        name_node = node.child_by_field_name(field)
+        if name_node:
+            # For nested structures (e.g., function_declarator), recurse
+            nested_name = get_node_name(name_node, source_bytes)
+            if nested_name:
+                return nested_name
+
+            # Otherwise extract text
+            name_text = source_bytes[name_node.start_byte : name_node.end_byte].decode(
+                "utf-8", errors="replace"
+            )
+            if name_text.strip():
+                return name_text.strip()
+
+    # Fallback: try first named child
+    for child in node.children:
+        if child.is_named:
+            child_text = source_bytes[child.start_byte : child.end_byte].decode(
+                "utf-8", errors="replace"
+            )
+            # Avoid returning full definition as name
+            if len(child_text) < 100 and "\n" not in child_text:
+                return child_text.strip()
+
+    # Last resort: use node type and position
+    return f"{node.type}_{node.start_point[0]}"
+
+
+def is_import_or_export(node: Any, lang: str) -> bool:
+    """Check if node is an import/export statement."""
+    import_types = IMPORT_NODES.get(lang, [])
+
+    # Direct type match
+    if node.type in import_types:
+        return True
+
+    # For Ruby, check if it's a require/require_relative call
+    if lang == "ruby" and node.type == "method_call":
+        method_name_node = node.child_by_field_name("method")
+        if method_name_node:
+            method_name = method_name_node.text.decode("utf-8", errors="replace")
+            return method_name in ("require", "require_relative")
+
+    return False
+
+
+def extract_imports(tree: Any, source_bytes: bytes, lang: str) -> str:
+    """Extract all import/export statements from the tree."""
+    import_lines: list[str] = []
+
+    def traverse(node: Any) -> None:
+        if is_import_or_export(node, lang):
+            import_text = source_bytes[node.start_byte : node.end_byte].decode(
+                "utf-8", errors="replace"
+            )
+            import_lines.append(import_text)
+
+        # Only traverse top-level for imports
+        if node.parent is None or node.parent.type in ("program", "module"):
+            for child in node.children:
+                traverse(child)
+
+    traverse(tree.root_node)
+    return "\n".join(import_lines) if import_lines else ""
+
+
+def is_definition_node(node: Any, lang: str) -> bool:
+    """Check if node is a top-level definition."""
+    def_types = DEFINITION_NODES.get(lang, [])
+
+    # Direct type match
+    if node.type in def_types:
+        return True
+
+    # For JavaScript/TypeScript, check if lexical_declaration contains a function
+    if lang in ("javascript", "typescript", "tsx") and node.type in (
+        "lexical_declaration",
+        "variable_declaration",
+    ):
+        # Check if it contains a function or class expression
+        for child in node.children:
+            if child.type in (
+                "variable_declarator",
+            ):
+                for grandchild in child.children:
+                    if grandchild.type in (
+                        "arrow_function",
+                        "function_expression",
+                        "class",
+                    ):
+                        return True
+
+    return False
+
+
+def extract_definitions(tree: Any, source_bytes: bytes, lang: str) -> list[Definition]:
+    """
+    Extract top-level definitions from tree-sitter parse tree.
+
+    Returns:
+        list[Definition]: Top-level definitions with name, location, and content
+    """
+    definitions: list[Definition] = []
+    source_lines = source_bytes.decode("utf-8", errors="replace").split("\n")
+
+    # Get root node
+    root = tree.root_node
+
+    # Traverse only direct children of root (top-level definitions)
+    for node in root.children:
+        # Skip import/export statements (handled separately)
+        if is_import_or_export(node, lang):
+            continue
+
+        # Check if this is a definition node
+        if not is_definition_node(node, lang):
+            continue
+
+        # Extract name
+        name = get_node_name(node, source_bytes)
+
+        # Get location
+        start_line = node.start_point[0]
+        end_line = node.end_point[0] + 1  # Make it exclusive
+
+        # Extract content
+        content = source_bytes[node.start_byte : node.end_byte].decode(
+            "utf-8", errors="replace"
+        )
+
+        definitions.append(
+            Definition(
+                name=name,
+                start_line=start_line,
+                end_line=end_line,
+                content=content,
+            )
+        )
+
+    return definitions
+
+
+def parse_file_with_treesitter(
+    file_path: Path,
+) -> tuple[list[Definition], str, str] | None:
+    """
+    Parse source file using tree-sitter.
+
+    Returns:
+        tuple: (list of definitions, imports string, language display name)
+        None if language not supported
+    """
+    lang_info = detect_language(file_path)
+    if not lang_info:
+        return None
+
+    ts_lang_name, display_name = lang_info
+
     try:
-        tree = ast.parse(content)
-    except SyntaxError as e:
+        # Get parser for this language
+        parser = get_parser(ts_lang_name)
+    except Exception as e:
         print(
-            f"⚠️  Warning: Python parsing failed: {e}, falling back to line split",
+            f"⚠️  Warning: Failed to get parser for {ts_lang_name}: {e}",
             file=sys.stderr,
         )
-        return [], ""
-
-    definitions: list[Definition] = []
-    lines = content.split("\n")
-    imports = extract_imports_python(content)
-
-    for node in tree.body:
-        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-            name = node.name
-            start_line = node.lineno - 1
-            end_line = node.end_lineno if node.end_lineno else len(lines)
-
-            # Extract content including decorators
-            if hasattr(node, "decorator_list") and node.decorator_list:
-                first_decorator = node.decorator_list[0]
-                start_line = first_decorator.lineno - 1
-
-            def_content = "\n".join(lines[start_line:end_line])
-
-            definitions.append(
-                Definition(
-                    name=name,
-                    start_line=start_line,
-                    end_line=end_line,
-                    content=def_content,
-                )
-            )
-
-    return definitions, imports
-
-
-def parse_javascript_typescript(content: str) -> tuple[list[Definition], str]:
-    """
-    Parse JavaScript/TypeScript using regex patterns.
-
-    Returns:
-        tuple: (list of definitions, imports string)
-    """
-    lines = content.split("\n")
-    definitions: list[Definition] = []
-
-    # Extract imports (both ES6 and CommonJS)
-    import_pattern = re.compile(
-        r"^(import\s+.+from\s+.+|const\s+.+\s*=\s*require\(.+\)|export\s+.+from\s+.+)",
-        re.MULTILINE,
-    )
-    imports = "\n".join(import_pattern.findall(content))
-
-    # Patterns for top-level definitions
-    patterns = [
-        # export function/class
-        (r"^export\s+(async\s+)?function\s+(\w+)", "function"),
-        (r"^export\s+class\s+(\w+)", "class"),
-        # function/class declarations
-        (r"^(async\s+)?function\s+(\w+)", "function"),
-        (r"^class\s+(\w+)", "class"),
-        # const/let/var with function/class
-        (
-            r"^(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(?.*\)?\s*=>",
-            "arrow_function",
-        ),
-        (r"^(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*class", "class_expr"),
-    ]
-
-    i = 0
-    while i < len(lines):
-        line = lines[i].strip()
-
-        for pattern, def_type in patterns:
-            match = re.match(pattern, line)
-            if match:
-                # Extract name from match groups
-                name = match.group(2) if match.lastindex >= 2 else match.group(1)
-
-                # Find the end of this definition (simple heuristic: next top-level def or EOF)
-                start_line = i
-                brace_count = 0
-                in_definition = False
-
-                j = i
-                while j < len(lines):
-                    current_line = lines[j]
-
-                    # Track braces
-                    brace_count += current_line.count("{") - current_line.count("}")
-
-                    if "{" in current_line:
-                        in_definition = True
-
-                    # End when braces balance after opening
-                    if in_definition and brace_count == 0 and "{" in lines[start_line:j]:
-                        end_line = j + 1
-                        break
-
-                    j += 1
-                else:
-                    end_line = len(lines)
-
-                def_content = "\n".join(lines[start_line:end_line])
-
-                definitions.append(
-                    Definition(
-                        name=name,
-                        start_line=start_line,
-                        end_line=end_line,
-                        content=def_content,
-                    )
-                )
-
-                i = end_line - 1
-                break
-        i += 1
-
-    return definitions, imports
-
-
-def parse_go(content: str) -> tuple[list[Definition], str]:
-    """
-    Parse Go source using regex patterns.
-
-    Returns:
-        tuple: (list of definitions, imports string)
-    """
-    lines = content.split("\n")
-    definitions: list[Definition] = []
-
-    # Extract imports
-    import_pattern = re.compile(r"^import\s+\(.*?\)", re.MULTILINE | re.DOTALL)
-    import_single = re.compile(r'^import\s+".*?"', re.MULTILINE)
-
-    imports_multi = import_pattern.findall(content)
-    imports_single_list = import_single.findall(content)
-    imports = "\n".join(imports_multi + imports_single_list)
-
-    # Patterns for top-level definitions
-    patterns = [
-        (r"^func\s+(?:\([^)]+\)\s+)?(\w+)", "function"),  # Functions and methods
-        (r"^type\s+(\w+)\s+struct", "struct"),
-        (r"^type\s+(\w+)\s+interface", "interface"),
-    ]
-
-    i = 0
-    while i < len(lines):
-        line = lines[i].strip()
-
-        for pattern, def_type in patterns:
-            match = re.match(pattern, line)
-            if match:
-                name = match.group(1)
-                start_line = i
-
-                # Find end of definition
-                brace_count = 0
-                in_definition = False
-
-                j = i
-                while j < len(lines):
-                    current_line = lines[j]
-
-                    brace_count += current_line.count("{") - current_line.count("}")
-
-                    if "{" in current_line:
-                        in_definition = True
-
-                    if in_definition and brace_count == 0:
-                        end_line = j + 1
-                        break
-
-                    j += 1
-                else:
-                    end_line = len(lines)
-
-                def_content = "\n".join(lines[start_line:end_line])
-
-                definitions.append(
-                    Definition(
-                        name=name,
-                        start_line=start_line,
-                        end_line=end_line,
-                        content=def_content,
-                    )
-                )
-
-                i = end_line - 1
-                break
-        i += 1
-
-    return definitions, imports
-
-
-def parse_file(file_path: Path) -> tuple[list[Definition], str, str]:
-    """
-    Parse source file and extract top-level definitions.
-
-    Returns:
-        tuple: (list of definitions, imports string, language)
-    """
-    language = detect_language(file_path)
+        return None
 
     try:
-        content = file_path.read_text()
+        content = file_path.read_bytes()
     except Exception as e:
         print(f"❌ Error reading {file_path}: {e}", file=sys.stderr)
         sys.exit(2)
 
-    if language == "Python":
-        definitions, imports = parse_python(content)
-    elif language in ("JavaScript", "TypeScript"):
-        definitions, imports = parse_javascript_typescript(content)
-    elif language == "Go":
-        definitions, imports = parse_go(content)
-    else:
-        # Fallback: split by line count
-        print(
-            f"⚠️  Warning: No parser for {language}, falling back to line split",
-            file=sys.stderr,
-        )
-        definitions, imports = fallback_split(content)
+    # Parse the file
+    try:
+        tree = parser.parse(content)
+    except Exception as e:
+        print(f"⚠️  Warning: Tree-sitter parsing failed: {e}", file=sys.stderr)
+        return None
 
-    return definitions, imports, language
+    # Extract imports
+    imports = extract_imports(tree, content, ts_lang_name)
+
+    # Extract definitions
+    definitions = extract_definitions(tree, content, ts_lang_name)
+
+    return definitions, imports, display_name
 
 
 def fallback_split(content: str, lines_per_chunk: int = 200) -> tuple[list[Definition], str]:
@@ -368,6 +440,37 @@ def fallback_split(content: str, lines_per_chunk: int = 200) -> tuple[list[Defin
         )
 
     return definitions, ""
+
+
+def parse_file(file_path: Path) -> tuple[list[Definition], str, str]:
+    """
+    Parse source file and extract top-level definitions.
+
+    Returns:
+        tuple: (list of definitions, imports string, language)
+    """
+    # Try tree-sitter parsing first
+    result = parse_file_with_treesitter(file_path)
+
+    if result is not None:
+        definitions, imports, language = result
+        return definitions, imports, language
+
+    # Fallback: language not supported by tree-sitter
+    print(
+        f"⚠️  Warning: No tree-sitter parser available for {file_path.suffix}, "
+        "falling back to line split",
+        file=sys.stderr,
+    )
+
+    try:
+        content = file_path.read_text()
+    except Exception as e:
+        print(f"❌ Error reading {file_path}: {e}", file=sys.stderr)
+        sys.exit(2)
+
+    definitions, imports = fallback_split(content)
+    return definitions, imports, "Unknown"
 
 
 def create_chunks(
@@ -433,7 +536,9 @@ def write_chunks(
     """
     original_name = file_path.stem
     extension = file_path.suffix
-    language = detect_language(file_path)
+
+    lang_info = detect_language(file_path)
+    language = lang_info[1] if lang_info else "Unknown"
 
     chunk_infos: list[ChunkInfo] = []
     total_tokens = 0
@@ -539,7 +644,7 @@ def print_summary(manifest: ChunkManifest, manifest_path: Path) -> None:
 def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Split large source files by top-level definitions"
+        description="Split large source files by top-level definitions using tree-sitter"
     )
     parser.add_argument("file_path", help="Path to source file to split")
     parser.add_argument(

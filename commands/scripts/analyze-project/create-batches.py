@@ -239,6 +239,8 @@ def _split_large_file(
     cmd = [
         "uv",
         "run",
+        "--with",
+        "tree-sitter-languages",
         str(split_script),
         str(full_path),
         "--output-dir",
