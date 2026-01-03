@@ -527,14 +527,28 @@ def write_chunks(
     file_path: Path,
     output_dir: Path,
     max_tokens: int,
+    relative_path: str | None = None,
 ) -> ChunkManifest:
     """
     Write chunks to output directory and create manifest.
 
+    Args:
+        chunks: List of definition chunks
+        imports: Import statements to include in each chunk
+        file_path: Absolute path to original file
+        output_dir: Directory to write chunks
+        max_tokens: Maximum tokens per chunk
+        relative_path: Relative path from project root (for naming)
+
     Returns:
         ChunkManifest with metadata about all chunks
     """
-    original_name = file_path.stem
+    # Use relative_path for naming if provided, otherwise fall back to file_path.stem
+    if relative_path:
+        safe_prefix = relative_path.replace("/", "__").replace("\\", "__")
+    else:
+        safe_prefix = file_path.stem
+
     extension = file_path.suffix
 
     lang_info = detect_language(file_path)
@@ -544,7 +558,7 @@ def write_chunks(
     total_tokens = 0
 
     for idx, chunk_defs in enumerate(chunks, start=1):
-        chunk_filename = f"{original_name}_chunk_{idx}{extension}"
+        chunk_filename = f"{safe_prefix}_chunk_{idx}{extension}"
         chunk_path = output_dir / chunk_filename
 
         # Build chunk content
@@ -588,9 +602,19 @@ def write_chunks(
     )
 
 
-def write_manifest(manifest: ChunkManifest, output_dir: Path, original_name: str) -> Path:
-    """Write manifest JSON file."""
-    manifest_path = output_dir / f"{original_name}_chunks.json"
+def write_manifest(manifest: ChunkManifest, output_dir: Path, safe_prefix: str) -> Path:
+    """
+    Write manifest JSON file.
+
+    Args:
+        manifest: Chunk manifest data
+        output_dir: Directory to write manifest
+        safe_prefix: Safe filename prefix (path with / replaced by __)
+
+    Returns:
+        Path to created manifest file
+    """
+    manifest_path = output_dir / f"{safe_prefix}.chunks.json"
 
     manifest_dict = {
         "original_file": manifest.original_file,
@@ -659,6 +683,11 @@ def main() -> None:
         default=8000,
         help="Maximum tokens per chunk (default: 8000)",
     )
+    parser.add_argument(
+        "--relative-path",
+        type=str,
+        help="Relative path from project root (for naming chunks and manifest)",
+    )
 
     args = parser.parse_args()
 
@@ -693,8 +722,17 @@ def main() -> None:
     chunks = create_chunks(definitions, imports, max_tokens)
 
     # Write chunks and manifest
-    manifest = write_chunks(chunks, imports, file_path, output_dir, max_tokens)
-    manifest_path = write_manifest(manifest, output_dir, file_path.stem)
+    manifest = write_chunks(
+        chunks, imports, file_path, output_dir, max_tokens, args.relative_path
+    )
+
+    # Determine safe prefix for manifest
+    if args.relative_path:
+        safe_prefix = args.relative_path.replace("/", "__").replace("\\", "__")
+    else:
+        safe_prefix = file_path.stem
+
+    manifest_path = write_manifest(manifest, output_dir, safe_prefix)
 
     # Print summary
     print_summary(manifest, manifest_path)
