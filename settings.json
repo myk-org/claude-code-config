@@ -99,8 +99,8 @@
     "Bash(uv run ~/.claude/commands/scripts/analyze-project/merge-analysis.py*)",
     "Bash(uv run --with jsonschema ~/.claude/commands/scripts/analyze-project/validate-analysis.py*)",
     "Bash(uv run ~/.claude/commands/scripts/analyze-project/inspect-analysis.py*)",
-    "Bash(uv run --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/split-large-files.py*)",
-    "Bash(uv run --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py*)"
+    "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/split-large-files.py*)",
+    "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py*)"
   ],
   "permissions": {
     "allow": [
@@ -125,8 +125,8 @@
       "Bash(uv run ~/.claude/commands/scripts/analyze-project/merge-analysis.py:*)",
       "Bash(uv run --with jsonschema ~/.claude/commands/scripts/analyze-project/validate-analysis.py:*)",
       "Bash(uv run ~/.claude/commands/scripts/analyze-project/inspect-analysis.py:*)",
-      "Bash(uv run --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/split-large-files.py:*)",
-      "Bash(uv run --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py:*)"
+      "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/split-large-files.py:*)",
+      "Bash(uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py:*)"
     ]
   },
   "feedbackSurveyState": {

@@ -239,6 +239,10 @@ def _split_large_file(
     cmd = [
         "uv",
         "run",
+        "--python",
+        "3.12",
+        "--with",
+        "tree-sitter==0.21.3",
         "--with",
         "tree-sitter-languages",
         str(split_script),
@@ -295,7 +299,7 @@ def _split_large_file(
         sys.exit(1)
 
     # Extract chunk file paths
-    chunk_files = [chunk["file_path"] for chunk in chunk_manifest["chunks"]]
+    chunk_files = [chunk["chunk_file"] for chunk in chunk_manifest["chunks"]]
 
     return {
         "original_file": file_path,

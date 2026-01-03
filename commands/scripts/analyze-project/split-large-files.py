@@ -6,6 +6,15 @@ For files too large to analyze in one pass, splits them into smaller chunks
 where each chunk contains one or more top-level definitions (classes, functions).
 
 Uses tree-sitter for robust parsing across multiple languages.
+
+REQUIREMENTS:
+  - Python 3.12 (tree-sitter-languages not yet compatible with 3.13+)
+  - tree-sitter==0.21.3 (compatibility with tree-sitter-languages)
+  - tree-sitter-languages
+
+Usage:
+  uv run --python 3.12 --with "tree-sitter==0.21.3" --with tree-sitter-languages \\
+    split-large-files.py <file> --output-dir <dir>
 """
 
 import argparse
@@ -15,12 +24,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+# Check Python version early
+if sys.version_info >= (3, 13):
+    print(
+        "❌ Error: Python 3.13+ not supported by tree-sitter-languages.\n"
+        "   Use: uv run --python 3.12 --with 'tree-sitter==0.21.3' "
+        "--with tree-sitter-languages split-large-files.py ...",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
 try:
     from tree_sitter_languages import get_language, get_parser
 except ImportError:
     print(
-        "❌ Error: tree-sitter-languages not installed. "
-        "Run: uv add tree-sitter-languages",
+        "❌ Error: tree-sitter-languages not installed.\n"
+        "   Use: uv run --python 3.12 --with 'tree-sitter==0.21.3' "
+        "--with tree-sitter-languages split-large-files.py ...",
         file=sys.stderr,
     )
     sys.exit(2)
@@ -67,6 +87,7 @@ class ChunkManifest:
 
 
 # Language mapping: file extension -> (tree-sitter language name, display name)
+# Note: Swift removed due to missing symbols in tree-sitter-languages
 LANGUAGE_MAP = {
     ".py": ("python", "Python"),
     ".js": ("javascript", "JavaScript"),
@@ -85,7 +106,6 @@ LANGUAGE_MAP = {
     ".hpp": ("cpp", "C++ Header"),
     ".cs": ("c_sharp", "C#"),
     ".rs": ("rust", "Rust"),
-    ".swift": ("swift", "Swift"),
 }
 
 
@@ -176,13 +196,6 @@ DEFINITION_NODES = {
         "impl_item",
         "mod_item",
     ],
-    "swift": [
-        "class_declaration",
-        "function_declaration",
-        "struct_declaration",
-        "protocol_declaration",
-        "extension_declaration",
-    ],
 }
 
 
@@ -201,7 +214,6 @@ IMPORT_NODES = {
     "cpp": ["preproc_include", "using_declaration"],
     "c_sharp": ["using_directive"],
     "rust": ["use_declaration"],
-    "swift": ["import_declaration"],
 }
 
 
@@ -221,36 +233,60 @@ def get_node_name(node: Any, source_bytes: bytes) -> str:
     Extract the name/identifier from a tree-sitter node.
 
     Looks for common name fields like 'name', 'declarator', 'pattern', etc.
+    Falls back to checking for identifier child nodes (Python classes/functions).
+    Handles decorated definitions by recursively extracting from wrapped node.
     """
-    # Try common name fields
-    name_fields = ["name", "declarator", "pattern", "value"]
+    # Special case: Python decorated_definition - extract name from wrapped definition
+    if node.type == "decorated_definition":
+        # Find the wrapped definition (class_definition or function_definition)
+        for child in node.children:
+            if child.type in ("class_definition", "function_definition"):
+                return get_node_name(child, source_bytes)
 
-    for field in name_fields:
-        name_node = node.child_by_field_name(field)
-        if name_node:
-            # For nested structures (e.g., function_declarator), recurse
-            nested_name = get_node_name(name_node, source_bytes)
-            if nested_name:
-                return nested_name
+    # Method 1: Try field-based access (works for many languages)
+    name_node = node.child_by_field_name("name")
+    if name_node:
+        return source_bytes[name_node.start_byte:name_node.end_byte].decode(
+            "utf-8", errors="replace"
+        ).strip()
 
-            # Otherwise extract text
-            name_text = source_bytes[name_node.start_byte : name_node.end_byte].decode(
+    # Method 2: Try declarator field (for C/C++)
+    declarator = node.child_by_field_name("declarator")
+    if declarator:
+        # Might be nested (function_declarator -> identifier)
+        inner_name = declarator.child_by_field_name("name")
+        if inner_name:
+            return source_bytes[inner_name.start_byte:inner_name.end_byte].decode(
                 "utf-8", errors="replace"
-            )
-            if name_text.strip():
-                return name_text.strip()
+            ).strip()
+        # Or direct identifier
+        if declarator.type == "identifier":
+            return source_bytes[declarator.start_byte:declarator.end_byte].decode(
+                "utf-8", errors="replace"
+            ).strip()
 
-    # Fallback: try first named child
+    # Method 3: Try pattern field (for variable declarations)
+    pattern = node.child_by_field_name("pattern")
+    if pattern and pattern.type == "identifier":
+        return source_bytes[pattern.start_byte:pattern.end_byte].decode(
+            "utf-8", errors="replace"
+        ).strip()
+
+    # Method 4: Look for identifier among direct children (Python classes/functions)
     for child in node.children:
-        if child.is_named:
-            child_text = source_bytes[child.start_byte : child.end_byte].decode(
+        if child.type == "identifier":
+            return source_bytes[child.start_byte:child.end_byte].decode(
                 "utf-8", errors="replace"
-            )
-            # Avoid returning full definition as name
-            if len(child_text) < 100 and "\n" not in child_text:
-                return child_text.strip()
+            ).strip()
 
-    # Last resort: use node type and position
+    # Method 5: Look for property_identifier (JavaScript/TypeScript methods)
+    for child in node.children:
+        if child.type == "property_identifier":
+            return source_bytes[child.start_byte:child.end_byte].decode(
+                "utf-8", errors="replace"
+            ).strip()
+
+    # Fallback: use node type and line number
     return f"{node.type}_{node.start_point[0]}"
 
 
@@ -370,107 +406,76 @@ def extract_definitions(tree: Any, source_bytes: bytes, lang: str) -> list[Defin
 
 def parse_file_with_treesitter(
     file_path: Path,
-) -> tuple[list[Definition], str, str] | None:
+) -> tuple[list[Definition], str, str]:
     """
     Parse source file using tree-sitter.
 
     Returns:
         tuple: (list of definitions, imports string, language display name)
-        None if language not supported
+
+    Raises:
+        SystemExit(1): If language not supported by tree-sitter
+        SystemExit(2): If tree-sitter initialization or parsing fails
     """
     lang_info = detect_language(file_path)
     if not lang_info:
-        return None
+        print(
+            f"❌ Error: Language not supported for {file_path.suffix}\n"
+            f"   Supported extensions: {', '.join(sorted(LANGUAGE_MAP.keys()))}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     ts_lang_name, display_name = lang_info
 
+    # Get parser for this language
     try:
-        # Get parser for this language
         parser = get_parser(ts_lang_name)
     except Exception as e:
         print(
-            f"⚠️  Warning: Failed to get parser for {ts_lang_name}: {e}",
+            f"❌ Error: Failed to initialize tree-sitter parser for {ts_lang_name}: {e}\n"
+            f"   This is a script error. Check tree-sitter-languages installation.",
             file=sys.stderr,
         )
-        return None
+        sys.exit(2)
 
+    # Read file content
     try:
         content = file_path.read_bytes()
     except Exception as e:
-        print(f"❌ Error reading {file_path}: {e}", file=sys.stderr)
+        print(f"❌ Error: Cannot read {file_path}: {e}", file=sys.stderr)
         sys.exit(2)
 
     # Parse the file
     try:
         tree = parser.parse(content)
     except Exception as e:
-        print(f"⚠️  Warning: Tree-sitter parsing failed: {e}", file=sys.stderr)
-        return None
+        print(
+            f"❌ Error: Tree-sitter parsing failed for {file_path}: {e}\n"
+            f"   This is a script error. File may be corrupted or parser incompatible.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
-    # Extract imports
+    # Extract imports and definitions
     imports = extract_imports(tree, content, ts_lang_name)
-
-    # Extract definitions
     definitions = extract_definitions(tree, content, ts_lang_name)
 
     return definitions, imports, display_name
 
 
-def fallback_split(content: str, lines_per_chunk: int = 200) -> tuple[list[Definition], str]:
-    """
-    Fallback: split content by line count.
-
-    Returns:
-        tuple: (list of definitions, empty imports)
-    """
-    lines = content.split("\n")
-    definitions: list[Definition] = []
-
-    for i in range(0, len(lines), lines_per_chunk):
-        chunk_lines = lines[i : i + lines_per_chunk]
-        chunk_content = "\n".join(chunk_lines)
-
-        definitions.append(
-            Definition(
-                name=f"lines_{i + 1}_{i + len(chunk_lines)}",
-                start_line=i,
-                end_line=i + len(chunk_lines),
-                content=chunk_content,
-            )
-        )
-
-    return definitions, ""
-
-
 def parse_file(file_path: Path) -> tuple[list[Definition], str, str]:
     """
-    Parse source file and extract top-level definitions.
+    Parse source file and extract top-level definitions using tree-sitter.
 
     Returns:
         tuple: (list of definitions, imports string, language)
+
+    Raises:
+        SystemExit(1): If language not supported
+        SystemExit(2): If parsing fails
     """
-    # Try tree-sitter parsing first
-    result = parse_file_with_treesitter(file_path)
-
-    if result is not None:
-        definitions, imports, language = result
-        return definitions, imports, language
-
-    # Fallback: language not supported by tree-sitter
-    print(
-        f"⚠️  Warning: No tree-sitter parser available for {file_path.suffix}, "
-        "falling back to line split",
-        file=sys.stderr,
-    )
-
-    try:
-        content = file_path.read_text()
-    except Exception as e:
-        print(f"❌ Error reading {file_path}: {e}", file=sys.stderr)
-        sys.exit(2)
-
-    definitions, imports = fallback_split(content)
-    return definitions, imports, "Unknown"
+    return parse_file_with_treesitter(file_path)
 
 
 def create_chunks(

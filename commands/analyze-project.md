@@ -336,7 +336,7 @@ Analyze each batch using the tree-sitter-based script:
 
 1. Read batch_manifest.json from ${TEMP_DIR} to get the list of batches
 2. For each batch file, run the analysis script:
-   uv run --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py --batch ${TEMP_DIR}/file_batch_${BATCH_NUM}.txt --output ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
+   uv run --python 3.12 --with tree-sitter==0.21.3 --with tree-sitter-languages ~/.claude/commands/scripts/analyze-project/analyze-code.py --batch ${TEMP_DIR}/file_batch_${BATCH_NUM}.txt --output ${TEMP_DIR}/analysis_batch_${BATCH_NUM}.json
 
 3. Run all batches (can be run sequentially or in parallel if system supports it)
 

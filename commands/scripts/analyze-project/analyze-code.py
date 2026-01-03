@@ -6,10 +6,11 @@ Extracts structured code data (classes, functions, imports, etc.) from source fi
 using tree-sitter parsers instead of AI-based analysis.
 
 Usage:
-    uv run --python 3.12 --with tree-sitter-languages analyze-code.py <file_path> [--output analysis.json]
-    uv run --python 3.12 --with tree-sitter-languages analyze-code.py --batch <batch_file> [--output analysis.json]
+    uv run --python 3.12 --with "tree-sitter==0.21.3" --with tree-sitter-languages analyze-code.py <file_path> [--output analysis.json]
+    uv run --python 3.12 --with "tree-sitter==0.21.3" --with tree-sitter-languages analyze-code.py --batch <batch_file> [--output analysis.json]
 
-Note: Requires Python 3.12 due to tree-sitter-languages wheel availability.
+Note: Requires Python 3.12 (NOT 3.13+) due to tree-sitter-languages wheel availability.
+      Python 3.13+ is not supported by tree-sitter-languages.
 
 Exit codes:
     0 - Success
@@ -17,9 +18,16 @@ Exit codes:
     2 - Script error
 """
 
+import sys
+
+# CRITICAL: Python 3.13+ is not supported by tree-sitter-languages
+if sys.version_info >= (3, 13):
+    print("❌ Error: Python 3.13+ is not supported by tree-sitter-languages.", file=sys.stderr)
+    print('   Run with: uv run --python 3.12 --with "tree-sitter==0.21.3" --with tree-sitter-languages analyze-code.py ...', file=sys.stderr)
+    sys.exit(2)
+
 import argparse
 import json
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +35,7 @@ try:
     from tree_sitter_languages import get_language, get_parser
 except ImportError:
     print("ERROR: tree-sitter-languages not available", file=sys.stderr)
-    print("Run: uv run --with tree-sitter-languages analyze-code.py", file=sys.stderr)
+    print('Run: uv run --python 3.12 --with "tree-sitter==0.21.3" --with tree-sitter-languages analyze-code.py', file=sys.stderr)
     sys.exit(2)
 
 
