@@ -15,10 +15,10 @@ statsig
 settings.local.json
 
 # Exclude directories by default (synced from elsewhere)
-servers/
-agents/
-commands/
-scripts/
+servers/*
+agents/*
+commands/*
+scripts/*
 
 # But explicitly include tracked files
 # servers/code-execution/
@@ -49,6 +49,7 @@ scripts/
 !agents/frontend-expert.md
 !agents/general-purpose.md
 !agents/git-expert.md
+!agents/github-expert.md
 !agents/go-expert.md
 !agents/graphiti-memory-manager.md
 !agents/java-expert.md

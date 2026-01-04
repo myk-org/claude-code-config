@@ -16,7 +16,8 @@
 | Kubernetes/OpenShift | `kubernetes-expert` |
 | Jenkins/CI/Groovy | `jenkins-expert` |
 | **Development** |
-| Git operations | `git-expert` |
+| Git operations (local) | `git-expert` |
+| GitHub (PRs, issues, releases, workflows) | `github-expert` |
 | Tests | `test-automator` |
 | Debugging | `debugger` |
 | API docs | `api-documenter` |
@@ -36,6 +37,9 @@ Examples:
 - Running Python tests? → `python-expert` (not bash-expert)
 - Editing Python files? → `python-expert` (even with sed/awk)
 - Shell script creation? → `bash-expert`
+- Creating a PR? → `github-expert` (not git-expert)
+- Committing changes? → `git-expert` (local git)
+- Viewing GitHub issue? → `github-expert`
 
 ## Documentation Fetching (MANDATORY)
 
