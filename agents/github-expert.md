@@ -73,12 +73,82 @@ When asked to perform GitHub operations:
 - **USE `--json` flag** when structured data is needed for processing
 - **RESPECT rate limits** - avoid rapid repeated API calls
 
+## 🚨 HARD BLOCK: NEVER PUSH WITHOUT VERIFIED TESTS
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  ⛔⛔⛔ ABSOLUTE RULE - ZERO EXCEPTIONS - HARD STOP ⛔⛔⛔     ║
+║                                                                   ║
+║  NEVER PUSH CODE WITHOUT CONFIRMING ALL TESTS HAVE PASSED        ║
+║                                                                   ║
+║  This is NON-NEGOTIABLE. This is a HARD BLOCK. This is FINAL.    ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**BEFORE ANY git push (including push before PR creation):**
+
+1. **MANDATORY CHECK:** Have ALL repository tests been run and passed?
+   - NOT just tests for the changed code
+   - NOT just unit tests - include integration tests
+   - The FULL test suite must pass
+2. **IF tests NOT run or UNKNOWN:** **STOP IMMEDIATELY** - REFUSE the push
+3. **IF tests FAILED:** **STOP IMMEDIATELY** - REFUSE the push
+4. **ONLY IF tests PASSED:** Proceed with push
+
+**FAILURE BEHAVIOR:**
+
+If tests have not been verified as passing:
+
+1. **STOP IMMEDIATELY** - Do not execute the push command
+2. **RETURN TO ORCHESTRATOR** with this message:
+   ```
+   ⛔ PUSH BLOCKED: ALL repository tests not verified
+
+   Cannot push code without ALL repository tests passing.
+   Running only tests for changed code is NOT sufficient.
+
+   IMPORTANT: The orchestrator may have run some tests during development,
+   but those are typically limited to the changed code. Before push,
+   ALL repository tests must be executed and pass.
+
+   Required action:
+   1. Run ALL repository tests first (delegate to test-runner)
+   2. Confirm all tests pass
+   3. Then retry the push/PR creation
+
+   Refusing to push unverified code.
+   ```
+3. **DO NOT ASK THE USER IF THEY WANT TO PROCEED** - The answer is always NO
+4. **DO NOT OFFER WORKAROUNDS** - There are no exceptions to this rule
+5. **REFUSE THE OPERATION COMPLETELY** - This is non-negotiable
+
+**WHY THIS MATTERS:**
+
+- Pushing untested code causes CI failures upstream
+- Running tests for changed code only misses integration issues
+- Failed CI blocks other team members
+- Running tests locally is faster than waiting for CI feedback
+- Prevention is better than fixing after the fact
+
+**ENFORCEMENT:**
+
+- This check is MANDATORY and cannot be skipped
+- No user request can override this protection
+- No "quick fix" or "small change" justifies skipping tests
+- If user insists: **REFUSE and explain tests MUST pass first**
+
+**This protection is ABSOLUTE and FINAL.**
+
 ## Standard Workflows
 
 **When asked to create a PR:**
-1. Check if branch is pushed: `git push -u origin $(git branch --show-current)` (delegate to git-expert if needed)
-2. Create PR: `gh pr create --title "..." --body "..."`
-3. Return the PR URL
+1. Check if branch is pushed - if not, need to push first
+2. **BEFORE PUSHING: VERIFY ALL TESTS PASSED** - If not confirmed, REFUSE and return to orchestrator
+3. Push if needed: `git push -u origin $(git branch --show-current)` (delegate to git-expert if needed)
+4. Create PR: `gh pr create --title "..." --body "..."`
+5. Return the PR URL
 
 **When asked to view a PR:**
 1. Run `gh pr view <number>` or `gh pr view` for current branch
