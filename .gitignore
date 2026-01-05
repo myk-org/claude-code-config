@@ -79,6 +79,7 @@ scripts/*
 !commands/scripts/github-review-handler/get-human-reviews.sh
 
 # scripts/
+!scripts/check-merged-branch.sh
 !scripts/git-protection.py
 !scripts/inject-claude.sh
 !scripts/my-notifier.sh

@@ -61,25 +61,9 @@ color: blue
 
 **Detection command:**
 ```bash
-CURRENT_BRANCH=$(git branch --show-current)
-# Detect main branch (prefer remote for accuracy)
-MAIN_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-if [ -z "$MAIN_BRANCH" ]; then
-    if git show-ref --verify --quiet refs/heads/main 2>/dev/null; then
-        MAIN_BRANCH="main"
-    elif git show-ref --verify --quiet refs/heads/master 2>/dev/null; then
-        MAIN_BRANCH="master"
-    else
-        MAIN_BRANCH="main"
-    fi
-fi
-# Use remote main if available for accurate merge detection
-REMOTE_MAIN="origin/$MAIN_BRANCH"
-git rev-parse --verify "$REMOTE_MAIN" >/dev/null 2>&1 && MAIN_BRANCH="$REMOTE_MAIN"
-if git merge-base --is-ancestor "$CURRENT_BRANCH" "$MAIN_BRANCH" 2>/dev/null; then
-    echo "⛔ ERROR: Branch '$CURRENT_BRANCH' has already been merged into $MAIN_BRANCH"
-    # WORKFLOW STOPS HERE - DO NOT PROCEED
-fi
+~/.claude/scripts/check-merged-branch.sh
+# Exit 0: Branch NOT merged (safe to proceed)
+# Exit 1: Branch IS merged (refuse operation)
 ```
 
 **FAILURE BEHAVIOR:**
@@ -296,23 +280,8 @@ If the check above detects you are on `main` or `master`:
 2. If on `main` or `master`: **Follow the HARD BLOCK: MAIN BRANCH PROTECTION procedure above - REFUSE the operation**
 3. Check if branch is already merged:
    ```bash
-   # Detect main branch (prefer remote for accuracy)
-   MAIN_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-   if [ -z "$MAIN_BRANCH" ]; then
-       if git show-ref --verify --quiet refs/heads/main 2>/dev/null; then
-           MAIN_BRANCH="main"
-       elif git show-ref --verify --quiet refs/heads/master 2>/dev/null; then
-           MAIN_BRANCH="master"
-       else
-           MAIN_BRANCH="main"
-       fi
-   fi
-   # Use remote main if available for accurate merge detection
-   REMOTE_MAIN="origin/$MAIN_BRANCH"
-   git rev-parse --verify "$REMOTE_MAIN" >/dev/null 2>&1 && MAIN_BRANCH="$REMOTE_MAIN"
-   if git merge-base --is-ancestor "$CURRENT_BRANCH" "$MAIN_BRANCH" 2>/dev/null; then
-       # REFUSE - branch is merged
-   fi
+   ~/.claude/scripts/check-merged-branch.sh
+   # Exit 0: OK to proceed | Exit 1: Branch merged, refuse
    ```
 4. If branch is merged: **Follow the HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above - REFUSE the operation**
 5. If on an unmerged feature branch, proceed normally
@@ -421,25 +390,8 @@ EOF
    fi
 
    # Check 2: Already merged branches
-   # Detect main branch (prefer remote for accuracy)
-   MAIN_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-   if [ -z "$MAIN_BRANCH" ]; then
-       if git show-ref --verify --quiet refs/heads/main 2>/dev/null; then
-           MAIN_BRANCH="main"
-       elif git show-ref --verify --quiet refs/heads/master 2>/dev/null; then
-           MAIN_BRANCH="master"
-       else
-           MAIN_BRANCH="main"
-       fi
-   fi
-   # Use remote main if available for accurate merge detection
-   REMOTE_MAIN="origin/$MAIN_BRANCH"
-   git rev-parse --verify "$REMOTE_MAIN" >/dev/null 2>&1 && MAIN_BRANCH="$REMOTE_MAIN"
-   if git merge-base --is-ancestor "$CURRENT_BRANCH" "$MAIN_BRANCH" 2>/dev/null; then
-       echo "⛔ ERROR: Branch '$CURRENT_BRANCH' has already been merged into $MAIN_BRANCH"
-       echo "This branch is stale. Create a new branch from main."
-       # WORKFLOW STOPS HERE - DO NOT PROCEED
-   fi
+   ~/.claude/scripts/check-merged-branch.sh
+   # If exit 1, branch is merged - WORKFLOW STOPS HERE
    ```
    **If on main/master OR on merged branch:** REFUSE and ask user to create feature branch. DO NOT PROCEED.
 
