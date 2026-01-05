@@ -19,6 +19,8 @@
       "Bash(claude:*)",
       "Bash(sed -n:*)",
       "Bash(grep:*)",
+      "Bash(~/.claude/scripts/check-merged-branch.sh:*)",
+      "Bash(~/.claude/scripts/check-protected-branch.sh:*)",
       "Grep"
     ]
   },
@@ -111,6 +113,8 @@
     "Bash(sed -n *)",
     "Bash(grep *)",
     "Grep",
+    "Bash(~/.claude/scripts/check-merged-branch.sh*)",
+    "Bash(~/.claude/scripts/check-protected-branch.sh*)",
     "Bash(~/.claude/commands/scripts/general/get-pr-info.sh*)",
     "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh*)",

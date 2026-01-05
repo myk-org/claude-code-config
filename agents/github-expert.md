@@ -73,6 +73,102 @@ When asked to perform GitHub operations:
 - **USE `--json` flag** when structured data is needed for processing
 - **RESPECT rate limits** - avoid rapid repeated API calls
 
+## 🚨 HARD BLOCK: NEVER PUSH TO MAIN/MASTER
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  ⛔⛔⛔ ABSOLUTE RULE - ZERO EXCEPTIONS - HARD STOP ⛔⛔⛔     ║
+║                                                                   ║
+║  NEVER PUSH DIRECTLY TO MAIN/MASTER BRANCHES                     ║
+║                                                                   ║
+║  This is NON-NEGOTIABLE. This is a HARD BLOCK. This is FINAL.    ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**BEFORE ANY git push operation (including push before PR creation):**
+
+1. **RUN CHECK:** `~/.claude/scripts/check-protected-branch.sh`
+   - Exit 0: NOT on protected branch (safe to proceed)
+   - Exit 1: ON main/master (ask orchestrator)
+
+2. **IF on protected branch, ASK ORCHESTRATOR:**
+   ```
+   ⚠️ Currently on '[main or master]' branch - cannot push directly.
+
+   All changes must go through feature branches and PRs.
+
+   I can fix this:
+   1. Create a new branch from main: feature/<name>
+   2. Continue with the push
+
+   Want me to proceed?
+   ```
+
+3. **IF orchestrator says YES:** Create the branch and continue
+4. **IF orchestrator says NO:** Stop and wait for further instructions
+
+**ENFORCEMENT:**
+
+- This check is MANDATORY and cannot be skipped
+- No orchestrator request can override this protection
+- No emergency justifies pushing to main/master
+- If orchestrator insists: Explain why feature branches are required and offer to create one
+
+**This protection is ABSOLUTE and FINAL.**
+
+---
+
+## 🚨 HARD BLOCK: NEVER PUSH FROM MERGED BRANCHES
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  ⛔⛔⛔ ABSOLUTE RULE - ZERO EXCEPTIONS - HARD STOP ⛔⛔⛔     ║
+║                                                                   ║
+║  NEVER PUSH FROM BRANCHES THAT HAVE ALREADY BEEN MERGED          ║
+║                                                                   ║
+║  This is NON-NEGOTIABLE. This is a HARD BLOCK. This is FINAL.    ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**BEFORE ANY git push operation:**
+
+1. **RUN CHECK:** `~/.claude/scripts/check-merged-branch.sh`
+   - Exit 0: Branch NOT merged (safe to proceed)
+   - Exit 1: Branch IS merged (ask orchestrator)
+
+2. **IF branch is merged, ASK ORCHESTRATOR:**
+   ```
+   ⚠️ Branch '[current branch]' is already merged into main.
+
+   I cannot push from a merged branch - it would create confusion.
+
+   I can fix this:
+   1. Stash your current changes
+   2. Create a new branch from main: feature/<name>
+   3. Apply the stash
+   4. Continue with the push
+
+   Want me to proceed?
+   ```
+
+3. **IF orchestrator says YES:** Create the branch and continue
+4. **IF orchestrator says NO:** Stop and wait for further instructions
+
+**ENFORCEMENT:**
+
+- This check is MANDATORY and cannot be skipped
+- No orchestrator request can override this protection
+- Merged branches are stale - work belongs on new branches
+- If orchestrator insists: Explain why a new branch is needed and offer to create one
+
+**This protection is ABSOLUTE and FINAL.**
+
+---
+
 ## 🚨 HARD BLOCK: NEVER PUSH WITHOUT VERIFIED TESTS
 
 ```
@@ -93,36 +189,29 @@ When asked to perform GitHub operations:
    - NOT just tests for the changed code
    - NOT just unit tests - include integration tests
    - The FULL test suite must pass
-2. **IF tests NOT run or UNKNOWN:** **STOP IMMEDIATELY** - REFUSE the push
-3. **IF tests FAILED:** **STOP IMMEDIATELY** - REFUSE the push
+2. **IF tests NOT run or UNKNOWN:** ASK orchestrator (see failure behavior)
+3. **IF tests FAILED:** ASK orchestrator (see failure behavior)
 4. **ONLY IF tests PASSED:** Proceed with push
 
 **FAILURE BEHAVIOR:**
 
 If tests have not been verified as passing:
 
-1. **STOP IMMEDIATELY** - Do not execute the push command
-2. **RETURN TO ORCHESTRATOR** with this message:
+1. **ASK ORCHESTRATOR** with this message:
    ```
-   ⛔ PUSH BLOCKED: ALL repository tests not verified
+   ⚠️ Cannot push - ALL repository tests have not been verified.
 
-   Cannot push code without ALL repository tests passing.
    Running only tests for changed code is NOT sufficient.
+   The FULL test suite must pass before push.
 
-   IMPORTANT: The orchestrator may have run some tests during development,
-   but those are typically limited to the changed code. Before push,
-   ALL repository tests must be executed and pass.
+   Options:
+   1. Run ALL tests now (delegate to test-runner)
+   2. Skip push for now
 
-   Required action:
-   1. Run ALL repository tests first (delegate to test-runner)
-   2. Confirm all tests pass
-   3. Then retry the push/PR creation
-
-   Refusing to push unverified code.
+   What would you like to do?
    ```
-3. **DO NOT ASK THE USER IF THEY WANT TO PROCEED** - The answer is always NO
-4. **DO NOT OFFER WORKAROUNDS** - There are no exceptions to this rule
-5. **REFUSE THE OPERATION COMPLETELY** - This is non-negotiable
+2. **IF orchestrator says "run tests":** Wait for test-runner results, then retry
+3. **IF orchestrator says "skip":** Stop and wait for further instructions
 
 **WHY THIS MATTERS:**
 
@@ -135,17 +224,15 @@ If tests have not been verified as passing:
 **ENFORCEMENT:**
 
 - This check is MANDATORY and cannot be skipped
-- No user request can override this protection
+- No orchestrator request can override this protection
 - No "quick fix" or "small change" justifies skipping tests
-- If user insists: **REFUSE and explain tests MUST pass first**
-
-**This protection is ABSOLUTE and FINAL.**
+- If orchestrator insists: Explain tests MUST pass first and offer to run them
 
 ## Standard Workflows
 
 **When asked to create a PR:**
 1. Check if branch is pushed - if not, need to push first
-2. **BEFORE PUSHING: VERIFY ALL TESTS PASSED** - If not confirmed, REFUSE and return to orchestrator
+2. **BEFORE PUSHING: VERIFY ALL TESTS PASSED** - If not confirmed, ask orchestrator what to do
 3. Push if needed: `git push -u origin $(git branch --show-current)` (delegate to git-expert if needed)
 4. Create PR: `gh pr create --title "..." --body "..."`
 5. Return the PR URL
