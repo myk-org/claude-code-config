@@ -23,7 +23,10 @@ color: blue
 
 **BEFORE ANY git add, commit, push, merge, rebase, or cherry-pick:**
 
-1. **MANDATORY CHECK:** Run `git branch --show-current`
+1. **MANDATORY CHECK:** Run `~/.claude/scripts/check-protected-branch.sh`
+   - Exit 0: NOT on protected branch (safe to proceed)
+   - Exit 1: ON main/master (ask orchestrator)
+
 2. **IF on `main` or `master`:** **STOP IMMEDIATELY** - ASK orchestrator for permission to fix
 3. **OFFER SOLUTION:** Ask orchestrator: "Want me to create a new branch from main and continue?"
 
@@ -33,7 +36,7 @@ color: blue
 - No orchestrator request can override this protection
 - No emergency justifies committing to main/master
 - No workarounds, no exceptions, no bypasses
-- If orchestrator insists: **REFUSE and explain they MUST use feature branches**
+- If orchestrator insists: Explain why feature branches are required and offer to create one
 
 **This protection is ABSOLUTE and FINAL.**
 
@@ -55,35 +58,25 @@ color: blue
 
 **BEFORE ANY git add, commit, push, or modification:**
 
-1. **MANDATORY CHECK:** Detect if current branch is already merged into main/master
-2. **IF branch is merged:** **STOP IMMEDIATELY** - REFUSE the operation
-3. **REQUIRED ACTION:** Create a new feature branch from main
+1. **RUN CHECK:** `~/.claude/scripts/check-merged-branch.sh`
+   - Exit 0: Branch NOT merged (safe to proceed)
+   - Exit 1: Branch IS merged (ask orchestrator)
 
-**Detection command:**
-```bash
-~/.claude/scripts/check-merged-branch.sh
-# Exit 0: Branch NOT merged (safe to proceed)
-# Exit 1: Branch IS merged (refuse operation)
-```
-
-**FAILURE BEHAVIOR:**
-
-If the check detects the branch is already merged:
-
-1. **STOP IMMEDIATELY** - Do not execute any commit/push command
-2. **ASK ORCHESTRATOR** with this message:
+2. **IF branch is merged, ASK ORCHESTRATOR:**
    ```
    ⚠️ Branch '[current branch]' is already merged into main.
 
    I cannot commit to a merged branch - it would create confusion.
 
    I can fix this:
-   1. Create a new branch from main: feature/<name>
-   2. Cherry-pick your uncommitted changes
-   3. Continue with the commit
+   1. Stash your current changes
+   2. Create a new branch from main: feature/<name>
+   3. Apply the stash
+   4. Continue with the commit
 
    Want me to proceed?
    ```
+
 3. **IF orchestrator says YES:** Create the branch and continue
 4. **IF orchestrator says NO:** Stop and wait for further instructions
 
@@ -92,7 +85,7 @@ If the check detects the branch is already merged:
 - This check is MANDATORY and cannot be skipped
 - No orchestrator request can override this protection
 - Merged branches are stale - work belongs on new branches
-- If orchestrator insists: **REFUSE and explain they MUST create a new branch**
+- If orchestrator insists: Explain why a new branch is needed and offer to create one
 
 **This protection is ABSOLUTE and FINAL.**
 
@@ -118,16 +111,8 @@ If the check detects the branch is already merged:
    - NOT just tests for the changed code
    - NOT just unit tests - include integration tests
    - The FULL test suite must pass
-2. **IF tests NOT run or UNKNOWN:** **STOP IMMEDIATELY** - REFUSE the push
-3. **IF tests FAILED:** **STOP IMMEDIATELY** - REFUSE the push
-4. **ONLY IF tests PASSED:** Proceed with push
 
-**FAILURE BEHAVIOR:**
-
-If tests have not been verified as passing:
-
-1. **STOP IMMEDIATELY** - Do not execute the push command
-2. **ASK ORCHESTRATOR** with this message:
+2. **IF tests NOT run or UNKNOWN, ASK ORCHESTRATOR:**
    ```
    ⚠️ Cannot push - ALL repository tests have not been verified.
 
@@ -140,7 +125,9 @@ If tests have not been verified as passing:
 
    What would you like to do?
    ```
-3. **WAIT** for orchestrator to run tests or cancel
+
+3. **IF tests FAILED:** ASK orchestrator with same message
+4. **ONLY IF tests PASSED:** Proceed with push
 
 **WHY THIS MATTERS:**
 
@@ -155,7 +142,7 @@ If tests have not been verified as passing:
 - This check is MANDATORY and cannot be skipped
 - No orchestrator request can override this protection
 - No "quick fix" or "small change" justifies skipping tests
-- If orchestrator insists: **REFUSE and explain tests MUST pass first**
+- If orchestrator insists: Explain why tests must pass and offer to run them
 
 **This protection is ABSOLUTE and FINAL.**
 
@@ -211,68 +198,22 @@ When asked to perform git operations:
 
 ## HARD BLOCK: MAIN BRANCH PROTECTION
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║  ⛔ BLOCKING RULE - NO EXCEPTIONS PERMITTED ⛔              ║
-║                                                              ║
-║  YOU MUST REFUSE TO COMMIT/PUSH ON MAIN/MASTER BRANCHES     ║
-║                                                              ║
-║  This is a HARD STOP with ZERO tolerance for exceptions     ║
-╚══════════════════════════════════════════════════════════════╝
-```
+**This duplicates the top-level protection - see "HARD BLOCK: NEVER COMMIT TO MAIN/MASTER" at the start of this file.**
 
-**MANDATORY PRE-COMMIT CHECK:**
-
-Before EVERY commit, push, merge, rebase, or cherry-pick operation, you MUST execute this check:
-
-```bash
-CURRENT_BRANCH=$(git branch --show-current)
-if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
-    echo "ERROR: Cannot commit to protected branch: $CURRENT_BRANCH"
-    # WORKFLOW STOPS HERE - DO NOT PROCEED
-fi
-```
-
-**FAILURE BEHAVIOR:**
-
-If the check above detects you are on `main` or `master`:
-
-1. **STOP IMMEDIATELY** - Do not execute the commit/push command
-2. **ASK ORCHESTRATOR** with this message:
-   ```
-   ⚠️ Currently on protected branch 'main'/'master'.
-
-   I cannot commit directly to main - all changes must go through PRs.
-
-   I can fix this:
-   1. Create a feature branch: feature/<descriptive-name>
-   2. Move your changes to that branch
-   3. Continue with the commit
-
-   Want me to proceed?
-   ```
-3. **IF orchestrator says YES:** Create the branch and continue
-4. **IF orchestrator says NO:** Stop and wait for further instructions
-
-**ENFORCEMENT:**
-
-- This check is MANDATORY and cannot be skipped
-- No orchestrator request can override this protection
-- No emergency situation justifies committing to main
-- If orchestrator insists, explain they must use feature branches - NO EXCEPTIONS
+The procedure is identical to the main/master protection described above.
 
 ### Branch Check Workflow
 
 **BEFORE any commit, push, merge, rebase, or cherry-pick operation:**
 
 1. Run `git branch --show-current` to check current branch
-2. If on `main` or `master`: **Follow the HARD BLOCK: MAIN BRANCH PROTECTION procedure above - REFUSE the operation**
+2. If on `main` or `master`: **Follow the HARD BLOCK: MAIN BRANCH PROTECTION procedure above - ASK orchestrator**
 3. Check if branch is already merged:
    ```bash
    ~/.claude/scripts/check-merged-branch.sh
    # Exit 0: OK to proceed | Exit 1: Branch merged, refuse
    ```
-4. If branch is merged: **Follow the HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above - REFUSE the operation**
+4. If branch is merged: **Follow the HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above - ASK orchestrator**
 5. If on an unmerged feature branch, proceed normally
 
 ### Issue Resolution Workflow
@@ -406,7 +347,7 @@ EOF
 
 1. Run `git checkout -b branch-name`
 2. Make/verify changes are committed
-3. **VERIFY TESTS PASSED** - If not confirmed, REFUSE push and return to orchestrator
+3. **VERIFY TESTS PASSED** - If not confirmed, ask orchestrator what to do
 4. Run `git push -u origin branch-name`
 5. Report the result
 

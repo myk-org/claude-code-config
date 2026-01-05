@@ -79,6 +79,7 @@ scripts/*
 
 # scripts/
 !scripts/check-merged-branch.sh
+!scripts/check-protected-branch.sh
 !scripts/git-protection.py
 !scripts/inject-claude.sh
 !scripts/my-notifier.sh

@@ -73,6 +73,102 @@ When asked to perform GitHub operations:
 - **USE `--json` flag** when structured data is needed for processing
 - **RESPECT rate limits** - avoid rapid repeated API calls
 
+## 🚨 HARD BLOCK: NEVER PUSH TO MAIN/MASTER
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  ⛔⛔⛔ ABSOLUTE RULE - ZERO EXCEPTIONS - HARD STOP ⛔⛔⛔     ║
+║                                                                   ║
+║  NEVER PUSH DIRECTLY TO MAIN/MASTER BRANCHES                     ║
+║                                                                   ║
+║  This is NON-NEGOTIABLE. This is a HARD BLOCK. This is FINAL.    ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**BEFORE ANY git push operation (including push before PR creation):**
+
+1. **RUN CHECK:** `~/.claude/scripts/check-protected-branch.sh`
+   - Exit 0: NOT on protected branch (safe to proceed)
+   - Exit 1: ON main/master (ask orchestrator)
+
+2. **IF on protected branch, ASK ORCHESTRATOR:**
+   ```
+   ⚠️ Currently on '[main or master]' branch - cannot push directly.
+
+   All changes must go through feature branches and PRs.
+
+   I can fix this:
+   1. Create a new branch from main: feature/<name>
+   2. Continue with the push
+
+   Want me to proceed?
+   ```
+
+3. **IF orchestrator says YES:** Create the branch and continue
+4. **IF orchestrator says NO:** Stop and wait for further instructions
+
+**ENFORCEMENT:**
+
+- This check is MANDATORY and cannot be skipped
+- No orchestrator request can override this protection
+- No emergency justifies pushing to main/master
+- If orchestrator insists: Explain why feature branches are required and offer to create one
+
+**This protection is ABSOLUTE and FINAL.**
+
+---
+
+## 🚨 HARD BLOCK: NEVER PUSH FROM MERGED BRANCHES
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  ⛔⛔⛔ ABSOLUTE RULE - ZERO EXCEPTIONS - HARD STOP ⛔⛔⛔     ║
+║                                                                   ║
+║  NEVER PUSH FROM BRANCHES THAT HAVE ALREADY BEEN MERGED          ║
+║                                                                   ║
+║  This is NON-NEGOTIABLE. This is a HARD BLOCK. This is FINAL.    ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**BEFORE ANY git push operation:**
+
+1. **RUN CHECK:** `~/.claude/scripts/check-merged-branch.sh`
+   - Exit 0: Branch NOT merged (safe to proceed)
+   - Exit 1: Branch IS merged (ask orchestrator)
+
+2. **IF branch is merged, ASK ORCHESTRATOR:**
+   ```
+   ⚠️ Branch '[current branch]' is already merged into main.
+
+   I cannot push from a merged branch - it would create confusion.
+
+   I can fix this:
+   1. Stash your current changes
+   2. Create a new branch from main: feature/<name>
+   3. Apply the stash
+   4. Continue with the push
+
+   Want me to proceed?
+   ```
+
+3. **IF orchestrator says YES:** Create the branch and continue
+4. **IF orchestrator says NO:** Stop and wait for further instructions
+
+**ENFORCEMENT:**
+
+- This check is MANDATORY and cannot be skipped
+- No orchestrator request can override this protection
+- Merged branches are stale - work belongs on new branches
+- If orchestrator insists: Explain why a new branch is needed and offer to create one
+
+**This protection is ABSOLUTE and FINAL.**
+
+---
+
 ## 🚨 HARD BLOCK: NEVER PUSH WITHOUT VERIFIED TESTS
 
 ```
