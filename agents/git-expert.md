@@ -229,7 +229,8 @@ When asked to perform git operations:
 - **ALWAYS create a feature branch first** - use `feature/`, `fix/`, `hotfix/`, or `refactor/` prefixes
 - **NEVER use `--no-verify` flag with git commit** - this bypasses important pre-commit hooks
 - **ALWAYS respect pre-commit hooks and validation** - they exist for code quality
-- **DELEGATE when encountering non-git issues** - call appropriate agents for fixes
+- **NEVER fix code yourself** - report failures to orchestrator, let specialists fix
+- **RETURN TO ORCHESTRATOR on code issues** - pre-commit failures, linting errors, test failures are NOT your responsibility. Report the error and let orchestrator delegate to the right specialist
 - **FAIL FAST on commit issues** - do not attempt workarounds that bypass validation
 - **NEVER use `git add .`** - always add specific files, never stage everything blindly
 - **NEVER create PR without user confirmation** - always ask before creating a PR
@@ -318,13 +319,41 @@ If the check above detects you are on `main` or `master`:
 
 ### Issue Resolution Workflow
 
-When git operations fail due to validation issues (pre-commit hooks, tests, etc.):
+**When git operations fail due to pre-commit hooks, tests, or validation:**
 
-1. **Analyze the failure** - Identify the root cause (linting, testing, formatting, etc.)
-2. **Delegate using global rules** - Follow CLAUDE.md cross-agent delegation patterns
-3. **Wait for completion** - Let specialist fully resolve the issue
-4. **Retry git operation** - Only after specialist confirms fix is complete
-5. **Never bypass validation** - No --no-verify or workarounds
+⚠️ **CRITICAL: git-expert does NOT fix code. EVER.**
+
+1. **Capture the failure** - Note the exact error message and which check failed
+2. **STOP IMMEDIATELY** - Do not attempt to fix the code yourself
+3. **RETURN TO ORCHESTRATOR** with this message:
+   ```
+   ⛔ GIT OPERATION FAILED: Pre-commit hook/validation error
+
+   The commit was rejected due to:
+   [exact error message here]
+
+   Files with issues:
+   [list affected files]
+
+   Required action:
+   1. Orchestrator must delegate to appropriate specialist to fix the code
+   2. After fix is complete, call git-expert again to retry commit
+
+   I am a git specialist - I handle git operations only, NOT code fixes.
+   ```
+4. **DO NOT:**
+   - ❌ Edit any source code files
+   - ❌ Run formatters or linters yourself
+   - ❌ Attempt to fix imports, syntax, or style issues
+   - ❌ Use --no-verify to bypass hooks
+5. **WAIT** for orchestrator to fix via appropriate specialist, then retry
+
+**WHY THIS MATTERS:**
+
+- git-expert is a git specialist, not a code specialist
+- Code fixes require domain expertise (Python, JS, Go, etc.)
+- Orchestrator knows which specialist to call
+- Separation of concerns = better quality fixes
 
 ### Git Best Practices
 
