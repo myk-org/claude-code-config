@@ -93,36 +93,29 @@ When asked to perform GitHub operations:
    - NOT just tests for the changed code
    - NOT just unit tests - include integration tests
    - The FULL test suite must pass
-2. **IF tests NOT run or UNKNOWN:** **STOP IMMEDIATELY** - REFUSE the push
-3. **IF tests FAILED:** **STOP IMMEDIATELY** - REFUSE the push
+2. **IF tests NOT run or UNKNOWN:** ASK orchestrator (see failure behavior)
+3. **IF tests FAILED:** ASK orchestrator (see failure behavior)
 4. **ONLY IF tests PASSED:** Proceed with push
 
 **FAILURE BEHAVIOR:**
 
 If tests have not been verified as passing:
 
-1. **STOP IMMEDIATELY** - Do not execute the push command
-2. **RETURN TO ORCHESTRATOR** with this message:
+1. **ASK ORCHESTRATOR** with this message:
    ```
-   ⛔ PUSH BLOCKED: ALL repository tests not verified
+   ⚠️ Cannot push - ALL repository tests have not been verified.
 
-   Cannot push code without ALL repository tests passing.
    Running only tests for changed code is NOT sufficient.
+   The FULL test suite must pass before push.
 
-   IMPORTANT: The orchestrator may have run some tests during development,
-   but those are typically limited to the changed code. Before push,
-   ALL repository tests must be executed and pass.
+   Options:
+   1. Run ALL tests now (delegate to test-runner)
+   2. Skip push for now
 
-   Required action:
-   1. Run ALL repository tests first (delegate to test-runner)
-   2. Confirm all tests pass
-   3. Then retry the push/PR creation
-
-   Refusing to push unverified code.
+   What would you like to do?
    ```
-3. **DO NOT ASK THE USER IF THEY WANT TO PROCEED** - The answer is always NO
-4. **DO NOT OFFER WORKAROUNDS** - There are no exceptions to this rule
-5. **REFUSE THE OPERATION COMPLETELY** - This is non-negotiable
+2. **IF orchestrator says "run tests":** Wait for test-runner results, then retry
+3. **IF orchestrator says "skip":** Stop and wait for further instructions
 
 **WHY THIS MATTERS:**
 
@@ -135,17 +128,15 @@ If tests have not been verified as passing:
 **ENFORCEMENT:**
 
 - This check is MANDATORY and cannot be skipped
-- No user request can override this protection
+- No orchestrator request can override this protection
 - No "quick fix" or "small change" justifies skipping tests
-- If user insists: **REFUSE and explain tests MUST pass first**
-
-**This protection is ABSOLUTE and FINAL.**
+- If orchestrator insists: Explain tests MUST pass first and offer to run them
 
 ## Standard Workflows
 
 **When asked to create a PR:**
 1. Check if branch is pushed - if not, need to push first
-2. **BEFORE PUSHING: VERIFY ALL TESTS PASSED** - If not confirmed, REFUSE and return to orchestrator
+2. **BEFORE PUSHING: VERIFY ALL TESTS PASSED** - If not confirmed, ask orchestrator what to do
 3. Push if needed: `git push -u origin $(git branch --show-current)` (delegate to git-expert if needed)
 4. Create PR: `gh pr create --title "..." --body "..."`
 5. Return the PR URL

@@ -51,7 +51,6 @@ scripts/*
 !agents/git-expert.md
 !agents/github-expert.md
 !agents/go-expert.md
-!agents/graphiti-memory-manager.md
 !agents/java-expert.md
 !agents/jenkins-expert.md
 !agents/kubernetes-expert.md
