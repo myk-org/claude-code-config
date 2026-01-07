@@ -1,5 +1,12 @@
 # Agent Bug Reporting
 
+## Scope
+
+> **If you are a SPECIALIST AGENT:**
+> IGNORE this rule. This is for the ORCHESTRATOR only.
+
+---
+
 When the orchestrator discovers a logic flaw or bug in an agent's configuration or instructions, follow this workflow.
 
 ## Scope - Agents Covered by This Rule
@@ -134,10 +141,3 @@ workaround..."
 3. **Continue working** - After issue creation (or skip), continue with the original task
 4. **Be specific** - Clearly identify which agent and which part of its logic is flawed
 5. **Suggest fixes** - If you know how to fix the agent's instructions, include it in the issue
-
----
-
-## Scope Reminder
-
-> **If you are a SPECIALIST AGENT:**
-> IGNORE this rule. This is for the ORCHESTRATOR only.
