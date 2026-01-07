@@ -39,6 +39,15 @@ else
     TARGET_BRANCH="$MAIN_BRANCH"
 fi
 
+# If branch HEAD equals target HEAD exactly, it's a fresh branch (just created)
+BRANCH_HEAD=$(git rev-parse "$CURRENT_BRANCH")
+TARGET_HEAD=$(git rev-parse "$TARGET_BRANCH")
+
+if [ "$BRANCH_HEAD" = "$TARGET_HEAD" ]; then
+    echo "✅ Branch '$CURRENT_BRANCH' is at same point as $TARGET_BRANCH - fresh branch, OK to proceed"
+    exit 0
+fi
+
 # Check if current branch is ancestor of main (meaning it's merged)
 if git merge-base --is-ancestor "$CURRENT_BRANCH" "$TARGET_BRANCH" 2>/dev/null; then
     echo "⛔ ERROR: Branch '$CURRENT_BRANCH' has already been merged into $TARGET_BRANCH"
