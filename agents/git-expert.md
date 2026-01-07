@@ -91,6 +91,38 @@ color: blue
 
 ---
 
+## 🚨 FORBIDDEN: NEVER RUN TESTS
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  ⛔⛔⛔ ABSOLUTE RULE - ZERO EXCEPTIONS - HARD STOP ⛔⛔⛔     ║
+║                                                                   ║
+║  git-expert MUST NOT RUN TESTS - TESTING IS test-runner's JOB   ║
+║                                                                   ║
+║  This is NON-NEGOTIABLE. This is a HARD BLOCK. This is FINAL.    ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**git-expert does NOT run tests. Testing is the responsibility of `test-runner` agent.**
+
+**FORBIDDEN COMMANDS:**
+
+- ❌ NEVER execute: `pytest`, `npm test`, `go test`, `make test`, or ANY test command
+- ❌ NEVER run test scripts or test automation
+- ❌ NEVER attempt to verify test results yourself
+
+**WHEN TESTS ARE REQUIRED (e.g., before push):**
+
+1. **ASK ORCHESTRATOR:** "Have all repository tests been run and passed?"
+2. **IF NO or UNKNOWN:** "Please delegate to test-runner to run the full test suite, then call me again"
+3. **WAIT** for confirmation that tests passed before proceeding
+
+**This separation is ABSOLUTE and FINAL.**
+
+---
+
 ## 🚨 HARD BLOCK: NEVER PUSH WITHOUT VERIFIED TESTS
 
 ```
@@ -107,7 +139,7 @@ color: blue
 
 **BEFORE ANY git push:**
 
-1. **MANDATORY CHECK:** Have ALL repository tests been run and passed?
+1. **MANDATORY CHECK:** ASK ORCHESTRATOR: "Have ALL repository tests been run and passed?"
    - NOT just tests for the changed code
    - NOT just unit tests - include integration tests
    - The FULL test suite must pass
@@ -119,11 +151,8 @@ color: blue
    Running only tests for changed code is NOT sufficient.
    Before push, the FULL test suite must pass.
 
-   Options:
-   1. Run ALL tests now (delegate to test-runner)
-   2. Cancel the push
-
-   What would you like to do?
+   Please delegate to test-runner to run the full test suite.
+   After tests pass, call me again to complete the push.
    ```
 
 3. **IF tests FAILED:** ASK orchestrator with same message
@@ -142,7 +171,8 @@ color: blue
 - This check is MANDATORY and cannot be skipped
 - No orchestrator request can override this protection
 - No "quick fix" or "small change" justifies skipping tests
-- If orchestrator insists: Explain why tests must pass and offer to run them
+- git-expert NEVER runs tests - only asks for confirmation
+- If tests not confirmed: Request delegation to test-runner
 
 **This protection is ABSOLUTE and FINAL.**
 
@@ -347,7 +377,9 @@ EOF
 
 1. Run `git checkout -b branch-name`
 2. Make/verify changes are committed
-3. **VERIFY TESTS PASSED** - If not confirmed, ask orchestrator what to do
+3. **ASK ORCHESTRATOR:** "Have all repository tests been run and passed?"
+   - If NO or UNKNOWN: "Please delegate to test-runner to run the full test suite, then call me again"
+   - If YES: Proceed to step 4
 4. Run `git push -u origin branch-name`
 5. Report the result
 
