@@ -4,18 +4,18 @@
 
 | Domain/Tool | Agent |
 |-------------|-------|
-| **Languages (by file type)** |
+| **Languages (by file type)** | |
 | Python (.py) | `python-expert` |
 | Go (.go) | `go-expert` |
 | Java (.java) | `java-expert` |
 | Frontend (JS/TS/React/Vue) | `frontend-expert` |
 | Shell scripts (.sh) | `bash-expert` |
 | Markdown (.md) | `technical-documentation-writer` |
-| **Infrastructure** |
+| **Infrastructure** | |
 | Docker | `docker-expert` |
 | Kubernetes/OpenShift | `kubernetes-expert` |
 | Jenkins/CI/Groovy | `jenkins-expert` |
-| **Development** |
+| **Development** | |
 | Git operations (local) | `git-expert` |
 | GitHub (PRs, issues, releases, workflows) | `github-expert` |
 | Tests | `test-automator` |
@@ -23,7 +23,7 @@
 | API docs | `api-documenter` |
 | Claude Code docs (features, hooks, settings, commands, MCP, IDE, Agent SDK, Claude API) | `claude-code-guide` (built-in) |
 | External library/framework docs (React, FastAPI, Django, etc.) | `docs-fetcher` |
-| **MCP Tools** |
+| **MCP Tools** | |
 | `mcp__chrome-devtools__*` | `chrome-devtool-manager` |
 | `mcp__github-metrics__*` | `github-metrics-manager` |
 | `mcp__github-webhook-logs-*__*` | `webhook-logs-manager` |
