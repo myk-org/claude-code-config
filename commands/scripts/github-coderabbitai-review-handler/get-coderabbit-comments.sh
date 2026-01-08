@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Script to extract CodeRabbit comments for AI processing
 # Usage: get-coderabbit-comments.sh <pr-info-script-path> [commit_sha|review_id|review_url]

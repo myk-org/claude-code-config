@@ -120,7 +120,7 @@ useEffect is a Hook that lets you synchronize a component with an external syste
 
 ## Tools Available
 
-- **WebSearch** - Find official documentation URLs (use current year 2025)
+- **WebSearch** - Find official documentation URLs (use current year 2026)
 - **WebFetch** - Fetch llms.txt or HTML documentation pages
 
 ## Quality Checklist
@@ -131,7 +131,7 @@ useEffect is a Hook that lets you synchronize a component with an external syste
 - [ ] Included practical code examples when available
 - [ ] Provided key actionable points
 - [ ] Cited source URL and type
-- [ ] Verified content is current (2025)
+- [ ] Verified content is current (2026)
 
 ## Special Cases
 
