@@ -1,5 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_scriptsNote": "Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.",
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
@@ -10,10 +11,22 @@
       "Bash(claude:*)",
       "Bash(sed -n:*)",
       "Bash(grep:*)",
-      "Bash(~/.claude/scripts/*.sh:*)",
-      "Bash(~/.claude/commands/scripts/**/*.sh:*)",
-      "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/.claude/commands/scripts/general/get-pr-info.sh:*)",
-      "Bash(uv run ~/.claude/scripts/*.py:*)",
+      "Bash(~/.claude/scripts/inject-claude.sh:*)",
+      "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
+      "Bash(~/.claude/scripts/check-protected-branch.sh:*)",
+      "Bash(~/.claude/scripts/check-merged-branch.sh:*)",
+      "Bash(~/.claude/scripts/my-notifier.sh:*)",
+      "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
+      "Bash(uv run ~/.claude/scripts/post-compact-restore.py:*)",
+      "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
+      "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
+      "Bash(uv run ~/.claude/scripts/pre-compact-snapshot.py:*)",
+      "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh:*)",
+      "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh:*)",
+      "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh:*)",
+      "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
+      "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh:*)",
+      "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh:*)",
       "Grep"
     ]
   },
@@ -106,10 +119,22 @@
     "Bash(sed -n:*)",
     "Bash(grep:*)",
     "Grep",
-    "Bash(~/.claude/scripts/*.sh:*)",
-    "Bash(~/.claude/commands/scripts/**/*.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/.claude/commands/scripts/general/get-pr-info.sh:*)",
-    "Bash(uv run ~/.claude/scripts/*.py:*)"
+    "Bash(~/.claude/scripts/inject-claude.sh:*)",
+    "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
+    "Bash(~/.claude/scripts/check-protected-branch.sh:*)",
+    "Bash(~/.claude/scripts/check-merged-branch.sh:*)",
+    "Bash(~/.claude/scripts/my-notifier.sh:*)",
+    "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
+    "Bash(uv run ~/.claude/scripts/post-compact-restore.py:*)",
+    "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
+    "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
+    "Bash(uv run ~/.claude/scripts/pre-compact-snapshot.py:*)",
+    "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh:*)",
+    "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh:*)",
+    "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh:*)",
+    "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
+    "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh:*)",
+    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh:*)"
   ],
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309
