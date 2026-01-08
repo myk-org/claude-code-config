@@ -43,3 +43,43 @@ uv run pip install requests
 ```
 
 The `--with` syntax ensures dependencies are managed per-execution without modifying the environment.
+
+---
+
+## External Git Repository Exploration
+
+**When exploring external Git repositories, clone locally first.**
+
+Clone to `/tmp/claude/` and explore using Read/Glob/Grep - NOT via WebFetch.
+
+### Clone the Bare Minimum
+
+- ✅ Use `--depth 1` for shallow clone (no history)
+- ✅ Use sparse checkout if only specific directories are needed
+- ✅ Delete the clone when done if not needed
+
+### Examples
+
+✅ **Correct:**
+```bash
+# Shallow clone to temp directory
+git clone --depth 1 https://github.com/org/repo.git /tmp/claude/repo
+
+# Sparse checkout for specific directory only
+git clone --depth 1 --filter=blob:none --sparse https://github.com/org/repo.git /tmp/claude/repo
+cd /tmp/claude/repo && git sparse-checkout set src/utils
+
+# Clean up when done
+rm -rf /tmp/claude/repo
+```
+
+❌ **Wrong:**
+```bash
+# Full clone with history
+git clone https://github.com/org/repo.git /tmp/claude/repo
+
+# Using WebFetch to browse repository files
+WebFetch(https://github.com/org/repo/blob/main/src/file.py)
+```
+
+Local exploration is faster, more reliable, and provides full file access without web scraping limitations.
