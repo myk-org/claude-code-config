@@ -74,17 +74,17 @@ Examples:
 
 ### Rule: NEVER Fetch Docs Directly
 
-**The orchestrator MUST delegate documentation fetching appropriately.**
+**The orchestrator MUST NEVER fetch documentation directly.**
 
 ❌ **FORBIDDEN** - Orchestrator using WebFetch for external docs:
-```
+```text
 WebFetch(https://react.dev/...)
 WebFetch(https://fastapi.tiangolo.com/...)
 WebFetch(https://ohmyposh.dev/...)
 ```
 
 ✅ **REQUIRED** - Delegate to the appropriate agent:
-```
+```text
 # For Claude Code docs:
 Task(subagent_type="claude-code-guide", prompt="How do I configure hooks in Claude Code?")
 
@@ -122,7 +122,7 @@ Task(subagent_type="docs-fetcher", prompt="Fetch Oh My Posh configuration docs..
 
 ### Workflow
 
-```
+```text
 Need documentation?
        ↓
   Is it Claude Code / Agent SDK / Claude API?
