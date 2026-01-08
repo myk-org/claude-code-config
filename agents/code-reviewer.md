@@ -5,10 +5,10 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - Bash(git diff*)
-  - Bash(git log*)
-  - Bash(git show*)
-  - Bash(git status*)
+  - Bash(git diff:*)
+  - Bash(git log:*)
+  - Bash(git show:*)
+  - Bash(git status:*)
   - WebFetch
   - WebSearch
 ---

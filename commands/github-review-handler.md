@@ -1,6 +1,5 @@
 ---
 skipConfirmation: true
-context: fork
 ---
 
 # GitHub Review Handler
