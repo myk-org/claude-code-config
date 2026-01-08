@@ -82,4 +82,10 @@ git clone https://github.com/org/repo.git /tmp/claude/repo
 WebFetch(https://github.com/org/repo/blob/main/src/file.py)
 ```
 
+### Private Repositories
+
+For private repositories, ensure authentication is configured:
+- **SSH**: `git clone --depth 1 git@github.com:org/private-repo.git /tmp/claude/repo`
+- **Credential helper**: Ensure `git config --global credential.helper` is set
+
 Local exploration is faster, more reliable, and provides full file access without web scraping limitations.
