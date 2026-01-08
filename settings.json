@@ -60,6 +60,16 @@
             "command": "uv run ~/.claude/scripts/git-protection.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "You are a security gate protecting against catastrophic OS destruction. Analyze: $ARGUMENTS\n\nALWAYS ALLOW (whitelisted):\n- Commands starting with: ~/.claude/scripts/, ~/.claude/commands/scripts/\n\nBLOCK if the command would:\n- Delete system directories: /, /boot, /etc, /usr, /bin, /sbin, /lib, /var, /home\n- Write to disk devices: dd to /dev/sda, /dev/nvme, etc.\n- Format filesystems: mkfs on any device\n- Remove critical files: /etc/fstab, /etc/passwd, /etc/shadow, kernel/initramfs\n- Recursive delete with sudo or as root\n\nASK (requires user confirmation) if:\n- Command uses sudo but is not clearly destructive\n- Deletes files outside system directories but looks risky\n\nALLOW all other commands - this gate only guards against OS destruction.\n\nRespond with JSON: {\"decision\": \"approve\" or \"block\" or \"ask\", \"reason\": \"brief explanation\"}",
+            "timeout": 10000
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
