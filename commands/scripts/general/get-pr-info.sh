@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Script to get current branch and PR information
 # Usage: get-pr-info.sh

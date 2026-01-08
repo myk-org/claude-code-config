@@ -90,7 +90,7 @@ REPO="${REPO_FULL_NAME##*/}"
 LATEST_COMMIT_SHA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER" --jq '.head.sha')
 
 if [ -z "$LATEST_COMMIT_SHA" ]; then
-  echo "❌ Error: Could not retrieve latest commit SHA"
+  echo "❌ Error: Could not retrieve latest commit SHA" >&2
   exit 1
 fi
 
@@ -98,7 +98,7 @@ fi
 LATEST_COMMIT_DATE=$(gh api "/repos/$OWNER/$REPO/commits/$LATEST_COMMIT_SHA" --jq '.commit.committer.date')
 
 if [ -z "$LATEST_COMMIT_DATE" ]; then
-  echo "❌ Error: Could not retrieve latest commit date"
+  echo "❌ Error: Could not retrieve latest commit date" >&2
   exit 1
 fi
 

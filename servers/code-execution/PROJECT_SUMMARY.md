@@ -1,4 +1,3 @@
-STDIN
 # Archon UTCP Code-Mode Server - Project Summary
 
 ## Overview

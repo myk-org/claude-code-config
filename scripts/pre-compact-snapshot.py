@@ -449,9 +449,7 @@ def _is_code_block(text: str) -> bool:
     return (
         text.strip().startswith("```")
         or text.strip().startswith("    ")  # Indented code
-        or "{" in text
-        and "}" in text
-        and ":" in text  # JSON-like
+        or ("{" in text and "}" in text and ":" in text)  # JSON-like
     )
 
 

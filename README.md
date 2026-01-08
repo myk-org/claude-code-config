@@ -4,8 +4,17 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 
 ## Requirements
 
-- **Claude Code v2.1.0 or higher** - This configuration uses v2.1.0 features (agent-scoped hooks, `context: fork`, `allowed-tools` in frontmatter)
+- **Claude Code v2.1.0 or higher** - This configuration uses v2.1.0 features (agent-scoped hooks, `allowed-tools` in frontmatter)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager (used for running hook scripts)
+
+### Claude Code v2.1.0 Features Used
+
+This configuration leverages these v2.1.0 features:
+
+- **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert)
+- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only)
+
+> Note: `context: fork` was evaluated but not used due to compatibility issues with multi-phase workflows.
 
 ## Installation
 
@@ -154,7 +163,7 @@ dotfiles/
 
 ### Setup
 
-> **Note:** If `~/.claude` already exists, see [Option 1](#option-1-fresh-install-recommended-for-new-setups) for backup instructions before cloning.
+> **Note:** If `~/.claude` already exists, see [Option 1](#option-1-clone-directly-to-claude) for backup instructions before cloning.
 
 ```bash
 # 1. Clone this repo to ~/.claude
@@ -195,9 +204,12 @@ cd ~/.claude && git pull
 | `kubernetes-expert` | K8s/OpenShift, Helm, GitOps |
 | `jenkins-expert` | CI/CD pipelines, Jenkinsfiles |
 | `git-expert` | Git operations, branching strategies |
+| `github-expert` | GitHub platform operations (PRs, issues, releases) |
 | `test-automator` | Test suites, CI pipelines |
+| `test-runner` | Test execution and reporting |
 | `debugger` | Error analysis, debugging |
 | `code-reviewer` | Code quality, security review |
+| `codebase-refactor-analyst` | Refactoring analysis and planning |
 | `technical-documentation-writer` | Documentation |
 | `api-documenter` | OpenAPI/Swagger specs |
 | `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |

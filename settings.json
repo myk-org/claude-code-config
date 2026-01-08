@@ -103,14 +103,14 @@
     "Write(/tmp/claude/**)",
     "Read(/tmp/claude/**)",
     "Bash(mkdir -p /tmp/claude*)",
-    "Bash(claude *)",
-    "Bash(sed -n *)",
-    "Bash(grep *)",
+    "Bash(claude:*)",
+    "Bash(sed -n:*)",
+    "Bash(grep:*)",
     "Grep",
     "Bash(~/.claude/scripts/*.sh:*)",
     "Bash(~/.claude/commands/scripts/**/*.sh:*)",
     "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/.claude/commands/scripts/general/get-pr-info.sh:*)",
-    "Bash(uv run ~/.claude/scripts/*.py*)",
+    "Bash(uv run ~/.claude/scripts/*.py:*)",
     "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)"
   ],
   "feedbackSurveyState": {
