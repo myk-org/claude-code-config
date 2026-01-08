@@ -30,6 +30,14 @@
 | `mcp__graphiti-memory__*` | `graphiti-memory-manager` |
 | `mcp__openshift-python-wrapper__*` | `openshift-manager` |
 
+### Built-in vs Custom Agents
+
+**Built-in agents** are provided by Claude Code itself and do NOT require definition files in `agents/`:
+- `claude-code-guide` - Has current Claude Code documentation built into Claude Code
+
+**Custom agents** are defined in this repository's `agents/` directory and require definition files:
+- All other agents in the routing table above (e.g., `python-expert`, `docs-fetcher`, `git-expert`)
+
 ## Routing by Intent, Not Tool
 
 **Important:** Route based on the task intent, not just the tool being used.
@@ -50,10 +58,14 @@ Examples:
 
 | Documentation Type | Agent | Notes |
 |--------------------|-------|-------|
-| Claude Code, Agent SDK, Claude API | `claude-code-guide` | Built-in agent with current docs |
-| External libraries/frameworks | `docs-fetcher` | Fetches from web, prioritizes llms.txt |
+| Claude Code, Agent SDK, Claude API | `claude-code-guide` | Built-in agent (no definition file needed) |
+| External libraries/frameworks | `docs-fetcher` | Custom agent (defined in `agents/docs-fetcher.md`) |
 
 ### claude-code-guide (Built-in)
+
+> **Note:** `claude-code-guide` is a **built-in Claude Code agent** provided by Claude Code itself.
+> It does NOT have a definition file in the `agents/` directory - it is part of Claude Code's core functionality.
+> This is different from custom agents like `docs-fetcher` which require definition files.
 
 **Use for Claude Code ecosystem documentation:**
 - Claude Code features, hooks, settings
@@ -63,7 +75,7 @@ Examples:
 - Agent SDK usage
 - Claude API reference
 
-**This is a built-in agent** - no web fetching required, has current documentation.
+**This is a built-in agent** - no definition file needed, no web fetching required, has current documentation.
 
 ### docs-fetcher (External Docs)
 
