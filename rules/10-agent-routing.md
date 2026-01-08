@@ -21,7 +21,8 @@
 | Tests | `test-automator` |
 | Debugging | `debugger` |
 | API docs | `api-documenter` |
-| Documentation fetching | `docs-fetcher` |
+| Claude Code docs (features, hooks, settings, commands, MCP, IDE, Agent SDK, Claude API) | `claude-code-guide` (built-in) |
+| External library/framework docs (React, FastAPI, Django, etc.) | `docs-fetcher` |
 | **MCP Tools** |
 | `mcp__chrome-devtools__*` | `chrome-devtool-manager` |
 | `mcp__github-metrics__*` | `github-metrics-manager` |
@@ -40,12 +41,40 @@ Examples:
 - Creating a PR? → `github-expert` (not git-expert)
 - Committing changes? → `git-expert` (local git)
 - Viewing GitHub issue? → `github-expert`
+- Claude Code hooks question? → `claude-code-guide` (not docs-fetcher)
+- React documentation? → `docs-fetcher` (not claude-code-guide)
 
-## Documentation Fetching (MANDATORY)
+## Documentation Routing (MANDATORY)
+
+### Two Documentation Agents
+
+| Documentation Type | Agent | Notes |
+|--------------------|-------|-------|
+| Claude Code, Agent SDK, Claude API | `claude-code-guide` | Built-in agent with current docs |
+| External libraries/frameworks | `docs-fetcher` | Fetches from web, prioritizes llms.txt |
+
+### claude-code-guide (Built-in)
+
+**Use for Claude Code ecosystem documentation:**
+- Claude Code features, hooks, settings
+- Slash commands and custom commands
+- MCP server configuration
+- IDE integrations (VS Code, JetBrains)
+- Agent SDK usage
+- Claude API reference
+
+**This is a built-in agent** - no web fetching required, has current documentation.
+
+### docs-fetcher (External Docs)
+
+**Use for external library/framework documentation:**
+- React, Vue, Angular, FastAPI, Django, etc.
+- Third-party tools (Oh My Posh, Starship, etc.)
+- Any documentation not part of Claude Code ecosystem
 
 ### Rule: NEVER Fetch Docs Directly
 
-**The orchestrator MUST delegate ALL documentation fetching to `docs-fetcher` agent.**
+**The orchestrator MUST delegate documentation fetching appropriately.**
 
 ❌ **FORBIDDEN** - Orchestrator using WebFetch for external docs:
 ```
@@ -54,46 +83,62 @@ WebFetch(https://fastapi.tiangolo.com/...)
 WebFetch(https://ohmyposh.dev/...)
 ```
 
-✅ **REQUIRED** - Delegate to docs-fetcher:
+✅ **REQUIRED** - Delegate to the appropriate agent:
 ```
+# For Claude Code docs:
+Task(subagent_type="claude-code-guide", prompt="How do I configure hooks in Claude Code?")
+
+# For external library docs:
 Task(subagent_type="docs-fetcher", prompt="Fetch Oh My Posh configuration docs...")
 ```
 
 ### Why This Matters
 
-- docs-fetcher tries `llms.txt` first (optimized for LLMs)
-- docs-fetcher extracts only relevant sections
-- docs-fetcher provides structured, actionable output
+- `claude-code-guide` has built-in, current Claude Code documentation
+- `docs-fetcher` tries `llms.txt` first (optimized for LLMs)
+- `docs-fetcher` extracts only relevant sections
 - Direct WebFetch wastes tokens on full HTML pages
 
-### When to Spawn docs-fetcher
+### When to Spawn Each Agent
 
-**MUST delegate when:**
+**Use `claude-code-guide` when:**
+- Questions about Claude Code features or configuration
+- How to use hooks, settings.json, slash commands
+- MCP server setup for Claude Code
+- Agent SDK or Claude API usage
+- IDE integration questions
+
+**Use `docs-fetcher` when:**
 - Fetching library/framework documentation (React, FastAPI, Django, etc.)
-- Looking up configuration guides (Oh My Posh, Starship, etc.)
-- Getting API references or usage examples
+- Looking up configuration guides for external tools
+- Getting API references for third-party services
 - User asks about external tool documentation
-- You need current best practices for a library
 
-**Exceptions - Skip docs-fetcher when:**
+**Exceptions - Skip both when:**
 - Standard library only (no external dependencies)
 - User explicitly says "skip docs" or "I know the API"
 - Simple operations with obvious patterns
-- Already fetched docs for this library in current conversation
+- Already fetched docs in current conversation
 
 ### Workflow
 
 ```
-Need external docs?
+Need documentation?
        ↓
-  ┌────────────────────────────────────┐
-  │  DELEGATE to docs-fetcher agent    │
-  │  DO NOT use WebFetch directly      │
-  └────────────────────────────────────┘
-       ↓
-Wait for structured response
-       ↓
-Use context for implementation
+  Is it Claude Code / Agent SDK / Claude API?
+       │
+   ┌───┴───┐
+  YES      NO
+   │        │
+   ↓        ↓
+┌──────────────────┐  ┌──────────────────┐
+│ claude-code-guide │  │   docs-fetcher   │
+│   (built-in)      │  │  (web fetching)  │
+└──────────────────┘  └──────────────────┘
+       │                      │
+       └──────────┬───────────┘
+                  ↓
+       Use context for implementation
 ```
 
 ## Fallback
