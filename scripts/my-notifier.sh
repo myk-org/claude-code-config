@@ -32,6 +32,6 @@ fi
 
 # Send the notification and propagate any failures
 if ! notify-send --icon="" --wait "Claude: $notification_message"; then
-    echo "Error: notify-send failed with exit code $?" >&2
+    echo "Error: notify-send failed" >&2
     exit 1
 fi
