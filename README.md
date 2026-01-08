@@ -4,6 +4,7 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 
 ## Requirements
 
+- **Claude Code v2.1.0 or higher** - This configuration uses v2.1.0 features (agent-scoped hooks, `context: fork`, `allowed-tools` in frontmatter)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager (used for running hook scripts)
 
 ## Installation
@@ -174,11 +175,11 @@ cd ~/.claude && git pull
 
 ## What's Included
 
-- **24 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
+- **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **4 slash commands** including PR review workflows
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
-- **MCP server integrations** (code execution, graphiti-memory)
+- **MCP server integrations** (code execution)
 - **Status line** integration
 
 ## Agents
@@ -200,7 +201,6 @@ cd ~/.claude && git pull
 | `technical-documentation-writer` | Documentation |
 | `api-documenter` | OpenAPI/Swagger specs |
 | `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |
-| `graphiti-memory-manager` | Manages graphiti-memory MCP server for knowledge graph operations (add episodes, search nodes/facts, manage graph data) |
 | `general-purpose` | Fallback for unspecified tasks |
 
 ### Automatic Documentation Fetching
@@ -247,7 +247,6 @@ The `.claude/servers/` directory contains MCP (Model Context Protocol) server im
 ### Available MCP Servers
 
 1. **Code Execution Server** - UTCP-based code execution layer for tool chaining
-2. **Graphiti Memory Server** - Knowledge graph storage for persistent memory across sessions
 
 ### Code Execution Server
 
@@ -349,58 +348,6 @@ EOF
 3. Restart Claude Code for the changes to take effect.
 
 **Note:** The `code-execution-configs/` directory is for your private MCP server configurations and is NOT part of this repository. Create it yourself in `~/.claude/` and add your own config files there.
-
-### Graphiti Memory Server
-
-The Graphiti Memory Server enables persistent knowledge graph storage across Claude sessions.
-
-**Key features:**
-- **Knowledge Graph Storage** - Stores entities, relationships, and facts in a graph database
-- **Semantic Search** - Search for nodes and facts using natural language queries
-- **Episode Management** - Add episodes (events/observations) that automatically extract entities and relationships
-- **Persistent Memory** - Knowledge persists across sessions, enabling long-term context
-- **Group Isolation** - Multiple projects can have separate knowledge graphs
-
-**Use cases:**
-- Long-term memory of user preferences and decisions
-- Tracking relationships between code entities
-- Building context over multiple sessions
-
-**Setup:**
-
-The graphiti-memory server is configured in `~/.claude.json`:
-
-```json
-{
-  "mcpServers": {
-    "graphiti-memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-graphiti-memory"
-      ],
-      "env": {
-        "NEO4J_URI": "bolt://localhost:7687",
-        "NEO4J_USER": "neo4j",
-        "NEO4J_PASSWORD": "your-password",
-        "GRAPHITI_DEFAULT_GROUP_ID": "default"
-      }
-    }
-  }
-}
-```
-
-**Prerequisites:**
-- Neo4j database running (local or remote)
-- OpenAI API key (for entity extraction)
-
-**Management:**
-
-The `graphiti-memory-manager` agent provides high-level operations:
-- Add episodes with automatic entity extraction
-- Search for nodes and facts
-- Manage graph data (delete edges/episodes)
-- Clear graph data
 
 ### Creating an Agent for Your MCP Server
 
