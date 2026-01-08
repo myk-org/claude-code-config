@@ -12,6 +12,7 @@
       "Bash(grep:*)",
       "Bash(~/.claude/scripts/*.sh:*)",
       "Bash(~/.claude/commands/scripts/**/*.sh:*)",
+      "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/.claude/commands/scripts/general/get-pr-info.sh:*)",
       "Grep"
     ]
   },
@@ -105,7 +106,8 @@
     "Bash(grep *)",
     "Grep",
     "Bash(~/.claude/scripts/*.sh*)",
-    "Bash(~/.claude/commands/scripts/**/*.sh*)"
+    "Bash(~/.claude/commands/scripts/**/*.sh*)",
+    "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh ~/.claude/commands/scripts/general/get-pr-info.sh*)"
   ],
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309
