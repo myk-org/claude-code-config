@@ -6,10 +6,10 @@ hooks:
   PreToolUse:
     - matcher: "Bash"
       command: "uv run ~/.claude/scripts/git-protection.py"
+---
 
 > **You ARE the specialist. Do the work directly. The orchestrator already routed this task to you.**
 
----
 
 ## 🚨 HARD BLOCK: NEVER COMMIT TO MAIN/MASTER
 
