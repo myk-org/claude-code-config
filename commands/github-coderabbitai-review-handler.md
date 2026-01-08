@@ -1,5 +1,6 @@
 ---
 skipConfirmation: true
+context: fork
 ---
 
 # GitHub CodeRabbit AI Review Handler

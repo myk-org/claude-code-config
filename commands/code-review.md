@@ -1,5 +1,6 @@
 ---
 skipConfirmation: true
+context: fork
 ---
 
 # Code Review Command

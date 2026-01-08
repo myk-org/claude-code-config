@@ -2,6 +2,10 @@
 name: git-expert
 description: Use this agent for LOCAL git operations including commits, branching, merging, rebasing, stash, and resolving git issues. For GitHub platform operations (PRs, issues, releases), use github-expert instead. This agent will never use --no-verify flag and will delegate to appropriate specialists when encountering issues (e.g., calling python-expert for pre-commit Python issues).
 color: blue
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      command: "uv run ~/.claude/scripts/git-protection.py"
 
 > **You ARE the specialist. Do the work directly. The orchestrator already routed this task to you.**
 

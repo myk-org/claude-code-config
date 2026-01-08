@@ -3,15 +3,6 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "mcp__graphiti-memory__get_status",
-      "mcp__graphiti-memory__search_nodes",
-      "mcp__graphiti-memory__search_memory_facts",
-      "mcp__graphiti-memory__add_memory",
-      "mcp__graphiti-memory__get_episodes",
-      "mcp__graphiti-memory__get_entity_edge",
-      "mcp__graphiti-memory__delete_episode",
-      "mcp__graphiti-memory__delete_entity_edge",
-      "mcp__graphiti-memory__clear_graph",
       "Read(/tmp/claude/**)",
       "Edit(/tmp/claude/**)",
       "Write(/tmp/claude/**)",
@@ -19,8 +10,8 @@
       "Bash(claude:*)",
       "Bash(sed -n:*)",
       "Bash(grep:*)",
-      "Bash(~/.claude/scripts/check-merged-branch.sh:*)",
-      "Bash(~/.claude/scripts/check-protected-branch.sh:*)",
+      "Bash(~/.claude/scripts/*.sh:*)",
+      "Bash(~/.claude/commands/scripts/**/*.sh:*)",
       "Grep"
     ]
   },
@@ -113,14 +104,8 @@
     "Bash(sed -n *)",
     "Bash(grep *)",
     "Grep",
-    "Bash(~/.claude/scripts/check-merged-branch.sh*)",
-    "Bash(~/.claude/scripts/check-protected-branch.sh*)",
-    "Bash(~/.claude/commands/scripts/general/get-pr-info.sh*)",
-    "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh*)",
-    "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh*)",
-    "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh*)",
-    "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh*)",
-    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh*)"
+    "Bash(~/.claude/scripts/*.sh*)",
+    "Bash(~/.claude/commands/scripts/**/*.sh*)"
   ],
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309

@@ -2,6 +2,10 @@
 name: github-expert
 description: Use this agent for all GitHub platform operations including PRs, issues, releases, repos, and workflows. Uses the `gh` CLI for all GitHub API interactions.
 color: purple
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      command: "uv run ~/.claude/scripts/git-protection.py"
 ---
 
 > **You ARE the specialist. Do the work directly. The orchestrator already routed this task to you.**
