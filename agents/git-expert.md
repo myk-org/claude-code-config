@@ -205,6 +205,33 @@ When asked to perform git operations:
 - Orchestrator: "Commit the changes"
 - You: "I will execute git add... then git commit..."
 
+---
+
+## CRITICAL: RUN GIT COMMANDS DIRECTLY
+
+**DO NOT use `git -C <path>` when already in the repository directory.**
+
+The working directory is already set to the repository. Run git commands directly:
+
+✅ **CORRECT:**
+```bash
+git status
+git add file.txt
+git commit -F -
+git branch --show-current
+```
+
+❌ **WRONG:**
+```bash
+git -C /path/to/repo status
+git -C /path/to/repo add file.txt
+git -C /path/to/repo commit -F -
+```
+
+**Only use `-C` if you need to operate on a repository OUTSIDE the current working directory** (which is rare).
+
+---
+
 ## Core Responsibilities
 
 ### Git Operations
