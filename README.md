@@ -58,9 +58,6 @@ git clone https://github.com/myk-org/claude-code-config ~/.claude
 # Copy your private files back (examples - adjust to your setup)
 # Private agents:
 cp ~/.claude.backup/agents/my-private-agent.md ~/.claude/agents/
-# MCP server configs (if you had them):
-mkdir -p ~/.claude/code-execution-configs/
-cp -r ~/.claude.backup/code-execution-configs/* ~/.claude/code-execution-configs/
 # Any other private files you have...
 
 # Remove backup after verifying everything works
@@ -83,12 +80,9 @@ ln -sf ~/git/claude-code-config/agents ~/.claude/agents
 ln -sf ~/git/claude-code-config/commands ~/.claude/commands
 ln -sf ~/git/claude-code-config/rules ~/.claude/rules
 ln -sf ~/git/claude-code-config/scripts ~/.claude/scripts
-ln -sf ~/git/claude-code-config/servers ~/.claude/servers
 ln -sf ~/git/claude-code-config/settings.json ~/.claude/settings.json
 ln -sf ~/git/claude-code-config/statusline.sh ~/.claude/statusline.sh
 ```
-
-**Note:** To use the code execution server with MCP server configs, create your own `~/.claude/code-execution-configs/` directory for your private config files (not part of this repo).
 
 #### Copy Approach
 
@@ -138,7 +132,6 @@ Step 2: stow your dotfiles (private .claude files overlay on top)
 ├── agents/                   # Public agents (from this repo)
 ├── commands/                 # Commands
 ├── scripts/                  # Public scripts
-├── servers/                  # Server configs
 ├── settings.json             # Base settings
 └── statusline.sh
 ```
@@ -154,11 +147,8 @@ dotfiles/
     │   └── company-specific-agent.md
     ├── scripts/              # Private scripts
     │   └── my-helper.sh
-    ├── commands/             # Private commands
-    │   └── my-workflow.md
-    └── code-execution-configs/  # Your MCP server configs
-        ├── my-server.json
-        └── company-internal-service.json
+    └── commands/             # Private commands
+        └── my-workflow.md
 ```
 
 ### Setup
@@ -188,7 +178,6 @@ cd ~/.claude && git pull
 - **4 slash commands** including PR review workflows
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
-- **MCP server integrations** (code execution)
 - **Status line** integration
 
 ## Agents
@@ -252,140 +241,32 @@ python-expert uses current best practices
 - Single review thread with summary table
 - Inline comments with severity badges, suggestions, AI prompts
 
-## MCP Servers
+## MCP Server Access
 
-The `.claude/servers/` directory contains MCP (Model Context Protocol) server implementations.
+This configuration uses [mcp-cli](https://github.com/chrishayuk/mcp-cli) for on-demand MCP (Model Context Protocol) server access.
 
-### Available MCP Servers
+**Benefits over native MCP loading:**
+- Tools are NOT loaded into context at session start
+- No 30% context consumption from tool definitions
+- Agents discover and call tools on-demand via CLI
 
-1. **Code Execution Server** - UTCP-based code execution layer for tool chaining
+**How it works:**
+- Orchestrator can run `mcp-cli` for discovery
+- Agents use `mcp-cli` to discover, inspect, and execute MCP tools
+- See `rules/15-mcp-server-access.md` for full usage details
 
-### Code Execution Server
-
-Located at `.claude/servers/code-execution/`, this server wraps MCP connections through a **code execution layer** using UTCP.
-
-**Why not connect MCP servers directly?**
-
-| Approach | API Calls | Flexibility | Performance |
-|----------|-----------|-------------|-------------|
-| **Direct MCP** | 1 call per tool | Single tool per request | Many round-trips |
-| **Code Execution** | 1 call for entire workflow | Chain tools with TypeScript | Single round-trip |
-
-**Key advantages:**
-
-1. **Tool Chaining in One Call**
-   ```typescript
-   // Direct MCP: 3 separate API calls
-   // Code Execution: 1 call with this code:
-   const repos = await github.listRepos();
-   const metrics = await Promise.all(
-     repos.map(r => github.getMetrics(r.id))
-   );
-   return summarize(metrics);
-   ```
-
-2. **Custom Logic Between Tools**
-   - Conditional branching based on results
-   - Loops and iterations
-   - Data transformation and filtering
-   - Error handling and retries
-
-3. **Reduced Token Usage**
-   - One tool call instead of many
-   - Results aggregated before returning
-   - No intermediate results in conversation
-
-4. **Better Performance**
-   - Single round-trip to API
-   - Parallel execution with Promise.all
-   - No waiting for Claude to process each step
-
-**Setup:**
+**Quick reference:**
 ```bash
-cd ~/.claude/servers/code-execution
-npm install
+mcp-cli                          # List all servers and tools
+mcp-cli <server>                 # Show server's tools with parameters
+mcp-cli <server>/<tool>          # Get full JSON schema for a tool
+mcp-cli <server>/<tool> '<json>' # Execute tool with arguments
+mcp-cli grep "<pattern>"         # Search tools by name
 ```
 
-### Adding Server Configs
-
-1. Create your private configs directory and config file:
-
-```bash
-# Create your private configs directory (not part of this repo)
-mkdir -p ~/.claude/code-execution-configs/
-
-# Create a config file for your MCP server
-cat > ~/.claude/code-execution-configs/my-service.json << 'EOF'
-{
-  "manual_call_templates": [
-    {
-      "name": "my-service",
-      "call_template_type": "mcp",
-      "config": {
-        "mcpServers": {
-          "my-server": {
-            "transport": "http",
-            "url": "http://localhost:8080/mcp"
-          }
-        }
-      }
-    }
-  ],
-  "tool_repository": {
-    "tool_repository_type": "in_memory"
-  },
-  "tool_search_strategy": {
-    "tool_search_strategy_type": "tag_and_description_word_match"
-  }
-}
-EOF
-```
-
-2. Add the MCP server to Claude by editing `~/.claude.json`:
-
-```json
-{
-  "mcpServers": {
-    "my-service": {
-      "command": "npx",
-      "args": ["@utcp/code-mode-mcp"],
-      "env": {
-        "UTCP_CONFIG_FILE": "~/.claude/code-execution-configs/my-service.json"
-      }
-    }
-  }
-}
-```
-
-3. Restart Claude Code for the changes to take effect.
-
-**Note:** The `code-execution-configs/` directory is for your private MCP server configurations and is NOT part of this repository. Create it yourself in `~/.claude/` and add your own config files there.
-
-### Creating an Agent for Your MCP Server
-
-After adding an MCP server, you'll want a specialized agent to manage it. Ask Claude to create one:
-
-**Example prompt:**
-```
-Create an agent for my new MCP server called "my-service" that handles [describe what your server does].
-The agent should be saved to ~/.claude/agents/my-service-manager.md
-```
-
-**Agent file structure:**
-```markdown
----
-name: my-service-manager
-description: Use this agent for [your MCP server purpose]
----
-
-You are a specialist agent for managing the my-service MCP server...
-
-## Available Tools
-- mcp__my-service__tool_name
-- ...
-```
-
-The agent will be automatically available in Claude Code after creation.
+**Prerequisites:**
+- Install mcp-cli: See [mcp-cli installation](https://github.com/chrishayuk/mcp-cli#installation)
+- Configure your MCP servers in `~/.mcp.json` or use `-c` flag
 
 ## Why Agent-Based Workflow?
 

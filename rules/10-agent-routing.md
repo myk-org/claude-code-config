@@ -23,12 +23,6 @@
 | API docs | `api-documenter` |
 | Claude Code docs (features, hooks, settings, commands, MCP, IDE, Agent SDK, Claude API) | `claude-code-guide` (built-in) |
 | External library/framework docs (React, FastAPI, Django, etc.) | `docs-fetcher` |
-| **MCP Tools** | |
-| `mcp__chrome-devtools__*` | `chrome-devtool-manager` |
-| `mcp__github-metrics__*` | `github-metrics-manager` |
-| `mcp__github-webhook-logs-*__*` | `webhook-logs-manager` |
-| `mcp__graphiti-memory__*` | `graphiti-memory-manager` |
-| `mcp__openshift-python-wrapper__*` | `openshift-manager` |
 
 ### Built-in vs Custom Agents
 

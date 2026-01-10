@@ -25,14 +25,11 @@ hooks:
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-**BEFORE ANY git add, commit, push, merge, rebase, or cherry-pick:**
+**AUTOMATIC PROTECTION:** The `git-protection.py` hook automatically blocks commits to main/master before they execute.
 
-1. **MANDATORY CHECK:** Run `~/.claude/scripts/check-protected-branch.sh`
-   - Exit 0: NOT on protected branch (safe to proceed)
-   - Exit 1: ON main/master (ask orchestrator)
+**IF the hook blocks you (on `main` or `master`):** **STOP IMMEDIATELY** - ASK orchestrator for permission to fix
 
-2. **IF on `main` or `master`:** **STOP IMMEDIATELY** - ASK orchestrator for permission to fix
-3. **OFFER SOLUTION:** Ask orchestrator: "Want me to create a new branch from main and continue?"
+**OFFER SOLUTION:** Ask orchestrator: "Want me to create a new branch from main and continue?"
 
 **Branch prefixes:** `feature/`, `fix/`, `hotfix/`, `refactor/`
 
@@ -60,29 +57,26 @@ hooks:
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-**BEFORE ANY git add, commit, push, or modification:**
+**AUTOMATIC PROTECTION:** The `git-protection.py` hook automatically blocks commits to merged branches before they execute.
 
-1. **RUN CHECK:** `~/.claude/scripts/check-merged-branch.sh`
-   - Exit 0: Branch NOT merged (safe to proceed)
-   - Exit 1: Branch IS merged (ask orchestrator)
+**IF the hook blocks you (branch is merged), ASK ORCHESTRATOR:**
+```
+⚠️ Branch '[current branch]' is already merged into main.
 
-2. **IF branch is merged, ASK ORCHESTRATOR:**
-   ```
-   ⚠️ Branch '[current branch]' is already merged into main.
+I cannot commit to a merged branch - it would create confusion.
 
-   I cannot commit to a merged branch - it would create confusion.
+I can fix this:
+1. Stash your current changes
+2. Create a new branch from main: feature/<name>
+3. Apply the stash
+4. Continue with the commit
 
-   I can fix this:
-   1. Stash your current changes
-   2. Create a new branch from main: feature/<name>
-   3. Apply the stash
-   4. Continue with the commit
+Want me to proceed?
+```
 
-   Want me to proceed?
-   ```
+**IF orchestrator says YES:** Create the branch and continue
 
-3. **IF orchestrator says YES:** Create the branch and continue
-4. **IF orchestrator says NO:** Stop and wait for further instructions
+**IF orchestrator says NO:** Stop and wait for further instructions
 
 **ENFORCEMENT:**
 
@@ -265,17 +259,15 @@ The procedure is identical to the main/master protection described above.
 
 ### Branch Check Workflow
 
-**BEFORE any commit, push, merge, rebase, or cherry-pick operation:**
+**AUTOMATIC PROTECTION:** The `git-protection.py` hook handles branch protection automatically. It will block:
+- Commits to `main` or `master` branches
+- Commits to branches that have already been merged
 
-1. Run `git branch --show-current` to check current branch
-2. If on `main` or `master`: **Follow the HARD BLOCK: MAIN BRANCH PROTECTION procedure above - ASK orchestrator**
-3. Check if branch is already merged:
-   ```bash
-   ~/.claude/scripts/check-merged-branch.sh
-   # Exit 0: OK to proceed | Exit 1: Branch merged, refuse
-   ```
-4. If branch is merged: **Follow the HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above - ASK orchestrator**
-5. If on an unmerged feature branch, proceed normally
+**IF the hook blocks your operation:**
+
+1. If blocked for main/master: **Follow the HARD BLOCK: MAIN BRANCH PROTECTION procedure above - ASK orchestrator**
+2. If blocked for merged branch: **Follow the HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above - ASK orchestrator**
+3. If not blocked, proceed normally
 
 ### Issue Resolution Workflow
 
@@ -358,26 +350,19 @@ EOF
 
 **When asked to commit changes:**
 
-0. **CHECK BRANCH FIRST - MANDATORY STEP:**
+0. **BRANCH PROTECTION (AUTOMATIC):**
+
+   The `git-protection.py` hook automatically blocks commits to protected branches (main/master) and merged branches. You can proceed directly with the commit workflow - the hook will block if needed.
+
+   **However, check for detached HEAD state first:**
    ```bash
    CURRENT_BRANCH=$(git branch --show-current)
-
-   # Check 0: Detached HEAD state
    if [ -z "$CURRENT_BRANCH" ]; then
        # WORKFLOW STOPS HERE - RETURN TO ORCHESTRATOR
    fi
-
-   # Check 1: Protected branches (main/master)
-   if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
-       # WORKFLOW STOPS HERE - RETURN TO ORCHESTRATOR (see HARD BLOCK: MAIN BRANCH PROTECTION)
-   fi
-
-   # Check 2: Already merged branches
-   ~/.claude/scripts/check-merged-branch.sh
-   # If exit 1, branch is merged - WORKFLOW STOPS HERE - RETURN TO ORCHESTRATOR
    ```
 
-   **On Check 0 failure (detached HEAD):** ASK ORCHESTRATOR:
+   **On detached HEAD:** ASK ORCHESTRATOR:
    ```
    ⚠️ In detached HEAD state - cannot commit without a branch.
 
@@ -388,11 +373,9 @@ EOF
    Want me to proceed?
    ```
 
-   **On Check 1 failure (main/master):** Follow HARD BLOCK: MAIN BRANCH PROTECTION procedure above
+   **If hook blocks (main/master):** Follow HARD BLOCK: MAIN BRANCH PROTECTION procedure above
 
-   **On Check 2 failure (merged branch):** Follow HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above
-
-   **If all checks pass:** Proceed to step 1 below.
+   **If hook blocks (merged branch):** Follow HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above
 
 1. Run `git status` to see what changed
 2. Run `git add <specific files>` for each file

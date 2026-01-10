@@ -51,18 +51,6 @@ def get_main_branch():
 def is_branch_merged(current_branch, main_branch):
     """Check if current_branch is merged into main_branch."""
     try:
-        # Get the merge base between current and main
-        merge_base_result = subprocess.run(
-            ["git", "merge-base", current_branch, main_branch],
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
-        if merge_base_result.returncode != 0:
-            return False
-
-        merge_base = merge_base_result.stdout.strip()
-
         # Get HEAD of current branch
         branch_head_result = subprocess.run(
             ["git", "rev-parse", current_branch],
@@ -74,6 +62,34 @@ def is_branch_merged(current_branch, main_branch):
             return False
 
         branch_head = branch_head_result.stdout.strip()
+
+        # Get HEAD of main branch
+        main_head_result = subprocess.run(
+            ["git", "rev-parse", main_branch],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if main_head_result.returncode != 0:
+            return False
+
+        main_head = main_head_result.stdout.strip()
+
+        # If branch HEAD equals main HEAD exactly, it's a fresh branch (just created)
+        if branch_head == main_head:
+            return False
+
+        # Get the merge base between current and main
+        merge_base_result = subprocess.run(
+            ["git", "merge-base", current_branch, main_branch],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if merge_base_result.returncode != 0:
+            return False
+
+        merge_base = merge_base_result.stdout.strip()
 
         # Branch is merged if merge-base equals branch HEAD
         return merge_base == branch_head

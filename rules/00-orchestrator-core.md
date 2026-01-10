@@ -19,6 +19,7 @@
 
 ✅ **ALLOWED** direct actions:
 - Read files (Read tool for single files)
+- Run `mcp-cli` for MCP server discovery
 - Ask clarifying questions
 - Analyze and plan
 - Route tasks to agents

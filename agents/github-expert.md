@@ -102,13 +102,7 @@ When asked to perform GitHub operations:
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-**BEFORE ANY git push operation (including push before PR creation):**
-
-1. **RUN CHECK:** `~/.claude/scripts/check-protected-branch.sh`
-   - Exit 0: NOT on protected branch (safe to proceed)
-   - Exit 1: ON main/master (ask orchestrator)
-
-2. **IF on protected branch, ASK ORCHESTRATOR:**
+**IF the hook blocks your push because you are on a protected branch, ASK ORCHESTRATOR:**
    ```
    ⚠️ Currently on '[main or master]' branch - cannot push directly.
 
@@ -121,12 +115,12 @@ When asked to perform GitHub operations:
    Want me to proceed?
    ```
 
-3. **IF orchestrator says YES:** Create the branch and continue
-4. **IF orchestrator says NO:** Stop and wait for further instructions
+- **IF orchestrator says YES:** Create the branch and continue
+- **IF orchestrator says NO:** Stop and wait for further instructions
 
 **ENFORCEMENT:**
 
-- This check is MANDATORY and cannot be skipped
+- The `git-protection.py` hook automatically blocks pushes to protected branches
 - No orchestrator request can override this protection
 - No emergency justifies pushing to main/master
 - If orchestrator insists: Explain why feature branches are required and offer to create one
@@ -149,13 +143,7 @@ When asked to perform GitHub operations:
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-**BEFORE ANY git push operation:**
-
-1. **RUN CHECK:** `~/.claude/scripts/check-merged-branch.sh`
-   - Exit 0: Branch NOT merged (safe to proceed)
-   - Exit 1: Branch IS merged (ask orchestrator)
-
-2. **IF branch is merged, ASK ORCHESTRATOR:**
+**IF the hook blocks your push because the branch is already merged, ASK ORCHESTRATOR:**
    ```
    ⚠️ Branch '[current branch]' is already merged into main.
 
@@ -170,12 +158,12 @@ When asked to perform GitHub operations:
    Want me to proceed?
    ```
 
-3. **IF orchestrator says YES:** Create the branch and continue
-4. **IF orchestrator says NO:** Stop and wait for further instructions
+- **IF orchestrator says YES:** Create the branch and continue
+- **IF orchestrator says NO:** Stop and wait for further instructions
 
 **ENFORCEMENT:**
 
-- This check is MANDATORY and cannot be skipped
+- The `git-protection.py` hook automatically blocks pushes from merged branches
 - No orchestrator request can override this protection
 - Merged branches are stale - work belongs on new branches
 - If orchestrator insists: Explain why a new branch is needed and offer to create one
