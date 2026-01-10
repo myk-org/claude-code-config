@@ -33,13 +33,17 @@ MCP (Model Context Protocol) servers provide access to external tools and data s
 
 - Run `mcp-cli` first to discover what's available
 - Check schema before calling unknown tools
-- Quote JSON arguments with single quotes
-- Use heredoc for complex JSON:
+- **Prefer stdin/heredoc for complex JSON** (avoids shell quoting issues):
   ```bash
-  mcp-cli server/tool - <<EOF
-  {"content": "Text with 'quotes'"}
+  mcp-cli server/tool - <<'EOF'
+  {"content": "Text with 'single' and \"double\" quotes"}
   EOF
   ```
+- For simple JSON without quotes, inline single quotes work:
+  ```bash
+  mcp-cli server/tool '{"key": "value"}'
+  ```
+  **Note:** Inline single quotes fail if JSON contains literal single quotes.
 
 ---
 

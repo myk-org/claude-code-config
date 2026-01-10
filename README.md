@@ -243,7 +243,7 @@ python-expert uses current best practices
 
 ## MCP Server Access
 
-This configuration uses [mcp-cli](https://github.com/chrishayuk/mcp-cli) for on-demand MCP (Model Context Protocol) server access.
+This configuration uses [mcp-cli](https://github.com/philschmid/mcp-cli) for on-demand MCP (Model Context Protocol) server access.
 
 **Benefits over native MCP loading:**
 - Tools are NOT loaded into context at session start
@@ -265,8 +265,8 @@ mcp-cli grep "<pattern>"         # Search tools by name
 ```
 
 **Prerequisites:**
-- Install mcp-cli: See [mcp-cli installation](https://github.com/chrishayuk/mcp-cli#installation)
-- Configure your MCP servers in `~/.mcp.json` or use `-c` flag
+- Install mcp-cli: See [mcp-cli installation](https://github.com/philschmid/mcp-cli#installation)
+- Configure your MCP servers in `~/.mcp_servers.json` or `~/.config/mcp/mcp_servers.json`
 
 ## Why Agent-Based Workflow?
 
@@ -341,6 +341,8 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ```
 ~/.claude/
 ├── agents/           # Specialist agent definitions
+├── commands/         # Slash commands
+├── rules/            # Orchestrator rules (auto-loaded)
 ├── scripts/          # Helper scripts for hooks
 ├── settings.json     # Hooks and tool permissions
 └── statusline.sh     # Status line script

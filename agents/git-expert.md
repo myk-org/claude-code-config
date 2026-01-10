@@ -27,9 +27,10 @@ hooks:
 
 **AUTOMATIC PROTECTION:** The `git-protection.py` hook automatically blocks commits to main/master before they execute.
 
-**IF the hook blocks you (on `main` or `master`):** **STOP IMMEDIATELY** - ASK orchestrator for permission to fix
-
-**OFFER SOLUTION:** Ask orchestrator: "Want me to create a new branch from main and continue?"
+**IF the hook blocks you (on `main` or `master`):** Offer to create a new branch:
+```
+Blocked on protected branch. Want me to create a new branch from main and continue?
+```
 
 **Branch prefixes:** `feature/`, `fix/`, `hotfix/`, `refactor/`
 
@@ -59,24 +60,26 @@ hooks:
 
 **AUTOMATIC PROTECTION:** The `git-protection.py` hook automatically blocks commits to merged branches before they execute.
 
-**IF the hook blocks you (branch is merged), ASK ORCHESTRATOR:**
+**IF the hook blocks you (branch is merged):** Offer to create a new branch:
 ```
-⚠️ Branch '[current branch]' is already merged into main.
-
-I cannot commit to a merged branch - it would create confusion.
+Blocked on merged branch '[current branch]'.
 
 I can fix this:
+
+**If you have uncommitted changes:**
 1. Stash your current changes
 2. Create a new branch from main: feature/<name>
 3. Apply the stash
 4. Continue with the commit
 
+**If you have commits on this branch to preserve:**
+1. Note the commit hashes to preserve
+2. Create a new branch from main: feature/<name>
+3. Cherry-pick the commits: git cherry-pick <hash>
+4. Continue working
+
 Want me to proceed?
 ```
-
-**IF orchestrator says YES:** Create the branch and continue
-
-**IF orchestrator says NO:** Stop and wait for further instructions
 
 **ENFORCEMENT:**
 
@@ -265,8 +268,8 @@ The procedure is identical to the main/master protection described above.
 
 **IF the hook blocks your operation:**
 
-1. If blocked for main/master: **Follow the HARD BLOCK: MAIN BRANCH PROTECTION procedure above - ASK orchestrator**
-2. If blocked for merged branch: **Follow the HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above - ASK orchestrator**
+1. If blocked for main/master: **Follow the HARD BLOCK: MAIN BRANCH PROTECTION procedure above**
+2. If blocked for merged branch: **Follow the HARD BLOCK: NEVER WORK ON MERGED BRANCHES procedure above**
 3. If not blocked, proceed normally
 
 ### Issue Resolution Workflow

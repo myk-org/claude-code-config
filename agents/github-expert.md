@@ -102,21 +102,16 @@ When asked to perform GitHub operations:
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-**IF the hook blocks your push because you are on a protected branch, ASK ORCHESTRATOR:**
-   ```
-   ⚠️ Currently on '[main or master]' branch - cannot push directly.
+**IF the hook blocks your push (on protected branch):** Offer to create a new branch:
+```
+Blocked on protected branch '[main or master]'.
 
-   All changes must go through feature branches and PRs.
+I can fix this:
+1. Create a new branch from main: feature/<name>
+2. Continue with the push
 
-   I can fix this:
-   1. Create a new branch from main: feature/<name>
-   2. Continue with the push
-
-   Want me to proceed?
-   ```
-
-- **IF orchestrator says YES:** Create the branch and continue
-- **IF orchestrator says NO:** Stop and wait for further instructions
+Want me to proceed?
+```
 
 **ENFORCEMENT:**
 
@@ -143,23 +138,26 @@ When asked to perform GitHub operations:
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-**IF the hook blocks your push because the branch is already merged, ASK ORCHESTRATOR:**
-   ```
-   ⚠️ Branch '[current branch]' is already merged into main.
+**IF the hook blocks your push (branch is merged):** Offer to create a new branch:
+```
+Blocked on merged branch '[current branch]'.
 
-   I cannot push from a merged branch - it would create confusion.
+I can fix this:
 
-   I can fix this:
-   1. Stash your current changes
-   2. Create a new branch from main: feature/<name>
-   3. Apply the stash
-   4. Continue with the push
+**If you have uncommitted changes:**
+1. Stash your current changes
+2. Create a new branch from main: feature/<name>
+3. Apply the stash
+4. Continue with the push
 
-   Want me to proceed?
-   ```
+**If you have commits on this branch to preserve:**
+1. Note the commit hashes to preserve
+2. Create a new branch from main: feature/<name>
+3. Cherry-pick the commits: git cherry-pick <hash>
+4. Continue working
 
-- **IF orchestrator says YES:** Create the branch and continue
-- **IF orchestrator says NO:** Stop and wait for further instructions
+Want me to proceed?
+```
 
 **ENFORCEMENT:**
 
