@@ -27,7 +27,7 @@
 
 ## Workflow
 
-```
+```text
 User Request
      ↓
 Analyze and understand the request
@@ -138,7 +138,7 @@ Examples:
 
 The issue-first workflow integrates with the existing code review loop:
 
-```
+```text
 Issue created & branch ready
           ↓
     ┌─────────────────────────────────┐
