@@ -52,6 +52,50 @@ def get_main_branch():
     return None
 
 
+def get_pr_merge_status(branch_name: str) -> tuple[bool, str | None]:
+    """
+    Check if a PR for this branch exists and is merged on GitHub.
+
+    Returns:
+        (is_merged, pr_number) - True if PR is merged, with PR number if found
+    """
+    try:
+        gh_path = shutil.which("gh")
+        if not gh_path:
+            return False, None
+
+        # Unambiguous lookup by head branch (avoids interpreting numeric branch names as PR numbers)
+        result = subprocess.run(
+            [
+                gh_path,
+                "pr",
+                "list",
+                "--head",
+                branch_name,
+                "--state",
+                "merged",
+                "--json",
+                "number",
+                "--limit",
+                "1",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            if data and isinstance(data, list) and len(data) > 0:
+                pr_number = data[0].get("number")
+                return True, str(pr_number) if pr_number else None
+
+        return False, None
+    except Exception:
+        # If we can't check, don't block (fail open for this check)
+        return False, None
+
+
 def is_branch_merged(current_branch, main_branch):
     """Check if current_branch is merged into main_branch.
 
@@ -157,8 +201,18 @@ def should_block_commit(command):
     # Get current branch
     current_branch = get_current_branch()
     if not current_branch:
-        # Detached HEAD - allow
-        return False, None
+        return True, """⛔ BLOCKED: You are in detached HEAD state.
+
+What happened:
+- You're not on any branch (detached HEAD)
+- Commits made here can become orphaned and lost
+
+What to do:
+1. Create a branch from current position:
+   git checkout -b my-new-branch
+2. Then commit your changes
+
+Do NOT commit in detached HEAD state."""
 
     # Get main branch
     main_branch = get_main_branch()
@@ -174,7 +228,24 @@ def should_block_commit(command):
     if is_amend_with_unpushed_commits(command):
         return False, None
 
-    # Check if branch is merged
+    # Check if PR is already merged on GitHub
+    pr_merged, pr_number = get_pr_merge_status(current_branch)
+    if pr_merged:
+        return True, f"""⛔ BLOCKED: PR #{pr_number} for branch '{current_branch}' is already MERGED.
+
+What happened:
+- This branch's PR was already merged
+- Committing more changes to a merged branch is not useful
+
+What to do:
+1. Create a NEW branch for your changes:
+   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
+2. Your uncommitted changes will come with you
+3. Commit on the new branch and create a new PR
+
+Do NOT commit to '{current_branch}'."""
+
+    # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
         return True, (
             f"Branch '{current_branch}' is already merged into '{main_branch}'. "
@@ -202,7 +273,8 @@ def should_block_push():
     # Get current branch
     current_branch = get_current_branch()
     if not current_branch:
-        # Detached HEAD - allow
+        # Detached HEAD - allow push (can't really push from detached HEAD anyway,
+        # and if explicitly pushing a commit hash to a ref, it's intentional)
         return False, None
 
     # Get main branch
@@ -215,7 +287,24 @@ def should_block_push():
     if current_branch in ["main", "master"]:
         return True, f"Cannot push directly to {current_branch} branch. Create a feature branch and open a PR."
 
-    # Check if branch is merged
+    # Check if PR is already merged on GitHub
+    pr_merged, pr_number = get_pr_merge_status(current_branch)
+    if pr_merged:
+        return True, f"""⛔ BLOCKED: PR #{pr_number} for branch '{current_branch}' is already MERGED.
+
+What happened:
+- This branch's PR was already merged into the base branch
+- Pushing more commits to this branch serves no purpose
+
+What to do:
+1. If you have new changes, create a NEW branch:
+   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
+2. Cherry-pick your commits to the new branch if needed
+3. Create a new PR from the new branch
+
+Do NOT continue pushing to '{current_branch}'."""
+
+    # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
         return True, (
             f"Branch '{current_branch}' is already merged into '{main_branch}'. "
