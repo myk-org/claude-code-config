@@ -58,28 +58,40 @@ When asked to perform git operations:
 
 ---
 
-## CRITICAL: RUN GIT COMMANDS DIRECTLY
+## CRITICAL: NEVER USE `git -C` (STRICT RULE)
 
-**DO NOT use `git -C <path>` when already in the repository directory.**
+🚨 **YOU ARE ALREADY IN THE REPOSITORY. RUN GIT COMMANDS DIRECTLY.**
 
-The working directory is already set to the repository. Run git commands directly:
+The `-C` flag is **FORBIDDEN** for the current working directory. This is a strict rule with no exceptions.
 
-✅ **CORRECT:**
+### Default Behavior (ALWAYS)
+
 ```bash
+# ✅ CORRECT - Run directly in current directory
 git status
 git add file.txt
 git commit -F -
 git branch --show-current
+git push origin main
 ```
 
-❌ **WRONG:**
+### Forbidden Pattern (NEVER)
+
 ```bash
+# ❌ FORBIDDEN - Never use -C for current repository
 git -C /path/to/repo status
 git -C /path/to/repo add file.txt
-git -C /path/to/repo commit -F -
+git -C . commit -F -
+git -C "$PWD" push
 ```
 
-**Only use `-C` if you need to operate on a repository OUTSIDE the current working directory** (which is rare).
+### Only Exception
+
+Use `-C` **ONLY** when the orchestrator **EXPLICITLY** asks you to operate on a repository that is:
+1. Located at a different path than the current working directory
+2. Specifically mentioned as an external repository (e.g., in `/tmp/claude/some-other-repo`)
+
+**If no external repository is mentioned, NEVER use `-C`.**
 
 ---
 
