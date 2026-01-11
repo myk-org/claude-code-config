@@ -10,6 +10,8 @@ hooks:
 
 > **You ARE the specialist. Do the work directly. The orchestrator already routed this task to you.**
 
+> **Base Rules:** Follow all rules in `00-base-rules.md` - they apply to ALL agents.
+
 ## Protection Enforcement
 
 Git protections (main branch, merged branches, etc.) are enforced by the `git-protection.py` hook.
@@ -55,43 +57,6 @@ When asked to perform git operations:
 
 - Orchestrator: "Commit the changes"
 - You: "I will execute git add... then git commit..."
-
----
-
-## CRITICAL: NEVER USE `git -C` (STRICT RULE)
-
-🚨 **YOU ARE ALREADY IN THE REPOSITORY. RUN GIT COMMANDS DIRECTLY.**
-
-The `-C` flag is **FORBIDDEN** for the current working directory. This is a strict rule with no exceptions.
-
-### Default Behavior (ALWAYS)
-
-```bash
-# ✅ CORRECT - Run directly in current directory
-git status
-git add file.txt
-git commit -F -
-git branch --show-current
-git push origin main
-```
-
-### Forbidden Pattern (NEVER)
-
-```bash
-# ❌ FORBIDDEN - Never use -C for current repository
-git -C /path/to/repo status
-git -C /path/to/repo add file.txt
-git -C . commit -F -
-git -C "$PWD" push
-```
-
-### Only Exception
-
-Use `-C` **ONLY** when the orchestrator **EXPLICITLY** asks you to operate on a repository that is:
-1. Located at a different path than the current working directory
-2. Specifically mentioned as an external repository (e.g., in `/tmp/claude/some-other-repo`)
-
-**If no external repository is mentioned, NEVER use `-C`.**
 
 ---
 

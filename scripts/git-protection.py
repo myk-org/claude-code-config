@@ -222,7 +222,20 @@ Do NOT commit in detached HEAD state."""
 
     # Block if on main/master branch
     if current_branch in ["main", "master"]:
-        return True, f"Cannot commit directly to {current_branch} branch. Create a feature branch first."
+        return True, f"""⛔ BLOCKED: Cannot commit directly to '{current_branch}' branch.
+
+What happened:
+- You are on the protected '{current_branch}' branch
+- Direct commits to {current_branch} bypass code review and CI checks
+
+What to do:
+1. If you have uncommitted changes, stash and create a feature branch:
+   git stash && git checkout -b feature/your-feature && git stash pop
+2. If you have no uncommitted changes, just create a feature branch:
+   git checkout -b feature/your-feature
+3. Then commit your changes on the new branch
+
+Do NOT commit directly to '{current_branch}'."""
 
     # Allow amend on unpushed commits
     if is_amend_with_unpushed_commits(command):
@@ -247,10 +260,20 @@ Do NOT commit to '{current_branch}'."""
 
     # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
-        return True, (
-            f"Branch '{current_branch}' is already merged into '{main_branch}'. "
-            f"Create a new branch for additional changes."
-        )
+        return True, f"""⛔ BLOCKED: Branch '{current_branch}' is already merged into '{main_branch}'.
+
+What happened:
+- This branch has been merged into {main_branch}
+- Committing more changes to a merged branch creates confusion
+
+What to do:
+1. If you have uncommitted changes, stash and create a new branch:
+   git stash && git checkout {main_branch} && git pull && git checkout -b feature/new-feature && git stash pop
+2. If you have no uncommitted changes, just create a new branch:
+   git checkout {main_branch} && git pull && git checkout -b feature/new-feature
+3. Commit your changes on the new branch and create a new PR
+
+Do NOT commit to '{current_branch}'."""
 
     return False, None
 
@@ -285,7 +308,19 @@ def should_block_push():
 
     # Block if on main/master branch
     if current_branch in ["main", "master"]:
-        return True, f"Cannot push directly to {current_branch} branch. Create a feature branch and open a PR."
+        return True, f"""⛔ BLOCKED: Cannot push directly to '{current_branch}' branch.
+
+What happened:
+- You are on the protected '{current_branch}' branch
+- Direct pushes to {current_branch} bypass code review and CI checks
+
+What to do:
+1. If you have local commits on {current_branch}, move them to a feature branch:
+   git checkout -b feature/your-feature
+   git push -u origin feature/your-feature
+2. Then create a pull request for your changes
+
+Do NOT push directly to '{current_branch}'."""
 
     # Check if PR is already merged on GitHub
     pr_merged, pr_number = get_pr_merge_status(current_branch)
@@ -306,10 +341,21 @@ Do NOT continue pushing to '{current_branch}'."""
 
     # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
-        return True, (
-            f"Branch '{current_branch}' is already merged into '{main_branch}'. "
-            f"Create a new branch for additional changes."
-        )
+        return True, f"""⛔ BLOCKED: Branch '{current_branch}' is already merged into '{main_branch}'.
+
+What happened:
+- This branch has been merged into {main_branch}
+- Pushing more commits to a merged branch serves no purpose
+
+What to do:
+1. If you have new changes, create a new branch from {main_branch}:
+   git checkout {main_branch} && git pull && git checkout -b feature/new-feature
+2. Cherry-pick your commits to the new branch if needed:
+   git cherry-pick <commit-hash>
+3. Push the new branch and create a new PR:
+   git push -u origin feature/new-feature
+
+Do NOT push to '{current_branch}'."""
 
     return False, None
 
