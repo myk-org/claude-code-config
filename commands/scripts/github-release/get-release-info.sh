@@ -175,14 +175,15 @@ get_commits() {
             continue
         fi
 
-        # Parse the commit line using a unique delimiter that won't appear in commit messages
-        # Format: hash<SEP>short_hash<SEP>subject<SEP>author<SEP>date
+        # Parse the commit line using ASCII Unit Separator (0x1F) as delimiter
+        # This control character cannot appear in commit messages
+        # Format: hash<US>short_hash<US>subject<US>author<US>date
         local hash short_hash subject author date body
-        hash=$(echo "$line" | awk -F'<SEP>' '{print $1}')
-        short_hash=$(echo "$line" | awk -F'<SEP>' '{print $2}')
-        subject=$(echo "$line" | awk -F'<SEP>' '{print $3}')
-        author=$(echo "$line" | awk -F'<SEP>' '{print $4}')
-        date=$(echo "$line" | awk -F'<SEP>' '{print $5}')
+        hash=$(echo "$line" | awk -F$'\x1F' '{print $1}')
+        short_hash=$(echo "$line" | awk -F$'\x1F' '{print $2}')
+        subject=$(echo "$line" | awk -F$'\x1F' '{print $3}')
+        author=$(echo "$line" | awk -F$'\x1F' '{print $4}')
+        date=$(echo "$line" | awk -F$'\x1F' '{print $5}')
 
         # Get commit body separately (everything after first line of message)
         body=$(git log -1 --format='%b' "$hash" 2>/dev/null | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
@@ -205,7 +206,7 @@ get_commits() {
             '{hash: $hash, short_hash: $short_hash, subject: $subject, body: $body, author: $author, date: $date}' >> "$COMMITS_FILE"
 
         ((commit_count++)) || true
-    done < <(git log --format='%H<SEP>%h<SEP>%s<SEP>%an<SEP>%ai' -n 100 "$range" 2>/dev/null || true)
+    done < <(git log --format='%H%x1F%h%x1F%s%x1F%an%x1F%ai' -n 100 "$range" 2>/dev/null || true)
 
     echo "]" >> "$COMMITS_FILE"
 

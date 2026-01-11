@@ -140,14 +140,6 @@ EOF
 
 **When asked to commit changes:**
 
-0. **Check for detached HEAD state first:**
-   ```bash
-   CURRENT_BRANCH=$(git branch --show-current)
-   if [ -z "$CURRENT_BRANCH" ]; then
-       # Offer to create a branch from current position
-   fi
-   ```
-
 1. Run `git status` to see what changed
 2. Run `git add <specific files>` for each file
 3. Run commit command with proper format:

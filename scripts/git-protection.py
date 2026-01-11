@@ -64,9 +64,21 @@ def get_pr_merge_status(branch_name: str) -> tuple[bool, str | None]:
         if not gh_path:
             return False, None
 
-        # Check if there's a PR for this branch
+        # Unambiguous lookup by head branch (avoids interpreting numeric branch names as PR numbers)
         result = subprocess.run(
-            [gh_path, "pr", "view", branch_name, "--json", "state,number"],
+            [
+                gh_path,
+                "pr",
+                "list",
+                "--head",
+                branch_name,
+                "--state",
+                "merged",
+                "--json",
+                "number",
+                "--limit",
+                "1",
+            ],
             capture_output=True,
             text=True,
             timeout=10,
@@ -74,9 +86,8 @@ def get_pr_merge_status(branch_name: str) -> tuple[bool, str | None]:
 
         if result.returncode == 0:
             data = json.loads(result.stdout)
-            state = data.get("state", "")
-            pr_number = data.get("number")
-            if state == "MERGED":
+            if data and isinstance(data, list) and len(data) > 0:
+                pr_number = data[0].get("number")
                 return True, str(pr_number) if pr_number else None
 
         return False, None
@@ -190,8 +201,18 @@ def should_block_commit(command):
     # Get current branch
     current_branch = get_current_branch()
     if not current_branch:
-        # Detached HEAD - allow
-        return False, None
+        return True, """⛔ BLOCKED: You are in detached HEAD state.
+
+What happened:
+- You're not on any branch (detached HEAD)
+- Commits made here can become orphaned and lost
+
+What to do:
+1. Create a branch from current position:
+   git checkout -b my-new-branch
+2. Then commit your changes
+
+Do NOT commit in detached HEAD state."""
 
     # Get main branch
     main_branch = get_main_branch()
@@ -252,7 +273,8 @@ def should_block_push():
     # Get current branch
     current_branch = get_current_branch()
     if not current_branch:
-        # Detached HEAD - allow
+        # Detached HEAD - allow push (can't really push from detached HEAD anyway,
+        # and if explicitly pushing a commit hash to a ref, it's intentional)
         return False, None
 
     # Get main branch

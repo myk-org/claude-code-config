@@ -41,7 +41,7 @@ Arguments:
   changelog_file  Path to file containing release notes
 
 Options:
-  --target <branch>   Target branch for the release (default: current branch)
+  --target <branch>   Target branch for the release (default: repository default branch)
   --prerelease        Mark as pre-release
   --draft             Create as draft release
   -h, --help          Show this help message
@@ -57,19 +57,18 @@ Dependencies:
 EOF
 }
 
-# Check required dependencies
-for cmd in gh jq; do
-    if ! command -v "$cmd" &>/dev/null; then
-        echo '{"status":"failed","error":"Required command '"'$cmd'"' is not installed"}' >&2
-        exit 1
-    fi
-done
-
-# Show help if explicitly requested (exit 0)
+# Show help if explicitly requested (exit 0) - before dependency check
 if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
     show_help
     exit 0
 fi
+
+# Check required dependencies
+for cmd in gh jq; do
+    if ! command -v "$cmd" &>/dev/null; then
+        json_output "failed" "Required command '$cmd' is not installed"
+    fi
+done
 
 # Error if no arguments provided (exit 1)
 if [[ $# -eq 0 ]]; then
@@ -164,9 +163,9 @@ if [[ $GH_EXIT_CODE -ne 0 ]]; then
 fi
 
 # Extract URL from gh output (gh outputs the release URL on success)
-RELEASE_URL="$GH_OUTPUT"
+RELEASE_URL=$(echo "$GH_OUTPUT" | grep -oE 'https://github.com/[^/]+/[^/]+/releases/tag/[^ ]+' | head -1)
 
-# If URL is empty, construct it
+# If URL extraction failed, construct it
 if [[ -z "$RELEASE_URL" ]]; then
     RELEASE_URL="https://github.com/$REPO/releases/tag/$TAG"
 fi

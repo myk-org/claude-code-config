@@ -374,7 +374,7 @@ Your choice:
 | `major`, `MAJOR` | Recalculate version with MAJOR bump, show updated preview, ask again |
 | `minor`, `MINOR` | Recalculate version with MINOR bump, show updated preview, ask again |
 | `patch`, `PATCH` | Recalculate version with PATCH bump, show updated preview, ask again |
-| `prerelease` | Toggle prerelease flag, show updated preview, ask again |
+| `prerelease` | Toggle pre-release flag, show updated preview, ask again |
 | `draft` | Toggle draft flag, show updated preview, ask again |
 | `no`, `n`, `N` | Cancel workflow, show "Release cancelled." and stop |
 | Other | Show "Invalid input. Please enter 'yes', 'no', 'major', 'minor', 'patch', 'prerelease', or 'draft'." and ask again |
