@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""PreToolUse hook - prevents commits on already-merged branches.
+"""PreToolUse hook - prevents commits and pushes on protected branches.
 
-This hook intercepts git commit commands and blocks them if:
+This hook intercepts git commit and push commands and blocks them if:
 1. The current branch is already merged into the main branch
 2. The current branch is the main/master branch itself
 
@@ -11,15 +11,19 @@ Allows commits on:
 """
 
 import json
+import shutil
 import subprocess
 import sys
+
+# Resolve git executable path, fall back to "git" if not found
+GIT_EXECUTABLE = shutil.which("git") or "git"
 
 
 def get_current_branch():
     """Get the current git branch name. Returns None if detached HEAD or error."""
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            [GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True,
             text=True,
             timeout=2,
@@ -37,7 +41,7 @@ def get_main_branch():
     for branch_name in ["main", "master"]:
         try:
             result = subprocess.run(
-                ["git", "rev-parse", "--verify", branch_name],
+                [GIT_EXECUTABLE, "rev-parse", "--verify", "--", branch_name],
                 capture_output=True,
                 timeout=2,
             )
@@ -49,34 +53,42 @@ def get_main_branch():
 
 
 def is_branch_merged(current_branch, main_branch):
-    """Check if current_branch is merged into main_branch."""
+    """Check if current_branch is merged into main_branch.
+
+    A branch is considered merged if:
+    1. It has unique commits (not a fresh branch)
+    2. The branch HEAD is an ancestor of main HEAD
+    """
     try:
-        # Get the merge base between current and main
-        merge_base_result = subprocess.run(
-            ["git", "merge-base", current_branch, main_branch],
+        # First check if branch has unique commits compared to main
+        # If count is 0, this is a fresh branch with no unique commits
+        unique_commits_result = subprocess.run(
+            [GIT_EXECUTABLE, "rev-list", "--count", f"{main_branch}..{current_branch}"],
             capture_output=True,
             text=True,
             timeout=2,
         )
-        if merge_base_result.returncode != 0:
+        if unique_commits_result.returncode != 0:
             return False
 
-        merge_base = merge_base_result.stdout.strip()
+        try:
+            unique_count = int(unique_commits_result.stdout.strip())
+        except ValueError:
+            return False
+        if unique_count == 0:
+            # Fresh branch with no unique commits - not merged
+            return False
 
-        # Get HEAD of current branch
-        branch_head_result = subprocess.run(
-            ["git", "rev-parse", current_branch],
+        # Check if branch HEAD is an ancestor of main HEAD
+        # This means all branch commits are reachable from main (i.e., merged)
+        ancestor_result = subprocess.run(
+            [GIT_EXECUTABLE, "merge-base", "--is-ancestor", current_branch, main_branch],
             capture_output=True,
-            text=True,
             timeout=2,
         )
-        if branch_head_result.returncode != 0:
-            return False
-
-        branch_head = branch_head_result.stdout.strip()
-
-        # Branch is merged if merge-base equals branch HEAD
-        return merge_base == branch_head
+        # Return code 0 means branch is ancestor of main (merged)
+        # Return code 1 means branch is not ancestor (not merged)
+        return ancestor_result.returncode == 0
     except Exception:
         return False
 
@@ -86,7 +98,7 @@ def is_branch_ahead_of_remote():
     try:
         # First check if branch has a remote tracking branch
         result = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+            [GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
             capture_output=True,
             text=True,
             timeout=2,
@@ -97,7 +109,7 @@ def is_branch_ahead_of_remote():
 
         # Check if ahead of remote
         result = subprocess.run(
-            ["git", "status", "--short", "--branch"],
+            [GIT_EXECUTABLE, "status", "--short", "--branch"],
             capture_output=True,
             text=True,
             timeout=2,
@@ -113,7 +125,7 @@ def is_git_repository():
     """Check if current directory is inside a git repository."""
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "--git-dir"],
+            [GIT_EXECUTABLE, "rev-parse", "--git-dir"],
             capture_output=True,
             timeout=2,
         )
@@ -124,8 +136,7 @@ def is_git_repository():
 
 def is_commit_command(command):
     """Check if command is a git commit command."""
-    cmd = command.strip()
-    return cmd.startswith("git commit")
+    return "git commit" in command
 
 
 def is_amend_with_unpushed_commits(command):
@@ -173,6 +184,47 @@ def should_block_commit(command):
     return False, None
 
 
+def is_push_command(command):
+    """Check if command is a git push command."""
+    return "git push" in command
+
+
+def should_block_push():
+    """
+    Determine if a git push command should be blocked.
+
+    Returns: (should_block: bool, reason: str or None)
+    """
+    # Skip if not in git repo
+    if not is_git_repository():
+        return False, None
+
+    # Get current branch
+    current_branch = get_current_branch()
+    if not current_branch:
+        # Detached HEAD - allow
+        return False, None
+
+    # Get main branch
+    main_branch = get_main_branch()
+    if not main_branch:
+        # Can't determine main branch - allow
+        return False, None
+
+    # Block if on main/master branch
+    if current_branch in ["main", "master"]:
+        return True, f"Cannot push directly to {current_branch} branch. Create a feature branch and open a PR."
+
+    # Check if branch is merged
+    if is_branch_merged(current_branch, main_branch):
+        return True, (
+            f"Branch '{current_branch}' is already merged into '{main_branch}'. "
+            f"Create a new branch for additional changes."
+        )
+
+    return False, None
+
+
 def main():
     try:
         input_data = json.loads(sys.stdin.read())
@@ -186,6 +238,21 @@ def main():
             # Check if it's a git commit command
             if is_commit_command(command):
                 should_block, reason = should_block_commit(command)
+
+                if should_block:
+                    output = {
+                        "hookSpecificOutput": {
+                            "hookEventName": "PreToolUse",
+                            "permissionDecision": "deny",
+                            "permissionDecisionReason": reason
+                        }
+                    }
+                    print(json.dumps(output))
+                    sys.exit(0)
+
+            # Check if it's a git push command
+            if is_push_command(command):
+                should_block, reason = should_block_push()
 
                 if should_block:
                     output = {

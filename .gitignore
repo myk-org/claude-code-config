@@ -15,28 +15,11 @@ statsig
 settings.local.json
 
 # Exclude directories by default (synced from elsewhere)
-servers/*
 agents/*
 commands/*
 scripts/*
 
 # But explicitly include tracked files
-# servers/code-execution/
-!servers/code-execution/.gitignore
-!servers/code-execution/COMMANDS.md
-!servers/code-execution/COMPARISON.md
-!servers/code-execution/INDEX.md
-!servers/code-execution/PROJECT_SUMMARY.md
-!servers/code-execution/QUICKSTART.md
-!servers/code-execution/README.md
-!servers/code-execution/USAGE.md
-!servers/code-execution/package-lock.json
-!servers/code-execution/package.json
-!servers/code-execution/setup.sh
-!servers/code-execution/src/server.ts
-!servers/code-execution/src/types.ts
-!servers/code-execution/tsconfig.json
-!servers/code-execution/verify.sh
 
 # agents/
 !agents/api-documenter.md
@@ -60,7 +43,6 @@ scripts/*
 !agents/test-runner.md
 
 # commands/
-!commands/
 !commands/code-review.md
 !commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md
@@ -78,8 +60,6 @@ scripts/*
 !commands/scripts/github-review-handler/get-human-reviews.sh
 
 # scripts/
-!scripts/check-merged-branch.sh
-!scripts/check-protected-branch.sh
 !scripts/git-protection.py
 !scripts/inject-claude.sh
 !scripts/my-notifier.sh
