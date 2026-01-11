@@ -52,6 +52,39 @@ def get_main_branch():
     return None
 
 
+def get_pr_merge_status(branch_name: str) -> tuple[bool, str | None]:
+    """
+    Check if a PR for this branch exists and is merged on GitHub.
+
+    Returns:
+        (is_merged, pr_number) - True if PR is merged, with PR number if found
+    """
+    try:
+        gh_path = shutil.which("gh")
+        if not gh_path:
+            return False, None
+
+        # Check if there's a PR for this branch
+        result = subprocess.run(
+            [gh_path, "pr", "view", branch_name, "--json", "state,number"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            state = data.get("state", "")
+            pr_number = data.get("number")
+            if state == "MERGED":
+                return True, str(pr_number) if pr_number else None
+
+        return False, None
+    except Exception:
+        # If we can't check, don't block (fail open for this check)
+        return False, None
+
+
 def is_branch_merged(current_branch, main_branch):
     """Check if current_branch is merged into main_branch.
 
@@ -174,7 +207,24 @@ def should_block_commit(command):
     if is_amend_with_unpushed_commits(command):
         return False, None
 
-    # Check if branch is merged
+    # Check if PR is already merged on GitHub
+    pr_merged, pr_number = get_pr_merge_status(current_branch)
+    if pr_merged:
+        return True, f"""⛔ BLOCKED: PR #{pr_number} for branch '{current_branch}' is already MERGED.
+
+What happened:
+- This branch's PR was already merged
+- Committing more changes to a merged branch is not useful
+
+What to do:
+1. Create a NEW branch for your changes:
+   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
+2. Your uncommitted changes will come with you
+3. Commit on the new branch and create a new PR
+
+Do NOT commit to '{current_branch}'."""
+
+    # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
         return True, (
             f"Branch '{current_branch}' is already merged into '{main_branch}'. "
@@ -215,7 +265,24 @@ def should_block_push():
     if current_branch in ["main", "master"]:
         return True, f"Cannot push directly to {current_branch} branch. Create a feature branch and open a PR."
 
-    # Check if branch is merged
+    # Check if PR is already merged on GitHub
+    pr_merged, pr_number = get_pr_merge_status(current_branch)
+    if pr_merged:
+        return True, f"""⛔ BLOCKED: PR #{pr_number} for branch '{current_branch}' is already MERGED.
+
+What happened:
+- This branch's PR was already merged into the base branch
+- Pushing more commits to this branch serves no purpose
+
+What to do:
+1. If you have new changes, create a NEW branch:
+   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
+2. Cherry-pick your commits to the new branch if needed
+3. Create a new PR from the new branch
+
+Do NOT continue pushing to '{current_branch}'."""
+
+    # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
         return True, (
             f"Branch '{current_branch}' is already merged into '{main_branch}'. "

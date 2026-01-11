@@ -26,6 +26,8 @@
       "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
       "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh:*)",
       "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh:*)",
+      "Bash(~/.claude/commands/scripts/github-release/get-release-info.sh:*)",
+      "Bash(~/.claude/commands/scripts/github-release/create-github-release.sh:*)",
       "Grep"
     ]
   },
@@ -142,7 +144,9 @@
     "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh:*)",
     "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
     "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh:*)"
+    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh:*)",
+    "Bash(~/.claude/commands/scripts/github-release/get-release-info.sh:*)",
+    "Bash(~/.claude/commands/scripts/github-release/create-github-release.sh:*)"
   ],
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309
