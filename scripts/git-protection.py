@@ -81,7 +81,7 @@ def get_pr_merge_status(branch_name: str) -> tuple[bool, str | None]:
             ],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=5,
         )
 
         if result.returncode == 0:

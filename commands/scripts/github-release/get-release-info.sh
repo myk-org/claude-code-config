@@ -123,23 +123,31 @@ perform_validations() {
     fi
 
     # 3. Remote Sync Check
-    # Fetch latest from remote (quietly)
-    git fetch origin "$default_branch" --quiet 2>/dev/null || true
-
-    # Check for unpushed commits
-    UNPUSHED_COMMITS=$(git rev-list "origin/${default_branch}..${default_branch}" --count 2>/dev/null || echo "0")
-
-    # Check if behind remote
-    BEHIND_REMOTE=$(git rev-list "${default_branch}..origin/${default_branch}" --count 2>/dev/null || echo "0")
-
-    SYNCED_WITH_REMOTE="true"
-    if [[ "$UNPUSHED_COMMITS" -gt 0 ]] || [[ "$BEHIND_REMOTE" -gt 0 ]]; then
+    # Try to fetch from remote (quietly)
+    FETCH_SUCCESSFUL="true"
+    if ! git fetch origin "$default_branch" --quiet 2>/dev/null; then
+        FETCH_SUCCESSFUL="false"
+        # Can't verify sync status without fetch
         SYNCED_WITH_REMOTE="false"
+        UNPUSHED_COMMITS="0"
+        BEHIND_REMOTE="0"
+    else
+        # Check for unpushed commits
+        UNPUSHED_COMMITS=$(git rev-list "origin/${default_branch}..${default_branch}" --count 2>/dev/null || echo "0")
+
+        # Check if behind remote
+        BEHIND_REMOTE=$(git rev-list "${default_branch}..origin/${default_branch}" --count 2>/dev/null || echo "0")
+
+        SYNCED_WITH_REMOTE="true"
+        if [[ "$UNPUSHED_COMMITS" -gt 0 ]] || [[ "$BEHIND_REMOTE" -gt 0 ]]; then
+            SYNCED_WITH_REMOTE="false"
+        fi
     fi
 
-    # Calculate all_passed
+    # Calculate all_passed (requires fetch success to verify sync status)
     ALL_VALIDATIONS_PASSED="false"
-    if [[ "$ON_DEFAULT_BRANCH" == "true" ]] && \
+    if [[ "$FETCH_SUCCESSFUL" == "true" ]] && \
+       [[ "$ON_DEFAULT_BRANCH" == "true" ]] && \
        [[ "$WORKING_TREE_CLEAN" == "true" ]] && \
        [[ "$SYNCED_WITH_REMOTE" == "true" ]]; then
         ALL_VALIDATIONS_PASSED="true"
@@ -251,6 +259,7 @@ main() {
             --argjson on_default_branch "$ON_DEFAULT_BRANCH" \
             --argjson working_tree_clean "$WORKING_TREE_CLEAN" \
             --arg dirty_files "$DIRTY_FILES" \
+            --argjson fetch_successful "$FETCH_SUCCESSFUL" \
             --argjson synced_with_remote "$SYNCED_WITH_REMOTE" \
             --argjson unpushed_commits "$UNPUSHED_COMMITS" \
             --argjson behind_remote "$BEHIND_REMOTE" \
@@ -268,6 +277,7 @@ main() {
                     current_branch: $current_branch,
                     working_tree_clean: $working_tree_clean,
                     dirty_files: $dirty_files,
+                    fetch_successful: $fetch_successful,
                     synced_with_remote: $synced_with_remote,
                     unpushed_commits: $unpushed_commits,
                     behind_remote: $behind_remote,
@@ -277,7 +287,7 @@ main() {
                 all_tags: [],
                 commits: [],
                 commit_count: 0,
-                is_first_release: true
+                is_first_release: null
             }'
         exit 0
     fi
@@ -302,92 +312,57 @@ main() {
     is_first_release=$(echo "$meta_data" | cut -d':' -f2)
 
     # Build final JSON output
-    # Use --argjson for last_tag when empty (null), otherwise --arg for string value
+    # Prepare last_tag as JSON value: null if empty, quoted string otherwise
+    local last_tag_json
     if [[ -z "$last_tag" ]]; then
-        jq -n \
-            --arg owner "$owner" \
-            --arg repo "$repo" \
-            --arg current_branch "$current_branch" \
-            --arg default_branch "$default_branch" \
-            --argjson on_default_branch "$ON_DEFAULT_BRANCH" \
-            --argjson working_tree_clean "$WORKING_TREE_CLEAN" \
-            --arg dirty_files "$DIRTY_FILES" \
-            --argjson synced_with_remote "$SYNCED_WITH_REMOTE" \
-            --argjson unpushed_commits "$UNPUSHED_COMMITS" \
-            --argjson behind_remote "$BEHIND_REMOTE" \
-            --argjson all_passed "$ALL_VALIDATIONS_PASSED" \
-            --argjson last_tag "null" \
-            --argjson all_tags "$all_tags" \
-            --argjson commits "$commits_json" \
-            --argjson commit_count "$commit_count" \
-            --argjson is_first_release "$is_first_release" \
-            '{
-                metadata: {
-                    owner: $owner,
-                    repo: $repo,
-                    current_branch: $current_branch,
-                    default_branch: $default_branch
-                },
-                validations: {
-                    on_default_branch: $on_default_branch,
-                    default_branch: $default_branch,
-                    current_branch: $current_branch,
-                    working_tree_clean: $working_tree_clean,
-                    dirty_files: $dirty_files,
-                    synced_with_remote: $synced_with_remote,
-                    unpushed_commits: $unpushed_commits,
-                    behind_remote: $behind_remote,
-                    all_passed: $all_passed
-                },
-                last_tag: $last_tag,
-                all_tags: $all_tags,
-                commits: $commits,
-                commit_count: $commit_count,
-                is_first_release: $is_first_release
-            }'
+        last_tag_json="null"
     else
-        jq -n \
-            --arg owner "$owner" \
-            --arg repo "$repo" \
-            --arg current_branch "$current_branch" \
-            --arg default_branch "$default_branch" \
-            --argjson on_default_branch "$ON_DEFAULT_BRANCH" \
-            --argjson working_tree_clean "$WORKING_TREE_CLEAN" \
-            --arg dirty_files "$DIRTY_FILES" \
-            --argjson synced_with_remote "$SYNCED_WITH_REMOTE" \
-            --argjson unpushed_commits "$UNPUSHED_COMMITS" \
-            --argjson behind_remote "$BEHIND_REMOTE" \
-            --argjson all_passed "$ALL_VALIDATIONS_PASSED" \
-            --arg last_tag "$last_tag" \
-            --argjson all_tags "$all_tags" \
-            --argjson commits "$commits_json" \
-            --argjson commit_count "$commit_count" \
-            --argjson is_first_release "$is_first_release" \
-            '{
-                metadata: {
-                    owner: $owner,
-                    repo: $repo,
-                    current_branch: $current_branch,
-                    default_branch: $default_branch
-                },
-                validations: {
-                    on_default_branch: $on_default_branch,
-                    default_branch: $default_branch,
-                    current_branch: $current_branch,
-                    working_tree_clean: $working_tree_clean,
-                    dirty_files: $dirty_files,
-                    synced_with_remote: $synced_with_remote,
-                    unpushed_commits: $unpushed_commits,
-                    behind_remote: $behind_remote,
-                    all_passed: $all_passed
-                },
-                last_tag: $last_tag,
-                all_tags: $all_tags,
-                commits: $commits,
-                commit_count: $commit_count,
-                is_first_release: $is_first_release
-            }'
+        last_tag_json="\"$last_tag\""
     fi
+
+    jq -n \
+        --arg owner "$owner" \
+        --arg repo "$repo" \
+        --arg current_branch "$current_branch" \
+        --arg default_branch "$default_branch" \
+        --argjson on_default_branch "$ON_DEFAULT_BRANCH" \
+        --argjson working_tree_clean "$WORKING_TREE_CLEAN" \
+        --arg dirty_files "$DIRTY_FILES" \
+        --argjson fetch_successful "$FETCH_SUCCESSFUL" \
+        --argjson synced_with_remote "$SYNCED_WITH_REMOTE" \
+        --argjson unpushed_commits "$UNPUSHED_COMMITS" \
+        --argjson behind_remote "$BEHIND_REMOTE" \
+        --argjson all_passed "$ALL_VALIDATIONS_PASSED" \
+        --argjson last_tag "$last_tag_json" \
+        --argjson all_tags "$all_tags" \
+        --argjson commits "$commits_json" \
+        --argjson commit_count "$commit_count" \
+        --argjson is_first_release "$is_first_release" \
+        '{
+            metadata: {
+                owner: $owner,
+                repo: $repo,
+                current_branch: $current_branch,
+                default_branch: $default_branch
+            },
+            validations: {
+                on_default_branch: $on_default_branch,
+                default_branch: $default_branch,
+                current_branch: $current_branch,
+                working_tree_clean: $working_tree_clean,
+                dirty_files: $dirty_files,
+                fetch_successful: $fetch_successful,
+                synced_with_remote: $synced_with_remote,
+                unpushed_commits: $unpushed_commits,
+                behind_remote: $behind_remote,
+                all_passed: $all_passed
+            },
+            last_tag: $last_tag,
+            all_tags: $all_tags,
+            commits: $commits,
+            commit_count: $commit_count,
+            is_first_release: $is_first_release
+        }'
 }
 
 main "$@"

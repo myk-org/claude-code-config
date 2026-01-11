@@ -43,11 +43,13 @@ skipConfirmation: true
 
 ## Architecture Overview
 
-```
-PHASE 1: Data Collection (bash-expert agent)
+```text
+PHASE 1: Validation (bash-expert agent)
   -> Run get-release-info.sh script
-  -> Return JSON with tags, commits, repo info
-  -> CHECKPOINT: Data retrieved
+  -> Validate: default branch, clean tree, synced with remote
+  -> If validation fails: ABORT with clear error message
+  -> If validation passes: Return JSON with tags, commits, repo info
+  -> CHECKPOINT: Validation passed, data retrieved
 
 PHASE 2: Changelog & Version Analysis (MAIN CONVERSATION)
   -> Parse commits using conventional commit patterns
@@ -78,14 +80,14 @@ PHASE 5: Summary (MAIN CONVERSATION)
 
 ## Instructions
 
-### PHASE 1: Data Collection (DELEGATE TO bash-expert)
+### PHASE 1: Validation (DELEGATE TO bash-expert)
 
 **Route to `bash-expert` agent with this prompt:**
 
 ```markdown
-# Release Data Collection Task
+# Release Validation Task
 
-Execute the release info script to gather repository data for creating a GitHub release.
+Execute the release info script to validate prerequisites and gather repository data for creating a GitHub release.
 
 ## Script Path
 
@@ -177,8 +179,6 @@ If the script fails, include an "error" field with the error message:
 - Display first 500 characters of raw agent output
 - Abort workflow
 
-**CHECKPOINT**: Release data retrieved successfully.
-
 **Validation Checks (MUST ALL PASS):**
 
 1. **On default branch**: `validations.on_default_branch` must be `true`
@@ -196,6 +196,8 @@ If the script fails, include an "error" field with the error message:
 **If ANY validation fails:** Display error message(s) and ABORT workflow.
 
 **If `validations.all_passed` is `true`:** Proceed to Phase 2.
+
+**CHECKPOINT**: Validation passed, release data retrieved.
 
 - **On script failure:** Show error and abort.
 - **On zero commits:** Show "No commits found since last release. Nothing to release." and complete workflow.
@@ -484,7 +486,7 @@ Return a JSON object with the results:
 ```
 
 Show progress while working:
-```
+```text
 Creating release {tag} for {owner}/{repo}...
 ```
 
@@ -646,7 +648,7 @@ When `--prerelease` flag is set:
 
 ## Error Handling
 
-**If Phase 1 (data collection) fails:**
+**If Phase 1 (validation) fails:**
 - Show error message from bash-expert agent
 - Common issues: not in a git repo, gh not authenticated
 - Abort workflow
@@ -676,7 +678,7 @@ When `--prerelease` flag is set:
 ## Enforcement Rules
 
 **NEVER skip phases** - all phases are mandatory:
-1. Phase 1: Data Collection (bash-expert agent)
+1. Phase 1: Validation (bash-expert agent)
 2. Phase 2: Changelog Analysis (main conversation)
 3. Phase 3: User Approval (main conversation - MANDATORY STOP)
 4. Phase 4: Create Release (bash-expert agent - only after approval)
