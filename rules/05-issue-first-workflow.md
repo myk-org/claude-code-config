@@ -75,45 +75,15 @@ When user confirms they want to work on the issue, **delegate to git-expert**:
 
 ---
 
-## Issue Template
+## Issue Format
 
-When creating an issue, use this structure:
+The `github-expert` agent handles issue formatting. When delegating issue creation, provide:
+- Type (fix/feat/refactor/docs)
+- Problem/feature description
+- Requirements list
+- Deliverables checklist
 
-### Title Format
-`<type>: <brief description>`
-
-Examples:
-- `feat: add user authentication`
-- `fix: resolve memory leak in parser`
-- `refactor: simplify error handling`
-
-### Body Structure
-
-```markdown
-## Summary
-[1-2 sentence description of what this issue addresses]
-
-## Problem / Motivation
-[Why is this needed? What problem does it solve?]
-
-## Requirements
-[Detailed list of what needs to be done]
-
-1. Requirement one
-2. Requirement two
-3. ...
-
-## Deliverables
-
-- [ ] Code changes
-- [ ] Update README.md (if applicable)
-- [ ] Update CLAUDE.md (if codebase structure changes)
-- [ ] Add/update tests (if repo has tests)
-- [ ] Other: [specify]
-
-## Notes
-[Any additional context, constraints, or considerations]
-```
+The agent will format the title and body according to its template.
 
 ---
 

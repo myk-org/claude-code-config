@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""PreToolUse hook - blocks direct python/pip commands."""
+"""PreToolUse hook - blocks direct python/pip and pre-commit commands."""
 
 import json
 import sys
 
 
-def is_forbidden_python_command(command):
+def is_forbidden_python_command(command: str) -> bool:
     """Check if command uses python/pip directly instead of uv."""
     cmd = command.strip().lower()
 
@@ -18,7 +18,15 @@ def is_forbidden_python_command(command):
     return cmd.startswith(forbidden)
 
 
-def main():
+def is_forbidden_precommit_command(command: str) -> bool:
+    """Check if command uses pre-commit directly instead of prek."""
+    cmd = command.strip().lower()
+
+    # Block direct pre-commit commands
+    return cmd.startswith("pre-commit ")
+
+
+def main() -> None:
     try:
         input_data = json.loads(sys.stdin.read())
         tool_name = input_data.get("tool_name", "")
@@ -32,7 +40,19 @@ def main():
                     "hookSpecificOutput": {
                         "hookEventName": "PreToolUse",
                         "permissionDecision": "deny",
-                        "permissionDecisionReason": "Python/pip commands forbidden. Use 'uv run' or 'uvx' instead. See: https://docs.astral.sh/uv/"
+                        "permissionDecisionReason": "Python/pip commands forbidden. Use 'uv run' or 'uvx' instead. See: https://docs.astral.sh/uv/",
+                    }
+                }
+                print(json.dumps(output))
+                sys.exit(0)
+
+            if is_forbidden_precommit_command(command):
+                reason = "⛔ BLOCKED: Use `prek` instead of `pre-commit`."
+                output = {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "permissionDecision": "deny",
+                        "permissionDecisionReason": reason,
                     }
                 }
                 print(json.dumps(output))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Restore context after compaction."""
+
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -21,7 +21,7 @@ def load_snapshot(session_id: str) -> dict:
         return {}
 
     try:
-        return json.loads(snapshot_file.read_text(encoding='utf-8', errors='replace'))
+        return json.loads(snapshot_file.read_text(encoding="utf-8", errors="replace"))
     except json.JSONDecodeError as e:
         print(f"Failed to parse snapshot JSON: {e}", file=sys.stderr)
         return {}
@@ -66,7 +66,7 @@ def format_context(snapshot: dict) -> str:
     return "\n".join(lines)
 
 
-def main():
+def main() -> None:
     # Read hook input to get session_id
     try:
         hook_input = json.loads(sys.stdin.read())

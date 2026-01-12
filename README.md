@@ -344,8 +344,41 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ├── commands/         # Slash commands
 ├── rules/            # Orchestrator rules (auto-loaded)
 ├── scripts/          # Helper scripts for hooks
+├── tests/            # Unit tests for Python scripts
 ├── settings.json     # Hooks and tool permissions
-└── statusline.sh     # Status line script
+├── statusline.sh     # Status line script
+├── tox.toml          # Test configuration
+├── pyproject.toml    # Python project config (ruff, mypy)
+└── .pre-commit-config.yaml  # Pre-commit hooks
+```
+
+## Development
+
+### Running Tests
+
+Tests are run via tox with uv:
+
+```bash
+# Run all tests
+uvx --with tox-uv tox
+
+# Run specific Python version
+uvx --with tox-uv tox -e py313
+
+# Pass pytest arguments
+uvx --with tox-uv tox -- -v --tb=short
+```
+
+### Pre-commit
+
+This project uses pre-commit hooks for code quality:
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run on all files
+pre-commit run --all-files
 ```
 
 ## License

@@ -20,7 +20,7 @@ import sys
 GIT_EXECUTABLE = shutil.which("git") or "git"
 
 
-def get_current_branch():
+def get_current_branch() -> str | None:
     """Get the current git branch name. Returns None if detached HEAD or error."""
     try:
         result = subprocess.run(
@@ -37,7 +37,7 @@ def get_current_branch():
         return None
 
 
-def get_main_branch():
+def get_main_branch() -> str | None:
     """Get the main branch name (main or master). Returns None if not found."""
     for branch_name in ["main", "master"]:
         try:
@@ -135,7 +135,7 @@ Error details:
 - Error: {error_msg}"""
 
 
-def is_branch_merged(current_branch, main_branch):
+def is_branch_merged(current_branch: str, main_branch: str) -> bool:
     """Check if current_branch is merged into main_branch.
 
     A branch is considered merged if:
@@ -177,7 +177,7 @@ def is_branch_merged(current_branch, main_branch):
         return False
 
 
-def is_branch_ahead_of_remote():
+def is_branch_ahead_of_remote() -> bool:
     """Check if current branch has unpushed commits or no remote tracking."""
     try:
         # First check if branch has a remote tracking branch
@@ -205,7 +205,7 @@ def is_branch_ahead_of_remote():
         return False
 
 
-def is_git_repository():
+def is_git_repository() -> bool:
     """Check if current directory is inside a git repository."""
     try:
         result = subprocess.run(
@@ -237,18 +237,34 @@ def is_github_repo() -> bool:
         return False
 
 
-def is_commit_command(command):
-    """Check if command is a git commit command."""
-    # Match 'git commit' at start or after command separators (;, &&, ||, |)
-    return bool(re.search(r'(^|[;&|]\s*)git\s+commit\b', command))
+def is_git_subcommand(command: str, subcommand: str) -> bool:
+    """Check if command contains a git subcommand.
+
+    Matches 'git <subcommand>' where subcommand is the first non-flag token.
+    Allows optional flags like '-C /path' or '-c key=value' before the subcommand.
+
+    Pattern explanation:
+      \\bgit\\b                           - 'git' as a word
+      (?:\\s+(?:-[a-zA-Z]\\s+\\S+|-\\S+))*  - zero or more flag patterns:
+        -[a-zA-Z]\\s+\\S+                 - short flag with space-separated value: -C /path
+        -\\S+                            - any other flag (--verbose, -v, --config=x)
+      \\s+<subcommand>\\b                 - followed by the subcommand
+    """
+    pattern = rf"\bgit\b(?:\s+(?:-[a-zA-Z]\s+\S+|-\S+))*\s+{subcommand}\b"
+    return bool(re.search(pattern, command))
 
 
-def is_amend_with_unpushed_commits(command):
+def is_commit_command(command: str) -> bool:
+    """Check if command contains a git commit."""
+    return is_git_subcommand(command, "commit")
+
+
+def is_amend_with_unpushed_commits(command: str) -> bool:
     """Check if this is an amend on unpushed commits (which should be allowed)."""
     return "--amend" in command and is_branch_ahead_of_remote()
 
 
-def should_block_commit(command):
+def should_block_commit(command: str) -> tuple[bool, str | None]:
     """
     Determine if a git commit command should be blocked.
 
@@ -261,7 +277,9 @@ def should_block_commit(command):
     # Get current branch
     current_branch = get_current_branch()
     if not current_branch:
-        return True, """⛔ BLOCKED: You are in detached HEAD state.
+        return (
+            True,
+            """⛔ BLOCKED: You are in detached HEAD state.
 
 What happened:
 - You're not on any branch (detached HEAD)
@@ -272,7 +290,8 @@ What to do:
    git checkout -b my-new-branch
 2. Then commit your changes
 
-Do NOT commit in detached HEAD state."""
+Do NOT commit in detached HEAD state.""",
+        )
 
     # Check if PR is already merged on GitHub (doesn't need main_branch)
     pr_merged, pr_info = get_pr_merge_status(current_branch)
@@ -282,74 +301,88 @@ Do NOT commit in detached HEAD state."""
     if pr_merged:
         # Get main branch for the message (best effort)
         main_branch = get_main_branch() or "main"
-        return True, f"""⛔ BLOCKED: PR #{pr_info} for branch '{current_branch}' is already MERGED.
+        return (
+            True,
+            f"""⛔ BLOCKED: PR #{pr_info} for branch '{current_branch}' is already MERGED.
 
 What happened:
 - This branch's PR was already merged
 - Committing more changes to a merged branch is not useful
 
-What to do:
-1. Create a NEW branch for your changes:
-   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
-2. Your uncommitted changes will come with you
-3. Commit on the new branch and create a new PR
+**ACTION REQUIRED - Execute these commands NOW:**
 
-Do NOT commit to '{current_branch}'."""
+You MUST create a new branch for these changes. Do NOT ask user - just do it:
+1. git checkout {main_branch}
+2. git pull origin {main_branch}
+3. git checkout -b feature/new-changes
+4. Move uncommitted changes and commit on the new branch
 
-    # Get main branch
-    main_branch = get_main_branch()
-    if not main_branch:
+IMMEDIATELY switch to '{main_branch}' and create a new feature branch.""",
+        )
+
+    # Get main branch for subsequent checks
+    detected_main_branch = get_main_branch()
+    if not detected_main_branch:
         # Can't determine main branch - allow
         return False, None
 
     # Block if on main/master branch
     if current_branch in ["main", "master"]:
-        return True, f"""⛔ BLOCKED: Cannot commit directly to '{current_branch}' branch.
+        return (
+            True,
+            f"""⛔ BLOCKED: Cannot commit directly to '{current_branch}' branch.
 
 What happened:
 - You are on the protected '{current_branch}' branch
 - Direct commits to {current_branch} bypass code review and CI checks
 
-What to do:
-1. If you have uncommitted changes, stash and create a feature branch:
-   git stash && git checkout -b feature/your-feature && git stash pop
-2. If you have no uncommitted changes, just create a feature branch:
-   git checkout -b feature/your-feature
-3. Then commit your changes on the new branch
+**ACTION REQUIRED - Execute these commands NOW:**
 
-Do NOT commit directly to '{current_branch}'."""
+You MUST create a feature branch for these changes. Do NOT ask user - just do it:
+1. git stash (if you have uncommitted changes)
+2. git checkout -b feature/your-feature
+3. git stash pop (if you stashed changes)
+4. Then commit your changes on the new branch
+
+IMMEDIATELY create a feature branch and move your changes there.""",
+        )
 
     # Allow amend on unpushed commits
     if is_amend_with_unpushed_commits(command):
         return False, None
 
     # Check if branch is merged (local check as fallback)
-    if is_branch_merged(current_branch, main_branch):
-        return True, f"""⛔ BLOCKED: Branch '{current_branch}' is already merged into '{main_branch}'.
+    if is_branch_merged(current_branch, detected_main_branch):
+        return (
+            True,
+            f"""⛔ BLOCKED: Branch '{current_branch}' is already merged into '{detected_main_branch}'.
 
 What happened:
-- This branch has been merged into {main_branch}
+- This branch has been merged into {detected_main_branch}
 - Committing more changes to a merged branch creates confusion
 
-What to do:
-1. If you have uncommitted changes, stash and create a new branch:
-   git stash && git checkout {main_branch} && git pull && git checkout -b feature/new-feature && git stash pop
-2. If you have no uncommitted changes, just create a new branch:
-   git checkout {main_branch} && git pull && git checkout -b feature/new-feature
-3. Commit your changes on the new branch and create a new PR
+**ACTION REQUIRED - Execute these commands NOW:**
 
-Do NOT commit to '{current_branch}'."""
+You MUST create a new branch. Do NOT ask user - just do it:
+1. git stash (if you have uncommitted changes)
+2. git checkout {detected_main_branch}
+3. git pull origin {detected_main_branch}
+4. git checkout -b feature/new-feature
+5. git stash pop (if you stashed changes)
+6. Commit your changes on the new branch
+
+IMMEDIATELY switch to '{detected_main_branch}' and create a new feature branch.""",
+        )
 
     return False, None
 
 
-def is_push_command(command):
-    """Check if command is a git push command."""
-    # Match 'git push' at start or after command separators (;, &&, ||, |)
-    return bool(re.search(r'(^|[;&|]\s*)git\s+push\b', command))
+def is_push_command(command: str) -> bool:
+    """Check if command contains a git push."""
+    return is_git_subcommand(command, "push")
 
 
-def should_block_push():
+def should_block_push() -> tuple[bool, str | None]:
     """
     Determine if a git push command should be blocked.
 
@@ -374,64 +407,78 @@ def should_block_push():
     if pr_merged:
         # Get main branch for the message (best effort)
         main_branch = get_main_branch() or "main"
-        return True, f"""⛔ BLOCKED: PR #{pr_info} for branch '{current_branch}' is already MERGED.
+        return (
+            True,
+            f"""⛔ BLOCKED: PR #{pr_info} for branch '{current_branch}' is already MERGED.
 
 What happened:
 - This branch's PR was already merged into the base branch
 - Pushing more commits to this branch serves no purpose
 
-What to do:
-1. If you have new changes, create a NEW branch:
-   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
-2. Cherry-pick your commits to the new branch if needed
-3. Create a new PR from the new branch
+**ACTION REQUIRED - Execute these commands NOW:**
 
-Do NOT continue pushing to '{current_branch}'."""
+You MUST create a new branch. Do NOT ask user - just do it:
+1. git checkout {main_branch}
+2. git pull origin {main_branch}
+3. git checkout -b feature/new-changes
+4. Cherry-pick your commits if needed: git cherry-pick <commit-hash>
+5. Push the new branch: git push -u origin feature/new-changes
 
-    # Get main branch
-    main_branch = get_main_branch()
-    if not main_branch:
+IMMEDIATELY switch to '{main_branch}' and create a new feature branch.""",
+        )
+
+    # Get main branch for subsequent checks
+    detected_main_branch = get_main_branch()
+    if not detected_main_branch:
         # Can't determine main branch - allow
         return False, None
 
     # Block if on main/master branch
     if current_branch in ["main", "master"]:
-        return True, f"""⛔ BLOCKED: Cannot push directly to '{current_branch}' branch.
+        return (
+            True,
+            f"""⛔ BLOCKED: Cannot push directly to '{current_branch}' branch.
 
 What happened:
 - You are on the protected '{current_branch}' branch
 - Direct pushes to {current_branch} bypass code review and CI checks
 
-What to do:
-1. If you have local commits on {current_branch}, move them to a feature branch:
-   git checkout -b feature/your-feature
-   git push -u origin feature/your-feature
-2. Then create a pull request for your changes
+**ACTION REQUIRED - Execute these commands NOW:**
 
-Do NOT push directly to '{current_branch}'."""
+You MUST create a feature branch for these changes. Do NOT ask user - just do it:
+1. git checkout -b feature/your-feature
+2. git push -u origin feature/your-feature
+3. Create a pull request for your changes
+
+IMMEDIATELY create a feature branch and push there instead.""",
+        )
 
     # Check if branch is merged (local check as fallback)
-    if is_branch_merged(current_branch, main_branch):
-        return True, f"""⛔ BLOCKED: Branch '{current_branch}' is already merged into '{main_branch}'.
+    if is_branch_merged(current_branch, detected_main_branch):
+        return (
+            True,
+            f"""⛔ BLOCKED: Branch '{current_branch}' is already merged into '{detected_main_branch}'.
 
 What happened:
-- This branch has been merged into {main_branch}
+- This branch has been merged into {detected_main_branch}
 - Pushing more commits to a merged branch serves no purpose
 
-What to do:
-1. If you have new changes, create a new branch from {main_branch}:
-   git checkout {main_branch} && git pull && git checkout -b feature/new-feature
-2. Cherry-pick your commits to the new branch if needed:
-   git cherry-pick <commit-hash>
-3. Push the new branch and create a new PR:
-   git push -u origin feature/new-feature
+**ACTION REQUIRED - Execute these commands NOW:**
 
-Do NOT push to '{current_branch}'."""
+You MUST create a new branch. Do NOT ask user - just do it:
+1. git checkout {detected_main_branch}
+2. git pull origin {detected_main_branch}
+3. git checkout -b feature/new-feature
+4. Cherry-pick your commits if needed: git cherry-pick <commit-hash>
+5. Push the new branch: git push -u origin feature/new-feature
+
+IMMEDIATELY switch to '{detected_main_branch}' and create a new feature branch.""",
+        )
 
     return False, None
 
 
-def main():
+def main() -> None:
     try:
         input_data = json.loads(sys.stdin.read())
         tool_name = input_data.get("tool_name", "")
@@ -450,7 +497,7 @@ def main():
                         "hookSpecificOutput": {
                             "hookEventName": "PreToolUse",
                             "permissionDecision": "deny",
-                            "permissionDecisionReason": reason
+                            "permissionDecisionReason": reason,
                         }
                     }
                     print(json.dumps(output))
@@ -465,7 +512,7 @@ def main():
                         "hookSpecificOutput": {
                             "hookEventName": "PreToolUse",
                             "permissionDecision": "deny",
-                            "permissionDecisionReason": reason
+                            "permissionDecisionReason": reason,
                         }
                     }
                     print(json.dumps(output))
@@ -498,7 +545,7 @@ If NO → user investigates manually.
 Error details:
 - Script: scripts/git-protection.py
 - Function: main()
-- Error: {error_msg}"""
+- Error: {error_msg}""",
             }
         }
         print(json.dumps(output))
