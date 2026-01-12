@@ -44,6 +44,7 @@ def get_main_branch():
             result = subprocess.run(
                 [GIT_EXECUTABLE, "rev-parse", "--verify", "--end-of-options", branch_name],
                 capture_output=True,
+                text=True,
                 timeout=2,
             )
             if result.returncode == 0:
@@ -64,6 +65,10 @@ def get_pr_merge_status(branch_name: str) -> tuple[bool | None, str | None]:
         - (None, error_msg) - Error occurred (caller should fail closed)
     """
     try:
+        # Skip gh check for non-GitHub repos (GitLab, Bitbucket, etc.)
+        if not is_github_repo():
+            return False, None
+
         gh_path = shutil.which("gh")
         if not gh_path:
             # gh CLI not installed - not an error, just can't check
@@ -112,22 +117,22 @@ def format_pr_merge_error(function_name: str, error_info: str | None) -> str:
     error_msg = error_info or "Unknown error"
     return f"""⛔ BLOCKED: git-protection hook error.
 
-**Bug detected in:** scripts/git-protection.py
-**Function:** {function_name}
-**Error:** {error_msg}
+🚨 **ACTION REQUIRED - DO NOT IGNORE** 🚨
+
+You MUST ask the user: "git-protection.py encountered an error. Create a GitHub issue? (yes/no)"
+
+If YES → delegate to github-expert:
+  - Repo: myk-org/claude-code-config
+  - Title: bug(scripts): git-protection.py - {error_msg}
+
+If NO → user investigates manually.
 
 ---
 
-**ORCHESTRATOR ACTION REQUIRED:**
-
-Ask the user: "I encountered a bug in git-protection.py. Do you want me to create a GitHub issue for this?"
-
-If YES, delegate to github-expert with:
-- Repository: myk-org/claude-code-config
-- Title: bug(scripts): git-protection.py - {error_msg}
-- Include the error details above
-
-If NO, the user can proceed manually after investigating."""
+Error details:
+- Script: scripts/git-protection.py
+- Function: {function_name}
+- Error: {error_msg}"""
 
 
 def is_branch_merged(current_branch, main_branch):
@@ -209,6 +214,25 @@ def is_git_repository():
             timeout=2,
         )
         return result.returncode == 0
+    except Exception:
+        return False
+
+
+def is_github_repo() -> bool:
+    """Check if the current repository is hosted on GitHub."""
+    try:
+        result = subprocess.run(
+            [GIT_EXECUTABLE, "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if result.returncode != 0:
+            return False
+
+        remote_url = result.stdout.strip().lower()
+        # Check for GitHub URLs (HTTPS or SSH both contain github.com)
+        return "github.com" in remote_url
     except Exception:
         return False
 
@@ -452,28 +476,29 @@ def main():
 
     except Exception as e:
         # Fail CLOSED on errors - block the operation
+        error_msg = f"{type(e).__name__}: {e!s}"
         output = {
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "deny",
                 "permissionDecisionReason": f"""⛔ BLOCKED: git-protection hook crashed.
 
-**Bug detected in:** scripts/git-protection.py
-**Function:** main()
-**Error:** {type(e).__name__}: {e!s}
+🚨 **ACTION REQUIRED - DO NOT IGNORE** 🚨
+
+You MUST ask the user: "git-protection.py crashed. Create a GitHub issue? (yes/no)"
+
+If YES → delegate to github-expert:
+  - Repo: myk-org/claude-code-config
+  - Title: bug(scripts): git-protection.py - {type(e).__name__} in main()
+
+If NO → user investigates manually.
 
 ---
 
-**ORCHESTRATOR ACTION REQUIRED:**
-
-Ask the user: "I encountered a bug in git-protection.py. Do you want me to create a GitHub issue for this?"
-
-If YES, delegate to github-expert with:
-- Repository: myk-org/claude-code-config
-- Title: bug(scripts): git-protection.py - {type(e).__name__} in main()
-- Body: Include the full error details, git version, and command that was attempted
-
-If NO, the user should investigate manually."""
+Error details:
+- Script: scripts/git-protection.py
+- Function: main()
+- Error: {error_msg}"""
             }
         }
         print(json.dumps(output))
