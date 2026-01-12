@@ -74,3 +74,18 @@
 !scripts/reply-to-pr-review.sh
 !scripts/rule-enforcer.py
 !scripts/rule-injector.py
+
+# tests/
+!tests/
+!tests/__init__.py
+!tests/test_git_protection.py
+!tests/test_pre_compact_snapshot.py
+!tests/test_rule_enforcer.py
+!tests/test_post_compact_restore.py
+
+# Config files
+!tox.toml
+!pyproject.toml
+!.pre-commit-config.yaml
+!.flake8
+!CLAUDE.md

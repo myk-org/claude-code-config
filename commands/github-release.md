@@ -137,7 +137,7 @@ The script returns JSON with this structure:
   "all_tags": ["v1.2.3", "v1.2.2", "v1.2.1", "v1.2.0"],
   "commits": [
     {
-      "hash": "abc1234567890abcdef1234567890abcdef12345",
+      "hash": "abc1234567890abcdef1234567890abcdef12345",  # pragma: allowlist secret
       "short_hash": "abc1234",
       "subject": "feat: add new feature",
       "body": "",
@@ -145,7 +145,7 @@ The script returns JSON with this structure:
       "date": "2024-01-15 10:30:00 +0000"
     },
     {
-      "hash": "def5678901234abcdef5678901234abcdef56789",
+      "hash": "def5678901234abcdef5678901234abcdef56789",  # pragma: allowlist secret
       "short_hash": "def5678",
       "subject": "fix: resolve bug in parser",
       "body": "",

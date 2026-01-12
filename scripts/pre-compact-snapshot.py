@@ -77,9 +77,7 @@ def normalize_task_description(desc: str) -> str:
     normalized = desc.lower().strip()
     # Normalize common variations
     normalized = re.sub(r"\s+", " ", normalized)  # Collapse whitespace
-    normalized = re.sub(
-        r"commit and push (?:changes|to main)", "commit and push", normalized
-    )
+    normalized = re.sub(r"commit and push (?:changes|to main)", "commit and push", normalized)
     normalized = re.sub(r"fix (?:the )?issues?", "fix issue", normalized)
     normalized = re.sub(r"update (?:the )?", "update ", normalized)
     return normalized
@@ -123,9 +121,7 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
     debug_log(f"Path validation passed: {path_valid}")
 
     if not path_valid:
-        debug_log(
-            f"Security: Transcript path outside allowed directories: {transcript_path}"
-        )
+        debug_log(f"Security: Transcript path outside allowed directories: {transcript_path}")
         return result
 
     try:
@@ -136,9 +132,7 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
         debug_log(f"File size: {file_size} bytes")
 
         if file_size > MAX_TRANSCRIPT_SIZE:
-            debug_log(
-                f"Transcript file too large: {file_size} bytes (max {MAX_TRANSCRIPT_SIZE})"
-            )
+            debug_log(f"Transcript file too large: {file_size} bytes (max {MAX_TRANSCRIPT_SIZE})")
             return result
 
         # Parse JSONL line by line - track tool calls and their results
@@ -175,45 +169,27 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
                                 item_type = item.get("type", "")
 
                                 # Task tool call (agent delegation)
-                                if (
-                                    item_type == "tool_use"
-                                    and item.get("name") == "Task"
-                                ):
+                                if item_type == "tool_use" and item.get("name") == "Task":
                                     tool_id = item.get("id", "")
                                     if tool_id:
                                         task_tool_calls[tool_id] = item
                                         debug_log(f"Found Task tool call: {tool_id}")
 
                                 # TodoWrite tool call (built-in todo list)
-                                elif (
-                                    item_type == "tool_use"
-                                    and item.get("name") == "TodoWrite"
-                                ):
+                                elif item_type == "tool_use" and item.get("name") == "TodoWrite":
                                     # Track the most recent TodoWrite call
                                     last_todowrite = item
-                                    debug_log(
-                                        f"Found TodoWrite tool call: {item.get('id', '')}"
-                                    )
+                                    debug_log(f"Found TodoWrite tool call: {item.get('id', '')}")
 
                                 # Edit tool call - track file modifications
-                                elif (
-                                    item_type == "tool_use"
-                                    and item.get("name") == "Edit"
-                                ):
-                                    file_path = item.get("input", {}).get(
-                                        "file_path", ""
-                                    )
+                                elif item_type == "tool_use" and item.get("name") == "Edit":
+                                    file_path = item.get("input", {}).get("file_path", "")
                                     if file_path:
                                         files_modified_set.add(file_path)
 
                                 # Write tool call - track file modifications
-                                elif (
-                                    item_type == "tool_use"
-                                    and item.get("name") == "Write"
-                                ):
-                                    file_path = item.get("input", {}).get(
-                                        "file_path", ""
-                                    )
+                                elif item_type == "tool_use" and item.get("name") == "Write":
+                                    file_path = item.get("input", {}).get("file_path", "")
                                     if file_path:
                                         files_modified_set.add(file_path)
 
@@ -263,7 +239,7 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
                                                 content_obj = result_content
 
                                             # Recursively look for file_path keys
-                                            def extract_file_paths(obj, paths_set):
+                                            def extract_file_paths(obj: Any, paths_set: set[str]) -> None:
                                                 if isinstance(obj, dict):
                                                     if "file_path" in obj and obj["file_path"]:
                                                         paths_set.add(obj["file_path"])
@@ -282,12 +258,8 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
                                             )
                                             files_modified_set.update(file_path_matches)
 
-        debug_log(
-            f"Processed {line_count} lines, found {len(task_tool_calls)} task calls"
-        )
-        debug_log(
-            f"Found {len(assistant_messages)} assistant messages, {len(user_messages)} user messages"
-        )
+        debug_log(f"Processed {line_count} lines, found {len(task_tool_calls)} task calls")
+        debug_log(f"Found {len(assistant_messages)} assistant messages, {len(user_messages)} user messages")
         debug_log(f"Found {len(files_modified_set)} modified files")
         debug_log(f"Found TodoWrite: {last_todowrite is not None}")
 
@@ -336,7 +308,7 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
                         last_active_task = task_text
 
         # 2. Extract tasks from Task tool calls (agent delegations)
-        for tool_id, tool_call in task_tool_calls.items():
+        for _tool_id, tool_call in task_tool_calls.items():
             input_data = tool_call.get("input", {})
             agent = input_data.get("subagent_type", "unknown")
             description = input_data.get("description", "")
@@ -386,9 +358,7 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
         # Use all_tasks list (already in priority order: TodoWrite first, then Task calls)
         # Limit to 10 most recent
         result["tasks"] = all_tasks[:10]
-        debug_log(
-            f"Final task count: {len(result['tasks'])} (TodoWrite + Task, deduplicated)"
-        )
+        debug_log(f"Final task count: {len(result['tasks'])} (TodoWrite + Task, deduplicated)")
 
         # Extract files modified (limit to 10)
         result["files_modified"] = sorted(list(files_modified_set))[:10]
@@ -428,17 +398,18 @@ def extract_from_transcript(transcript_path: str) -> dict[str, Any]:
             if len(result["decisions"]) >= 5:
                 break
 
+        task_count = len(result["tasks"])
+        file_count = len(result["files_modified"])
+        decision_count = len(result["decisions"])
         debug_log(
-            f"Extracted {len(result['tasks'])} unique tasks (from {len(task_tool_calls)} total), {len(result['files_modified'])} files, {len(result['decisions'])} decisions"
+            f"Extracted {task_count} unique tasks (from {len(task_tool_calls)} total), "
+            f"{file_count} files, {decision_count} decisions"
         )
 
     except OSError as e:
         debug_log(f"Error reading transcript file: {e}")
     except Exception as e:
         debug_log(f"Unexpected error processing transcript: {e}")
-        import traceback
-
-        debug_log(f"Traceback: {traceback.format_exc()}")
 
     return result
 
@@ -456,24 +427,22 @@ def _is_code_block(text: str) -> bool:
 def _looks_like_code(text: str) -> bool:
     """Check if text looks like code or technical noise."""
     # Count code-like indicators
-    indicators = sum(
-        [
-            text.count("{") > 1,
-            text.count("}") > 1,
-            text.count("(") > 2,
-            text.count(")") > 2,
-            text.count(";") > 1,
-            text.count("import ") > 0,
-            text.count("def ") > 0,
-            text.count("class ") > 0,
-            text.startswith("#"),
-            text.startswith("//"),
-        ]
-    )
+    indicators = sum([
+        text.count("{") > 1,
+        text.count("}") > 1,
+        text.count("(") > 2,
+        text.count(")") > 2,
+        text.count(";") > 1,
+        text.count("import ") > 0,
+        text.count("def ") > 0,
+        text.count("class ") > 0,
+        text.startswith("#"),
+        text.startswith("//"),
+    ])
     return indicators >= 2
 
 
-def main():
+def main() -> None:
     # Log session start
     debug_log("=" * 80)
     debug_log("PRE-COMPACT SNAPSHOT - SESSION START")

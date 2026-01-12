@@ -9,13 +9,13 @@ import json
 import sys
 
 
-def main():
+def main() -> None:
     """Inject rule reminder into user prompt context."""
 
     # Read stdin (required by hook protocol)
     try:
-        input_data = sys.stdin.read()
-    except:
+        _ = sys.stdin.read()
+    except Exception:
         pass  # Ignore stdin errors
 
     try:
@@ -29,12 +29,7 @@ def main():
             "HOOKS WILL BLOCK VIOLATIONS."
         )
 
-        output = {
-            "hookSpecificOutput": {
-                "hookEventName": "UserPromptSubmit",
-                "additionalContext": rule_reminder
-            }
-        }
+        output = {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": rule_reminder}}
 
         # Output JSON to stdout
         print(json.dumps(output, indent=2))

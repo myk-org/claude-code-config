@@ -1,0 +1,29 @@
+[tool.ruff]
+preview = true
+line-length = 120
+fix = true
+output-format = "grouped"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "PLC0415", "ARG", "RUF059"]
+
+[tool.ruff.format]
+exclude = [".git", ".venv", ".mypy_cache", ".tox", "__pycache__"]
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = false
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+show_error_codes = true
+warn_unused_ignores = true
+strict_equality = true
+extra_checks = true
+warn_unused_configs = true
+warn_redundant_casts = true
+
+[dependency-groups]
+tests = [
+    "pytest>=9.0.2",
+]

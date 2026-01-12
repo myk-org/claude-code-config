@@ -107,8 +107,73 @@ When asked to perform GitHub operations:
 2. Report key details (title, status, checks, reviewers)
 
 **When asked to create an issue:**
-1. Run `gh issue create --title "..." --body "..."`
-2. Return the issue URL
+
+### Title Format
+`<type>: <brief description>`
+
+Examples:
+- `feat: add user authentication`
+- `fix: resolve memory leak in parser`
+- `refactor: simplify error handling`
+- `docs: update installation guide`
+
+### Body Structure
+
+Use this template for the issue body:
+
+```markdown
+## Summary
+[1-2 sentence description of what this issue addresses]
+
+## Problem / Motivation
+[Why is this needed? What problem does it solve?]
+
+## Requirements
+[Detailed list of what needs to be done]
+
+1. Requirement one
+2. Requirement two
+3. ...
+
+## Deliverables
+
+- [ ] Code changes
+- [ ] Update README.md (if applicable)
+- [ ] Update CLAUDE.md (if codebase structure changes)
+- [ ] Add/update tests (if repo has tests)
+- [ ] Other: [specify]
+
+## Notes
+[Any additional context, constraints, or considerations]
+```
+
+### Command Usage
+
+Use heredoc for complex body content:
+
+```bash
+gh issue create --title "<type>: <brief description>" --body "$(cat <<'EOF'
+## Summary
+...
+
+## Problem / Motivation
+...
+
+## Requirements
+1. ...
+2. ...
+
+## Deliverables
+- [ ] Code changes
+- [ ] ...
+
+## Notes
+...
+EOF
+)"
+```
+
+After creating the issue, return the issue URL.
 
 **When asked to check CI status:**
 1. Run `gh pr checks` or `gh run list`
