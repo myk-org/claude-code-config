@@ -239,8 +239,9 @@ def is_github_repo() -> bool:
 
 def is_commit_command(command):
     """Check if command is a git commit command."""
-    # Match 'git commit' at start or after command separators (;, &&, ||, |)
-    return bool(re.search(r'(^|[;&|]\s*)git\s+commit\b', command))
+    # Match 'git [any-flags] commit' at start or after command separators
+    # Handles: git commit, git -C /path commit, git --git-dir=x commit
+    return bool(re.search(r'(^|[;&|]\s*)git\s+.*?\bcommit\b', command))
 
 
 def is_amend_with_unpushed_commits(command):
@@ -345,8 +346,9 @@ Do NOT commit to '{current_branch}'."""
 
 def is_push_command(command):
     """Check if command is a git push command."""
-    # Match 'git push' at start or after command separators (;, &&, ||, |)
-    return bool(re.search(r'(^|[;&|]\s*)git\s+push\b', command))
+    # Match 'git [any-flags] push' at start or after command separators
+    # Handles: git push, git -C /path push, git --git-dir=x push
+    return bool(re.search(r'(^|[;&|]\s*)git\s+.*?\bpush\b', command))
 
 
 def should_block_push():
