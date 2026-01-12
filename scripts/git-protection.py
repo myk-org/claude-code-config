@@ -107,6 +107,29 @@ def get_pr_merge_status(branch_name: str) -> tuple[bool | None, str | None]:
         return None, f"Unexpected error checking PR status: {e}"
 
 
+def format_pr_merge_error(function_name: str, error_info: str | None) -> str:
+    """Generate error message for PR merge status check failures."""
+    error_msg = error_info or "Unknown error"
+    return f"""⛔ BLOCKED: git-protection hook error.
+
+**Bug detected in:** scripts/git-protection.py
+**Function:** {function_name}
+**Error:** {error_msg}
+
+---
+
+**ORCHESTRATOR ACTION REQUIRED:**
+
+Ask the user: "I encountered a bug in git-protection.py. Do you want me to create a GitHub issue for this?"
+
+If YES, delegate to github-expert with:
+- Repository: myk-org/claude-code-config
+- Title: bug(scripts): git-protection.py - {error_msg}
+- Include the error details above
+
+If NO, the user can proceed manually after investigating."""
+
+
 def is_branch_merged(current_branch, main_branch):
     """Check if current_branch is merged into main_branch.
 
@@ -231,24 +254,7 @@ Do NOT commit in detached HEAD state."""
     pr_merged, pr_info = get_pr_merge_status(current_branch)
     if pr_merged is None:
         # Error checking PR status - fail closed
-        return True, f"""⛔ BLOCKED: git-protection hook error.
-
-**Bug detected in:** scripts/git-protection.py
-**Function:** get_pr_merge_status()
-**Error:** {pr_info}
-
----
-
-**ORCHESTRATOR ACTION REQUIRED:**
-
-Ask the user: "I encountered a bug in git-protection.py. Do you want me to create a GitHub issue for this?"
-
-If YES, delegate to github-expert with:
-- Repository: myk-org/claude-code-config
-- Title: bug(scripts): git-protection.py - {pr_info}
-- Include the error details above
-
-If NO, the user can proceed manually after investigating."""
+        return True, format_pr_merge_error("get_pr_merge_status()", pr_info)
     if pr_merged:
         # Get main branch for the message (best effort)
         main_branch = get_main_branch() or "main"
@@ -340,24 +346,7 @@ def should_block_push():
     pr_merged, pr_info = get_pr_merge_status(current_branch)
     if pr_merged is None:
         # Error checking PR status - fail closed
-        return True, f"""⛔ BLOCKED: git-protection hook error.
-
-**Bug detected in:** scripts/git-protection.py
-**Function:** get_pr_merge_status()
-**Error:** {pr_info}
-
----
-
-**ORCHESTRATOR ACTION REQUIRED:**
-
-Ask the user: "I encountered a bug in git-protection.py. Do you want me to create a GitHub issue for this?"
-
-If YES, delegate to github-expert with:
-- Repository: myk-org/claude-code-config
-- Title: bug(scripts): git-protection.py - {pr_info}
-- Include the error details above
-
-If NO, the user can proceed manually after investigating."""
+        return True, format_pr_merge_error("get_pr_merge_status()", pr_info)
     if pr_merged:
         # Get main branch for the message (best effort)
         main_branch = get_main_branch() or "main"
