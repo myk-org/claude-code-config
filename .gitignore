@@ -88,4 +88,3 @@
 !pyproject.toml
 !.pre-commit-config.yaml
 !.flake8
-!CLAUDE.md
