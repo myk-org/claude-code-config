@@ -4,35 +4,6 @@
 
 ---
 
-## Git Command Rules
-
-### NEVER USE `git -C` (STRICT RULE)
-
-When running git commands:
-
-🚨 **YOU ARE ALREADY IN THE REPOSITORY. RUN GIT COMMANDS DIRECTLY.**
-
-```bash
-# ✅ CORRECT - Run directly in current directory
-git status
-git diff
-git log --oneline -10
-git show HEAD
-
-# ❌ FORBIDDEN - Never use -C for current repository
-git -C /path/to/repo status
-git -C . diff
-git -C "$PWD" log
-```
-
-**The `-C` flag is FORBIDDEN unless:**
-1. The orchestrator **EXPLICITLY** asks you to operate on an external repository
-2. The repository is at a **DIFFERENT PATH** than the current working directory (e.g., `/tmp/claude/some-other-repo`)
-
-**If no external repository is mentioned, NEVER use `-C`.**
-
----
-
 ## Action-First Principle
 
 All agents should:
