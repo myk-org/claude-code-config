@@ -11,6 +11,7 @@ Allows commits on:
 """
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -41,7 +42,7 @@ def get_main_branch():
     for branch_name in ["main", "master"]:
         try:
             result = subprocess.run(
-                [GIT_EXECUTABLE, "rev-parse", "--verify", "--", branch_name],
+                [GIT_EXECUTABLE, "rev-parse", "--verify", "--end-of-options", branch_name],
                 capture_output=True,
                 timeout=2,
             )
@@ -52,16 +53,20 @@ def get_main_branch():
     return None
 
 
-def get_pr_merge_status(branch_name: str) -> tuple[bool, str | None]:
+def get_pr_merge_status(branch_name: str) -> tuple[bool | None, str | None]:
     """
     Check if a PR for this branch exists and is merged on GitHub.
 
     Returns:
-        (is_merged, pr_number) - True if PR is merged, with PR number if found
+        (is_merged, info) where:
+        - (True, pr_number) - PR is merged
+        - (False, None) - PR not merged or no PR found
+        - (None, error_msg) - Error occurred (caller should fail closed)
     """
     try:
         gh_path = shutil.which("gh")
         if not gh_path:
+            # gh CLI not installed - not an error, just can't check
             return False, None
 
         # Unambiguous lookup by head branch (avoids interpreting numeric branch names as PR numbers)
@@ -84,16 +89,45 @@ def get_pr_merge_status(branch_name: str) -> tuple[bool, str | None]:
             timeout=5,
         )
 
-        if result.returncode == 0:
-            data = json.loads(result.stdout)
-            if data and isinstance(data, list) and len(data) > 0:
-                pr_number = data[0].get("number")
-                return True, str(pr_number) if pr_number else None
+        if result.returncode != 0:
+            stderr = result.stderr.strip() if result.stderr else "Unknown gh error"
+            return None, f"gh pr list failed (exit {result.returncode}): {stderr}"
+
+        data = json.loads(result.stdout)
+        if data and isinstance(data, list) and len(data) > 0:
+            pr_number = data[0].get("number")
+            return True, str(pr_number) if pr_number else None
 
         return False, None
-    except Exception:
-        # If we can't check, don't block (fail open for this check)
-        return False, None
+    except subprocess.TimeoutExpired:
+        return None, "GitHub API timeout while checking PR status"
+    except json.JSONDecodeError as e:
+        return None, f"Invalid JSON from GitHub API: {e}"
+    except Exception as e:
+        return None, f"Unexpected error checking PR status: {e}"
+
+
+def format_pr_merge_error(function_name: str, error_info: str | None) -> str:
+    """Generate error message for PR merge status check failures."""
+    error_msg = error_info or "Unknown error"
+    return f"""⛔ BLOCKED: git-protection hook error.
+
+**Bug detected in:** scripts/git-protection.py
+**Function:** {function_name}
+**Error:** {error_msg}
+
+---
+
+**ORCHESTRATOR ACTION REQUIRED:**
+
+Ask the user: "I encountered a bug in git-protection.py. Do you want me to create a GitHub issue for this?"
+
+If YES, delegate to github-expert with:
+- Repository: myk-org/claude-code-config
+- Title: bug(scripts): git-protection.py - {error_msg}
+- Include the error details above
+
+If NO, the user can proceed manually after investigating."""
 
 
 def is_branch_merged(current_branch, main_branch):
@@ -128,6 +162,7 @@ def is_branch_merged(current_branch, main_branch):
         ancestor_result = subprocess.run(
             [GIT_EXECUTABLE, "merge-base", "--is-ancestor", current_branch, main_branch],
             capture_output=True,
+            text=True,
             timeout=2,
         )
         # Return code 0 means branch is ancestor of main (merged)
@@ -180,7 +215,8 @@ def is_git_repository():
 
 def is_commit_command(command):
     """Check if command is a git commit command."""
-    return "git commit" in command
+    # Match 'git commit' at start or after command separators (;, &&, ||, |)
+    return bool(re.search(r'(^|[;&|]\s*)git\s+commit\b', command))
 
 
 def is_amend_with_unpushed_commits(command):
@@ -214,6 +250,28 @@ What to do:
 
 Do NOT commit in detached HEAD state."""
 
+    # Check if PR is already merged on GitHub (doesn't need main_branch)
+    pr_merged, pr_info = get_pr_merge_status(current_branch)
+    if pr_merged is None:
+        # Error checking PR status - fail closed
+        return True, format_pr_merge_error("get_pr_merge_status()", pr_info)
+    if pr_merged:
+        # Get main branch for the message (best effort)
+        main_branch = get_main_branch() or "main"
+        return True, f"""⛔ BLOCKED: PR #{pr_info} for branch '{current_branch}' is already MERGED.
+
+What happened:
+- This branch's PR was already merged
+- Committing more changes to a merged branch is not useful
+
+What to do:
+1. Create a NEW branch for your changes:
+   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
+2. Your uncommitted changes will come with you
+3. Commit on the new branch and create a new PR
+
+Do NOT commit to '{current_branch}'."""
+
     # Get main branch
     main_branch = get_main_branch()
     if not main_branch:
@@ -241,23 +299,6 @@ Do NOT commit directly to '{current_branch}'."""
     if is_amend_with_unpushed_commits(command):
         return False, None
 
-    # Check if PR is already merged on GitHub
-    pr_merged, pr_number = get_pr_merge_status(current_branch)
-    if pr_merged:
-        return True, f"""⛔ BLOCKED: PR #{pr_number} for branch '{current_branch}' is already MERGED.
-
-What happened:
-- This branch's PR was already merged
-- Committing more changes to a merged branch is not useful
-
-What to do:
-1. Create a NEW branch for your changes:
-   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
-2. Your uncommitted changes will come with you
-3. Commit on the new branch and create a new PR
-
-Do NOT commit to '{current_branch}'."""
-
     # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
         return True, f"""⛔ BLOCKED: Branch '{current_branch}' is already merged into '{main_branch}'.
@@ -280,7 +321,8 @@ Do NOT commit to '{current_branch}'."""
 
 def is_push_command(command):
     """Check if command is a git push command."""
-    return "git push" in command
+    # Match 'git push' at start or after command separators (;, &&, ||, |)
+    return bool(re.search(r'(^|[;&|]\s*)git\s+push\b', command))
 
 
 def should_block_push():
@@ -299,6 +341,28 @@ def should_block_push():
         # Detached HEAD - allow push (can't really push from detached HEAD anyway,
         # and if explicitly pushing a commit hash to a ref, it's intentional)
         return False, None
+
+    # Check if PR is already merged on GitHub (doesn't need main_branch)
+    pr_merged, pr_info = get_pr_merge_status(current_branch)
+    if pr_merged is None:
+        # Error checking PR status - fail closed
+        return True, format_pr_merge_error("get_pr_merge_status()", pr_info)
+    if pr_merged:
+        # Get main branch for the message (best effort)
+        main_branch = get_main_branch() or "main"
+        return True, f"""⛔ BLOCKED: PR #{pr_info} for branch '{current_branch}' is already MERGED.
+
+What happened:
+- This branch's PR was already merged into the base branch
+- Pushing more commits to this branch serves no purpose
+
+What to do:
+1. If you have new changes, create a NEW branch:
+   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
+2. Cherry-pick your commits to the new branch if needed
+3. Create a new PR from the new branch
+
+Do NOT continue pushing to '{current_branch}'."""
 
     # Get main branch
     main_branch = get_main_branch()
@@ -321,23 +385,6 @@ What to do:
 2. Then create a pull request for your changes
 
 Do NOT push directly to '{current_branch}'."""
-
-    # Check if PR is already merged on GitHub
-    pr_merged, pr_number = get_pr_merge_status(current_branch)
-    if pr_merged:
-        return True, f"""⛔ BLOCKED: PR #{pr_number} for branch '{current_branch}' is already MERGED.
-
-What happened:
-- This branch's PR was already merged into the base branch
-- Pushing more commits to this branch serves no purpose
-
-What to do:
-1. If you have new changes, create a NEW branch:
-   git checkout {main_branch} && git pull && git checkout -b new-feature-branch
-2. Cherry-pick your commits to the new branch if needed
-3. Create a new PR from the new branch
-
-Do NOT continue pushing to '{current_branch}'."""
 
     # Check if branch is merged (local check as fallback)
     if is_branch_merged(current_branch, main_branch):
@@ -403,8 +450,33 @@ def main():
         # Allow everything else
         sys.exit(0)
 
-    except Exception:
-        # Fail open on errors
+    except Exception as e:
+        # Fail CLOSED on errors - block the operation
+        output = {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": f"""⛔ BLOCKED: git-protection hook crashed.
+
+**Bug detected in:** scripts/git-protection.py
+**Function:** main()
+**Error:** {type(e).__name__}: {e!s}
+
+---
+
+**ORCHESTRATOR ACTION REQUIRED:**
+
+Ask the user: "I encountered a bug in git-protection.py. Do you want me to create a GitHub issue for this?"
+
+If YES, delegate to github-expert with:
+- Repository: myk-org/claude-code-config
+- Title: bug(scripts): git-protection.py - {type(e).__name__} in main()
+- Body: Include the full error details, git version, and command that was attempted
+
+If NO, the user should investigate manually."""
+            }
+        }
+        print(json.dumps(output))
         sys.exit(0)
 
 
