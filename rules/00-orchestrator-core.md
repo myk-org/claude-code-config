@@ -34,3 +34,15 @@
 ❌ MCP tools → delegate to manager agents
 ❌ Multi-file exploration → delegate to Explore agent
 ❌ Delegating slash commands → execute them AND their internal operations DIRECTLY (see slash command rules)
+
+---
+
+## Before Implementation (MANDATORY)
+
+Before ANY code changes, run the pre-implementation checklist:
+
+→ **See the "Pre-Implementation Checklist" section below** - Do NOT skip this step.
+
+**Quick check:**
+- [ ] GitHub issue created?
+- [ ] On issue branch (`feat/issue-N-...` or `fix/issue-N-...`)?
