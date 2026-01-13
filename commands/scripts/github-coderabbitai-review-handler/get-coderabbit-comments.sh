@@ -2,19 +2,75 @@
 set -euo pipefail
 
 # Script to extract CodeRabbit comments for AI processing
-# Usage: get-coderabbit-comments.sh <pr-info-script-path> [commit_sha|review_id|review_url]
-#   OR:  get-coderabbit-comments.sh <owner/repo> <pr_number> [commit_sha|review_id|review_url]
+# Usage: get-coderabbit-comments.sh <pr-info-script-path> <review_id|review_url>
+#   OR:  get-coderabbit-comments.sh <owner/repo> <pr_number> <review_id|review_url>
 
-if [ $# -eq 1 ] || [ $# -eq 2 ]; then
-  # One or two arguments: check if first arg is a file (pr-info script)
+show_usage() {
+  echo "Usage: $0 <pr-info-script-path> <review_id|review_url>" >&2
+  echo "   OR: $0 <owner/repo> <pr_number> <review_id|review_url>" >&2
+  echo "" >&2
+  echo "The review ID or URL is REQUIRED. You can find it from:" >&2
+  echo "  - GitHub PR page: click on a CodeRabbit review, copy the URL" >&2
+  echo "  - The URL will look like: https://github.com/owner/repo/pull/123#pullrequestreview-3657783409" >&2
+  echo "" >&2
+  echo "Examples:" >&2
+  echo "  $0 /path/to/get-pr-info.sh 3379917343" >&2
+  echo "  $0 /path/to/get-pr-info.sh https://github.com/owner/repo/pull/123#pullrequestreview-3379917343" >&2
+  echo "  $0 owner/repo 123 3379917343" >&2
+  echo "  $0 owner/repo 123 https://github.com/owner/repo/pull/123#pullrequestreview-3379917343" >&2
+  exit 1
+}
+
+# Check which comment IDs are in resolved threads using GraphQL API
+# Returns JSON array of comment IDs that are resolved
+# Note: Only checks first 100 review threads. PRs with 100+ threads may have
+# some resolved comments incorrectly included in results.
+get_resolved_comment_ids() {
+  local owner="$1"
+  local repo="$2"
+  local pr_number="$3"
+
+  local result
+  if ! result=$(gh api graphql -f query='
+    query($owner: String!, $repo: String!, $pr: Int!) {
+      repository(owner: $owner, name: $repo) {
+        pullRequest(number: $pr) {
+          reviewThreads(first: 100) {
+            nodes {
+              isResolved
+              comments(first: 1) {
+                nodes {
+                  databaseId
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" --jq '
+    [.data.repository.pullRequest.reviewThreads.nodes[] |
+     select(.isResolved == true) |
+     .comments.nodes[0].databaseId] |
+    map(select(. != null))
+  ' 2>&1); then
+    echo "⚠️ Warning: Could not fetch resolved threads: $result" >&2
+    echo "[]"
+    return 0
+  fi
+  echo "$result"
+}
+
+# Parse arguments and validate
+if [ $# -eq 2 ]; then
+  # Two arguments: check if first arg is a file (pr-info script)
   if [ -f "$1" ]; then
-    # First argument is pr-info script path
+    # First argument is pr-info script path, second is review ID/URL (REQUIRED)
     PR_INFO_SCRIPT="$1"
-    TARGET_PARAM="${2:-}"  # Optional second parameter (commit_sha, review_id, or review_url)
+    TARGET_PARAM="$2"
 
     # Call the pr-info script and parse output
-    PR_INFO=$("$PR_INFO_SCRIPT")
-    if [ $? -ne 0 ]; then
+    if ! PR_INFO=$("$PR_INFO_SCRIPT"); then
       echo "❌ Error: Failed to get PR information" >&2
       exit 1
     fi
@@ -23,90 +79,95 @@ if [ $# -eq 1 ] || [ $# -eq 2 ]; then
     REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
     PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
   else
-    # First argument is owner/repo, second is PR number
-    REPO_FULL_NAME="$1"
-    PR_NUMBER="$2"
-    TARGET_PARAM=""
+    # First argument is not a file - could be owner/repo format but missing arguments
+    echo "Error: '$1' is not a valid script file path." >&2
+    echo "" >&2
+    show_usage
   fi
 
 elif [ $# -eq 3 ]; then
-  # Three arguments: owner/repo, PR number, and target
+  # Three arguments: owner/repo, PR number, and review ID/URL (REQUIRED)
   REPO_FULL_NAME="$1"
   PR_NUMBER="$2"
   TARGET_PARAM="$3"
 
 else
-  echo "Usage: $0 <pr-info-script-path> [commit_sha|review_id|review_url]" >&2
-  echo "   OR: $0 <owner/repo> <pr_number> [commit_sha|review_id|review_url]" >&2
-  echo "" >&2
-  echo "Examples:" >&2
-  echo "  $0 /path/to/get-pr-info.sh                      # Latest commit" >&2
-  echo "  $0 /path/to/get-pr-info.sh 3379917343           # Specific review ID" >&2
-  echo "  $0 owner/repo 123 abc1234...                    # Use specific commit SHA" >&2
-  echo "  $0 owner/repo 123 3379917343                    # Use review ID" >&2
-  echo "  $0 owner/repo 123 https://github.com/.../pull/123#pullrequestreview-3379917343" >&2
-  exit 1
+  show_usage
 fi
 
 OWNER=$(echo "$REPO_FULL_NAME" | cut -d'/' -f1)
 REPO=$(echo "$REPO_FULL_NAME" | cut -d'/' -f2)
 
-# Step 1: Determine target commit SHA from parameter
-if [ -n "$TARGET_PARAM" ]; then
-  # Check if it's a review URL
-  if [[ "$TARGET_PARAM" =~ pullrequestreview-([0-9]+) ]]; then
-    REVIEW_ID="${BASH_REMATCH[1]}"
-    echo "📝 Extracting commit from review URL (review ID: $REVIEW_ID)..." >&2
-    LATEST_COMMIT_SHA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$REVIEW_ID" --jq '.commit_id')
-    if [ -z "$LATEST_COMMIT_SHA" ] || [ "$LATEST_COMMIT_SHA" == "null" ]; then
-      echo "❌ Error: Could not retrieve commit SHA from review $REVIEW_ID" >&2
-      exit 1
-    fi
-    echo "✅ Using commit from review: $LATEST_COMMIT_SHA" >&2
-  # Check if it's a numeric review ID
-  elif [[ "$TARGET_PARAM" =~ ^[0-9]+$ ]]; then
-    REVIEW_ID="$TARGET_PARAM"
-    echo "📝 Extracting commit from review ID: $REVIEW_ID..." >&2
-    LATEST_COMMIT_SHA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$REVIEW_ID" --jq '.commit_id')
-    if [ -z "$LATEST_COMMIT_SHA" ] || [ "$LATEST_COMMIT_SHA" == "null" ]; then
-      echo "❌ Error: Could not retrieve commit SHA from review $REVIEW_ID" >&2
-      exit 1
-    fi
-    echo "✅ Using commit from review: $LATEST_COMMIT_SHA" >&2
-  # Otherwise treat as commit SHA
-  else
-    LATEST_COMMIT_SHA="$TARGET_PARAM"
-    echo "📝 Using provided commit SHA: $LATEST_COMMIT_SHA" >&2
-  fi
+# Step 1: Parse review ID/URL and fetch review data
+# Extract review ID from URL or use numeric ID directly
+if [[ "$TARGET_PARAM" =~ pullrequestreview-([0-9]+) ]]; then
+    PROVIDED_REVIEW_ID="${BASH_REMATCH[1]}"
+    echo "📝 Extracting review ID from URL: $PROVIDED_REVIEW_ID" >&2
+elif [[ "$TARGET_PARAM" =~ ^[0-9]+$ ]]; then
+    PROVIDED_REVIEW_ID="$TARGET_PARAM"
+    echo "📝 Using provided review ID: $PROVIDED_REVIEW_ID" >&2
 else
-  # Get the latest commit SHA from PR
-  LATEST_COMMIT_SHA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER" --jq '.head.sha')
-  echo "📝 Using latest commit from PR: $LATEST_COMMIT_SHA" >&2
+    echo "❌ Error: Invalid review parameter. Must be a review ID (number) or review URL." >&2
+    echo "   Example URL: https://github.com/owner/repo/pull/123#pullrequestreview-3657783409" >&2
+    exit 1
 fi
 
-if [ -z "$LATEST_COMMIT_SHA" ]; then
-  echo "❌ Error: Could not retrieve commit SHA" >&2
+# Fetch and cache review data for reuse (avoids duplicate API calls)
+echo "📥 Fetching review data..." >&2
+if ! CACHED_REVIEW_JSON=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$PROVIDED_REVIEW_ID" 2>&1); then
+  echo "❌ Error: Could not fetch review $PROVIDED_REVIEW_ID. It may not exist or you may not have access." >&2
+  echo "   API response: $CACHED_REVIEW_JSON" >&2
   exit 1
 fi
-
-# Step 2: Get CodeRabbit reviews for the target commit
-# Note: GitHub API defaults to 30 items per page, so we request more to avoid missing recent reviews
-REVIEW_DATA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews?per_page=100" |
-  jq --arg bot_user "coderabbitai[bot]" --arg latest_sha "$LATEST_COMMIT_SHA" \
-    '[.[] | select(.user.login == $bot_user and (.body | length) > 100 and .commit_id == $latest_sha)] | sort_by(.submitted_at) | .[-1]')
-
-REVIEW_ID=$(echo "$REVIEW_DATA" | jq -r '.id')
-
-if [ -z "$REVIEW_ID" ] || [ "$REVIEW_ID" == "null" ]; then
-  echo "❌ No CodeRabbit reviews found"
+LATEST_COMMIT_SHA=$(echo "$CACHED_REVIEW_JSON" | jq -r '.commit_id')
+if [ -z "$LATEST_COMMIT_SHA" ] || [ "$LATEST_COMMIT_SHA" == "null" ]; then
+  echo "❌ Error: Could not retrieve commit SHA from review $PROVIDED_REVIEW_ID" >&2
   exit 1
 fi
+echo "✅ Review commit: $LATEST_COMMIT_SHA" >&2
+
+# Validate it's a CodeRabbit review
+REVIEW_USER=$(echo "$CACHED_REVIEW_JSON" | jq -r '.user.login')
+if [ "$REVIEW_USER" != "coderabbitai[bot]" ]; then
+  echo "⚠️ Warning: Review $PROVIDED_REVIEW_ID is from '$REVIEW_USER', not CodeRabbit. Results may be unexpected." >&2
+fi
+
+# Step 2: Set review ID (already have it from provided parameter)
+REVIEW_ID="$PROVIDED_REVIEW_ID"
 
 # Step 3: Get inline comments (actionable)
 INLINE_COMMENTS=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$REVIEW_ID/comments?per_page=100" --jq '.')
+ORIGINAL_INLINE_COUNT=$(echo "$INLINE_COMMENTS" | jq '. | length')
 
-# Step 4: Get review body (contains nitpicks)
-REVIEW_BODY=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$REVIEW_ID" --jq '.body')
+# Get list of resolved comment IDs for this PR
+echo "🔍 Checking for resolved comments..." >&2
+RESOLVED_IDS=$(get_resolved_comment_ids "$OWNER" "$REPO" "$PR_NUMBER")
+
+# Validate JSON
+if ! echo "$RESOLVED_IDS" | jq empty 2>/dev/null; then
+  echo "⚠️ Warning: Could not parse resolved thread IDs, skipping filter" >&2
+  RESOLVED_IDS="[]"
+fi
+
+# Filter out resolved comments and count how many from THIS review were filtered
+if [ "$ORIGINAL_INLINE_COUNT" -gt 0 ]; then
+  INLINE_COMMENTS_FILTERED=$(echo "$INLINE_COMMENTS" | jq --argjson resolved "$RESOLVED_IDS" '
+    [.[] | select(.id as $id | $resolved | index($id) | not)]
+  ')
+  FILTERED_INLINE_COUNT=$(echo "$INLINE_COMMENTS_FILTERED" | jq '. | length')
+  RESOLVED_COUNT=$((ORIGINAL_INLINE_COUNT - FILTERED_INLINE_COUNT))
+
+  if [ "$RESOLVED_COUNT" -gt 0 ]; then
+    echo "📝 Filtered $RESOLVED_COUNT resolved comments from this review" >&2
+  fi
+
+  INLINE_COMMENTS="$INLINE_COMMENTS_FILTERED"
+else
+  RESOLVED_COUNT=0
+fi
+
+# Step 4: Get review body (contains nitpicks) - reuse cached data
+REVIEW_BODY=$(echo "$CACHED_REVIEW_JSON" | jq -r '.body')
 
 # Extract actionable comments with AI prompts
 ACTIONABLE_COMMENTS=$(echo "$INLINE_COMMENTS" | jq '[.[] |
@@ -623,6 +684,9 @@ if [ "$DUPLICATE_COUNT" -gt 0 ]; then
 fi
 if [ "$OUTSIDE_DIFF_COUNT" -gt 0 ]; then
   JSON_OUTPUT="$JSON_OUTPUT\"outside_diff_range\": $OUTSIDE_DIFF_COUNT,"
+fi
+if [ "$RESOLVED_COUNT" -gt 0 ]; then
+  JSON_OUTPUT="$JSON_OUTPUT\"resolved_filtered\": $RESOLVED_COUNT,"
 fi
 JSON_OUTPUT="$JSON_OUTPUT\"total\": $TOTAL_COUNT"
 JSON_OUTPUT="$JSON_OUTPUT}"
