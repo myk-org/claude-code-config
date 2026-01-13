@@ -7,6 +7,28 @@
 
 ---
 
+## Pre-Implementation Checklist (START HERE)
+
+Before ANY code changes, complete this checklist:
+
+1. **Should this workflow be skipped?** (see "SKIP this workflow for" list below)
+   - YES → Do directly, skip remaining steps
+   - NO → Continue checklist
+
+2. **GitHub issue created?**
+   - NO → Create issue first (delegate to `github-expert`)
+   - YES → Continue
+
+3. **On correct branch?** (`feat/issue-N-...` or `fix/issue-N-...`)
+   - NO → Create branch from origin/main (delegate to `git-expert`)
+   - YES → Continue
+
+4. **User confirmed "work on it now"?**
+   - NO → Ask user
+   - YES → Proceed with implementation
+
+---
+
 ## When This Workflow Applies
 
 **USE this workflow for:**
@@ -32,7 +54,7 @@ User Request
      ↓
 Analyze and understand the request
      ↓
-Is this trivial? ──YES──→ Do it directly (skip workflow)
+Should skip workflow? ──YES──→ Do it directly (skip workflow)
      │
     NO
      ↓
