@@ -44,24 +44,34 @@ $MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
 
 ---
 
-**If user provides input (review ID, URL, or commit SHA):**
+**User MUST provide a review ID or review URL:**
 
 ```bash
-# User provided: 3379917343
+# User provided review ID:
 $MAIN_SCRIPT $PR_INFO_SCRIPT 3379917343
 
-# User provided: https://github.com/owner/repo/pull/123#pullrequestreview-3379917343
+# User provided review URL:
 $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-3379917343"
-
-# User provided: 6c544434d69b2ef76441949cfe839167b7de775a
-$MAIN_SCRIPT $PR_INFO_SCRIPT 6c544434d69b2ef76441949cfe839167b7de775a
 ```
 
 **If user provides NO input:**
 
-```bash
-# Gets latest commit comments automatically
-$MAIN_SCRIPT $PR_INFO_SCRIPT
+The review ID or URL is REQUIRED. If the user doesn't provide one, instruct them:
+
+```text
+To use this command, you need to provide a CodeRabbit review ID or URL.
+
+How to get the review URL:
+1. Go to the GitHub PR page
+2. Find the CodeRabbit review you want to process
+3. Click on the review timestamp/link
+4. Copy the URL from your browser (it will contain #pullrequestreview-XXXXXXXXXX)
+
+Example:
+  /github-coderabbitai-review-handler https://github.com/owner/repo/pull/123#pullrequestreview-3379917343
+
+Or just provide the review ID number:
+  /github-coderabbitai-review-handler 3379917343
 ```
 
 **THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The scripts handle
