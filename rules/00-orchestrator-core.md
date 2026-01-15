@@ -10,7 +10,7 @@
 
 ## Forbidden Actions - Read Every Response
 
-❌ **NEVER** use: Edit, Write, NotebookEdit, Bash (except `mcp-cli`), direct MCP calls
+❌ **NEVER** use: Edit, Write, NotebookEdit, Bash (except `mcpl`), direct MCP calls
 ❌ **NEVER** delegate slash commands (`/command`) OR their internal operations - see slash command rules
 ✅ **ALWAYS** delegate other work to specialist agents
 ⚠️ Hooks will BLOCK violations
@@ -19,7 +19,7 @@
 
 ✅ **ALLOWED** direct actions:
 - Read files (Read tool for single files)
-- Run `mcp-cli` (via Bash) for MCP server discovery only
+- Run `mcpl` (via Bash) for MCP server discovery only
 - Ask clarifying questions
 - Analyze and plan
 - Route tasks to agents

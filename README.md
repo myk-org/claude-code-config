@@ -243,30 +243,19 @@ python-expert uses current best practices
 
 ## MCP Server Access
 
-This configuration uses [mcp-cli](https://github.com/philschmid/mcp-cli) for on-demand MCP (Model Context Protocol) server access.
+This configuration uses [mcp-launchpad](https://github.com/kenneth-liao/mcp-launchpad) (`mcpl`) for on-demand MCP server access.
 
 **Benefits over native MCP loading:**
 - Tools are NOT loaded into context at session start
 - No 30% context consumption from tool definitions
 - Agents discover and call tools on-demand via CLI
 
-**How it works:**
-- Orchestrator can run `mcp-cli` for discovery
-- Agents use `mcp-cli` to discover, inspect, and execute MCP tools
-- See `rules/15-mcp-server-access.md` for full usage details
-
-**Quick reference:**
+**Installation:**
 ```bash
-mcp-cli                          # List all servers and tools
-mcp-cli <server>                 # Show server's tools with parameters
-mcp-cli <server>/<tool>          # Get full JSON schema for a tool
-mcp-cli <server>/<tool> '<json>' # Execute tool with arguments
-mcp-cli grep "<pattern>"         # Search tools by name
+uv tool install https://github.com/kenneth-liao/mcp-launchpad.git
 ```
 
-**Prerequisites:**
-- Install mcp-cli: See [mcp-cli installation](https://github.com/philschmid/mcp-cli#installation)
-- Configure your MCP servers in `~/.mcp_servers.json` or `~/.config/mcp/mcp_servers.json`
+See `rules/15-mcp-launchpad.md` for detailed usage instructions and command reference.
 
 ## Why Agent-Based Workflow?
 
