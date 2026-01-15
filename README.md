@@ -243,30 +243,44 @@ python-expert uses current best practices
 
 ## MCP Server Access
 
-This configuration uses [mcp-cli](https://github.com/philschmid/mcp-cli) for on-demand MCP (Model Context Protocol) server access.
+This configuration uses [mcp-launchpad](https://github.com/kenneth-liao/mcp-launchpad) for on-demand MCP (Model Context Protocol) server access.
 
 **Benefits over native MCP loading:**
 - Tools are NOT loaded into context at session start
 - No 30% context consumption from tool definitions
 - Agents discover and call tools on-demand via CLI
 
-**How it works:**
-- Orchestrator can run `mcp-cli` for discovery
-- Agents use `mcp-cli` to discover, inspect, and execute MCP tools
-- See `rules/15-mcp-server-access.md` for full usage details
+### Installation
 
-**Quick reference:**
 ```bash
-mcp-cli                          # List all servers and tools
-mcp-cli <server>                 # Show server's tools with parameters
-mcp-cli <server>/<tool>          # Get full JSON schema for a tool
-mcp-cli <server>/<tool> '<json>' # Execute tool with arguments
-mcp-cli grep "<pattern>"         # Search tools by name
+uv tool install https://github.com/kenneth-liao/mcp-launchpad.git
 ```
 
-**Prerequisites:**
-- Install mcp-cli: See [mcp-cli installation](https://github.com/philschmid/mcp-cli#installation)
-- Configure your MCP servers in `~/.mcp_servers.json` or `~/.config/mcp/mcp_servers.json`
+### Features
+
+- **Session daemon** - Persistent connections for faster repeated calls
+- **Smart search** - BM25, regex, and exact matching for tool discovery
+- **Server support** - Works with both stdio and HTTP MCP servers
+- **Auto-configuration** - Reads from `mcp.json` or `~/.claude/mcp.json`
+
+### Quick Reference
+
+```bash
+mcpl list                              # List all servers
+mcpl list <server>                     # List tools for a server
+mcpl search "<query>"                  # BM25 search across all tools
+mcpl search "<query>" --regex          # Regex search
+mcpl inspect <server> <tool>           # Get tool JSON schema
+mcpl call <server> <tool> '<json>'     # Execute tool with arguments
+mcpl session status                    # Check daemon and server status
+mcpl session stop                      # Stop session daemon
+```
+
+### How It Works
+
+- Orchestrator can run `mcpl` for discovery
+- Agents use `mcpl` to discover, inspect, and execute MCP tools
+- See `rules/15-mcp-launchpad.md` for full usage details
 
 ## Why Agent-Based Workflow?
 
