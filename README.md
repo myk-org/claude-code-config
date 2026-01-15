@@ -243,44 +243,19 @@ python-expert uses current best practices
 
 ## MCP Server Access
 
-This configuration uses [mcp-launchpad](https://github.com/kenneth-liao/mcp-launchpad) for on-demand MCP (Model Context Protocol) server access.
+This configuration uses [mcp-launchpad](https://github.com/kenneth-liao/mcp-launchpad) (`mcpl`) for on-demand MCP server access.
 
 **Benefits over native MCP loading:**
 - Tools are NOT loaded into context at session start
 - No 30% context consumption from tool definitions
 - Agents discover and call tools on-demand via CLI
 
-### Installation
-
+**Installation:**
 ```bash
 uv tool install https://github.com/kenneth-liao/mcp-launchpad.git
 ```
 
-### Features
-
-- **Session daemon** - Persistent connections for faster repeated calls
-- **Smart search** - BM25, regex, and exact matching for tool discovery
-- **Server support** - Works with both stdio and HTTP MCP servers
-- **Auto-configuration** - Reads from `mcp.json` or `~/.claude/mcp.json`
-
-### Quick Reference
-
-```bash
-mcpl list                              # List all servers
-mcpl list <server>                     # List tools for a server
-mcpl search "<query>"                  # BM25 search across all tools
-mcpl search "<query>" --regex          # Regex search
-mcpl inspect <server> <tool>           # Get tool JSON schema
-mcpl call <server> <tool> '<json>'     # Execute tool with arguments
-mcpl session status                    # Check daemon and server status
-mcpl session stop                      # Stop session daemon
-```
-
-### How It Works
-
-- Orchestrator can run `mcpl` for discovery
-- Agents use `mcpl` to discover, inspect, and execute MCP tools
-- See `rules/15-mcp-launchpad.md` for full usage details
+See `rules/15-mcp-launchpad.md` for detailed usage instructions and command reference.
 
 ## Why Agent-Based Workflow?
 
