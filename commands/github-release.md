@@ -348,7 +348,7 @@ Do NOT create any release without user confirmation.
 ---
 
 **Options**:
-- `yes` or `y` - Create release with proposed version
+- `yes` or `y` - Create release with proposed version ({proposed_version})
 - `major` - Override to MAJOR version bump
 - `minor` - Override to MINOR version bump
 - `patch` - Override to PATCH version bump
