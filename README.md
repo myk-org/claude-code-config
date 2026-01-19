@@ -176,6 +176,7 @@ cd ~/.claude && git pull
 
 - **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **4 slash commands** including PR review workflows
+- **1 skill** for context-aware automation
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
 - **Status line** integration
@@ -231,6 +232,18 @@ python-expert uses current best practices
 | `/github-review-handler` | Process human reviewer comments from a PR. |
 | `/github-coderabbitai-review-handler` | Process CodeRabbit AI review comments. |
 | `/code-review` | Run code review on local changes. |
+
+## Skills
+
+Skills are similar to slash commands but auto-invoke based on task context rather than requiring explicit invocation.
+
+| Skill | Description |
+|-------|-------------|
+| `agent-browser` | Browser automation for web testing, form filling, screenshots, and data extraction |
+
+### agent-browser Installation
+
+See [agent-browser](https://github.com/vercel-labs/agent-browser) for installation instructions.
 
 ### `/github-pr-review` Features
 
@@ -331,6 +344,9 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ~/.claude/
 ├── agents/           # Specialist agent definitions
 ├── commands/         # Slash commands
+├── skills/           # Skills (auto-invoked based on context)
+│   └── agent-browser/
+│       └── SKILL.md
 ├── rules/            # Orchestrator rules (auto-loaded)
 ├── scripts/          # Helper scripts for hooks
 ├── tests/            # Unit tests for Python scripts

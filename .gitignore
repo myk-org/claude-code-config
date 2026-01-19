@@ -53,6 +53,11 @@
 !commands/scripts/github-review-handler/
 !commands/scripts/github-review-handler/get-human-reviews.sh
 
+# skills/
+!skills/
+!skills/agent-browser/
+!skills/agent-browser/SKILL.md
+
 # rules/
 !rules/
 !rules/00-orchestrator-core.md
