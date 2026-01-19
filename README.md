@@ -80,6 +80,7 @@ ln -sf ~/git/claude-code-config/agents ~/.claude/agents
 ln -sf ~/git/claude-code-config/commands ~/.claude/commands
 ln -sf ~/git/claude-code-config/rules ~/.claude/rules
 ln -sf ~/git/claude-code-config/scripts ~/.claude/scripts
+ln -sf ~/git/claude-code-config/skills ~/.claude/skills
 ln -sf ~/git/claude-code-config/settings.json ~/.claude/settings.json
 ln -sf ~/git/claude-code-config/statusline.sh ~/.claude/statusline.sh
 ```
@@ -109,6 +110,7 @@ cp -r /tmp/claude-code-config/agents ~/.claude/
 cp -r /tmp/claude-code-config/commands ~/.claude/
 cp -r /tmp/claude-code-config/rules ~/.claude/
 cp -r /tmp/claude-code-config/scripts ~/.claude/
+cp -r /tmp/claude-code-config/skills ~/.claude/
 # ... selectively copy what you need
 rm -rf /tmp/claude-code-config
 ```
@@ -132,6 +134,7 @@ Step 2: stow your dotfiles (private .claude files overlay on top)
 ├── agents/                   # Public agents (from this repo)
 ├── commands/                 # Commands
 ├── scripts/                  # Public scripts
+├── skills/                   # Skills
 ├── settings.json             # Base settings
 └── statusline.sh
 ```
