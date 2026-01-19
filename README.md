@@ -183,6 +183,7 @@ cd ~/.claude && git pull
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
 - **Status line** integration
+- **SessionStart tool validation** - Checks for required tools (uv, gh, prek, mcpl) and prompts to install missing ones
 
 ## Agents
 
@@ -352,6 +353,15 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 │       └── SKILL.md
 ├── rules/            # Orchestrator rules (auto-loaded)
 ├── scripts/          # Helper scripts for hooks
+│   ├── git-protection.py         # Protects main branch, merged branches
+│   ├── inject-claude.sh          # Injects Claude config
+│   ├── my-notifier.sh            # Custom notifications
+│   ├── post-compact-restore.py   # Restores state after compaction
+│   ├── pre-compact-snapshot.py   # Saves state before compaction
+│   ├── reply-to-pr-review.sh     # Reply to PR reviews
+│   ├── rule-enforcer.py          # Blocks orchestrator from using Edit/Write/Bash
+│   ├── rule-injector.py          # Auto-loads rules from rules/
+│   └── session-start-check.sh    # Validates required tools at session start
 ├── tests/            # Unit tests for Python scripts
 ├── settings.json     # Hooks and tool permissions
 ├── statusline.sh     # Status line script

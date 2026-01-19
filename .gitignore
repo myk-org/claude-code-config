@@ -79,6 +79,7 @@
 !scripts/reply-to-pr-review.sh
 !scripts/rule-enforcer.py
 !scripts/rule-injector.py
+!scripts/session-start-check.sh
 
 # tests/
 !tests/
