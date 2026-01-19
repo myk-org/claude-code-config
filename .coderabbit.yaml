@@ -28,8 +28,6 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
-    base_branches:
-      - main
 
   # Enable relevant tools for Python/JavaScript project
   tools:

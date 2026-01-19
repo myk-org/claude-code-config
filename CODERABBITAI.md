@@ -84,7 +84,8 @@ claude-code-config/
 │   ├── pre-compact-snapshot.py   # Saves state before compaction
 │   ├── reply-to-pr-review.sh  # Reply to PR reviews
 │   ├── rule-enforcer.py       # Blocks orchestrator from using Edit/Write/Bash
-│   └── rule-injector.py       # Auto-loads rules from rules/
+│   ├── rule-injector.py       # Auto-loads rules from rules/
+│   └── session-start-check.sh # SessionStart hook for tool validation
 │
 ├── tests/                     # Unit tests for Python scripts
 │   ├── test_git_protection.py
@@ -99,7 +100,7 @@ claude-code-config/
 ├── .pre-commit-config.yaml    # Pre-commit hooks
 ├── .flake8                    # Flake8 configuration
 ├── README.md                  # Installation and usage guide
-└── CLAUDE.md                  # This file - project context
+└── CODERABBITAI.md            # This file - project context
 ```
 
 ---
@@ -417,7 +418,8 @@ The following directories are completely gitignored, with only specific files tr
 - **PreToolUse** - `rule-enforcer.py` blocks Edit/Write/Bash by orchestrator
 - **UserPromptSubmit** - `rule-injector.py` loads rules from `rules/`
 - **PreCompact** - `pre-compact-snapshot.py` saves state
-- **SessionStart** - `post-compact-restore.py` restores after compact
+- **PostCompact** - `post-compact-restore.py` restores state after compaction
+- **SessionStart** - `session-start-check.sh` validates tool configuration
 - **Notification** - `my-notifier.sh` custom notifications
 
 ### settings.json - Tool Allowlist
