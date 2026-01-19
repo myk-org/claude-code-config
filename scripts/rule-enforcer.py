@@ -40,19 +40,31 @@ def main() -> None:
                     "hookSpecificOutput": {
                         "hookEventName": "PreToolUse",
                         "permissionDecision": "deny",
-                        "permissionDecisionReason": "Python/pip commands forbidden. Use 'uv run' or 'uvx' instead. See: https://docs.astral.sh/uv/",
+                        "permissionDecisionReason": "Direct python/pip commands are forbidden.",
+                        "additionalContext": (
+                            "You attempted to run python/pip directly. Instead:\n"
+                            "1. Delegate Python tasks to the python-expert agent\n"
+                            "2. Use 'uv run script.py' to run Python scripts\n"
+                            "3. Use 'uvx package-name' to run package CLIs\n"
+                            "See: https://docs.astral.sh/uv/"
+                        ),
                     }
                 }
                 print(json.dumps(output))
                 sys.exit(0)
 
             if is_forbidden_precommit_command(command):
-                reason = "⛔ BLOCKED: Use `prek` instead of `pre-commit`."
                 output = {
                     "hookSpecificOutput": {
                         "hookEventName": "PreToolUse",
                         "permissionDecision": "deny",
-                        "permissionDecisionReason": reason,
+                        "permissionDecisionReason": "Direct pre-commit commands are forbidden.",
+                        "additionalContext": (
+                            "You attempted to run pre-commit directly. Instead:\n"
+                            "1. Use the 'prek' command which wraps pre-commit\n"
+                            "2. Example: prek run --all-files\n"
+                            "See: https://github.com/j178/prek"
+                        ),
                     }
                 }
                 print(json.dumps(output))

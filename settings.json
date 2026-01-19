@@ -15,6 +15,7 @@
       "Bash(prek:*)",
       "Bash(~/.claude/scripts/inject-claude.sh:*)",
       "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
+      "Bash(~/.claude/scripts/session-start-check.sh:*)",
       "Bash(~/.claude/scripts/my-notifier.sh:*)",
       "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
       "Bash(uv run ~/.claude/scripts/post-compact-restore.py:*)",
@@ -98,6 +99,16 @@
     ],
     "SessionStart": [
       {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/session-start-check.sh",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
         "matcher": "compact",
         "hooks": [
           {
@@ -134,6 +145,7 @@
     "Grep",
     "Bash(~/.claude/scripts/inject-claude.sh:*)",
     "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
+    "Bash(~/.claude/scripts/session-start-check.sh:*)",
     "Bash(~/.claude/scripts/my-notifier.sh:*)",
     "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
     "Bash(uv run ~/.claude/scripts/post-compact-restore.py:*)",

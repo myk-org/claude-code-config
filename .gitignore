@@ -3,7 +3,9 @@
 *
 
 # Core config files
+!.coderabbit.yaml
 !.gitignore
+!CODERABBITAI.md
 !README.md
 !settings.json
 !statusline.sh
@@ -79,6 +81,7 @@
 !scripts/reply-to-pr-review.sh
 !scripts/rule-enforcer.py
 !scripts/rule-injector.py
+!scripts/session-start-check.sh
 
 # tests/
 !tests/

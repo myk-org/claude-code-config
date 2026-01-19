@@ -4,15 +4,16 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 
 ## Requirements
 
-- **Claude Code v2.1.0 or higher** - This configuration uses v2.1.0 features (agent-scoped hooks, `allowed-tools` in frontmatter)
+- **Claude Code v2.1.9 or higher** - This configuration uses v2.1.9 features (see below)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager (used for running hook scripts)
 
-### Claude Code v2.1.0 Features Used
+### Claude Code v2.1.9 Features Used
 
-This configuration leverages these v2.1.0 features:
+This configuration leverages these features:
 
-- **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert)
-- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only)
+- **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert) (v2.1.0)
+- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only) (v2.1.0)
+- **`additionalContext` in PreToolUse** - Provides guidance when blocking commands (v2.1.9)
 
 > Note: `context: fork` was evaluated but not used due to compatibility issues with multi-phase workflows.
 
@@ -183,6 +184,7 @@ cd ~/.claude && git pull
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
 - **Status line** integration
+- **SessionStart tool validation** - Checks for required tools (uv, gh, prek, mcpl) and prompts to install missing ones
 
 ## Agents
 
@@ -352,6 +354,15 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 │       └── SKILL.md
 ├── rules/            # Orchestrator rules (auto-loaded)
 ├── scripts/          # Helper scripts for hooks
+│   ├── git-protection.py         # Protects main branch, merged branches
+│   ├── inject-claude.sh          # Injects Claude config
+│   ├── my-notifier.sh            # Custom notifications
+│   ├── post-compact-restore.py   # Restores state after compaction
+│   ├── pre-compact-snapshot.py   # Saves state before compaction
+│   ├── reply-to-pr-review.sh     # Reply to PR reviews
+│   ├── rule-enforcer.py          # Blocks orchestrator from using Edit/Write/Bash
+│   ├── rule-injector.py          # Auto-loads rules from rules/
+│   └── session-start-check.sh    # Validates required tools at session start
 ├── tests/            # Unit tests for Python scripts
 ├── settings.json     # Hooks and tool permissions
 ├── statusline.sh     # Status line script
