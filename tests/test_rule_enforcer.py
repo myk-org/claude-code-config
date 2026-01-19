@@ -388,8 +388,11 @@ class TestMain:
         hook_output = output["hookSpecificOutput"]
         assert hook_output["hookEventName"] == "PreToolUse"
         assert hook_output["permissionDecision"] == "deny"
-        assert "uv run" in hook_output["permissionDecisionReason"]
-        assert "uvx" in hook_output["permissionDecisionReason"]
+        assert "python/pip" in hook_output["permissionDecisionReason"]
+        # Guidance is now in additionalContext
+        assert "additionalContext" in hook_output
+        assert "uv run" in hook_output["additionalContext"]
+        assert "uvx" in hook_output["additionalContext"]
 
     # =========================================================================
     # Deny cases - forbidden pre-commit commands
@@ -418,7 +421,10 @@ class TestMain:
         hook_output = output["hookSpecificOutput"]
         assert hook_output["hookEventName"] == "PreToolUse"
         assert hook_output["permissionDecision"] == "deny"
-        assert "prek" in hook_output["permissionDecisionReason"]
+        assert "pre-commit" in hook_output["permissionDecisionReason"]
+        # Guidance is now in additionalContext
+        assert "additionalContext" in hook_output
+        assert "prek" in hook_output["additionalContext"]
 
     # =========================================================================
     # Allow cases - permitted commands
@@ -563,7 +569,9 @@ class TestMainWithMock:
 
                 output = json.loads(mock_print.call_args[0][0])
                 assert output["hookSpecificOutput"]["permissionDecision"] == "deny"
-                assert "prek" in output["hookSpecificOutput"]["permissionDecisionReason"]
+                assert "pre-commit" in output["hookSpecificOutput"]["permissionDecisionReason"]
+                # Guidance is now in additionalContext
+                assert "prek" in output["hookSpecificOutput"]["additionalContext"]
 
     def test_main_allow_prek_command(self) -> None:
         """Test main function allows prek commands."""

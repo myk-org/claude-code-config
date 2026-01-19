@@ -4,15 +4,16 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 
 ## Requirements
 
-- **Claude Code v2.1.0 or higher** - This configuration uses v2.1.0 features (agent-scoped hooks, `allowed-tools` in frontmatter)
+- **Claude Code v2.1.9 or higher** - This configuration uses v2.1.9 features (see below)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager (used for running hook scripts)
 
-### Claude Code v2.1.0 Features Used
+### Claude Code v2.1.9 Features Used
 
-This configuration leverages these v2.1.0 features:
+This configuration leverages these features:
 
-- **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert)
-- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only)
+- **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert) (v2.1.0)
+- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only) (v2.1.0)
+- **`additionalContext` in PreToolUse** - Provides guidance when blocking commands (v2.1.9)
 
 > Note: `context: fork` was evaluated but not used due to compatibility issues with multi-phase workflows.
 
