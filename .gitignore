@@ -3,7 +3,9 @@
 *
 
 # Core config files
+!.coderabbit.yaml
 !.gitignore
+!CODERABBITAI.md
 !README.md
 !settings.json
 !statusline.sh
