@@ -355,10 +355,7 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ├── rules/            # Orchestrator rules (auto-loaded)
 ├── scripts/          # Helper scripts for hooks
 │   ├── git-protection.py         # Protects main branch, merged branches
-│   ├── inject-claude.sh          # Injects Claude config
 │   ├── my-notifier.sh            # Custom notifications
-│   ├── post-compact-restore.py   # Restores state after compaction
-│   ├── pre-compact-snapshot.py   # Saves state before compaction
 │   ├── reply-to-pr-review.sh     # Reply to PR reviews
 │   ├── rule-enforcer.py          # Blocks orchestrator from using Edit/Write/Bash
 │   ├── rule-injector.py          # Auto-loads rules from rules/

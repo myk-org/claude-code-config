@@ -74,10 +74,7 @@
 # scripts/
 !scripts/
 !scripts/git-protection.py
-!scripts/inject-claude.sh
 !scripts/my-notifier.sh
-!scripts/post-compact-restore.py
-!scripts/pre-compact-snapshot.py
 !scripts/reply-to-pr-review.sh
 !scripts/rule-enforcer.py
 !scripts/rule-injector.py
@@ -87,9 +84,7 @@
 !tests/
 !tests/__init__.py
 !tests/test_git_protection.py
-!tests/test_pre_compact_snapshot.py
 !tests/test_rule_enforcer.py
-!tests/test_post_compact_restore.py
 
 # Config files
 !tox.toml
