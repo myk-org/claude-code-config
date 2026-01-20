@@ -13,15 +13,12 @@
       "Bash(mcpl:*)",
       "Bash(git -C:*)",
       "Bash(prek:*)",
-      "Bash(~/.claude/scripts/inject-claude.sh:*)",
       "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
       "Bash(~/.claude/scripts/session-start-check.sh:*)",
       "Bash(~/.claude/scripts/my-notifier.sh:*)",
       "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
-      "Bash(uv run ~/.claude/scripts/post-compact-restore.py:*)",
       "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
       "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
-      "Bash(uv run ~/.claude/scripts/pre-compact-snapshot.py:*)",
       "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh:*)",
       "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh:*)",
       "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh:*)",
@@ -86,17 +83,6 @@
         ]
       }
     ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run ~/.claude/scripts/pre-compact-snapshot.py"
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "",
@@ -105,15 +91,6 @@
             "type": "command",
             "command": "~/.claude/scripts/session-start-check.sh",
             "timeout": 5000
-          }
-        ]
-      },
-      {
-        "matcher": "compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run ~/.claude/scripts/post-compact-restore.py"
           }
         ]
       }
@@ -143,15 +120,12 @@
     "Bash(git -C:*)",
     "Bash(prek:*)",
     "Grep",
-    "Bash(~/.claude/scripts/inject-claude.sh:*)",
     "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
     "Bash(~/.claude/scripts/session-start-check.sh:*)",
     "Bash(~/.claude/scripts/my-notifier.sh:*)",
     "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
-    "Bash(uv run ~/.claude/scripts/post-compact-restore.py:*)",
     "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
     "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
-    "Bash(uv run ~/.claude/scripts/pre-compact-snapshot.py:*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh:*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh:*)",
     "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh:*)",

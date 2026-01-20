@@ -78,10 +78,7 @@ claude-code-config/
 │
 ├── scripts/                   # Hook scripts (Python/Bash)
 │   ├── git-protection.py      # Protects main branch, merged branches
-│   ├── inject-claude.sh       # Injects Claude config
 │   ├── my-notifier.sh         # Custom notifications
-│   ├── post-compact-restore.py   # Restores state after compaction
-│   ├── pre-compact-snapshot.py   # Saves state before compaction
 │   ├── reply-to-pr-review.sh  # Reply to PR reviews
 │   ├── rule-enforcer.py       # Blocks orchestrator from using Edit/Write/Bash
 │   ├── rule-injector.py       # Auto-loads rules from rules/
@@ -89,8 +86,6 @@ claude-code-config/
 │
 ├── tests/                     # Unit tests for Python scripts
 │   ├── test_git_protection.py
-│   ├── test_post_compact_restore.py
-│   ├── test_pre_compact_snapshot.py
 │   └── test_rule_enforcer.py
 │
 ├── settings.json              # Hooks, tool permissions, status line
@@ -417,8 +412,6 @@ The following directories are completely gitignored, with only specific files tr
 
 - **PreToolUse** - `rule-enforcer.py` blocks Edit/Write/Bash by orchestrator
 - **UserPromptSubmit** - `rule-injector.py` loads rules from `rules/`
-- **PreCompact** - `pre-compact-snapshot.py` saves state
-- **PostCompact** - `post-compact-restore.py` restores state after compaction
 - **SessionStart** - `session-start-check.sh` validates tool configuration
 - **Notification** - `my-notifier.sh` custom notifications
 
