@@ -66,13 +66,13 @@ Run both extraction scripts to get comments from each AI reviewer:
 
 ```bash
 # Script paths
-QODO_SCRIPT=~/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh
-CODERABBIT_SCRIPT=~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
-PR_INFO_SCRIPT=~/.claude/commands/scripts/general/get-pr-info.sh
+QODO_SCRIPT="$HOME/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh"
+CODERABBIT_SCRIPT="$HOME/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh"
+PR_INFO_SCRIPT="$HOME/.claude/commands/scripts/general/get-pr-info.sh"
 
 # Fetch from both sources
-$QODO_SCRIPT $PR_INFO_SCRIPT
-$CODERABBIT_SCRIPT $PR_INFO_SCRIPT
+"$QODO_SCRIPT" "$PR_INFO_SCRIPT"
+"$CODERABBIT_SCRIPT" "$PR_INFO_SCRIPT"
 ```
 
 **THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The scripts handle EVERYTHING.**
@@ -200,7 +200,7 @@ Suggested Diff (if available):
 Do you want to address this suggestion? (yes/no/skip/all)
 ```
 
-**Priority emojis:** Use HIGH, MEDIUM, LOW for priority levels.
+**Priority emojis:** Use 🔴 for HIGH, 🟡 for MEDIUM, 🟢 for LOW.
 
 **AI Source line formats:**
 - Single source: `AI Source: Qodo` or `AI Source: CodeRabbit`
@@ -390,7 +390,7 @@ gh api graphql -f query='
 # Resolve the thread
 gh api graphql -f query='
   mutation($threadId: ID!) {
-    resolvePullRequestReviewThread(input: {
+    resolveReviewThread(input: {
       threadId: $threadId
     }) {
       thread { isResolved }
@@ -457,7 +457,7 @@ gh api graphql -f query='
 # Resolve the thread
 gh api graphql -f query='
   mutation($threadId: ID!) {
-    resolvePullRequestReviewThread(input: {
+    resolveReviewThread(input: {
       threadId: $threadId
     }) {
       thread { isResolved }

@@ -366,7 +366,7 @@ gh api graphql -f query='
 # Resolve the thread
 gh api graphql -f query='
   mutation($threadId: ID!) {
-    resolvePullRequestReviewThread(input: {
+    resolveReviewThread(input: {
       threadId: $threadId
     }) {
       thread { isResolved }

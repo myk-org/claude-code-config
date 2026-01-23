@@ -66,57 +66,84 @@ get_resolved_comment_ids() {
   echo "$result"
 }
 
-# Get unresolved CodeRabbit inline review comments using GraphQL
+# Get unresolved CodeRabbit inline review comments using GraphQL with pagination
 # Returns JSON array of unresolved comments from coderabbitai[bot]
 get_unresolved_coderabbit_comments() {
   local owner="$1"
   local repo="$2"
   local pr_number="$3"
 
-  local result
-  if ! result=$(gh api graphql -f query='
-    query($owner: String!, $repo: String!, $pr: Int!) {
-      repository(owner: $owner, name: $repo) {
-        pullRequest(number: $pr) {
-          reviewThreads(first: 100) {
-            nodes {
-              id
-              isResolved
-              comments(first: 10) {
-                nodes {
-                  id
-                  databaseId
-                  author { login }
-                  path
-                  line
-                  body
+  local all_comments="[]"
+  local cursor="null"
+  local has_next_page="true"
+
+  while [ "$has_next_page" = "true" ]; do
+    local result
+    if ! result=$(gh api graphql -f query='
+      query($owner: String!, $repo: String!, $pr: Int!, $cursor: String) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $pr) {
+            reviewThreads(first: 100, after: $cursor) {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+              nodes {
+                id
+                isResolved
+                comments(first: 10) {
+                  nodes {
+                    id
+                    databaseId
+                    author { login }
+                    path
+                    line
+                    body
+                  }
                 }
               }
             }
           }
         }
       }
-    }
-  ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" --jq '
-    [.data.repository.pullRequest.reviewThreads.nodes[] |
-     select(.isResolved == false) |
-     . as $thread |
-     .comments.nodes[] |
-     select(.author.login == "coderabbitai") |
-     {
-       thread_id: $thread.id,
-       comment_id: .databaseId,
-       node_id: .id,
-       path: .path,
-       line: .line,
-       body: .body
-     }]
-  ' 2>&1); then
-    echo "Warning: Could not fetch unresolved comments: $result" >&2
-    echo "[]"
-    return 0
-  fi
-  echo "$result"
+    ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" -f cursor="$cursor" 2>&1); then
+      echo "Warning: Could not fetch unresolved comments: $result" >&2
+      echo "[]"
+      return 0
+    fi
+
+    # Extract pagination info
+    has_next_page=$(echo "$result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage')
+    cursor=$(echo "$result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor')
+
+    # Extract comments from this page
+    local page_comments
+    page_comments=$(echo "$result" | jq '
+      [.data.repository.pullRequest.reviewThreads.nodes[] |
+       select(.isResolved == false) |
+       . as $thread |
+       .comments.nodes[] |
+       select(.author.login == "coderabbitai") |
+       {
+         thread_id: $thread.id,
+         comment_id: .databaseId,
+         node_id: .id,
+         path: .path,
+         line: .line,
+         body: .body
+       }]
+    ')
+
+    # Merge with accumulated comments
+    all_comments=$(echo "$all_comments" "$page_comments" | jq -s 'add')
+
+    # Handle null cursor (no more pages)
+    if [ "$cursor" = "null" ] || [ -z "$cursor" ]; then
+      break
+    fi
+  done
+
+  echo "$all_comments"
 }
 
 # Parse inline comments into suggestion format
@@ -130,7 +157,13 @@ parse_inline_comments_to_suggestions() {
       thread_id: .thread_id,
       comment_id: .comment_id,
       priority: "HIGH",
-      title: (.body | split("\n")[0] | ltrimstr("**") | rtrimstr("**") | .[0:100]),
+      title: (
+        .body
+        | split("\n")[0]
+        | gsub("^\\s*[*_`#>\\-]+\\s*"; "")
+        | gsub("\\s*[*_`]+\\s*$"; "")
+        | .[0:100]
+      ),
       file: .path,
       line: (if .line then (.line | tostring) else "" end),
       body: (if (.body | contains("🤖 Prompt for AI Agents")) then
@@ -825,7 +858,7 @@ if echo "$REVIEW_BODY" | grep -q "Outside diff range"; then
         gsub(/"/, "\\\"", current_file)
         gsub(/\n/, "\\n", content)
 
-        printf "{\n  \"source\": \"review_body\",\n  \"priority\": \"VERY LOW\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
+        printf "{\n  \"source\": \"review_body\",\n  \"priority\": \"LOW\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
     }
 
     END {

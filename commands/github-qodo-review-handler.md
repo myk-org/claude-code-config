@@ -60,16 +60,19 @@ $MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
 **Usage patterns:**
 
 1. **No URL provided**: Fetches all unresolved inline review comments from the PR
+
    ```bash
    $MAIN_SCRIPT $PR_INFO_SCRIPT
    ```
 
-2. **Issue comment URL provided**: Fetches that issue comment + all unresolved inline comments
+1. **Issue comment URL provided**: Fetches that issue comment + all unresolved inline comments
+
    ```bash
    $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#issuecomment-2838476123"
    ```
 
-3. **PR review URL provided**: Fetches comments from that specific review only
+1. **PR review URL provided**: Fetches comments from that specific review only
+
    ```bash
    $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-2838476123"
    ```
@@ -112,7 +115,7 @@ The script returns structured JSON containing:
   - `title`: Brief description of the suggestion
   - `file`: File path affected
   - `line_range`: Line number or range (e.g., "42" or "42-50")
-  - `importance`: Why this change matters
+  - `importance`: Numeric score 1-10 (higher = more important, used for sorting)
   - `description`: Full description of the suggestion
   - `suggested_diff`: The proposed code change (if provided)
 
@@ -153,7 +156,7 @@ Do you want to address this suggestion? (yes/no/skip/all)
 Note: Use 🔴 for HIGH priority, 🟡 for MEDIUM priority, and 🟢 for LOW priority.
 Note: Source indicates where the suggestion came from - "Inline Review" can be resolved, "Issue Comment" cannot.
 
-**CRITICAL: Track Suggestion Outcomes for Reply**
+### CRITICAL: Track Suggestion Outcomes for Reply
 
 For EVERY suggestion presented, track the outcome for the final reply:
 - **Suggestion number**: Sequential (1, 2, 3...)
@@ -209,7 +212,7 @@ Processing X approved tasks:
 
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
-2. **Process all approved tasks:**
+1. **Process all approved tasks:**
    - **CRITICAL**: Process ALL tasks created during Phase 1, regardless of priority level
    - **NEVER skip LOW priority tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
    - Use the `suggested_diff` as guidance when implementing changes
@@ -340,7 +343,7 @@ gh api graphql -f query='
 # Resolve the thread
 gh api graphql -f query='
   mutation($threadId: ID!) {
-    resolvePullRequestReviewThread(input: {
+    resolveReviewThread(input: {
       threadId: $threadId
     }) {
       thread { isResolved }

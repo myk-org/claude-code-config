@@ -1,8 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# NOTE: This script requires GNU grep (grep -oP). On macOS, install via: brew install grep
-# and ensure /usr/local/opt/grep/libexec/gnubin is in PATH, or use ggrep.
+# Check required dependencies
+for cmd in gh jq gawk; do
+  command -v "$cmd" >/dev/null 2>&1 || { echo "Error: '$cmd' is required but not installed." >&2; exit 1; }
+done
 
 # Script to extract Qodo AI review comments for processing
 # Usage: get-qodo-comments.sh <pr-info-script-path> [comment_id|comment_url]
@@ -42,12 +44,15 @@ get_unresolved_qodo_comments() {
   local repo="$2"
   local pr_number="$3"
 
-  local result
-  if ! result=$(gh api graphql -f query='
+  local raw_result
+  if ! raw_result=$(gh api graphql -f query='
     query($owner: String!, $repo: String!, $pr: Int!) {
       repository(owner: $owner, name: $repo) {
         pullRequest(number: $pr) {
           reviewThreads(first: 100) {
+            pageInfo {
+              hasNextPage
+            }
             nodes {
               id
               isResolved
@@ -66,7 +71,22 @@ get_unresolved_qodo_comments() {
         }
       }
     }
-  ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" --jq '
+  ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" 2>&1); then
+    echo "Warning: Could not fetch unresolved comments: $raw_result" >&2
+    echo "[]"
+    return 0
+  fi
+
+  # Check if there are more pages (warn user)
+  local has_more
+  has_more=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage // false')
+  if [ "$has_more" = "true" ]; then
+    echo "Warning: More than 100 review threads exist. Some may be missing." >&2
+  fi
+
+  # Extract and filter comments
+  local result
+  result=$(echo "$raw_result" | jq '
     [.data.repository.pullRequest.reviewThreads.nodes[] |
      select(.isResolved == false) |
      . as $thread |
@@ -80,11 +100,7 @@ get_unresolved_qodo_comments() {
        line: .line,
        body: .body
      }]
-  ' 2>&1); then
-    echo "Warning: Could not fetch unresolved comments: $result" >&2
-    echo "[]"
-    return 0
-  fi
+  ')
   echo "$result"
 }
 
@@ -240,18 +256,21 @@ parse_review_issue_comment() {
           continue
         fi
 
-        # Extract title
+        # Extract title (content between <strong> tags)
         local title
-        title=$(echo "$block" | grep -oP '(?<=<strong>)[^<]+(?=</strong>)' | head -1 || echo "")
+        title=$(echo "$block" | sed -n 's/.*<strong>\([^<]*\)<\/strong>.*/\1/p' | head -1)
+        title="${title:-}"
 
-        # Extract file URL
+        # Extract file URL (href from <summary><a href='...'>)
         local file_url
-        file_url=$(echo "$block" | grep -oP "(?<=<summary><a href=')[^']+(?=')" | head -1 || echo "")
+        file_url=$(echo "$block" | sed -n "s/.*<summary><a href='\([^']*\)'.*/\1/p" | head -1)
+        file_url="${file_url:-}"
 
-        # Extract line range from URL
+        # Extract line range from URL (R123-R456 pattern)
         local line_range=""
         if [ -n "$file_url" ]; then
-          line_range=$(echo "$file_url" | grep -oP 'R\d+-R\d+' | sed 's/R//g; s/-R/-/' || echo "")
+          line_range=$(echo "$file_url" | sed -n 's/.*\(R[0-9]\+-R[0-9]\+\).*/\1/p' | sed 's/R//g; s/-R/-/')
+          line_range="${line_range:-}"
         fi
 
         # Extract description
@@ -339,9 +358,13 @@ parse_improve_issue_comment() {
   # Save comment body to temp file for awk processing
   local tmpfile
   tmpfile=$(mktemp /tmp/qodo-improve-XXXXXX.txt)
+  # Ensure temp file is cleaned up when function returns
+  trap 'rm -f "$tmpfile"' RETURN
   echo "$comment_body" > "$tmpfile"
 
   while IFS=$'\t' read -r category title impact file line_range file_url importance description diff_block; do
+    # Restore multi-line diff blocks (gawk encodes newlines as %%NEWLINE%%)
+    diff_block=${diff_block//%%NEWLINE%%/$'\n'}
     [ -z "$title" ] && continue
 
     # Determine priority
@@ -494,7 +517,6 @@ parse_improve_issue_comment() {
     }
   ' "$tmpfile")
 
-  rm -f "$tmpfile"
   echo "$suggestions"
 }
 
@@ -586,11 +608,12 @@ if [ "$HAS_TARGET" = true ]; then
     REVIEW_COMMENTS=$(get_review_inline_comments "$OWNER" "$REPO" "$PR_NUMBER" "$REVIEW_ID")
 
     if [ "$(echo "$REVIEW_COMMENTS" | jq '. | length')" -gt 0 ]; then
-      # Transform REST API response to expected format, then parse
+      # Filter to only Qodo bot comments and transform REST API response to expected format
+      # NOTE: REST API returns user.login as "qodo-code-review[bot]" (with [bot] suffix)
       # NOTE: thread_id is null because REST API doesn't provide thread IDs.
       # This means these comments cannot be resolved via GraphQL (limitation of REST API).
       # Only comments fetched via get_unresolved_qodo_comments (GraphQL) have thread_id.
-      TRANSFORMED=$(echo "$REVIEW_COMMENTS" | jq '[.[] | {
+      TRANSFORMED=$(echo "$REVIEW_COMMENTS" | jq '[.[] | select(.user.login == "qodo-code-review[bot]") | {
         thread_id: null,
         comment_id: .id,
         path: .path,
@@ -625,6 +648,12 @@ if [ -n "$ISSUE_COMMENT_ID" ]; then
     echo "   API response: $COMMENT_USER" >&2
     exit 1
   }
+
+  # Check for empty user login (API response may have changed)
+  if [ -z "$COMMENT_USER" ]; then
+    echo "Error: Could not extract user from comment. The API response may have changed." >&2
+    exit 1
+  fi
 
   # NOTE: REST API returns user.login as "qodo-code-review[bot]" (with [bot] suffix),
   # while GraphQL API returns author.login as "qodo-code-review" (without suffix).
@@ -703,6 +732,11 @@ TOTAL_COUNT=$((HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
 
 ISSUE_COMMENT_COUNT=$(echo "$ALL_SUGGESTIONS" | jq '[.[] | select(.source == "issue_comment")] | length')
 INLINE_REVIEW_COUNT=$(echo "$ALL_SUGGESTIONS" | jq '[.[] | select(.source == "inline_review")] | length')
+
+# Restore %%NEWLINE%% placeholders to actual newlines in suggested_diff fields
+ALL_SUGGESTIONS=$(echo "$ALL_SUGGESTIONS" | jq '
+  [.[] | .suggested_diff = (.suggested_diff | gsub("%%NEWLINE%%"; "\n"))]
+')
 
 # Build final JSON output
 jq -n \
