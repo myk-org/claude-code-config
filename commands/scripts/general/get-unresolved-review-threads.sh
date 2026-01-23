@@ -166,8 +166,10 @@ fetch_unresolved_threads() {
   result=$(echo "$all_threads" | jq '
     [.[] |
      select(.isResolved == false) |
+     (.comments.nodes // []) as $comments |
+     select(($comments | length) > 0) |
      . as $thread |
-     .comments.nodes[0] as $comment |
+     ($comments[0]) as $comment |
      {
        thread_id: $thread.id,
        comment_id: ($comment.databaseId // null),

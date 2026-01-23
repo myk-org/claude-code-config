@@ -221,10 +221,10 @@ for category in "${CATEGORIES[@]}"; do
     thread_id="$(jq -r '.thread_id // ""' <<<"$thread_data")"
     node_id="$(jq -r '.node_id // ""' <<<"$thread_data")"
     status="$(jq -r '.status // "pending"' <<<"$thread_data")"
-    reply="$(jq -r '.reply // ""' <<<"$thread_data")"
-    skip_reason="$(jq -r '.skip_reason // ""' <<<"$thread_data")"
-    posted_at="$(jq -r '.posted_at // ""' <<<"$thread_data")"
-    resolved_at="$(jq -r '.resolved_at // ""' <<<"$thread_data")"
+    reply="$(jq -r '.reply // empty' <<<"$thread_data")"
+    skip_reason="$(jq -r '.skip_reason // empty' <<<"$thread_data")"
+    posted_at="$(jq -r '.posted_at // empty' <<<"$thread_data")"
+    resolved_at="$(jq -r '.resolved_at // empty' <<<"$thread_data")"
     path="$(jq -r '.path // "unknown"' <<<"$thread_data")"
 
     # Determine if we should resolve this thread (MUST be before resolve_only_retry check)
@@ -400,9 +400,9 @@ if [ "$(jq 'length' <<<"$updates_json")" -gt 0 ]; then
     )
   ' "$JSON_PATH" >"$tmp_json"; then
     echo "Error: Failed to apply JSON updates" >&2
-  else
-    mv -f "$tmp_json" "$JSON_PATH"
+    exit 1
   fi
+  mv -f "$tmp_json" "$JSON_PATH"
 fi
 
 # Print summary

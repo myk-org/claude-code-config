@@ -227,8 +227,8 @@ fetch_unresolved_threads() {
         tmp_existing=$(mktemp)
         tmp_new=$(mktemp)
         TEMP_FILES+=("$tmp_existing" "$tmp_new")
-        echo "$all_threads" > "$tmp_existing"
-        echo "$page_threads" > "$tmp_new"
+        printf '%s' "$all_threads" >"$tmp_existing"
+        printf '%s' "$page_threads" >"$tmp_new"
         all_threads=$(jq -s '.[0] + .[1]' "$tmp_existing" "$tmp_new")
         rm -f "$tmp_existing" "$tmp_new"
 
@@ -411,9 +411,11 @@ main() {
     echo "Repository: $owner/$repo, PR: $pr_number" >&2
 
     # Ensure output directory exists
-    mkdir -p /tmp/claude
+    local tmp_base="${TMPDIR:-/tmp}"
+    local out_dir="${tmp_base%/}/claude"
+    mkdir -p "$out_dir"
 
-    local json_path="/tmp/claude/pr-${pr_number}-reviews.json"
+    local json_path="${out_dir}/pr-${pr_number}-reviews.json"
 
     # Fetch all unresolved threads
     echo "Fetching unresolved review threads..." >&2
@@ -509,7 +511,7 @@ main() {
 
     # Save to file atomically
     local tmp_json_path
-    tmp_json_path="$(mktemp "/tmp/claude/pr-${pr_number}-reviews.json.XXXXXX")"
+    tmp_json_path="$(mktemp "${out_dir}/pr-${pr_number}-reviews.json.XXXXXX")"
     TEMP_FILES+=("$tmp_json_path")
 
     echo "$final_output" > "$tmp_json_path"

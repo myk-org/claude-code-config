@@ -1,4 +1,6 @@
 ---
+name: github-ai-review-handler
+description: Processes AI code review comments from Qodo and CodeRabbit
 skipConfirmation: false
 ---
 
@@ -308,7 +310,7 @@ no changes needed):
 
   ```text
   Do you approve proceeding without these changes? (yes/no)
-  - yes: Proceed to Phase 3.5 (Update JSON and Post Replies)
+  - yes: Proceed to Phase 3.5 (Testing & Commit)
   - no: Reconsider and implement the changes
   ```
 
@@ -319,12 +321,30 @@ no changes needed):
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### Step 6: PHASE 3.5 - Update JSON and Post Replies
+### Step 6: PHASE 3.5 - Testing & Commit
 
-**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), update the JSON file and post
-replies to all AI reviewers.
+**MANDATORY STEP 1**: Run all tests WITH coverage
 
-#### Step 6a: Update the JSON File
+**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
+- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
+  the changes? (yes/no)"
+  - If user says "yes": Commit the changes
+  - If user says "no": Acknowledge and proceed to Phase 4 checkpoint (ask about posting replies anyway)
+- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
+  - Analyze coverage gaps and add missing tests
+  - Re-run tests with coverage until BOTH pass
+- **If tests fail**:
+  - Analyze and fix test failures
+  - Re-run until tests pass
+
+**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
+
+### Step 7: PHASE 4 - Update JSON and Post Replies
+
+**MANDATORY**: After Phase 3.5 (testing and commit), update the JSON file and post replies to all AI
+reviewers.
+
+#### Step 7a: Update the JSON File
 
 Read the JSON file from the path stored in `metadata.json_path` and update each processed comment:
 
@@ -359,7 +379,7 @@ Update BOTH the original Qodo thread AND the duplicate CodeRabbit thread (or vic
 
 Write the updated JSON back to the same file path.
 
-#### Step 6b: Post Replies Using the Posting Script
+#### Step 7b: Post Replies Using the Posting Script
 
 After updating the JSON, call the posting script:
 
@@ -377,24 +397,6 @@ Where `<json_path>` is the value from `metadata.json_path` (e.g., `/tmp/claude/p
 - Skipping threads that are still "pending"
 
 **CHECKPOINT**: All replies posted to ALL AI sources (Qodo AND CodeRabbit)
-
-### Step 7: PHASE 4 - Testing & Commit
-
-**MANDATORY STEP 1**: Run all tests WITH coverage
-
-**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
-- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
-  the changes? (yes/no)"
-  - If user says "yes": Commit the changes
-  - If user says "no": Acknowledge and proceed to Phase 5 checkpoint (ask about push anyway)
-- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
-  - Analyze coverage gaps and add missing tests
-  - Re-run tests with coverage until BOTH pass
-- **If tests fail**:
-  - Analyze and fix test failures
-  - Re-run until tests pass
-
-**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
 ### Step 8: PHASE 5 - Push to Remote
 
@@ -436,15 +438,7 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
-### PHASE 3.5: Update JSON and Post Replies
-
-- Update JSON file (at `metadata.json_path`) with `reply` and `status` for each processed comment
-- For duplicates, update BOTH the Qodo AND CodeRabbit threads
-- Call the posting script: `post-review-replies-from-json.sh <json_path>`
-- The script posts replies, resolves threads, and updates timestamps
-- **CHECKPOINT**: All replies posted to ALL AI sources
-
-### PHASE 4: Testing & Commit Phase
+### PHASE 3.5: Testing & Commit Phase
 
 - **MANDATORY STEP 1**: Run all tests WITH coverage
 - **MANDATORY STEP 2**: Check BOTH tests AND coverage - only proceed if BOTH pass
@@ -454,6 +448,14 @@ that CANNOT be skipped:
   changes? (yes/no)"
 - **MANDATORY STEP 4**: If user says yes: Commit the changes
 - **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
+
+### PHASE 4: Update JSON and Post Replies
+
+- Update JSON file (at `metadata.json_path`) with `reply` and `status` for each processed comment
+- For duplicates, update BOTH the Qodo AND CodeRabbit threads
+- Call the posting script: `post-review-replies-from-json.sh <json_path>`
+- The script posts replies, resolves threads, and updates timestamps
+- **CHECKPOINT**: All replies posted to ALL AI sources
 
 ### PHASE 5: Push Phase
 
@@ -475,4 +477,4 @@ that CANNOT be skipped:
 
 **If tests OR coverage fail**:
 - Analyze and fix failures (add tests for coverage gaps)
-- Re-run tests with coverage until BOTH pass before proceeding to Phase 4's commit confirmation.
+- Re-run tests with coverage until BOTH pass before proceeding to Phase 3.5's commit confirmation.
