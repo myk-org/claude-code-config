@@ -219,16 +219,33 @@ for category in "${CATEGORIES[@]}"; do
     effective_thread_id=""
     if [ -n "$thread_id" ] && [ "$thread_id" != "null" ]; then
       effective_thread_id="$thread_id"
+    elif [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
+      # Try to derive thread_id from the review comment node id
+      thread_lookup_result=$(
+        gh api graphql -f query='
+          query($nodeId: ID!) {
+            node(id: $nodeId) {
+              ... on PullRequestReviewComment {
+                pullRequestReviewThread {
+                  id
+                }
+              }
+            }
+          }
+        ' -f nodeId="$node_id" 2>&1
+      ) || {
+        thread_lookup_result=""
+      }
+
+      if [ -n "$thread_lookup_result" ] && ! echo "$thread_lookup_result" | jq -e '.errors' >/dev/null 2>&1; then
+        effective_thread_id=$(echo "$thread_lookup_result" | jq -r '.data.node.pullRequestReviewThread.id // empty')
+      fi
     fi
 
     # Check if we have a usable thread ID
     if [ -z "$effective_thread_id" ]; then
       no_thread_id_count=$((no_thread_id_count + 1))
-      if [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
-        echo "Warning: No thread_id for ${category}[${i}] ($path) - has node_id but it's not valid for GraphQL mutations" >&2
-      else
-        echo "Warning: No thread_id for ${category}[${i}] ($path) - cannot post reply" >&2
-      fi
+      echo "Warning: No resolvable thread_id for ${category}[${i}] ($path) - cannot post reply" >&2
       continue
     fi
 
@@ -278,13 +295,16 @@ for category in "${CATEGORIES[@]}"; do
       continue
     fi
 
+    # Record posted_at immediately after successful reply (before resolve attempt)
+    # This makes the operation idempotent - if resolve fails, we won't re-post
+    posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    updates+=("$category|$i|posted_at|$posted_at_timestamp")
+
     # Determine if we should resolve this thread
     should_resolve=true
     if [ "$category" = "human" ] && [ "$status" != "addressed" ]; then
       should_resolve=false
     fi
-
-    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
     # Resolve thread only if appropriate
     if [ "$should_resolve" = true ]; then
@@ -293,6 +313,9 @@ for category in "${CATEGORIES[@]}"; do
         echo "Failed to resolve ${category}[${i}] ($path) - reply was posted but thread not resolved" >&2
         continue
       fi
+      # Record resolved_at timestamp
+      resolved_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+      updates+=("$category|$i|resolved_at|$resolved_at_timestamp")
       case "$status" in
         addressed|not_addressed|failed)
           addressed_count=$((addressed_count + 1))
@@ -306,9 +329,6 @@ for category in "${CATEGORIES[@]}"; do
       replied_not_resolved_count=$((replied_not_resolved_count + 1))
       echo "Replied to ${category}[${i}] ($path) (not resolved)" >&2
     fi
-
-    # Queue update for JSON
-    updates+=("$category|$i|$timestamp")
   done
 done
 
@@ -325,10 +345,10 @@ if [ ${#updates[@]} -gt 0 ]; then
   cp "$JSON_PATH" "$tmp_json"
 
   for update in "${updates[@]}"; do
-    IFS='|' read -r cat idx ts <<< "$update"
-    if ! jq --arg cat "$cat" --arg idx "$idx" --arg ts "$ts" \
-      '.[$cat][($idx | tonumber)].posted_at = $ts' "$tmp_json" > "$tmp_json_new"; then
-      echo "Warning: Failed to update JSON for ${cat}[${idx}]" >&2
+    IFS='|' read -r cat idx field ts <<< "$update"
+    if ! jq --arg cat "$cat" --arg idx "$idx" --arg field "$field" --arg ts "$ts" \
+      '.[$cat][($idx | tonumber)][$field] = $ts' "$tmp_json" > "$tmp_json_new"; then
+      echo "Warning: Failed to update JSON for ${cat}[${idx}].${field}" >&2
       continue
     fi
     mv -f "$tmp_json_new" "$tmp_json"

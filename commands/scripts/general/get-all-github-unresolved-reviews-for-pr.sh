@@ -202,6 +202,16 @@ fetch_unresolved_threads() {
             fi
         fi
 
+        # Guard against GraphQL errors / non-JSON output (gh may exit 0 with .errors)
+        if ! echo "$raw_result" | jq -e . >/dev/null 2>&1; then
+            echo "Warning: GraphQL returned non-JSON response (page $page_count)" >&2
+            break
+        fi
+        if echo "$raw_result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
+            echo "Warning: GraphQL errors while fetching review threads (page $page_count): $(echo "$raw_result" | jq -r '.errors[0].message // "Unknown error"')" >&2
+            break
+        fi
+
         # Extract pagination info
         has_next_page=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage // false')
         cursor=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor // ""')

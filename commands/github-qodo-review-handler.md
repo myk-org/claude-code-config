@@ -139,7 +139,7 @@ The script returns structured JSON with categorized comments. **Filter to use ON
 - `status`: Status (initially "pending", you will update to "addressed", "skipped", or "not_addressed")
 
 **IMPORTANT**: The `metadata.json_path` contains the path to the saved JSON file. You will update this
-file in Phase 4 before calling the posting script.
+file in Phase 5 before calling the posting script.
 
 ### Step 3: PHASE 1 - Collect User Decisions (COLLECTION ONLY - NO PROCESSING)
 
@@ -266,25 +266,43 @@ no changes needed):
 
   ```text
   Do you approve proceeding without these changes? (yes/no)
-  - yes: Proceed to Phase 4 (Post Qodo Reply)
+  - yes: Proceed to Phase 4 (Testing & Commit)
   - no: Reconsider and implement the changes
   ```
 
 - **If user says "no"**: Re-implement the changes as requested
-- **If user says "yes"**: Proceed to Phase 4 (Post Qodo Reply)
+- **If user says "yes"**: Proceed to Phase 4 (Testing & Commit)
 
 **If ALL approved tasks were implemented**: Proceed directly to Phase 4
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### Step 6: PHASE 4 - Post Qodo Reply
+### Step 6: PHASE 4 - Testing & Commit
 
-**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), update the JSON file and call the
+**MANDATORY STEP 1**: Run all tests WITH coverage
+
+**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
+- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
+  the changes? (yes/no)"
+  - If user says "yes": Commit the changes
+  - If user says "no": Acknowledge and proceed to Phase 4 checkpoint (ask about push anyway)
+- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
+  - Analyze coverage gaps and add missing tests
+  - Re-run tests with coverage until BOTH pass
+- **If tests fail**:
+  - Analyze and fix test failures
+  - Re-run until tests pass
+
+**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
+
+### Step 7: PHASE 5 - Post Qodo Reply
+
+**MANDATORY**: After Phase 4 approval (or if all tasks were implemented), update the JSON file and call the
 posting script.
 
 ---
 
-#### Step 6.1: Update the JSON file
+#### Step 7.1: Update the JSON file
 
 Read the JSON file from `metadata.json_path` (e.g., `/tmp/claude/pr-<number>-reviews.json`).
 
@@ -310,7 +328,7 @@ For each processed Qodo comment, update its entry in the `qodo` array:
 ```json
 {
   "reply": "Not addressed: [AI's reason]",
-  "status": "skipped"
+  "status": "not_addressed"
 }
 ```
 
@@ -318,7 +336,7 @@ Write the updated JSON back to the same file path.
 
 ---
 
-#### Step 6.2: Call the posting script
+#### Step 7.2: Call the posting script
 
 After updating the JSON file, call the posting script:
 
@@ -338,29 +356,11 @@ The script will:
 
 **CHECKPOINT**: All Qodo replies posted successfully
 
-### Step 7: PHASE 5 - Testing & Commit
-
-**MANDATORY STEP 1**: Run all tests WITH coverage
-
-**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
-- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
-  the changes? (yes/no)"
-  - If user says "yes": Commit the changes
-  - If user says "no": Acknowledge and proceed to Phase 5 checkpoint (ask about push anyway)
-- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
-  - Analyze coverage gaps and add missing tests
-  - Re-run tests with coverage until BOTH pass
-- **If tests fail**:
-  - Analyze and fix test failures
-  - Re-run until tests pass
-
-**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
-
 ### Step 8: PHASE 6 - Push to Remote
 
-**MANDATORY STEP 1**: After successful commit (or commit decline), MUST ask: "Changes committed
-successfully. Do you want to push the changes to remote? (yes/no)"
-- If no commit was made, ask: "Do you want to push any existing commits to remote? (yes/no)"
+**MANDATORY STEP 1**: After Phase 5 completion, MUST ask about pushing:
+- If a commit was made: "Changes committed successfully. Do you want to push the changes to remote? (yes/no)"
+- If no commit was made: "No new commit was created. Do you want to push any existing commits to remote? (yes/no)"
 
 **MANDATORY STEP 2**: If user says "yes": Push the changes to remote
 
@@ -393,13 +393,7 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
-### PHASE 4: Post Qodo Reply
-
-- Update the JSON file with reply messages and status for each processed comment
-- Call the posting script to post replies and resolve threads
-- **CHECKPOINT**: All replies posted successfully
-
-### PHASE 5: Testing & Commit Phase
+### PHASE 4: Testing & Commit Phase
 
 - **MANDATORY STEP 1**: Run all tests WITH coverage
 - **MANDATORY STEP 2**: Check BOTH tests AND coverage - only proceed if BOTH pass
@@ -410,10 +404,17 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says yes: Commit the changes
 - **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
+### PHASE 5: Post Qodo Reply
+
+- Update the JSON file with reply messages and status for each processed comment
+- Call the posting script to post replies and resolve threads
+- **CHECKPOINT**: All replies posted successfully
+
 ### PHASE 6: Push Phase
 
-- **MANDATORY STEP 1**: After successful commit, MUST ask user: "Changes committed successfully. Do you want to
-  push the changes to remote? (yes/no)"
+- **MANDATORY STEP 1**: After Phase 5 completion, MUST ask about pushing:
+  - If a commit was made: "Changes committed successfully. Do you want to push the changes to remote? (yes/no)"
+  - If no commit was made: "No new commit was created. Do you want to push any existing commits to remote? (yes/no)"
 - **MANDATORY STEP 2**: If user says yes: Push the changes to remote
 - **CHECKPOINT**: Push confirmation asked (even if user declined)
 
