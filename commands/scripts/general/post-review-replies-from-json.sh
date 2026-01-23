@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Restrict temp file permissions
+umask 077
+
 # Global temp file tracking for cleanup
 TEMP_FILES=()
 cleanup() {
@@ -127,6 +130,12 @@ resolve_thread() {
     return 1
   fi
 
+  # Validate JSON response before parsing
+  if ! echo "$result" | jq -e . >/dev/null 2>&1; then
+    echo "GraphQL returned non-JSON response: $result" >&2
+    return 1
+  fi
+
   # Check for GraphQL errors
   if echo "$result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
     local error_msg
@@ -217,11 +226,23 @@ for category in "${CATEGORIES[@]}"; do
     resolved_at=$(echo "$thread_data" | jq -r '.resolved_at // empty')
     path=$(echo "$thread_data" | jq -r '.path // "unknown"')
 
+    # Determine if we should resolve this thread (MUST be before resolve_only_retry check)
+    should_resolve=true
+    if [ "$category" = "human" ] && [ "$status" != "addressed" ]; then
+      should_resolve=false
+    fi
+
     # Determine if this is a resolve-only retry (posted but not resolved)
     resolve_only_retry=false
     if [ -n "$posted_at" ] && [ -z "$resolved_at" ]; then
-      resolve_only_retry=true
-      echo "Retrying resolve for ${category}[${i}] ($path): posted at $posted_at but not resolved" >&2
+      if [ "$should_resolve" = true ]; then
+        resolve_only_retry=true
+        echo "Retrying resolve for ${category}[${i}] ($path): posted at $posted_at but not resolved" >&2
+      else
+        already_posted_count=$((already_posted_count + 1))
+        echo "Skipping ${category}[${i}] ($path): reply already posted at $posted_at (not resolving by policy)" >&2
+        continue
+      fi
     elif [ -n "$posted_at" ]; then
       # Already fully processed (posted and resolved)
       already_posted_count=$((already_posted_count + 1))
@@ -318,12 +339,6 @@ for category in "${CATEGORIES[@]}"; do
         echo "Failed to post reply for ${category}[${i}] ($path)" >&2
         continue
       fi
-    fi
-
-    # Determine if we should resolve this thread
-    should_resolve=true
-    if [ "$category" = "human" ] && [ "$status" != "addressed" ]; then
-      should_resolve=false
     fi
 
     # Resolve thread only if appropriate

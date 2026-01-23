@@ -101,6 +101,12 @@ EVERYTHING.**
 
 The script returns structured JSON with categorized comments. **Filter to use ONLY the `qodo` array.**
 
+**CRITICAL guard**: If any `qodo` item has a missing or empty `thread_id`, you MUST NOT create an execution task for it. Instead, mark it as:
+- `status`: `"skipped"`
+- `reply`: `"Skipped: No thread_id available to reply/resolve"`
+
+This prevents downstream script failures when trying to post replies to comments that cannot be resolved.
+
 **JSON structure:**
 
 ```json
@@ -305,7 +311,9 @@ no changes needed):
 ### PHASE 5 - Post Qodo Reply
 
 **MANDATORY**: After completing **Phase 4 (Testing & Commit)**, update the JSON file and call the posting
-script.
+script to reply in the existing PR review threads and resolve them.
+
+> **Note**: This phase posts threaded review replies to existing PR review threads, not new issue comments.
 
 ---
 

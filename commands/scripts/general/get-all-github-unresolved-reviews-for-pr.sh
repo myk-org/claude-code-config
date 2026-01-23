@@ -480,8 +480,13 @@ main() {
             coderabbit: $categorized.coderabbit
         }')
 
-    # Save to file
-    echo "$final_output" > "$json_path"
+    # Save to file atomically
+    local tmp_json_path
+    tmp_json_path="$(mktemp "/tmp/claude/pr-${pr_number}-reviews.json.XXXXXX")"
+    TEMP_FILES+=("$tmp_json_path")
+
+    echo "$final_output" > "$tmp_json_path"
+    mv -f "$tmp_json_path" "$json_path"
     echo "Saved to: $json_path" >&2
 
     # Count by category
