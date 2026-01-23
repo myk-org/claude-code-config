@@ -87,7 +87,7 @@ The script returns structured JSON containing:
 - `priority`: HIGH, MEDIUM, or LOW (auto-classified)
 - `source`: Always "human" for this handler
 - `reply`: Reply message (null until set)
-- `status`: Processing status ("pending", "addressed", "skipped")
+- `status`: Processing status ("pending", "addressed", "skipped", "not_addressed")
 
 **IMPORTANT**: This handler only processes the `human` array. Ignore `qodo` and `coderabbit` arrays.
 
@@ -261,8 +261,9 @@ Where `<number>` is the PR number from `metadata.pr_number`.
 **NOTE**: The posting script will:
 - Post replies to all threads with status != "pending"
 - Resolve threads with status = "addressed"
-- For status = "skipped" or "not_addressed", it posts the reply AND resolves the thread
-- To prevent resolution for skipped/not_addressed human reviews, you must handle these manually:
+- For status = "skipped" or "not_addressed", it posts the reply but does NOT resolve the thread (allows reviewer follow-up)
+
+**Note**: The posting script correctly handles human reviews by NOT resolving threads with `skipped` or `not_addressed` statuses. No manual handling is required for these cases.
 
 **STEP 3a (Manual handling for skipped/not_addressed)**: For human reviews that should NOT be resolved,
 post the reply manually without resolving:

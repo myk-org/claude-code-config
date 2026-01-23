@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Secure temp file creation
+umask 077
+
 # Unified script to fetch ALL unresolved review threads from a PR
 # and categorize them by source (human, qodo, coderabbit)
 #
@@ -16,6 +19,17 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PR_INFO_SCRIPT="$SCRIPT_DIR/get-pr-info.sh"
+
+# Track temp files for cleanup
+declare -a TEMP_FILES=()
+
+# Cleanup function for trap
+cleanup() {
+  for f in "${TEMP_FILES[@]:-}"; do
+    rm -f "$f" 2>/dev/null || true
+  done
+}
+trap cleanup EXIT INT TERM
 
 # Known AI reviewer usernames (keep in sync with get-reviewer-from-url.sh)
 QODO_USERS=("qodo-code-review" "qodo-code-review[bot]")
@@ -199,6 +213,7 @@ fetch_unresolved_threads() {
         local tmp_existing tmp_new
         tmp_existing=$(mktemp)
         tmp_new=$(mktemp)
+        TEMP_FILES+=("$tmp_existing" "$tmp_new")
         echo "$all_threads" > "$tmp_existing"
         echo "$page_threads" > "$tmp_new"
         all_threads=$(jq -s '.[0] + .[1]' "$tmp_existing" "$tmp_new")
@@ -270,7 +285,8 @@ fetch_review_comments() {
         return 0
     fi
 
-    echo "$result" | jq '[.[] | {
+    # NOTE: gh api --paginate outputs multiple JSON arrays concatenated, so we use jq -s 'add' to merge them
+    echo "$result" | jq -s 'add // [] | [.[] | {
         thread_id: null,
         node_id: .node_id,
         comment_id: .id,
@@ -293,6 +309,7 @@ process_and_categorize() {
     tmp_coderabbit=$(mktemp)
     tmp_threads=$(mktemp)
     tmp_item=$(mktemp)
+    TEMP_FILES+=("$tmp_human" "$tmp_qodo" "$tmp_coderabbit" "$tmp_threads" "$tmp_item")
 
     # Initialize empty arrays
     echo '[]' > "$tmp_human"

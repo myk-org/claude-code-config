@@ -52,6 +52,10 @@ workflow.**
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
 
+**Command invocation formats:**
+- With URL argument: `/github-qodo-review-handler https://github.com/owner/repo/pull/123#pullrequestreview-456`
+- Without URL argument: `/github-qodo-review-handler` (fetches all unresolved comments)
+
 ---
 
 **Usage patterns:**
@@ -150,7 +154,7 @@ Body: [body - truncate if very long, show first 200 chars]
 Do you want to address this suggestion? (yes/no/skip/all)
 ```
 
-Note: Use RED_CIRCLE for HIGH priority, YELLOW_CIRCLE for MEDIUM priority, and GREEN_CIRCLE for LOW priority.
+Note: Use 🔴 for HIGH priority, 🟡 for MEDIUM priority, and 🟢 for LOW priority.
 
 ### CRITICAL: Track Suggestion Outcomes for Reply
 
@@ -220,6 +224,8 @@ Proceed directly to execution (no confirmation needed since user already approve
    **Update outcome tracking after each task:**
    - If changes were made successfully: Set outcome = `addressed`
    - If AI decided NOT to make changes: Set outcome = `not_addressed`, reason = [explanation of why]
+
+**Note**: LOW-priority tasks are just as important as higher-priority tasks during execution.
 
 ### Step 5: PHASE 3 - Review Unimplemented Changes
 
@@ -305,8 +311,10 @@ Write the updated JSON back to the same file path.
 After updating the JSON file, call the posting script:
 
 ```bash
-~/.claude/commands/scripts/general/post-review-replies-from-json.sh /tmp/claude/pr-<number>-reviews.json
+~/.claude/commands/scripts/general/post-review-replies-from-json.sh "$JSON_PATH"
 ```
+
+Where `$JSON_PATH` is the value from `metadata.json_path` (e.g., `/tmp/claude/pr-<number>-reviews.json`).
 
 The script will:
 - Read the JSON file

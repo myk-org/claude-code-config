@@ -196,8 +196,9 @@ fetch_review_comments() {
   fi
 
   # Transform to thread format
+  # NOTE: gh api --paginate outputs multiple JSON arrays concatenated, so we use jq -s 'add' to merge them
   # NOTE: REST API returns user.login with [bot] suffix for bot accounts
-  echo "$result" | jq '[.[] | {
+  echo "$result" | jq -s 'add // [] | [.[] | {
     thread_id: null,
     node_id: .node_id,
     comment_id: .id,

@@ -29,6 +29,7 @@ set -euo pipefail
 #
 # Status handling:
 #   - addressed: Post reply and resolve thread
+#   - not_addressed: Post reply and resolve thread (similar to addressed)
 #   - skipped: Post reply (with skip reason) and resolve thread
 #   - pending: Skip (not processed yet)
 #   - failed: Retry posting
@@ -226,16 +227,21 @@ for category in "${CATEGORIES[@]}"; do
     fi
 
     # Determine which ID to use for GraphQL
+    # NOTE: Only thread_id (from GraphQL) is valid for mutations.
+    # node_id from REST API is NOT a valid thread ID and will cause GraphQL errors.
     effective_thread_id=""
     if [ -n "$thread_id" ] && [ "$thread_id" != "null" ]; then
       effective_thread_id="$thread_id"
-    elif [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
-      effective_thread_id="$node_id"
     fi
 
     # Check if we have a usable thread ID
     if [ -z "$effective_thread_id" ]; then
-      echo "Warning: No thread_id or node_id for ${category}[${i}] ($path, comment_id=$comment_id) - cannot post reply" >&2
+      # node_id is NOT usable - it's a comment ID, not a thread ID
+      if [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
+        echo "Warning: ${category}[${i}] ($path, comment_id=$comment_id) has node_id but no thread_id - node_id is not valid for GraphQL mutations, cannot post reply" >&2
+      else
+        echo "Warning: No thread_id for ${category}[${i}] ($path, comment_id=$comment_id) - cannot post reply" >&2
+      fi
       no_thread_id_count=$((no_thread_id_count + 1))
       continue
     fi
@@ -257,6 +263,14 @@ for category in "${CATEGORIES[@]}"; do
           reply_message="$reply"
         else
           reply_message="Skipped."
+        fi
+        ;;
+      not_addressed)
+        # Handle not_addressed status - post reply and resolve (similar to addressed)
+        if [ -n "$reply" ]; then
+          reply_message="$reply"
+        else
+          reply_message="Not addressed - see reply for details."
         fi
         ;;
       failed)
@@ -315,6 +329,10 @@ for category in "${CATEGORIES[@]}"; do
         skipped)
           skipped_count=$((skipped_count + 1))
           ;;
+        not_addressed)
+          # Count as addressed since we resolved the thread
+          addressed_count=$((addressed_count + 1))
+          ;;
         failed)
           # Successfully retried a previously failed thread
           addressed_count=$((addressed_count + 1))
@@ -345,7 +363,7 @@ if [ "$pending_count" -gt 0 ]; then
 fi
 
 if [ "$no_thread_id_count" -gt 0 ]; then
-  echo "  Skipped: $no_thread_id_count threads (no thread_id/node_id - likely issue comments)" >&2
+  echo "  Skipped: $no_thread_id_count threads (no thread_id - likely fetched via REST API without GraphQL thread ID)" >&2
 fi
 
 if [ "$failed_count" -gt 0 ]; then
