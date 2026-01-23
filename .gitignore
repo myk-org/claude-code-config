@@ -39,6 +39,7 @@
 !commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md
 !commands/github-release.md
+!commands/github-qodo-review-handler.md
 !commands/github-review-handler.md
 !commands/scripts/
 !commands/scripts/general/
@@ -52,6 +53,8 @@
 !commands/scripts/github-release/
 !commands/scripts/github-release/create-github-release.sh
 !commands/scripts/github-release/get-release-info.sh
+!commands/scripts/github-qodo-review-handler/
+!commands/scripts/github-qodo-review-handler/get-qodo-comments.sh
 !commands/scripts/github-review-handler/
 !commands/scripts/github-review-handler/get-human-reviews.sh
 
