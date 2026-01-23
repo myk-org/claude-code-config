@@ -8,8 +8,8 @@ set -euo pipefail
 
 # Known AI reviewer usernames
 # NOTE: Update these lists when adding new AI reviewer integrations
-QODO_USERS="qodo-code-review qodo-code-review[bot]"
-CODERABBIT_USERS="coderabbitai coderabbitai[bot]"
+QODO_USERS=("qodo-code-review" "qodo-code-review[bot]")
+CODERABBIT_USERS=("coderabbitai" "coderabbitai[bot]")
 
 usage() {
     echo "Usage: $0 <github-url>" >&2
@@ -115,7 +115,7 @@ detect_reviewer() {
     local author="$1"
 
     # Check for Qodo
-    for user in $QODO_USERS; do
+    for user in "${QODO_USERS[@]}"; do
         if [[ "$author" == "$user" ]]; then
             echo "qodo"
             return
@@ -123,7 +123,7 @@ detect_reviewer() {
     done
 
     # Check for CodeRabbit
-    for user in $CODERABBIT_USERS; do
+    for user in "${CODERABBIT_USERS[@]}"; do
         if [[ "$author" == "$user" ]]; then
             echo "coderabbit"
             return

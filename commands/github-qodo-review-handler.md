@@ -227,7 +227,12 @@ When user responds:
 - Show summary: "Created tasks for current suggestion + X remaining suggestions (Y HIGH, Z MEDIUM, W LOW)"
 - **Skip to Phase 2 immediately**
 
-**For "no" or "skip" responses:**
+**For "no" response:**
+
+- Show: "Not addressed"
+- Continue to next suggestion immediately
+
+**For "skip" response:**
 
 - Show: "Skipped"
 - Continue to next suggestion immediately

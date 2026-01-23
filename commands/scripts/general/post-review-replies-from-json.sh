@@ -79,6 +79,13 @@ post_thread_reply() {
   local thread_id="$1"
   local body="$2"
 
+  # GitHub comment bodies have a size limit (~65KB); truncate to avoid failures
+  local max_len=60000
+  if ((${#body} > max_len)); then
+    body="${body:0:max_len}
+...[truncated]"
+  fi
+
   local result
   if ! result=$(gh api graphql -f query='
     mutation($threadId: ID!, $body: String!) {
@@ -265,6 +272,7 @@ for category in "${CATEGORIES[@]}"; do
       effective_thread_id="$thread_id"
     elif [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
       # Try to derive thread_id from the review comment node id
+      thread_lookup_result=""
       if ! thread_lookup_result=$(
         gh api graphql -f query='
           query($nodeId: ID!) {
@@ -278,13 +286,17 @@ for category in "${CATEGORIES[@]}"; do
           }
         ' -f nodeId="$node_id" 2>&1
       ); then
+        echo "Warning: Failed to look up thread_id from node_id for ${category}[${i}] ($path)" >&2
         thread_lookup_result=""
       fi
 
-      if [ -n "$thread_lookup_result" ] \
-        && echo "$thread_lookup_result" | jq -e . >/dev/null 2>&1 \
-        && ! echo "$thread_lookup_result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
-        effective_thread_id=$(echo "$thread_lookup_result" | jq -r '.data.node.pullRequestReviewThread.id // empty')
+      if [ -n "$thread_lookup_result" ] && echo "$thread_lookup_result" | jq -e . >/dev/null 2>&1; then
+        if echo "$thread_lookup_result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
+          gql_error_msg=$(echo "$thread_lookup_result" | jq -r '.errors[0].message // "Unknown error"')
+          echo "Warning: GraphQL errors during thread_id lookup for ${category}[${i}] ($path): $gql_error_msg" >&2
+        else
+          effective_thread_id=$(echo "$thread_lookup_result" | jq -r '.data.node.pullRequestReviewThread.id // empty')
+        fi
       fi
     fi
 

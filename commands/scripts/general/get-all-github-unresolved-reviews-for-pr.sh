@@ -413,7 +413,11 @@ main() {
     # Ensure output directory exists
     local tmp_base="${TMPDIR:-/tmp}"
     local out_dir="${tmp_base%/}/claude"
-    mkdir -p "$out_dir"
+    if [ ! -d "$out_dir" ]; then
+      mkdir -p -m 700 "$out_dir"
+    else
+      chmod 700 "$out_dir" 2>/dev/null || true
+    fi
 
     local json_path="${out_dir}/pr-${pr_number}-reviews.json"
 
@@ -422,7 +426,7 @@ main() {
     local all_threads
     all_threads=$(fetch_unresolved_threads "$owner" "$repo" "$pr_number")
     local thread_count
-    thread_count=$(printf '%s' "$all_threads" | jq 'length')
+    thread_count=$(printf '%s' "$all_threads" | jq -r 'length' 2>/dev/null || printf '0')
     echo "Found $thread_count unresolved thread(s)" >&2
 
     # If review URL provided, also fetch specific thread(s)
@@ -463,7 +467,7 @@ main() {
 
     # Merge specific threads with all threads, deduplicating by prioritized keys
     # Uses temp files to avoid "Argument list too long" error with large JSON
-    if [ "$(echo "$specific_threads" | jq 'length')" -gt 0 ]; then
+    if [ "$(printf '%s' "$specific_threads" | jq -e 'length' 2>/dev/null || echo 0)" -gt 0 ]; then
         local tmp_all tmp_specific merged_threads
         tmp_all=$(mktemp)
         tmp_specific=$(mktemp)

@@ -163,8 +163,11 @@ When the same issue is flagged by BOTH AI reviewers:
 
 **For duplicates:**
 - Keep both suggestions in the list but mark the second one as duplicate
+- Compute a stable identifier for each item:
+  - Prefer `thread_id` when present (unique per thread)
+  - Otherwise use a deterministic composite like `<source>:<comment_id>`
 - Set `is_duplicate: true` on the duplicate
-- Set `duplicate_of: <id>` pointing to the original
+- Set `duplicate_of: <stable_id>` pointing to the original's stable identifier
 - Include `duplicate_sources: ["qodo", "coderabbit"]` on the original
 
 #### Filter Positive Comments
@@ -200,7 +203,7 @@ automatically when the original is processed.**
 **Unified presentation format:**
 
 ```text
-[PRIORITY_EMOJI] [PRIORITY] Priority - Suggestion X of Y
+[HIGH|MEDIUM|LOW] Priority - Suggestion X of Y
 [AI_SOURCE_LINE]
 [DUPLICATE_LINE if applicable]
 File: [file path]
@@ -210,7 +213,7 @@ Body: [body]
 Do you want to address this suggestion? (yes/no/skip/all)
 ```
 
-**Priority emojis:** Use 🔴 for HIGH, 🟡 for MEDIUM, 🟢 for LOW.
+**Priority emojis:** If your environment supports emojis, you may optionally prefix with 🔴 for HIGH, 🟡 for MEDIUM, 🟢 for LOW, but the text label `[HIGH|MEDIUM|LOW]` must always be present for accessibility.
 
 **AI Source line formats:**
 - Single source: `AI Source: Qodo` or `AI Source: CodeRabbit`
@@ -401,7 +404,7 @@ Where `<json_path>` is the value from `metadata.json_path` (e.g., `/tmp/claude/p
 
 **The script handles:**
 - Reading the updated JSON
-- Posting replies to each thread with `status` of "addressed" or "skipped"
+- Posting replies to each thread with `status` of "addressed", "skipped", or "not_addressed"
 - Resolving all processed threads
 - Updating the JSON with `posted_at` timestamps
 - Skipping threads that are still "pending"
