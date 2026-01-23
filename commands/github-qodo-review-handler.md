@@ -24,33 +24,30 @@ workflow.**
 
 ---
 
-## Key Differences from CodeRabbit
+## Key Concepts
 
-**IMPORTANT**: Qodo uses **two types of comments**, which affects how we handle them:
+**Qodo bot username**: `qodo-code-review[bot]`
 
-1. **Bot username**: `qodo-code-review[bot]`
-2. **Comment types**:
-   - **Issue comments**: URL contains `#issuecomment-XXX` - Cannot be resolved, reply is a new issue comment
-   - **Inline review comments**: Part of PR review threads - CAN be resolved, reply threads and resolves
-3. **Reply mechanism differs by type**:
-   - Issue comments: Post a NEW issue comment (cannot thread replies)
-   - Inline reviews: Reply to thread AND resolve it via GraphQL
+**Comment types**:
+- **Inline review comments**: Part of PR review threads - CAN be resolved, reply threads and resolves
+- Comments without `thread_id` cannot be resolved via the posting script
+
+**Reply mechanism**:
+- The posting script handles replying and resolving threads automatically
+- You only need to update the JSON file with `reply` and `status` fields
 
 ---
 
 ## Instructions
 
-### Step 1: Get Qodo comments using the extraction script
+### Step 1: Fetch Qodo comments using the unified fetcher
 
-MAIN_SCRIPT=~/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh
-PR_INFO_SCRIPT=~/.claude/commands/scripts/general/get-pr-info.sh
-
-### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
+**CRITICAL: Simple Command - DO NOT OVERCOMPLICATE**
 
 **ALWAYS use this exact command format:**
 
 ```bash
-$MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
+~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "<USER_INPUT_IF_PROVIDED>"
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
@@ -62,73 +59,78 @@ $MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
 1. **No URL provided**: Fetches all unresolved inline review comments from the PR
 
    ```bash
-   $MAIN_SCRIPT $PR_INFO_SCRIPT
+   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
    ```
 
-1. **Issue comment URL provided**: Fetches that issue comment + all unresolved inline comments
+2. **PR review URL provided**: Fetches comments from that specific review plus all unresolved
 
    ```bash
-   $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#issuecomment-2838476123"
-   ```
-
-1. **PR review URL provided**: Fetches comments from that specific review only
-
-   ```bash
-   $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-2838476123"
+   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "https://github.com/owner/repo/pull/123#pullrequestreview-2838476123"
    ```
 
 **If user provides NO input:**
 
-The script will fetch all unresolved inline review comments. If you want to also process an issue comment,
-instruct the user:
+The script will fetch all unresolved inline review comments. This is the normal use case.
 
-```text
-Running without arguments will fetch all unresolved inline review comments.
-
-To also include a specific Qodo issue comment, provide its URL:
-1. Go to the GitHub PR page
-2. Find the Qodo review comment you want to process (from qodo-code-review[bot])
-3. Click on the comment timestamp/link
-4. Copy the URL from your browser
-
-Example:
-  /github-qodo-review-handler https://github.com/owner/repo/pull/123#issuecomment-2838476123
-```
-
-**THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The scripts handle
+**THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The script handles
 EVERYTHING.**
 
 ### Step 2: Process the JSON output
 
-The script returns structured JSON containing:
+The script returns structured JSON with categorized comments. **Filter to use ONLY the `qodo` array.**
 
-- `metadata`: Contains `owner`, `repo`, `pr_number`, `comment_id`, `comment_type` (review|improve)
-- `summary`: Counts by priority level, plus `by_source` breakdown:
-  - `by_source.issue_comment`: Count of suggestions from issue comments
-  - `by_source.inline_review`: Count of suggestions from inline review threads
-- `suggestions`: Array of items with:
-  - `source`: Either `"issue_comment"` or `"inline_review"` - indicates comment origin
-  - `thread_id`: (inline reviews only) The GraphQL thread ID for replying/resolving
-  - `comment_id`: (inline reviews only) The specific comment ID in the thread
-  - `priority`: HIGH, MEDIUM, or LOW
-  - `category`: The type of suggestion (e.g., "Enhancement", "Bug Fix", "Code Style")
-  - `title`: Brief description of the suggestion
-  - `file`: File path affected
-  - `line_range`: Line number or range (e.g., "42" or "42-50")
-  - `importance`: Numeric score 1-10 (higher = more important, used for sorting)
-  - `description`: Full description of the suggestion
-  - `suggested_diff`: The proposed code change (if provided)
+**JSON structure:**
 
-**Note**: For issue comments, the `metadata.comment_id` applies to the entire comment.
-For inline reviews, each suggestion has its own `thread_id` and `comment_id` for
-replying and resolving.
+```json
+{
+  "metadata": {
+    "owner": "...",
+    "repo": "...",
+    "pr_number": "...",
+    "json_path": "/tmp/claude/pr-<number>-reviews.json"
+  },
+  "human": [ ... ],
+  "qodo": [
+    {
+      "thread_id": "PRRT_xxx",
+      "node_id": "PRRC_xxx",
+      "comment_id": 123456,
+      "author": "qodo-code-review[bot]",
+      "path": "src/main.py",
+      "line": 42,
+      "body": "...",
+      "priority": "HIGH",
+      "source": "qodo",
+      "reply": null,
+      "status": "pending"
+    }
+  ],
+  "coderabbit": [ ... ]
+}
+```
+
+**Field descriptions:**
+- `thread_id`: GraphQL thread ID for replying/resolving (required for posting)
+- `node_id`: REST API node ID (fallback for posting)
+- `comment_id`: REST API comment ID
+- `author`: The bot username
+- `path`: File path affected
+- `line`: Line number
+- `body`: Full description of the suggestion
+- `priority`: HIGH, MEDIUM, or LOW (auto-classified)
+- `source`: Always "qodo" for items in this array
+- `reply`: Reply message (initially null, you will set this)
+- `status`: Status (initially "pending", you will update to "addressed" or "skipped")
+
+**IMPORTANT**: The `metadata.json_path` contains the path to the saved JSON file. You will update this
+file in Phase 3.5 before calling the posting script.
 
 ### Step 3: PHASE 1 - Collect User Decisions (COLLECTION ONLY - NO PROCESSING)
 
 **CRITICAL: This is the COLLECTION phase. Do NOT execute, implement, or process ANY comments yet. Only ask
 questions and create tasks.**
 
-Go through ALL suggestions in priority order, collecting user decisions:
+Go through ALL Qodo suggestions in priority order, collecting user decisions:
 
 1. **HIGH Priority** first
 2. **MEDIUM Priority** second
@@ -140,34 +142,28 @@ process anything during this phase.**
 For ALL suggestions, use this unified format:
 
 ```text
-🔴 [PRIORITY] Priority - Suggestion X of Y
-📍 Source: [Inline Review | Issue Comment]
-📁 File: [file path]
-📍 Lines: [line_range]
-📋 Title: [title]
-💬 Description: [description]
-
-Suggested Diff:
-[suggested_diff if available, otherwise "No diff provided"]
+[PRIORITY_EMOJI] [PRIORITY] Priority - Suggestion X of Y
+File: [path]
+Line: [line]
+Body: [body - truncate if very long, show first 200 chars]
 
 Do you want to address this suggestion? (yes/no/skip/all)
 ```
 
-Note: Use 🔴 for HIGH priority, 🟡 for MEDIUM priority, and 🟢 for LOW priority.
-Note: Source indicates where the suggestion came from - "Inline Review" can be resolved, "Issue Comment" cannot.
+Note: Use RED_CIRCLE for HIGH priority, YELLOW_CIRCLE for MEDIUM priority, and GREEN_CIRCLE for LOW priority.
 
 ### CRITICAL: Track Suggestion Outcomes for Reply
 
 For EVERY suggestion presented, track the outcome for the final reply:
-- **Suggestion number**: Sequential (1, 2, 3...)
-- **Category**: The suggestion category
-- **Title**: The suggestion title
-- **File**: The file path
-- **Outcome**: Will be one of: `addressed`, `not_addressed`, `skipped`
-- **Reason**: Required for `not_addressed` and `skipped` outcomes
+- **Index**: Position in the qodo array (0, 1, 2...)
+- **Path**: The file path
+- **Line**: The line number
+- **Outcome**: Will be one of: `addressed`, `skipped`
+- **Reason**: Required for `skipped` outcomes (user provides this)
+- **Reply message**: What to post as the reply
 
 When user responds:
-- **"yes"**: Outcome will be set after execution (addressed or not_addressed)
+- **"yes"**: Outcome will be set after execution (addressed)
 - **"no" or "skip"**: MUST ask user: "Please provide a brief reason for skipping this suggestion:"
   - Set outcome = `skipped`, reason = user's response
   - If user doesn't provide reason, use "User chose to skip"
@@ -215,7 +211,7 @@ Proceed directly to execution (no confirmation needed since user already approve
 1. **Process all approved tasks:**
    - **CRITICAL**: Process ALL tasks created during Phase 1, regardless of priority level
    - **NEVER skip LOW priority tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
-   - Use the `suggested_diff` as guidance when implementing changes
+   - Use the `body` content as guidance when implementing changes
    - Route to appropriate specialists to implement the changes
    - Process multiple tasks in parallel when possible
    - Mark each task as completed after finishing
@@ -238,16 +234,12 @@ no changes needed):
   ```text
   Unimplemented Changes Review (X approved suggestions not changed):
 
-  1. [PRIORITY] Priority - File: [file] - Line: [line_range]
-     Category: [category]
-     Title: [title]
+  1. [PRIORITY] Priority - File: [path] - Line: [line]
      Reason AI did not implement: [Explain why no changes were made - e.g., "Current code already
      implements the suggestion", "Suggestion is not applicable", "Suggested change would break existing
      functionality"]
 
-  2. [PRIORITY] Priority - File: [file] - Line: [line_range]
-     Category: [category]
-     Title: [title]
+  2. [PRIORITY] Priority - File: [path] - Line: [line]
      Reason AI did not implement: [Explain why no changes were made]
   ...
   ```
@@ -269,131 +261,62 @@ no changes needed):
 
 ### Step 6: PHASE 3.5 - Post Qodo Reply
 
-**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), generate and post replies.
-
-**Handling differs by source type:**
-
----
-
-#### For Issue Comment Suggestions
-
-Post a **NEW issue comment** as the reply (cannot thread or resolve):
-
-**STEP 1**: Generate reply message using this format:
-
-```markdown
-## Qodo Review Response
-
-### Addressed
-| Category | Title | File |
-|----------|-------|------|
-| [category] | [title] | `[file]` |
-
-### Not Addressed
-| Category | Title | File | Reason |
-|----------|-------|------|--------|
-| [category] | [title] | `[file]` | [reason] |
-
-### Skipped
-| Category | Title | File | Reason |
-|----------|-------|------|--------|
-| [category] | [title] | `[file]` | [reason] |
-
----
-*Automated response from Qodo Review Handler*
-```
-
-**Notes on format:**
-- Only include sections that have items (if no skipped items, omit "Skipped" section)
-- Include count in header: "### Addressed (3)"
-- File paths should be in backticks for code formatting
-
-**STEP 2**: Post the reply as a new issue comment:
-
-```bash
-gh api "/repos/$OWNER/$REPO/issues/$PR_NUMBER/comments" \
-  -X POST -f body="$REPLY_MESSAGE"
-```
+**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), update the JSON file and call the
+posting script.
 
 ---
 
-#### For Inline Review Suggestions
+#### Step 6.1: Update the JSON file
 
-Reply to the thread AND resolve it using GraphQL:
+Read the JSON file from `metadata.json_path` (e.g., `/tmp/claude/pr-<number>-reviews.json`).
 
-**STEP 1**: For each addressed inline review suggestion, reply to the thread:
+For each processed Qodo comment, update its entry in the `qodo` array:
 
-```bash
-# Reply to the inline comment thread
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {
-      pullRequestReviewThreadId: $threadId,
-      body: $body
-    }) {
-      comment { id }
-    }
-  }
-' -f threadId="$THREAD_ID" -f body="Done"
+**For ADDRESSED suggestions:**
+```json
+{
+  "reply": "Done",
+  "status": "addressed"
+}
 ```
 
-**STEP 2**: Resolve the thread:
-
-```bash
-# Resolve the thread
-gh api graphql -f query='
-  mutation($threadId: ID!) {
-    resolveReviewThread(input: {
-      threadId: $threadId
-    }) {
-      thread { isResolved }
-    }
-  }
-' -f threadId="$THREAD_ID"
+**For SKIPPED suggestions:**
+```json
+{
+  "reply": "Skipped: [user's reason]",
+  "status": "skipped"
+}
 ```
 
-**Where to get values:**
-- `$THREAD_ID`: From suggestion's `thread_id` field
-- For skipped/not addressed: Reply with reason, optionally leave unresolved
-
-**STEP 3**: For skipped or not addressed inline reviews, reply with the reason and resolve:
-
-```bash
-# Reply with reason
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {
-      pullRequestReviewThreadId: $threadId,
-      body: $body
-    }) {
-      comment { id }
-    }
-  }
-' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
-
-# ALWAYS resolve the thread
-gh api graphql -f query='
-  mutation($threadId: ID!) {
-    resolveReviewThread(input: {
-      threadId: $threadId
-    }) {
-      thread { isResolved }
-    }
-  }
-' -f threadId="$THREAD_ID"
+**For NOT ADDRESSED suggestions (AI decided not to implement):**
+```json
+{
+  "reply": "Not addressed: [AI's reason]",
+  "status": "skipped"
+}
 ```
+
+Write the updated JSON back to the same file path.
 
 ---
 
-**Where to get values (for issue comments):**
-- `$OWNER`: From JSON `metadata.owner`
-- `$REPO`: From JSON `metadata.repo`
-- `$PR_NUMBER`: From JSON `metadata.pr_number`
-- `$REPLY_MESSAGE`: The generated reply from STEP 1
+#### Step 6.2: Call the posting script
 
-**STEP 4**: Confirm all replies were posted successfully before proceeding.
+After updating the JSON file, call the posting script:
 
-**CHECKPOINT**: All replies posted (issue comment AND/OR inline thread replies)
+```bash
+~/.claude/commands/scripts/general/post-review-replies-from-json.sh /tmp/claude/pr-<number>-reviews.json
+```
+
+The script will:
+- Read the JSON file
+- For each comment with status "addressed" or "skipped":
+  - Post the reply to the thread
+  - Resolve the thread
+- Skip comments with status "pending"
+- Update the JSON with `posted_at` timestamps
+
+**CHECKPOINT**: All Qodo replies posted successfully
 
 ### Step 7: PHASE 4 - Testing & Commit
 
@@ -452,9 +375,8 @@ that CANNOT be skipped:
 
 ### PHASE 3.5: Post Qodo Reply
 
-- Generate summary reply from tracked outcomes
-- **For issue comment suggestions**: Post NEW issue comment to PR (cannot thread or resolve)
-- **For inline review suggestions**: Reply to thread AND resolve it via GraphQL
+- Update the JSON file with reply messages and status for each processed comment
+- Call the posting script to post replies and resolve threads
 - **CHECKPOINT**: All replies posted successfully
 
 ### PHASE 4: Testing & Commit Phase

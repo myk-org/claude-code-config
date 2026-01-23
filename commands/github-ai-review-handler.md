@@ -27,27 +27,58 @@ workflow.**
 ## Overview
 
 This unified command:
-1. Fetches suggestions from BOTH Qodo and CodeRabbit
+1. Fetches suggestions from BOTH Qodo and CodeRabbit using a single unified script
 2. Detects and marks duplicates (same file + similar issue)
 3. Presents suggestions with source attribution
 4. Implements approved changes (AI picks one version for duplicates)
-5. Replies to ALL threads (both Qodo AND CodeRabbit)
-6. Resolves ALL threads (both Qodo AND CodeRabbit)
-7. Supports optional URL arguments with auto-detection of AI source
+5. Updates the JSON file with reply messages and status
+6. Posts replies and resolves ALL threads using the posting script
+7. Supports optional URL arguments for specific reviews
 
 ---
 
 ## Key Concepts
 
-### Comment Sources and Reply Mechanisms
+### Comment Sources
 
 **Qodo (`qodo-code-review[bot]`):**
-- **Issue comments**: URL contains `#issuecomment-XXX` - Cannot be resolved, reply is a new issue comment
-- **Inline review comments**: Part of PR review threads - CAN be resolved, reply threads and resolves
+- **Issue comments**: URL contains `#issuecomment-XXX` - Cannot be resolved via GraphQL
+- **Inline review comments**: Part of PR review threads - CAN be resolved
 
 **CodeRabbit (`coderabbitai[bot]`):**
-- **Review body comments**: Part of the PR review body - Reply via reply script, can resolve
-- **Inline review comments**: Part of PR review threads - CAN be resolved, reply threads and resolves
+- **Review body comments**: Part of the PR review body
+- **Inline review comments**: Part of PR review threads - CAN be resolved
+
+### JSON Structure
+
+The unified fetcher produces JSON with this structure:
+
+```json
+{
+  "metadata": {
+    "owner": "...",
+    "repo": "...",
+    "pr_number": "...",
+    "json_path": "/tmp/claude/pr-<number>-reviews.json"
+  },
+  "human": [ ... ],
+  "qodo": [ ... ],
+  "coderabbit": [ ... ]
+}
+```
+
+Each comment in the arrays has:
+- `thread_id`: GraphQL thread ID for replying/resolving
+- `node_id`: REST API node ID (fallback)
+- `comment_id`: REST API comment ID
+- `author`: Username of commenter
+- `path`: File path
+- `line`: Line number
+- `body`: Comment content
+- `priority`: "HIGH", "MEDIUM", or "LOW" (auto-classified)
+- `source`: "qodo", "coderabbit", or "human"
+- `reply`: null (to be set after processing)
+- `status`: "pending" (to be set to "addressed" or "skipped")
 
 ### Deduplication
 
@@ -55,64 +86,59 @@ When the same issue is flagged by BOTH AI reviewers:
 - Marked as duplicate with `is_duplicate: true`
 - Shows both sources in presentation
 - AI picks one implementation (both are valid)
-- Replies sent to BOTH Qodo AND CodeRabbit threads
+- Both Qodo AND CodeRabbit threads are updated and resolved
 
 ---
 
 ## Instructions
 
-### Step 1: Fetch from BOTH AI reviewers
+### Step 1: Fetch AI Review Comments
 
-Run extraction scripts to get comments from each AI reviewer.
+Run the unified fetcher to get all unresolved reviews from both Qodo and CodeRabbit.
 
-**Script paths:**
+**Script path:**
 
 ```bash
-QODO_SCRIPT="$HOME/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh"
-CODERABBIT_SCRIPT="$HOME/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh"
-PR_INFO_SCRIPT="$HOME/.claude/commands/scripts/general/get-pr-info.sh"
-DETECT_SCRIPT="$HOME/.claude/commands/scripts/general/get-reviewer-from-url.sh"
+UNIFIED_SCRIPT="$HOME/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh"
 ```
 
-**Usage patterns:**
+**Usage:**
 
 1. **No URL provided** - Fetches all unresolved from both:
 
    ```bash
-   "$QODO_SCRIPT" "$PR_INFO_SCRIPT"
-   "$CODERABBIT_SCRIPT" "$PR_INFO_SCRIPT"
+   "$UNIFIED_SCRIPT"
    ```
 
-2. **URL(s) provided** - Auto-detect source and route appropriately:
-
-   For each URL argument:
+2. **URL provided** - Fetches all unresolved plus ensures specific review is included:
 
    ```bash
-   # Detect which AI reviewer authored the comment
-   SOURCE=$("$DETECT_SCRIPT" "<url>")
-
-   # Route to appropriate script
-   if [ "$SOURCE" = "qodo" ]; then
-     "$QODO_SCRIPT" "$PR_INFO_SCRIPT" "<url>"
-   elif [ "$SOURCE" = "coderabbit" ]; then
-     "$CODERABBIT_SCRIPT" "$PR_INFO_SCRIPT" "<url>"
-   fi
+   "$UNIFIED_SCRIPT" "<review_url>"
    ```
-
-   Then also fetch all unresolved from the OTHER source (to catch any additional comments).
 
 **Examples:**
 
-- `/github-ai-review-handler` - All unresolved from both
-- `/github-ai-review-handler <qodo_url>` - Specific Qodo + all CodeRabbit
-- `/github-ai-review-handler <coderabbit_url>` - All Qodo + specific CodeRabbit
-- `/github-ai-review-handler <url1> <url2>` - Specific from each (auto-detected)
+- `/github-ai-review-handler` - All unresolved from both AI reviewers
+- `/github-ai-review-handler https://github.com/org/repo/pull/123#pullrequestreview-456` - All + specific review
 
-**IMPORTANT:** The scripts handle everything. Do NOT do additional bash manipulation.
+**IMPORTANT:** The script handles everything. Do NOT do additional bash manipulation.
 
-### Step 2: Merge and Deduplicate
+The script outputs JSON to stdout and saves to the path in `metadata.json_path`.
 
-After receiving JSON from both scripts, merge and detect duplicates.
+### Step 2: Filter to AI Reviews Only
+
+The unified fetcher returns categorized arrays: `human`, `qodo`, `coderabbit`.
+
+**For this command, use ONLY the `qodo` and `coderabbit` arrays.** Ignore the `human` array.
+
+Merge the `qodo` and `coderabbit` arrays into a single list for processing, preserving the `source` field
+to track origin.
+
+### Step 2.5: Detect Duplicates and Filter Positive Comments
+
+#### Duplicate Detection
+
+When the same issue is flagged by BOTH AI reviewers:
 
 **Deduplication criteria:**
 - Same file path
@@ -125,81 +151,19 @@ After receiving JSON from both scripts, merge and detect duplicates.
 - Set `duplicate_of: <id>` pointing to the original
 - Include `duplicate_sources: ["qodo", "coderabbit"]` on the original
 
-**Merged data structure:**
+#### Filter Positive Comments
 
-```json
-{
-  "metadata": {
-    "owner": "...",
-    "repo": "...",
-    "pr_number": "..."
-  },
-  "summary": {
-    "qodo": { "count": 5, "high": 2, "medium": 1, "low": 2 },
-    "coderabbit": { "count": 4, "actionable": 2, "nitpicks": 2 },
-    "duplicates": 2,
-    "total_unique": 7
-  },
-  "suggestions": [
-    {
-      "id": 1,
-      "ai_source": "qodo",
-      "is_duplicate": false,
-      "duplicate_of": null,
-      "duplicate_sources": ["qodo", "coderabbit"],
-      "source": "inline_review",
-      "thread_id": "PRRT_xxx",
-      "comment_id": "123456",
-      "priority": "HIGH",
-      "category": "Bug Fix",
-      "title": "Missing null check",
-      "file": "src/main.py",
-      "line_range": "42-45",
-      "description": "...",
-      "suggested_diff": "..."
-    },
-    {
-      "id": 2,
-      "ai_source": "coderabbit",
-      "is_duplicate": true,
-      "duplicate_of": 1,
-      "source": "inline_review",
-      "thread_id": "PRRT_yyy",
-      "comment_id": "789012",
-      "priority": "HIGH",
-      "title": "Potential null reference",
-      "file": "src/main.py",
-      "line_range": "42",
-      "description": "...",
-      "body": "..."
-    }
-  ]
-}
-```
-
-### Step 2.5: Filter Positive Comments
-
-#### CRITICAL: Filter Positive Comments Before Presentation
-
-Before presenting MEDIUM priority comments to user, classify each duplicate/positive comment.
-
-For each comment, analyze the title and body to filter out positive feedback:
+Before presenting MEDIUM-priority comments, filter out positive feedback.
 
 **POSITIVE (Filter Out) - Comments that are:**
-- Praise/acknowledgment: Contains words like "good", "great", "nice", "excellent", "perfect", "well done", "correct"
-- Positive feedback on fixes: "good fix", "nice improvement", "better approach", "correct implementation"
-- Acknowledgment without suggestions: No action words like "should", "consider", "recommend", "suggest", "try"
+- Praise/acknowledgment: Contains words like "good", "great", "nice", "excellent", "perfect", "well done"
+- Positive feedback on fixes: "good fix", "nice improvement", "better approach"
+- Acknowledgment without suggestions: No action words like "should", "consider", "recommend"
 
 **ACTIONABLE (Keep) - Comments that:**
 - Contain suggestions: "should", "consider", "recommend", "suggest", "could", "might want to"
 - Point out issues: "issue", "problem", "concern", "potential", "risk"
 - Request changes: "change", "update", "modify", "improve", "refactor"
-
-**Examples:**
-- POSITIVE (filter out): "Windows-safe resource import guard: good portability fix"
-- POSITIVE (filter out): "Nice error handling improvement"
-- ACTIONABLE (keep): "Consider adding error handling here"
-- ACTIONABLE (keep): "This could cause performance issues"
 
 Remove all POSITIVE comments before proceeding to Step 3.
 
@@ -223,14 +187,9 @@ automatically when the original is processed.**
 [PRIORITY_EMOJI] [PRIORITY] Priority - Suggestion X of Y
 [AI_SOURCE_LINE]
 [DUPLICATE_LINE if applicable]
-Source: [Inline Review | Issue Comment | Review Body]
 File: [file path]
-Lines: [line_range]
-Title: [title]
-Description: [description]
-
-Suggested Diff (if available):
-[suggested_diff or "No diff provided"]
+Line: [line]
+Body: [body]
 
 Do you want to address this suggestion? (yes/no/skip/all)
 ```
@@ -247,17 +206,15 @@ DUPLICATE: This issue was flagged by both Qodo and CodeRabbit.
            Addressing this will resolve threads in BOTH systems.
 ```
 
-**CRITICAL: Track Suggestion Outcomes for Reply**
+#### Track Suggestion Outcomes for Reply
 
 For EVERY suggestion presented, track the outcome for the final reply:
-- **Suggestion ID**: The unique ID from merged data
-- **AI Source(s)**: Which AI reviewer(s) flagged this (qodo, coderabbit, or both)
-- **Thread ID(s)**: The GraphQL thread ID(s) for replying/resolving
-- **Comment ID(s)**: The specific comment ID(s) for each source
-- **Title**: The suggestion title
-- **File**: The file path
-- **Outcome**: Will be one of: `addressed`, `not_addressed`, `skipped`
-- **Reason**: Required for `not_addressed` and `skipped` outcomes
+- **thread_id**: The GraphQL thread ID for replying/resolving
+- **source**: Which AI reviewer flagged this (qodo or coderabbit)
+- **path**: The file path
+- **line**: The line number
+- **Outcome**: Will be one of: `addressed`, `skipped`
+- **Reason**: Required for `skipped` outcomes
 
 When user responds:
 - **"yes"**: Outcome will be set after execution (addressed or not_addressed)
@@ -272,9 +229,8 @@ When user responds:
 - **DO NOT execute the task - Continue to next suggestion immediately**
 
 **For "all" response:**
-- Create tasks for the current suggestion AND **ALL remaining suggestions across ALL priority levels** automatically
-- **CRITICAL**: "all" means process EVERY remaining suggestion (HIGH, MEDIUM, and LOW priority) - do NOT skip any
-  priority level
+- Create tasks for the current suggestion AND **ALL remaining suggestions across ALL priority levels**
+- **CRITICAL**: "all" means process EVERY remaining suggestion (HIGH, MEDIUM, and LOW) - do NOT skip any
 - Show summary: "Created tasks for current suggestion + X remaining suggestions (Y HIGH, Z MEDIUM, W LOW)"
 - **Skip to Phase 2 immediately**
 
@@ -304,8 +260,8 @@ Proceed directly to execution (no confirmation needed since user already approve
 
 2. **Process all approved tasks:**
    - **CRITICAL**: Process ALL tasks created during Phase 1, regardless of priority level
-   - **NEVER skip LOW priority tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
-   - Use the `suggested_diff` or `body` as guidance when implementing changes
+   - **NEVER skip LOW-priority tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
+   - Use the `body` field as guidance when implementing changes
    - Route to appropriate specialists to implement the changes
    - Process multiple tasks in parallel when possible
    - Mark each task as completed after finishing
@@ -328,16 +284,14 @@ no changes needed):
   ```text
   Unimplemented Changes Review (X approved suggestions not changed):
 
-  1. [PRIORITY] Priority - File: [file] - Line: [line_range]
+  1. [PRIORITY] Priority - File: [file] - Line: [line]
      AI Source: [Qodo | CodeRabbit | Both]
-     Title: [title]
-     Reason AI did not implement: [Explain why no changes were made - e.g., "Current code already
-     implements the suggestion", "Suggestion is not applicable", "Suggested change would break existing
-     functionality"]
+     Body: [body excerpt]
+     Reason AI did not implement: [Explain why no changes were made]
 
-  2. [PRIORITY] Priority - File: [file] - Line: [line_range]
+  2. [PRIORITY] Priority - File: [file] - Line: [line]
      AI Source: [Qodo | CodeRabbit | Both]
-     Title: [title]
+     Body: [body excerpt]
      Reason AI did not implement: [Explain why no changes were made]
   ...
   ```
@@ -346,7 +300,7 @@ no changes needed):
 
   ```text
   Do you approve proceeding without these changes? (yes/no)
-  - yes: Proceed to Phase 3.5 (Post AI Review Replies)
+  - yes: Proceed to Phase 3.5 (Update JSON and Post Replies)
   - no: Reconsider and implement the changes
   ```
 
@@ -357,211 +311,62 @@ no changes needed):
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### Step 6: PHASE 3.5 - Post Replies to ALL AI Sources
+### Step 6: PHASE 3.5 - Update JSON and Post Replies
 
-**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), generate and post replies to
-ALL AI reviewers that flagged each suggestion.
+**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), update the JSON file and post
+replies to all AI reviewers.
 
-**CRITICAL: For duplicates, reply to BOTH Qodo AND CodeRabbit threads**
+#### Step 6a: Update the JSON File
 
----
-
-#### Qodo Issue Comment Suggestions
-
-Post a **NEW issue comment** as the reply (cannot thread or resolve):
-
-**Reply format:**
-
-```markdown
-## Qodo Review Response
-
-### Addressed
-| Category | Title | File |
-|----------|-------|------|
-| [category] | [title] | `[file]` |
-
-### Not Addressed
-| Category | Title | File | Reason |
-|----------|-------|------|--------|
-| [category] | [title] | `[file]` | [reason] |
-
-### Skipped
-| Category | Title | File | Reason |
-|----------|-------|------|--------|
-| [category] | [title] | `[file]` | [reason] |
-
----
-*Automated response from AI Review Handler*
-```
-
-**Post command:**
-
-```bash
-gh api "/repos/$OWNER/$REPO/issues/$PR_NUMBER/comments" \
-  -X POST -f body="$REPLY_MESSAGE"
-```
-
----
-
-#### Qodo Inline Review Suggestions
-
-Reply to thread AND resolve using GraphQL:
+Read the JSON file from the path stored in `metadata.json_path` and update each processed comment:
 
 **For ADDRESSED suggestions:**
+- Set `reply` to `"Done"` or a brief description of the fix
+- Set `status` to `"addressed"`
 
-```bash
-# Reply to the inline comment thread
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {
-      pullRequestReviewThreadId: $threadId,
-      body: $body
-    }) {
-      comment { id }
-    }
-  }
-' -f threadId="$THREAD_ID" -f body="Done"
+**For SKIPPED suggestions:**
+- Set `reply` to `"Skipped: <reason>"` where reason is the user's skip reason
+- Set `status` to `"skipped"`
 
-# Resolve the thread
-gh api graphql -f query='
-  mutation($threadId: ID!) {
-    resolveReviewThread(input: {
-      threadId: $threadId
-    }) {
-      thread { isResolved }
-    }
-  }
-' -f threadId="$THREAD_ID"
+**For duplicates:**
+Update BOTH the original Qodo thread AND the duplicate CodeRabbit thread (or vice versa).
+
+**Example update for a qodo comment:**
+
+```json
+{
+  "thread_id": "PRRT_xxx",
+  "node_id": "...",
+  "comment_id": 123456,
+  "author": "qodo-code-review[bot]",
+  "path": "src/main.py",
+  "line": 42,
+  "body": "...",
+  "priority": "HIGH",
+  "source": "qodo",
+  "reply": "Done",
+  "status": "addressed"
+}
 ```
 
-**For SKIPPED or NOT ADDRESSED suggestions:**
+Write the updated JSON back to the same file path.
+
+#### Step 6b: Post Replies Using the Posting Script
+
+After updating the JSON, call the posting script:
 
 ```bash
-# Reply with reason
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {
-      pullRequestReviewThreadId: $threadId,
-      body: $body
-    }) {
-      comment { id }
-    }
-  }
-' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
-
-# ALWAYS resolve the thread (even for skipped/not addressed)
-gh api graphql -f query='
-  mutation($threadId: ID!) {
-    resolveReviewThread(input: {
-      threadId: $threadId
-    }) {
-      thread { isResolved }
-    }
-  }
-' -f threadId="$THREAD_ID"
+~/.claude/commands/scripts/general/post-review-replies-from-json.sh "<json_path>"
 ```
 
----
+Where `<json_path>` is the value from `metadata.json_path` (e.g., `/tmp/claude/pr-123-reviews.json`).
 
-#### CodeRabbit Review Body Comments
-
-Post threaded replies using the reply script:
-
-**For ADDRESSED comments:**
-
-```bash
-~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "Done" --comment-id <comment_id> --resolve
-```
-
-**For NOT ADDRESSED or SKIPPED comments:**
-
-```bash
-~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "<reason>" --comment-id <comment_id> --resolve
-```
-
----
-
-#### CodeRabbit Inline Review Comments
-
-Reply to thread AND resolve using GraphQL (same as Qodo inline):
-
-**For ADDRESSED comments:**
-
-```bash
-# Reply to the inline comment thread
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {
-      pullRequestReviewThreadId: $threadId,
-      body: $body
-    }) {
-      comment { id }
-    }
-  }
-' -f threadId="$THREAD_ID" -f body="Done"
-
-# Resolve the thread
-gh api graphql -f query='
-  mutation($threadId: ID!) {
-    resolveReviewThread(input: {
-      threadId: $threadId
-    }) {
-      thread { isResolved }
-    }
-  }
-' -f threadId="$THREAD_ID"
-```
-
-**For SKIPPED or NOT ADDRESSED comments:**
-
-```bash
-# Reply with reason
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {
-      pullRequestReviewThreadId: $threadId,
-      body: $body
-    }) {
-      comment { id }
-    }
-  }
-' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
-
-# ALWAYS resolve the thread (even for skipped/not addressed)
-gh api graphql -f query='
-  mutation($threadId: ID!) {
-    resolveReviewThread(input: {
-      threadId: $threadId
-    }) {
-      thread { isResolved }
-    }
-  }
-' -f threadId="$THREAD_ID"
-```
-
----
-
-#### Handling Duplicates
-
-**CRITICAL: For suggestions flagged by BOTH AI reviewers, reply to BOTH threads:**
-
-1. Reply to Qodo thread (using Qodo's thread_id)
-2. Reply to CodeRabbit thread (using CodeRabbit's thread_id)
-3. Resolve BOTH threads if addressed
-
-**Example for duplicate that was addressed:**
-
-```bash
-# Reply to Qodo thread
-gh api graphql -f query='...' -f threadId="$QODO_THREAD_ID" -f body="Done"
-gh api graphql -f query='...' -f threadId="$QODO_THREAD_ID"  # Resolve
-
-# Reply to CodeRabbit thread
-gh api graphql -f query='...' -f threadId="$CODERABBIT_THREAD_ID" -f body="Done"
-gh api graphql -f query='...' -f threadId="$CODERABBIT_THREAD_ID"  # Resolve
-```
-
----
+**The script handles:**
+- Reading the updated JSON
+- Posting replies to each thread with `status` of "addressed" or "skipped"
+- Resolving all processed threads
+- Updating the JSON with `posted_at` timestamps
+- Skipping threads that are still "pending"
 
 **CHECKPOINT**: All replies posted to ALL AI sources (Qodo AND CodeRabbit)
 
@@ -602,8 +407,9 @@ that CANNOT be skipped:
 
 ### PHASE 1: Collection Phase
 
-- Fetch from BOTH Qodo and CodeRabbit
-- Merge and deduplicate suggestions
+- Fetch from unified script (covers BOTH Qodo and CodeRabbit)
+- Filter to use only `qodo` and `coderabbit` arrays
+- Detect duplicates and filter positive comments
 - ONLY collect decisions (yes/no/skip/all) and create tasks - NO execution
 - **CHECKPOINT**: ALL suggestions have been presented and user decisions collected
 
@@ -622,14 +428,12 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
-### PHASE 3.5: Post AI Review Replies
+### PHASE 3.5: Update JSON and Post Replies
 
-- Generate summary reply from tracked outcomes
-- **For Qodo issue comments**: Post NEW issue comment to PR
-- **For Qodo inline reviews**: Reply to thread AND resolve via GraphQL
-- **For CodeRabbit review body**: Reply using reply script
-- **For CodeRabbit inline reviews**: Reply to thread AND resolve via GraphQL
-- **For duplicates**: Reply to BOTH Qodo AND CodeRabbit threads
+- Update JSON file (at `metadata.json_path`) with `reply` and `status` for each processed comment
+- For duplicates, update BOTH the Qodo AND CodeRabbit threads
+- Call the posting script: `post-review-replies-from-json.sh <json_path>`
+- The script posts replies, resolves threads, and updates timestamps
 - **CHECKPOINT**: All replies posted to ALL AI sources
 
 ### PHASE 4: Testing & Commit Phase
@@ -658,7 +462,7 @@ that CANNOT be skipped:
 - **NEVER skip checkpoints** - each phase must reach its checkpoint before proceeding
 - **NEVER skip confirmations** - commit and push confirmations are REQUIRED even if previously discussed
 - **NEVER assume** - always ask for confirmation, never assume user wants to commit/push
-- **NEVER forget duplicate threads** - if a suggestion was flagged by both AI reviewers, reply to BOTH
+- **NEVER forget duplicate threads** - if a suggestion was flagged by both AI reviewers, update BOTH in JSON
 - **COMPLETE each phase fully** before starting the next phase
 
 **If tests OR coverage fail**:

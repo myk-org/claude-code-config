@@ -7,6 +7,7 @@ set -euo pipefail
 # Output: "qodo", "coderabbit", or "human"
 
 # Known AI reviewer usernames
+# NOTE: Update these lists when adding new AI reviewer integrations
 QODO_USERS="qodo-code-review qodo-code-review[bot]"
 CODERABBIT_USERS="coderabbitai coderabbitai[bot]"
 

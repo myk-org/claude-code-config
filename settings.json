@@ -25,9 +25,8 @@
       "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
       "Bash(~/.claude/commands/scripts/general/get-reviewer-from-url.sh:*)",
       "Bash(~/.claude/commands/scripts/general/get-unresolved-review-threads.sh:*)",
-      "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh:*)",
-      "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh:*)",
-      "Bash(~/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh:*)",
+      "Bash(~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh:*)",
+      "Bash(~/.claude/commands/scripts/general/post-review-replies-from-json.sh:*)",
       "Bash(~/.claude/commands/scripts/github-release/get-release-info.sh:*)",
       "Bash(~/.claude/commands/scripts/github-release/create-github-release.sh:*)",
       "Grep"
@@ -135,9 +134,8 @@
     "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
     "Bash(~/.claude/commands/scripts/general/get-reviewer-from-url.sh:*)",
     "Bash(~/.claude/commands/scripts/general/get-unresolved-review-threads.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh:*)",
+    "Bash(~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh:*)",
+    "Bash(~/.claude/commands/scripts/general/post-review-replies-from-json.sh:*)",
     "Bash(~/.claude/commands/scripts/github-release/get-release-info.sh:*)",
     "Bash(~/.claude/commands/scripts/github-release/create-github-release.sh:*)"
   ],

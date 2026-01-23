@@ -47,8 +47,8 @@
 !commands/scripts/general/get-pr-info.sh
 !commands/scripts/general/get-reviewer-from-url.sh
 !commands/scripts/general/get-unresolved-review-threads.sh
-!commands/scripts/github-coderabbitai-review-handler/
-!commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
+!commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+!commands/scripts/general/post-review-replies-from-json.sh
 !commands/scripts/github-pr-review/
 !commands/scripts/github-pr-review/get-claude-md.sh
 !commands/scripts/github-pr-review/get-pr-diff.sh
@@ -56,10 +56,6 @@
 !commands/scripts/github-release/
 !commands/scripts/github-release/create-github-release.sh
 !commands/scripts/github-release/get-release-info.sh
-!commands/scripts/github-qodo-review-handler/
-!commands/scripts/github-qodo-review-handler/get-qodo-comments.sh
-!commands/scripts/github-review-handler/
-!commands/scripts/github-review-handler/get-human-reviews.sh
 
 # skills/
 !skills/

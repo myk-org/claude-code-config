@@ -1,0 +1,494 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Unified script to fetch ALL unresolved review threads from a PR
+# and categorize them by source (human, qodo, coderabbit)
+#
+# Usage: get-all-github-unresolved-reviews-for-pr.sh [review_url]
+#
+# Arguments:
+#   review_url  Optional: specific review URL for context
+#               (e.g., #pullrequestreview-XXX or #discussion_rXXX)
+#
+# Output: JSON with metadata and categorized comments
+#
+# Dependencies: gh, jq, get-pr-info.sh (in same directory)
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PR_INFO_SCRIPT="$SCRIPT_DIR/get-pr-info.sh"
+
+# Known AI reviewer usernames (keep in sync with get-reviewer-from-url.sh)
+QODO_USERS=("qodo-code-review" "qodo-code-review[bot]")
+CODERABBIT_USERS=("coderabbitai" "coderabbitai[bot]")
+
+show_usage() {
+    echo "Usage: $0 [review_url]" >&2
+    echo "" >&2
+    echo "Fetches ALL unresolved review threads from the current PR" >&2
+    echo "and categorizes them by source (human, qodo, coderabbit)." >&2
+    echo "" >&2
+    echo "Arguments:" >&2
+    echo "  review_url  Optional: specific review URL for context" >&2
+    echo "" >&2
+    echo "Output:" >&2
+    echo "  JSON with metadata and categorized comments" >&2
+    echo "  Also saves to /tmp/claude/pr-<number>-reviews.json" >&2
+    echo "" >&2
+    echo "Examples:" >&2
+    echo "  $0" >&2
+    echo "  $0 https://github.com/org/repo/pull/123#pullrequestreview-456" >&2
+    exit 1
+}
+
+# Check required dependencies
+check_dependencies() {
+    for cmd in gh jq; do
+        if ! command -v "$cmd" &>/dev/null; then
+            echo "Error: '$cmd' is required but not installed." >&2
+            exit 1
+        fi
+    done
+
+    if [ ! -f "$PR_INFO_SCRIPT" ]; then
+        echo "Error: PR info script not found: $PR_INFO_SCRIPT" >&2
+        exit 1
+    fi
+}
+
+# Detect source from author login
+# Returns: "qodo", "coderabbit", or "human"
+detect_source() {
+    local author="$1"
+
+    # Check for Qodo
+    for user in "${QODO_USERS[@]}"; do
+        if [[ "$author" == "$user" ]]; then
+            echo "qodo"
+            return
+        fi
+    done
+
+    # Check for CodeRabbit
+    for user in "${CODERABBIT_USERS[@]}"; do
+        if [[ "$author" == "$user" ]]; then
+            echo "coderabbit"
+            return
+        fi
+    done
+
+    echo "human"
+}
+
+# Classify priority from comment body
+# Returns: "HIGH", "MEDIUM", or "LOW"
+classify_priority() {
+    local body="$1"
+    local body_lower
+    body_lower=$(echo "$body" | tr '[:upper:]' '[:lower:]')
+
+    # HIGH: security, bugs, critical issues
+    if echo "$body_lower" | grep -qE '(security|vulnerability|critical|bug|error|crash|must|required|breaking|urgent|injection|xss|csrf|auth)'; then
+        echo "HIGH"
+        return
+    fi
+
+    # LOW: style, formatting, minor
+    if echo "$body_lower" | grep -qE '(style|formatting|typo|nitpick|nit:|minor|optional|cosmetic|whitespace|indentation)'; then
+        echo "LOW"
+        return
+    fi
+
+    # MEDIUM: improvements, suggestions (or default)
+    echo "MEDIUM"
+}
+
+# Fetch all unresolved review threads using paginated GraphQL
+# Returns JSON array of unresolved threads
+fetch_unresolved_threads() {
+    local owner="$1"
+    local repo="$2"
+    local pr_number="$3"
+
+    local all_threads='[]'
+    local cursor=""
+    local has_next_page="true"
+    local page_count=0
+
+    while [ "$has_next_page" = "true" ]; do
+        page_count=$((page_count + 1))
+        local raw_result
+
+        if [ -z "$cursor" ]; then
+            # First query - no cursor
+            if ! raw_result=$(gh api graphql -f query='
+                query($owner: String!, $repo: String!, $pr: Int!) {
+                    repository(owner: $owner, name: $repo) {
+                        pullRequest(number: $pr) {
+                            reviewThreads(first: 100) {
+                                pageInfo {
+                                    hasNextPage
+                                    endCursor
+                                }
+                                nodes {
+                                    id
+                                    isResolved
+                                    comments(first: 1) {
+                                        nodes {
+                                            id
+                                            databaseId
+                                            author { login }
+                                            path
+                                            line
+                                            body
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" 2>&1); then
+                echo "Warning: Could not fetch unresolved threads: $raw_result" >&2
+                echo "[]"
+                return 0
+            fi
+        else
+            # Subsequent queries - with cursor
+            if ! raw_result=$(gh api graphql -f query='
+                query($owner: String!, $repo: String!, $pr: Int!, $cursor: String!) {
+                    repository(owner: $owner, name: $repo) {
+                        pullRequest(number: $pr) {
+                            reviewThreads(first: 100, after: $cursor) {
+                                pageInfo {
+                                    hasNextPage
+                                    endCursor
+                                }
+                                nodes {
+                                    id
+                                    isResolved
+                                    comments(first: 1) {
+                                        nodes {
+                                            id
+                                            databaseId
+                                            author { login }
+                                            path
+                                            line
+                                            body
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" -f cursor="$cursor" 2>&1); then
+                echo "Warning: Could not fetch unresolved threads (page $page_count): $raw_result" >&2
+                break
+            fi
+        fi
+
+        # Extract pagination info
+        has_next_page=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage // false')
+        cursor=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor // ""')
+
+        # Extract threads from this page and accumulate
+        # Use temp files to avoid "Argument list too long" error with large JSON
+        local page_threads
+        page_threads=$(echo "$raw_result" | jq '.data.repository.pullRequest.reviewThreads.nodes // []')
+
+        local tmp_existing tmp_new
+        tmp_existing=$(mktemp)
+        tmp_new=$(mktemp)
+        echo "$all_threads" > "$tmp_existing"
+        echo "$page_threads" > "$tmp_new"
+        all_threads=$(jq -s '.[0] + .[1]' "$tmp_existing" "$tmp_new")
+        rm -f "$tmp_existing" "$tmp_new"
+
+        if [ "$has_next_page" = "true" ]; then
+            echo "Fetching page $((page_count + 1)) of review threads..." >&2
+        fi
+    done
+
+    if [ "$page_count" -gt 1 ]; then
+        echo "Fetched $page_count pages of review threads" >&2
+    fi
+
+    # Filter unresolved threads and extract first comment details
+    echo "$all_threads" | jq '
+        [.[] |
+         select(.isResolved == false) |
+         . as $thread |
+         .comments.nodes[0] as $comment |
+         {
+             thread_id: $thread.id,
+             node_id: ($comment.id // null),
+             comment_id: ($comment.databaseId // null),
+             author: ($comment.author.login // null),
+             path: ($comment.path // null),
+             line: ($comment.line // null),
+             body: ($comment.body // "")
+         }]
+    '
+}
+
+# Fetch a specific review thread by discussion ID
+fetch_specific_discussion() {
+    local owner="$1"
+    local repo="$2"
+    local pr_number="$3"
+    local discussion_id="$4"
+
+    local result
+    if ! result=$(gh api "/repos/$owner/$repo/pulls/$pr_number/comments/$discussion_id" 2>&1); then
+        echo "Warning: Could not fetch discussion $discussion_id: $result" >&2
+        echo "[]"
+        return 0
+    fi
+
+    echo "$result" | jq '[{
+        thread_id: null,
+        node_id: .node_id,
+        comment_id: .id,
+        author: .user.login,
+        path: .path,
+        line: .line,
+        body: .body
+    }]'
+}
+
+# Fetch inline comments from a specific PR review
+fetch_review_comments() {
+    local owner="$1"
+    local repo="$2"
+    local pr_number="$3"
+    local review_id="$4"
+
+    local result
+    if ! result=$(gh api --paginate "/repos/$owner/$repo/pulls/$pr_number/reviews/$review_id/comments" 2>&1); then
+        echo "Warning: Could not fetch review $review_id comments: $result" >&2
+        echo "[]"
+        return 0
+    fi
+
+    echo "$result" | jq '[.[] | {
+        thread_id: null,
+        node_id: .node_id,
+        comment_id: .id,
+        author: .user.login,
+        path: .path,
+        line: .line,
+        body: .body
+    }]'
+}
+
+# Process threads: add source and priority, categorize
+# Uses temp files to avoid "Argument list too long" error with large JSON
+process_and_categorize() {
+    local threads_json="$1"
+
+    # Create temp files to accumulate results (avoids argument length limits)
+    local tmp_human tmp_qodo tmp_coderabbit tmp_threads tmp_item
+    tmp_human=$(mktemp)
+    tmp_qodo=$(mktemp)
+    tmp_coderabbit=$(mktemp)
+    tmp_threads=$(mktemp)
+    tmp_item=$(mktemp)
+
+    # Initialize empty arrays
+    echo '[]' > "$tmp_human"
+    echo '[]' > "$tmp_qodo"
+    echo '[]' > "$tmp_coderabbit"
+
+    # Save threads to temp file for processing
+    echo "$threads_json" > "$tmp_threads"
+
+    # Process each thread
+    local thread_count
+    thread_count=$(jq 'length' < "$tmp_threads")
+
+    for ((i = 0; i < thread_count; i++)); do
+        local thread author body source priority
+
+        thread=$(jq ".[$i]" < "$tmp_threads")
+        author=$(echo "$thread" | jq -r '.author // ""')
+        body=$(echo "$thread" | jq -r '.body // ""')
+
+        source=$(detect_source "$author")
+        priority=$(classify_priority "$body")
+
+        # Enrich thread with source, priority, and status fields
+        local enriched_thread
+        enriched_thread=$(echo "$thread" | jq \
+            --arg source "$source" \
+            --arg priority "$priority" \
+            '. + {
+                priority: $priority,
+                source: $source,
+                reply: null,
+                status: "pending"
+            }')
+
+        # Save enriched thread to temp file
+        echo "$enriched_thread" > "$tmp_item"
+
+        # Categorize by source using temp files
+        case "$source" in
+            qodo)
+                jq -s '.[0] + [.[1]]' "$tmp_qodo" "$tmp_item" > "${tmp_qodo}.new"
+                mv "${tmp_qodo}.new" "$tmp_qodo"
+                ;;
+            coderabbit)
+                jq -s '.[0] + [.[1]]' "$tmp_coderabbit" "$tmp_item" > "${tmp_coderabbit}.new"
+                mv "${tmp_coderabbit}.new" "$tmp_coderabbit"
+                ;;
+            *)
+                jq -s '.[0] + [.[1]]' "$tmp_human" "$tmp_item" > "${tmp_human}.new"
+                mv "${tmp_human}.new" "$tmp_human"
+                ;;
+        esac
+    done
+
+    # Output categorized results using temp files
+    jq -s '{human: .[0], qodo: .[1], coderabbit: .[2]}' "$tmp_human" "$tmp_qodo" "$tmp_coderabbit"
+
+    # Cleanup temp files
+    rm -f "$tmp_human" "$tmp_qodo" "$tmp_coderabbit" "$tmp_threads" "$tmp_item"
+}
+
+main() {
+    # Handle help flag
+    if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
+        show_usage
+    fi
+
+    check_dependencies
+
+    local review_url="${1:-}"
+
+    # Get PR info
+    echo "Getting PR information..." >&2
+    local pr_info
+    if ! pr_info=$("$PR_INFO_SCRIPT" 2>&1); then
+        echo "Error: Failed to get PR information: $pr_info" >&2
+        exit 1
+    fi
+
+    # Parse PR info output
+    local repo_full_name pr_number
+    read -r repo_full_name pr_number _rest <<<"$pr_info"
+
+    if [ -z "${repo_full_name:-}" ] || [ -z "${pr_number:-}" ]; then
+        echo "Error: Invalid PR info output: '$pr_info'" >&2
+        echo "Expected format: 'owner/repo pr_number'" >&2
+        exit 1
+    fi
+
+    if ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
+        echo "Error: PR number must be numeric, got: '$pr_number'" >&2
+        exit 1
+    fi
+
+    local owner repo
+    owner=$(echo "$repo_full_name" | cut -d'/' -f1)
+    repo=$(echo "$repo_full_name" | cut -d'/' -f2)
+
+    if [ -z "$owner" ] || [ -z "$repo" ]; then
+        echo "Error: Could not parse owner/repo from: '$repo_full_name'" >&2
+        exit 1
+    fi
+
+    echo "Repository: $owner/$repo, PR: $pr_number" >&2
+
+    # Ensure output directory exists
+    mkdir -p /tmp/claude
+
+    local json_path="/tmp/claude/pr-${pr_number}-reviews.json"
+
+    # Fetch all unresolved threads
+    echo "Fetching unresolved review threads..." >&2
+    local all_threads
+    all_threads=$(fetch_unresolved_threads "$owner" "$repo" "$pr_number")
+    local thread_count
+    thread_count=$(echo "$all_threads" | jq 'length')
+    echo "Found $thread_count unresolved thread(s)" >&2
+
+    # If review URL provided, also fetch specific thread(s)
+    local specific_threads='[]'
+    if [ -n "$review_url" ]; then
+        if [[ "$review_url" =~ pullrequestreview-([0-9]+) ]]; then
+            local review_id="${BASH_REMATCH[1]}"
+            echo "Fetching comments from PR review $review_id..." >&2
+            specific_threads=$(fetch_review_comments "$owner" "$repo" "$pr_number" "$review_id")
+            local specific_count
+            specific_count=$(echo "$specific_threads" | jq 'length')
+            echo "Found $specific_count comment(s) from review $review_id" >&2
+
+        elif [[ "$review_url" =~ discussion_r([0-9]+) ]]; then
+            local discussion_id="${BASH_REMATCH[1]}"
+            echo "Fetching discussion $discussion_id..." >&2
+            specific_threads=$(fetch_specific_discussion "$owner" "$repo" "$pr_number" "$discussion_id")
+            local specific_count
+            specific_count=$(echo "$specific_threads" | jq 'length')
+            echo "Found $specific_count comment(s) from discussion $discussion_id" >&2
+
+        elif [[ "$review_url" =~ issuecomment-([0-9]+) ]]; then
+            echo "Note: Issue comments (#issuecomment-*) are not review threads, skipping specific fetch" >&2
+
+        else
+            echo "Warning: Unrecognized URL fragment in: $review_url" >&2
+        fi
+    fi
+
+    # Merge specific threads with all threads, deduplicating by comment_id
+    if [ "$(echo "$specific_threads" | jq 'length')" -gt 0 ]; then
+        local merged_threads
+        merged_threads=$(jq -n \
+            --argjson all "$all_threads" \
+            --argjson specific "$specific_threads" '
+            ($all | map(.comment_id) | map(select(. != null))) as $existing_ids |
+            $all + [$specific[] | select(.comment_id as $id | ($existing_ids | index($id)) == null)]
+        ')
+        all_threads="$merged_threads"
+    fi
+
+    # Process and categorize threads
+    echo "Categorizing threads by source..." >&2
+    local categorized
+    categorized=$(process_and_categorize "$all_threads")
+
+    # Build final output
+    local final_output
+    final_output=$(jq -n \
+        --arg owner "$owner" \
+        --arg repo "$repo" \
+        --arg pr_number "$pr_number" \
+        --arg json_path "$json_path" \
+        --argjson categorized "$categorized" \
+        '{
+            metadata: {
+                owner: $owner,
+                repo: $repo,
+                pr_number: $pr_number,
+                json_path: $json_path
+            },
+            human: $categorized.human,
+            qodo: $categorized.qodo,
+            coderabbit: $categorized.coderabbit
+        }')
+
+    # Save to file
+    echo "$final_output" > "$json_path"
+    echo "Saved to: $json_path" >&2
+
+    # Count by category
+    local human_count qodo_count coderabbit_count
+    human_count=$(echo "$final_output" | jq '.human | length')
+    qodo_count=$(echo "$final_output" | jq '.qodo | length')
+    coderabbit_count=$(echo "$final_output" | jq '.coderabbit | length')
+    echo "Categories: human=$human_count, qodo=$qodo_count, coderabbit=$coderabbit_count" >&2
+
+    # Output to stdout
+    echo "$final_output"
+}
+
+main "$@"

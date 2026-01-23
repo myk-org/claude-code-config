@@ -189,7 +189,7 @@ fetch_review_comments() {
   local review_id="$4"
 
   local result
-  if ! result=$(gh api "/repos/$owner/$repo/pulls/$pr_number/reviews/$review_id/comments?per_page=100" 2>&1); then
+  if ! result=$(gh api --paginate "/repos/$owner/$repo/pulls/$pr_number/reviews/$review_id/comments" 2>&1); then
     echo "Warning: Could not fetch review $review_id comments: $result" >&2
     echo "[]"
     return 0
