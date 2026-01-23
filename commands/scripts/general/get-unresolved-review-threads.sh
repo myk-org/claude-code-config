@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Global temp file tracking for cleanup
+TEMP_FILES=()
+cleanup() {
+  for f in "${TEMP_FILES[@]}"; do
+    rm -f "$f" 2>/dev/null || true
+  done
+}
+trap cleanup EXIT INT TERM
+
 # Generic script to fetch ALL unresolved review threads from a PR
 # Returns raw thread data for handlers to filter and parse
 #
@@ -299,13 +308,18 @@ fi
 
 # Merge specific threads with all threads, deduplicating by comment_id
 if [ "$(echo "$SPECIFIC_THREADS" | jq '. | length')" -gt 0 ]; then
-  # Merge and deduplicate: keep all from ALL_THREADS, add from SPECIFIC_THREADS if not already present
-  MERGED_THREADS=$(jq -n \
-    --argjson all "$ALL_THREADS" \
-    --argjson specific "$SPECIFIC_THREADS" '
-    ($all | map(.comment_id) | map(select(. != null))) as $existing_ids |
-    $all + [$specific[] | select(.comment_id as $id | ($existing_ids | index($id)) == null)]
-  ')
+  tmp_all=$(mktemp)
+  tmp_specific=$(mktemp)
+  TEMP_FILES+=("$tmp_all" "$tmp_specific")
+
+  echo "$ALL_THREADS" > "$tmp_all"
+  echo "$SPECIFIC_THREADS" > "$tmp_specific"
+
+  MERGED_THREADS=$(jq -s '
+    (.[0] | map(.comment_id) | map(select(. != null))) as $existing_ids |
+    .[0] + [.[1][] | select(.comment_id as $id | ($existing_ids | index($id)) == null)]
+  ' "$tmp_all" "$tmp_specific")
+
   ALL_THREADS="$MERGED_THREADS"
 fi
 

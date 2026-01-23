@@ -49,7 +49,13 @@ workflow.**
 **ALWAYS use this exact command format:**
 
 ```bash
-~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "<USER_INPUT_IF_PROVIDED>"
+# No URL provided (default)
+~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+```
+
+```bash
+# URL provided
+~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "https://github.com/owner/repo/pull/123#pullrequestreview-456"
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
@@ -233,13 +239,14 @@ Proceed directly to execution (no confirmation needed since user already approve
    - Mark each task as completed after finishing
    - **Track unimplemented changes**: If AI decides NOT to make changes for an approved task, track the reason
 
-   **Update outcome tracking after each task:**
+#### Update outcome tracking after each task
+
    - If changes were made successfully: Set outcome = `addressed`
    - If AI decided NOT to make changes: Set outcome = `not_addressed`, reason = [explanation of why]
 
 **Note**: LOW-priority tasks are just as important as higher-priority tasks during execution.
 
-### Step 5: PHASE 3 - Review Unimplemented Changes
+### PHASE 3 - Review Unimplemented Changes
 
 **MANDATORY CHECKPOINT**: Before proceeding to posting reply, MUST review any approved suggestions where AI
 decided not to make changes.
@@ -277,7 +284,7 @@ no changes needed):
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### Step 6: PHASE 4 - Testing & Commit
+### PHASE 4 - Testing & Commit
 
 **MANDATORY STEP 1**: Run all tests WITH coverage
 
@@ -295,7 +302,7 @@ no changes needed):
 
 **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
-### Step 7: PHASE 5 - Post Qodo Reply
+### PHASE 5 - Post Qodo Reply
 
 **MANDATORY**: After Phase 4 approval (or if all tasks were implemented), update the JSON file and call the
 posting script.
@@ -356,7 +363,7 @@ The script will:
 
 **CHECKPOINT**: All Qodo replies posted successfully
 
-### Step 8: PHASE 6 - Push to Remote
+### PHASE 6 - Push to Remote
 
 **MANDATORY STEP 1**: After Phase 5 completion, MUST ask about pushing:
 - If a commit was made: "Changes committed successfully. Do you want to push the changes to remote? (yes/no)"

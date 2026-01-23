@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Global temp file tracking for cleanup
+TEMP_FILES=()
+cleanup() {
+  for f in "${TEMP_FILES[@]}"; do
+    rm -f "$f" 2>/dev/null || true
+  done
+}
+trap cleanup EXIT INT TERM
+
 # Post replies and resolve review threads from a JSON file
 #
 # Usage: post-review-replies-from-json.sh <json_path>
@@ -82,7 +91,7 @@ post_thread_reply() {
   fi
 
   # Check for GraphQL errors
-  if echo "$result" | jq -e '.errors' >/dev/null 2>&1; then
+  if echo "$result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
     local error_msg
     error_msg=$(echo "$result" | jq -r '.errors[0].message // "Unknown error"')
     echo "GraphQL error: $error_msg" >&2
@@ -113,7 +122,7 @@ resolve_thread() {
   fi
 
   # Check for GraphQL errors
-  if echo "$result" | jq -e '.errors' >/dev/null 2>&1; then
+  if echo "$result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
     local error_msg
     error_msg=$(echo "$result" | jq -r '.errors[0].message // "Unknown error"')
     echo "GraphQL error: $error_msg" >&2
@@ -199,10 +208,16 @@ for category in "${CATEGORIES[@]}"; do
     reply=$(echo "$thread_data" | jq -r '.reply // empty')
     skip_reason=$(echo "$thread_data" | jq -r '.skip_reason // empty')
     posted_at=$(echo "$thread_data" | jq -r '.posted_at // empty')
+    resolved_at=$(echo "$thread_data" | jq -r '.resolved_at // empty')
     path=$(echo "$thread_data" | jq -r '.path // "unknown"')
 
-    # Skip if already posted
-    if [ -n "$posted_at" ]; then
+    # Determine if this is a resolve-only retry (posted but not resolved)
+    resolve_only_retry=false
+    if [ -n "$posted_at" ] && [ -z "$resolved_at" ]; then
+      resolve_only_retry=true
+      echo "Retrying resolve for ${category}[${i}] ($path): posted at $posted_at but not resolved" >&2
+    elif [ -n "$posted_at" ]; then
+      # Already fully processed (posted and resolved)
       already_posted_count=$((already_posted_count + 1))
       echo "Skipping ${category}[${i}] ($path): already posted at $posted_at" >&2
       continue
@@ -288,17 +303,14 @@ for category in "${CATEGORIES[@]}"; do
         ;;
     esac
 
-    # Post reply
-    if ! post_thread_reply "$effective_thread_id" "$reply_message"; then
-      failed_count=$((failed_count + 1))
-      echo "Failed to post reply for ${category}[${i}] ($path)" >&2
-      continue
+    # Post reply only if not already posted
+    if [ "$resolve_only_retry" = false ]; then
+      if ! post_thread_reply "$effective_thread_id" "$reply_message"; then
+        failed_count=$((failed_count + 1))
+        echo "Failed to post reply for ${category}[${i}] ($path)" >&2
+        continue
+      fi
     fi
-
-    # Record posted_at immediately after successful reply (before resolve attempt)
-    # This makes the operation idempotent - if resolve fails, we won't re-post
-    posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    updates+=("$category|$i|posted_at|$posted_at_timestamp")
 
     # Determine if we should resolve this thread
     should_resolve=true
@@ -309,11 +321,20 @@ for category in "${CATEGORIES[@]}"; do
     # Resolve thread only if appropriate
     if [ "$should_resolve" = true ]; then
       if ! resolve_thread "$effective_thread_id"; then
+        # Record posted_at if we just posted (so next run can retry resolve only)
+        if [ "$resolve_only_retry" = false ]; then
+          posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          updates+=("$category|$i|posted_at|$posted_at_timestamp")
+        fi
         failed_count=$((failed_count + 1))
         echo "Failed to resolve ${category}[${i}] ($path) - reply was posted but thread not resolved" >&2
         continue
       fi
-      # Record resolved_at timestamp
+      # Record both timestamps after successful resolve
+      if [ "$resolve_only_retry" = false ]; then
+        posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        updates+=("$category|$i|posted_at|$posted_at_timestamp")
+      fi
       resolved_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
       updates+=("$category|$i|resolved_at|$resolved_at_timestamp")
       case "$status" in
@@ -326,6 +347,11 @@ for category in "${CATEGORIES[@]}"; do
       esac
       echo "Resolved ${category}[${i}] ($path)" >&2
     else
+      # For threads we don't resolve, record posted_at after successful reply
+      if [ "$resolve_only_retry" = false ]; then
+        posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        updates+=("$category|$i|posted_at|$posted_at_timestamp")
+      fi
       replied_not_resolved_count=$((replied_not_resolved_count + 1))
       echo "Replied to ${category}[${i}] ($path) (not resolved)" >&2
     fi
@@ -340,7 +366,7 @@ if [ ${#updates[@]} -gt 0 ]; then
   # Use mktemp for secure temp file creation
   tmp_json=$(mktemp)
   tmp_json_new=$(mktemp)
-  trap 'rm -f "$tmp_json" "$tmp_json_new" 2>/dev/null || true' EXIT
+  TEMP_FILES+=("$tmp_json" "$tmp_json_new")
 
   cp "$JSON_PATH" "$tmp_json"
 

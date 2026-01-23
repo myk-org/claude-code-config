@@ -113,7 +113,7 @@ Comment: [body]
 Do you want to address this comment? (yes/no/skip/all)
 ```
 
-**CRITICAL: Track Comment Outcomes for Reply**
+#### CRITICAL: Track Comment Outcomes for Reply
 
 For EVERY comment presented, track the outcome for the final reply:
 - **Thread ID**: The `thread_id` from JSON (needed for threaded replies)
@@ -168,7 +168,7 @@ Processing X approved tasks:
 
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
-2. **Process all approved tasks:**
+1. **Process all approved tasks:**
    - **CRITICAL**: Process ALL tasks created during Phase 1
    - **NEVER skip tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
    - Route to appropriate specialists based on comment content
@@ -235,7 +235,7 @@ For each comment in the `human` array that was processed:
   - `"skipped"` - User chose to skip (reply posted but thread NOT resolved)
   - `"not_addressed"` - Could not be addressed (reply posted but thread NOT resolved)
 
-**IMPORTANT: Human Review Handling Differs from AI Reviews**
+#### IMPORTANT: Human Review Handling Differs from AI Reviews
 
 Unlike AI review handlers (Qodo/CodeRabbit) where ALL threads are resolved after reply:
 - **Addressed comments**: Reply with "Done" and RESOLVE the thread
@@ -245,6 +245,7 @@ Unlike AI review handlers (Qodo/CodeRabbit) where ALL threads are resolved after
 **STEP 2**: Write the updated JSON back to the file at `metadata.json_path`
 
 Example update using jq:
+
 ```bash
 # Update a specific comment's status and reply
 jq '.human[0].status = "addressed" | .human[0].reply = "Done"' /tmp/claude/pr-123-reviews.json > /tmp/claude/pr-123-reviews.json.tmp && mv /tmp/claude/pr-123-reviews.json.tmp /tmp/claude/pr-123-reviews.json
