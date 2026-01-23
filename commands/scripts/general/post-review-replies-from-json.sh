@@ -137,7 +137,7 @@ update_json_with_timestamp() {
     echo "Error updating JSON file" >&2
     return 1
   fi
-  mv "$tmp_file" "$json_path"
+  mv -f "$tmp_file" "$json_path"
 }
 
 # Validate arguments

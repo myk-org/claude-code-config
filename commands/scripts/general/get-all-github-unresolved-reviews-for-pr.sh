@@ -352,15 +352,15 @@ process_and_categorize() {
         case "$source" in
             qodo)
                 jq -s '.[0] + [.[1]]' "$tmp_qodo" "$tmp_item" > "${tmp_qodo}.new"
-                mv "${tmp_qodo}.new" "$tmp_qodo"
+                mv -f "${tmp_qodo}.new" "$tmp_qodo"
                 ;;
             coderabbit)
                 jq -s '.[0] + [.[1]]' "$tmp_coderabbit" "$tmp_item" > "${tmp_coderabbit}.new"
-                mv "${tmp_coderabbit}.new" "$tmp_coderabbit"
+                mv -f "${tmp_coderabbit}.new" "$tmp_coderabbit"
                 ;;
             *)
                 jq -s '.[0] + [.[1]]' "$tmp_human" "$tmp_item" > "${tmp_human}.new"
-                mv "${tmp_human}.new" "$tmp_human"
+                mv -f "${tmp_human}.new" "$tmp_human"
                 ;;
         esac
     done
