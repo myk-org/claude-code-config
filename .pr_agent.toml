@@ -1,5 +1,4 @@
 # .pr_agent.toml - Qodo Merge configuration
-# Matching CodeRabbit config with direct/assertive tone
 
 [config]
 response_language = "en-US"

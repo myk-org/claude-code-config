@@ -21,6 +21,18 @@ if git remote -v 2>/dev/null | grep -q "github.com"; then
   fi
 fi
 
+# OPTIONAL: jq - Required for AI review handlers
+if ! command -v jq &>/dev/null; then
+  missing_optional+=("[OPTIONAL] jq - Required for AI review handlers (JSON processing)
+  Install: https://stedolan.github.io/jq/download/")
+fi
+
+# OPTIONAL: gawk - Required for AI review handlers
+if ! command -v gawk &>/dev/null; then
+  missing_optional+=("[OPTIONAL] gawk - Required for AI review handlers (text processing)
+  Install: brew install gawk (macOS) or apt install gawk (Linux)")
+fi
+
 # OPTIONAL: prek - Only check if .pre-commit-config.yaml exists
 if [[ -f ".pre-commit-config.yaml" ]]; then
   if ! command -v prek &>/dev/null; then

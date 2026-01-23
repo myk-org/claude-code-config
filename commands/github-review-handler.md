@@ -6,9 +6,9 @@ skipConfirmation: true
 
 **Description:** Finds and processes human reviewer comments from the current branch's GitHub PR.
 
-MAIN_SCRIPT = ~/.claude/commands/scripts/github-review-handler/get-human-reviews.sh
+---
 
-## 🚨 CRITICAL: SESSION ISOLATION & FLOW ENFORCEMENT
+## CRITICAL: SESSION ISOLATION & FLOW ENFORCEMENT
 
 **THIS PROMPT DEFINES A STRICT, SELF-CONTAINED WORKFLOW THAT MUST BE FOLLOWED EXACTLY:**
 
@@ -26,54 +26,77 @@ workflow.**
 
 ## Instructions
 
-### Step 1: Get human review comments using the extraction script
+### Step 1: Get human review comments using the unified fetcher
 
-### 🎯 CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
+### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
 
 **ALWAYS use this exact command format:**
 
 ```bash
-$MAIN_SCRIPT $ARGUMENTS
+~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh [review_url]
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
 
 ---
 
-**If user provides input (PR number or URL):**
+**Usage patterns:**
 
-```bash
-# User provided: 85
-$MAIN_SCRIPT 85
+1. **No URL provided**: Fetches all unresolved review threads from the PR
 
-# User provided: https://github.com/owner/repo/pull/123
-$MAIN_SCRIPT "https://github.com/owner/repo/pull/123"
-```
+   ```bash
+   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+   ```
+
+2. **Review URL provided**: Fetches threads with specific review context
+
+   ```bash
+   # User provided review URL:
+   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh \
+     "https://github.com/owner/repo/pull/123#pullrequestreview-456"
+
+   # User provided discussion URL:
+   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh \
+     "https://github.com/owner/repo/pull/123#discussion_r789"
+   ```
 
 **If user provides NO input:**
 
-```bash
-# Auto-detect from current git context - requires being in a git repo with an open PR
-$MAIN_SCRIPT
-```
+The script will fetch all unresolved review threads and categorize them by source.
 
-Note: The script will auto-detect the repository from the current git context when only a PR number is provided.
+**THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The script handles
+EVERYTHING.**
 
 ### Step 2: Process the JSON output
 
 The script returns structured JSON containing:
 
-- `metadata`: Contains `owner`, `repo`, `pr_number` for use in reply scripts
-- `summary`: Total count of human review comments
-- `comments`: Array of review comments from human reviewers
-  - Each has: comment_id, reviewer, file, line, body
+- `metadata`: Contains `owner`, `repo`, `pr_number`, `json_path` (path to saved JSON file)
+- `human`: Array of human review comments (ONLY use this array for this handler)
+- `qodo`: Array of Qodo AI comments (ignore for this handler)
+- `coderabbit`: Array of CodeRabbit AI comments (ignore for this handler)
+
+**Each comment in the `human` array has:**
+- `thread_id`: GraphQL thread ID (required for replying/resolving threads)
+- `node_id`: REST API comment node ID (informational only; posting requires `thread_id`)
+- `comment_id`: REST API comment ID (used for non-thread operations like fetching details)
+- `author`: The reviewer's username
+- `path`: File path
+- `line`: Line number
+- `body`: Comment text
+- `priority`: HIGH, MEDIUM, or LOW (auto-classified)
+- `source`: Always "human" for this handler
+- `reply`: Reply message (null until set)
+- `status`: Processing status ("pending", "addressed", "skipped", "not_addressed")
+
+**IMPORTANT**: This handler only processes the `human` array. Ignore `qodo` and `coderabbit` arrays.
 
 ### Step 3: PHASE 1 - Collect User Decisions (COLLECTION ONLY - NO PROCESSING)
 
-**🚨 CRITICAL: This is the COLLECTION phase. Do NOT execute, implement, or process ANY comments yet. Only ask
+**CRITICAL: This is the COLLECTION phase. Do NOT execute, implement, or process ANY comments yet. Only ask
 questions and create tasks.**
 
-Go through ALL comments sequentially, collecting user decisions:
+Go through ALL comments in the `human` array sequentially, collecting user decisions:
 
 **IMPORTANT: Present each comment individually, WAIT for user response, but NEVER execute, implement, or
 process anything during this phase.**
@@ -81,21 +104,21 @@ process anything during this phase.**
 For each comment, present:
 
 ```text
-👤 Human Review - Comment X of Y
-👨‍💻 Reviewer: [reviewer name]
-📁 File: [file path]
-📍 Line: [line]
-💬 Comment: [body]
+Human Review - Comment X of Y
+Reviewer: [author]
+File: [path]
+Line: [line]
+Comment: [body]
 
 Do you want to address this comment? (yes/no/skip/all)
 ```
 
-**🔄 CRITICAL: Track Comment Outcomes for Reply**
+#### CRITICAL: Track Comment Outcomes for Reply
 
 For EVERY comment presented, track the outcome for the final reply:
-- **Comment ID**: The `comment_id` from JSON (needed for threaded replies)
+- **Thread ID**: The `thread_id` from JSON (needed for threaded replies)
 - **Comment number**: Sequential (1, 2, 3...)
-- **Reviewer**: The reviewer name
+- **Reviewer**: The author name
 - **File**: The file path
 - **Outcome**: Will be one of: `addressed`, `not_addressed`, `skipped`
 - **Reason**: Required for `not_addressed` and `skipped` outcomes
@@ -110,34 +133,34 @@ When user responds:
 **For each "yes" response:**
 
 - Create a task with appropriate agent assignment
-- Show confirmation: "✅ Task created: [brief description]"
+- Show confirmation: "Task created: [brief description]"
 - **DO NOT execute the task - Continue to next comment immediately**
 
 **For "all" response:**
 
 - Create tasks for the current comment AND **ALL remaining comments** automatically
 - **CRITICAL**: "all" means process EVERY remaining comment - do NOT skip any comments
-- Show summary: "✅ Created tasks for current comment + X remaining comments"
+- Show summary: "Created tasks for current comment + X remaining comments"
 - **Skip to Phase 2 immediately**
 
 **For "no" or "skip" responses:**
 
-- Show: "⏭️ Skipped"
+- Show: "Skipped"
 - Continue to next comment immediately
 
-**🚨 REMINDER: Do NOT execute, implement, fix, or process anything during this phase. Only collect decisions
+**REMINDER: Do NOT execute, implement, fix, or process anything during this phase. Only collect decisions
 and create tasks.**
 
 ### Step 4: PHASE 2 - Process All Approved Tasks (EXECUTION PHASE)
 
-**🚨 IMPORTANT: Only start this phase AFTER all comments have been presented and decisions collected.**
+**IMPORTANT: Only start this phase AFTER all comments have been presented and decisions collected.**
 
 After ALL comments have been reviewed in Phase 1:
 
 1. **Show approved tasks and proceed directly:**
 
 ```text
-📋 Processing X approved tasks:
+Processing X approved tasks:
 1. [Task description]
 2. [Task description]
 ...
@@ -146,92 +169,137 @@ After ALL comments have been reviewed in Phase 1:
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
 1. **Process all approved tasks:**
-   - **🚨 CRITICAL**: Process ALL tasks created during Phase 1
+   - **CRITICAL**: Process ALL tasks created during Phase 1
    - **NEVER skip tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
    - Route to appropriate specialists based on comment content
    - Process multiple tasks in parallel when possible
    - Mark each task as completed after finishing
+   - **Track unimplemented changes**: If AI decides NOT to make changes for an approved task, track the reason
 
-1. **Post-execution workflow (PHASES 2.5, 3 & 4 - MANDATORY CHECKPOINTS):**
+   **Update outcome tracking after each task:**
+   - If changes were made successfully: Set outcome = `addressed`
+   - If AI decided NOT to make changes: Set outcome = `not_addressed`, reason = [explanation of why]
 
-   **PHASE 2.5: Post Review Reply**
-   - **STEP 1** (REQUIRED): Generate reply message using this format:
+### Step 5: PHASE 3 - Review Unimplemented Changes
 
-   ```markdown
-   ## Review Response
+**MANDATORY CHECKPOINT**: Before proceeding to posting replies, MUST review any approved comments where AI
+decided not to make changes.
 
-   ### Addressed
-   | Reviewer | Title/Comment | File |
-   |----------|---------------|------|
-   | [reviewer] | [brief summary] | `[file]` |
+If AI decided NOT to implement changes for ANY approved tasks (tasks where user said "yes" but AI determined
+no changes needed):
 
-   ### Not Addressed
-   | Reviewer | Title/Comment | File | Reason |
-   |----------|---------------|------|--------|
-   | [reviewer] | [brief summary] | `[file]` | [reason] |
+- **Show summary of unimplemented changes:**
 
-   ### Skipped
-   | Reviewer | Title/Comment | File | Reason |
-   |----------|---------------|------|--------|
-   | [reviewer] | [brief summary] | `[file]` | [reason] |
+  ```text
+  Unimplemented Changes Review (X approved comments not changed):
 
-   ---
-   *Automated response from Review Handler*
-   ```
+  1. Reviewer: [author] - File: [path] - Line: [line]
+     Comment: [body (truncated)]
+     Reason AI did not implement: [Explain why no changes were made]
 
-   **Notes on format:**
-   - Only include sections that have items (if no skipped items, omit "Skipped" section)
-   - Include count in header: "### Addressed (3)"
-   - File paths should be in backticks for code formatting
+  2. Reviewer: [author] - File: [path] - Line: [line]
+     Comment: [body (truncated)]
+     Reason AI did not implement: [Explain why no changes were made]
+  ...
+  ```
 
-   - **STEP 2** (REQUIRED): Post threaded replies to ALL comments:
+- **MANDATORY**: Ask user for confirmation:
 
-   **For ADDRESSED comments** - reply with "Done" and resolve:
-   ```bash
-   ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "Done" --comment-id <comment_id> --resolve
-   ```
+  ```text
+  Do you approve proceeding without these changes? (yes/no)
+  - yes: Proceed to Phase 3.5 (Post Review Reply)
+  - no: Reconsider and implement the changes
+  ```
 
-   **For NOT ADDRESSED comments** - reply with reason (NO resolve):
-   ```bash
-   ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "<reason>" --comment-id <comment_id>
-   ```
+- **If user says "no"**: Re-implement the changes as requested
+- **If user says "yes"**: Proceed to Phase 3.5 (Post Review Reply)
 
-   **For SKIPPED comments** - reply with reason (NO resolve):
-   ```bash
-   ~/.claude/scripts/reply-to-pr-review.sh "<owner>/<repo>" "<pr_number>" "<reason>" --comment-id <comment_id>
-   ```
+**If ALL approved tasks were implemented**: Proceed directly to Phase 3.5
 
-   **Where to get values:**
-   - `<owner>/<repo>`: From JSON `metadata.owner` + "/" + `metadata.repo`
-   - `<pr_number>`: From JSON `metadata.pr_number`
-   - `<comment_id>`: From each comment's `comment_id` field
-   - `<reason>`: The tracked reason for not_addressed or skipped outcomes
+**CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-   **Key difference from CodeRabbit handler:** Human reviewer comments that are not addressed or skipped do NOT get resolved - only replied to. This allows the human reviewer to follow up.
+### Step 6: PHASE 3.5 - Post Review Reply
 
-   - **CHECKPOINT**: Replies posted to PR
+**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), update the JSON file and post replies.
 
-   **PHASE 3: Testing & Commit**
-   - **STEP 1** (REQUIRED): Run all tests
-   - **STEP 2** (REQUIRED): If tests pass, MUST ask: "All tests pass. Do you want to commit the changes?
-     (yes/no)"
-     - If user says "yes": Commit changes with descriptive message
-     - If user says "no": Acknowledge and proceed to Phase 4 checkpoint (ask about push anyway)
-   - **STEP 3** (REQUIRED): If tests fail:
-     - Analyze and fix failures
-     - Re-run tests until they pass
-   - **CHECKPOINT**: Must reach this point before Phase 4 - commit confirmation MUST be asked
+---
 
-   **PHASE 4: Push to Remote**
-   - **STEP 1** (REQUIRED): After successful commit (or commit decline), MUST ask: "Changes committed
-     successfully. Do you want to push the changes to remote? (yes/no)"
-     - If no commit was made, ask: "Do you want to push any existing commits to remote? (yes/no)"
-   - **STEP 2** (REQUIRED): If user says "yes": Push changes to remote
-   - **CHECKPOINT**: Push confirmation MUST be asked - this is the final step of the workflow
+**STEP 1**: Update the JSON file at path from `metadata.json_path`
 
-**🚨 CRITICAL WORKFLOW - STRICT PHASE SEQUENCE:**
+For each comment in the `human` array that was processed:
+- Set `reply` to the appropriate reply message:
+  - For addressed: "Done" or a brief description of what was done
+  - For skipped/not_addressed: The reason provided
+- Set `status` to the outcome:
+  - `"addressed"` - Comment was addressed with code changes
+  - `"skipped"` - User chose to skip (reply posted but thread NOT resolved)
+  - `"not_addressed"` - Could not be addressed (reply posted but thread NOT resolved)
 
-This workflow has **5 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
+#### IMPORTANT: Human Review Handling Differs from AI Reviews
+
+Unlike AI review handlers (Qodo/CodeRabbit) where ALL threads are resolved after reply:
+- **Addressed comments**: Reply with "Done" and RESOLVE the thread
+- **Skipped comments**: Reply with reason but DO NOT resolve (allow human reviewer to follow up)
+- **Not addressed comments**: Reply with reason but DO NOT resolve (allow human reviewer to follow up)
+
+**STEP 2**: Write the updated JSON back to the file at `metadata.json_path`
+
+Example update using jq:
+
+```bash
+# Update a specific comment's status and reply
+jq '.human[0].status = "addressed" | .human[0].reply = "Done"' /tmp/claude/pr-123-reviews.json > /tmp/claude/pr-123-reviews.json.tmp && mv /tmp/claude/pr-123-reviews.json.tmp /tmp/claude/pr-123-reviews.json
+```
+
+**STEP 3**: Call the posting script to handle replies and resolution
+
+```bash
+~/.claude/commands/scripts/general/post-review-replies-from-json.sh /tmp/claude/pr-<number>-reviews.json
+```
+
+Where `<number>` is the PR number from `metadata.pr_number`.
+
+**NOTE**: The posting script will:
+- Post replies to all threads with status != "pending"
+- Resolve threads with status = "addressed"
+- For status = "skipped" or "not_addressed", it posts the reply but does NOT resolve the thread (allows reviewer follow-up)
+
+**Note**: The posting script correctly handles human reviews by NOT resolving threads with `skipped` or `not_addressed` statuses. No manual handling is required for these cases.
+
+**Key difference from AI review handlers:** Human reviewer comments that are not addressed or skipped
+do NOT get resolved - only replied to. This allows the human reviewer to follow up.
+
+**CHECKPOINT**: Replies posted to PR
+
+### Step 7: PHASE 4 - Testing & Commit
+
+**MANDATORY STEP 1**: Run all tests
+
+**MANDATORY STEP 2**: Check test results:
+- **If tests pass**: MUST ask: "All tests pass. Do you want to commit the changes? (yes/no)"
+  - If user says "yes": Commit the changes
+  - If user says "no": Acknowledge and proceed to Phase 5 checkpoint (ask about push anyway)
+- **If tests fail**:
+  - Analyze and fix test failures
+  - Re-run until tests pass
+
+**CHECKPOINT**: Tests pass, AND commit confirmation asked (even if user declined)
+
+### Step 8: PHASE 5 - Push to Remote
+
+**MANDATORY STEP 1**: After successful commit (or commit decline), MUST ask: "Changes committed
+successfully. Do you want to push the changes to remote? (yes/no)"
+- If no commit was made, ask: "Do you want to push any existing commits to remote? (yes/no)"
+
+**MANDATORY STEP 2**: If user says "yes": Push the changes to remote
+
+**CHECKPOINT**: Push confirmation MUST be asked - this is the final step of the workflow
+
+---
+
+## CRITICAL WORKFLOW - STRICT PHASE SEQUENCE
+
+This workflow has **6 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
 that CANNOT be skipped:
 
 ### PHASE 1: Collection Phase
@@ -243,32 +311,44 @@ that CANNOT be skipped:
 
 - ONLY execute tasks after ALL comments reviewed - NO more questions
 - Process ALL approved tasks
-- **CHECKPOINT**: ALL approved tasks have been completed
+- Track any tasks where AI decides not to make changes (with reasoning)
+- **CHECKPOINT**: ALL approved tasks have been processed (implemented or reasoned skip)
 
-### PHASE 2.5: Post Review Reply
+### PHASE 3: Unimplemented Changes Review
 
-- Generate summary reply from tracked outcomes
-- Post threaded replies to addressed comments
-- **CHECKPOINT**: Replies posted successfully
+- **MANDATORY STEP 1**: Show summary of any approved tasks where AI decided not to make changes
+- **MANDATORY STEP 2**: Explain WHY changes were not made for each
+- **MANDATORY STEP 3**: Ask user: "Do you approve proceeding without these changes? (yes/no)"
+- **MANDATORY STEP 4**: If user says no, re-implement the changes
+- **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
-### PHASE 3: Testing & Commit Phase
+### PHASE 3.5: Post Review Reply
+
+- Update JSON file with reply messages and status for each comment
+- For addressed comments: Reply and resolve thread
+- For skipped/not_addressed comments: Reply WITHOUT resolving (human reviews differ from AI reviews)
+- **CHECKPOINT**: All replies posted successfully
+
+### PHASE 4: Testing & Commit Phase
 
 - **MANDATORY STEP 1**: Run all tests
-- **MANDATORY STEP 2**: If tests pass, MUST ask user: "All tests pass. Do you want to commit the changes?
-  (yes/no)"
-- **MANDATORY STEP 3**: If user says yes: Commit changes with descriptive message
+- **MANDATORY STEP 2**: If tests pass, MUST ask user: "All tests pass. Do you want to commit
+  the changes? (yes/no)"
+- **MANDATORY STEP 3**: If user says yes: Commit the changes
 - **CHECKPOINT**: Tests completed AND commit confirmation asked (even if user declined)
 
-### PHASE 4: Push Phase
+### PHASE 5: Push Phase
 
 - **MANDATORY STEP 1**: After successful commit, MUST ask user: "Changes committed successfully. Do you want to
   push the changes to remote? (yes/no)"
-- **MANDATORY STEP 2**: If user says yes: Push changes to remote
+- **MANDATORY STEP 2**: If user says yes: Push the changes to remote
 - **CHECKPOINT**: Push confirmation asked (even if user declined)
 
-**🚨 ENFORCEMENT RULES:**
+---
 
-- **NEVER skip phases** - all 5 phases are mandatory
+## ENFORCEMENT RULES
+
+- **NEVER skip phases** - all 6 phases are mandatory
 - **NEVER skip checkpoints** - each phase must reach its checkpoint before proceeding
 - **NEVER skip confirmations** - commit and push confirmations are REQUIRED even if previously discussed
 - **NEVER assume** - always ask for confirmation, never assume user wants to commit/push
@@ -277,6 +357,8 @@ that CANNOT be skipped:
 **If tests fail**:
 
 - Analyze and fix failures
-- Re-run tests until they pass before proceeding to Phase 3's commit confirmation.
+- Re-run tests until they pass before proceeding to Phase 4's commit confirmation.
 
-Note: Human review comments are treated equally (no priority system like CodeRabbit).
+Note: Human review comments are treated equally (no priority system like AI reviews).
+Human reviews differ from AI reviews in that skipped/not_addressed comments are NOT resolved,
+allowing the human reviewer to follow up on unaddressed feedback.
