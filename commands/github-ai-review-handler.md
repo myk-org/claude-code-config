@@ -144,6 +144,12 @@ The unified fetcher returns categorized arrays: `human`, `qodo`, `coderabbit`.
 Merge the `qodo` and `coderabbit` arrays into a single list for processing, preserving the `source` field
 to track origin.
 
+**CRITICAL guard**: If any item has a missing, empty, or whitespace-only `thread_id`, you MUST NOT create an execution task for it. Instead, mark it as:
+- `status`: `"skipped"`
+- `reply`: `"Skipped: No valid thread_id available to reply/resolve"`
+
+This prevents downstream failures when calling `post-review-replies-from-json.sh`.
+
 ### Step 2.5: Detect Duplicates and Filter Positive Comments
 
 #### Duplicate Detection
@@ -211,6 +217,7 @@ Do you want to address this suggestion? (yes/no/skip/all)
 - Duplicate: `AI Source: DUPLICATE - Found in both Qodo and CodeRabbit`
 
 **For duplicates found in both:**
+
 ```text
 DUPLICATE: This issue was flagged by both Qodo and CodeRabbit.
            Addressing this will resolve threads in BOTH systems.
@@ -223,12 +230,15 @@ For EVERY suggestion presented, track the outcome for the final reply:
 - **source**: Which AI reviewer flagged this (qodo or coderabbit)
 - **path**: The file path
 - **line**: The line number
-- **Outcome**: Will be one of: `addressed`, `skipped`
-- **Reason**: Required for `skipped` outcomes
+- **Outcome**: Will be one of: `addressed`, `skipped`, `not_addressed`
+- **Reason**: Required for `skipped` and `not_addressed` outcomes
 
 When user responds:
-- **"yes"**: Outcome will be set after execution (addressed or not_addressed)
-- **"no" or "skip"**: MUST ask user: "Please provide a brief reason for skipping this suggestion:"
+- **"yes"**: Outcome will be set after execution (`addressed` or `not_addressed`)
+- **"no"**: MUST ask user: "Please provide a brief reason for not addressing this suggestion:"
+  - Set outcome = `not_addressed`, reason = user's response
+  - If user doesn't provide reason, use "User chose not to address"
+- **"skip"**: MUST ask user: "Please provide a brief reason for skipping this suggestion:"
   - Set outcome = `skipped`, reason = user's response
   - If user doesn't provide reason, use "User chose to skip"
 - **"all"**: Track all remaining as pending execution
@@ -310,18 +320,18 @@ no changes needed):
 
   ```text
   Do you approve proceeding without these changes? (yes/no)
-  - yes: Proceed to Phase 3.5 (Testing & Commit)
+  - yes: Proceed to Phase 4 (Testing & Commit)
   - no: Reconsider and implement the changes
   ```
 
 - **If user says "no"**: Re-implement the changes as requested
-- **If user says "yes"**: Proceed to Phase 3.5
+- **If user says "yes"**: Proceed to Phase 4
 
-**If ALL approved tasks were implemented**: Proceed directly to Phase 3.5
+**If ALL approved tasks were implemented**: Proceed directly to Phase 4
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### Step 6: PHASE 3.5 - Testing & Commit
+### Step 6: PHASE 4 - Testing & Commit
 
 **MANDATORY STEP 1**: Run all tests WITH coverage
 
@@ -329,7 +339,7 @@ no changes needed):
 - **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
   the changes? (yes/no)"
   - If user says "yes": Commit the changes
-  - If user says "no": Acknowledge and proceed to Phase 4 checkpoint (ask about posting replies anyway)
+  - If user says "no": Acknowledge and proceed to Phase 5 checkpoint (ask about posting replies anyway)
 - **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
   - Analyze coverage gaps and add missing tests
   - Re-run tests with coverage until BOTH pass
@@ -339,9 +349,9 @@ no changes needed):
 
 **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
-### Step 7: PHASE 4 - Update JSON and Post Replies
+### Step 7: PHASE 5 - Update JSON and Post Replies
 
-**MANDATORY**: After Phase 3.5 (testing and commit), update the JSON file and post replies to all AI
+**MANDATORY**: After Phase 4 (testing and commit), update the JSON file and post replies to all AI
 reviewers.
 
 #### Step 7a: Update the JSON File
@@ -398,7 +408,7 @@ Where `<json_path>` is the value from `metadata.json_path` (e.g., `/tmp/claude/p
 
 **CHECKPOINT**: All replies posted to ALL AI sources (Qodo AND CodeRabbit)
 
-### Step 8: PHASE 5 - Push to Remote
+### Step 8: PHASE 6 - Push to Remote
 
 **MANDATORY STEP 1**: After successful commit (or commit decline), MUST ask: "Changes committed
 successfully. Do you want to push the changes to remote? (yes/no)"
@@ -438,7 +448,7 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
-### PHASE 3.5: Testing & Commit Phase
+### PHASE 4: Testing & Commit Phase
 
 - **MANDATORY STEP 1**: Run all tests WITH coverage
 - **MANDATORY STEP 2**: Check BOTH tests AND coverage - only proceed if BOTH pass
@@ -449,7 +459,7 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says yes: Commit the changes
 - **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
-### PHASE 4: Update JSON and Post Replies
+### PHASE 5: Update JSON and Post Replies
 
 - Update JSON file (at `metadata.json_path`) with `reply` and `status` for each processed comment
 - For duplicates, update BOTH the Qodo AND CodeRabbit threads
@@ -457,7 +467,7 @@ that CANNOT be skipped:
 - The script posts replies, resolves threads, and updates timestamps
 - **CHECKPOINT**: All replies posted to ALL AI sources
 
-### PHASE 5: Push Phase
+### PHASE 6: Push Phase
 
 - **MANDATORY STEP 1**: After successful commit, MUST ask user: "Changes committed successfully. Do you want to
   push the changes to remote? (yes/no)"
@@ -477,4 +487,4 @@ that CANNOT be skipped:
 
 **If tests OR coverage fail**:
 - Analyze and fix failures (add tests for coverage gaps)
-- Re-run tests with coverage until BOTH pass before proceeding to Phase 3.5's commit confirmation.
+- Re-run tests with coverage until BOTH pass before proceeding to Phase 4's commit confirmation.

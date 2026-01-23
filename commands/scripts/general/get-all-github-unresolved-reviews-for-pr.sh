@@ -422,7 +422,7 @@ main() {
     local all_threads
     all_threads=$(fetch_unresolved_threads "$owner" "$repo" "$pr_number")
     local thread_count
-    thread_count=$(echo "$all_threads" | jq 'length')
+    thread_count=$(printf '%s' "$all_threads" | jq 'length')
     echo "Found $thread_count unresolved thread(s)" >&2
 
     # If review URL provided, also fetch specific thread(s)

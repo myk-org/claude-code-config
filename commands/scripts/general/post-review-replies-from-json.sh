@@ -7,8 +7,8 @@ umask 077
 # Global temp file tracking for cleanup
 TEMP_FILES=()
 cleanup() {
-  for f in "${TEMP_FILES[@]}"; do
-    rm -f "$f" 2>/dev/null || true
+  for f in "${TEMP_FILES[@]:-}"; do
+    rm -f "$f" "${f}.new" 2>/dev/null || true
   done
 }
 trap cleanup EXIT INT TERM
@@ -205,7 +205,8 @@ updates_json='[]'
 
 # Process each category
 for category in "${CATEGORIES[@]}"; do
-  THREAD_COUNT=$(jq --arg cat "$category" '.[$cat] | length' "$JSON_PATH")
+  mapfile -t category_threads < <(jq -c --arg cat "$category" '.[$cat][]?' "$JSON_PATH")
+  THREAD_COUNT="${#category_threads[@]}"
 
   if [ "$THREAD_COUNT" -eq 0 ]; then
     continue
@@ -214,8 +215,8 @@ for category in "${CATEGORIES[@]}"; do
   echo "Processing $THREAD_COUNT threads in $category..." >&2
 
   for ((i = 0; i < THREAD_COUNT; i++)); do
-    # Read thread data
-    thread_data=$(jq -c --arg cat "$category" '.[$cat]['"$i"']' "$JSON_PATH")
+    # Read thread data (already JSON-encoded per element)
+    thread_data="${category_threads[$i]}"
 
     # Extract fields individually to handle special characters properly
     thread_id="$(jq -r '.thread_id // ""' <<<"$thread_data")"
