@@ -1,4 +1,5 @@
 # .pr_agent.toml - Qodo Merge configuration
+# Matching CodeRabbit config with direct/assertive tone
 
 [config]
 response_language = "en-US"
@@ -33,10 +34,10 @@ Focus Areas:
 """
 require_security_review = true
 require_tests_review = true
-require_estimate_effort_to_review = true
+require_estimate_effort_to_review = false
 require_score_review = false
-enable_review_labels_security = true
-enable_review_labels_effort = true
+enable_review_labels_security = false
+enable_review_labels_effort = false
 num_max_findings = 50
 persistent_comment = false
 enable_help_text = true
