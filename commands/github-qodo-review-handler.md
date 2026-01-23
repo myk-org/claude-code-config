@@ -178,7 +178,7 @@ Body: [body - truncate if very long, show first 200 chars]
 Do you want to address this suggestion? (yes/no/skip/all)
 ```
 
-Note: Use 🔴 for HIGH priority, 🟡 for MEDIUM priority, and 🟢 for LOW priority.
+Note: Use 🔴 for HIGH priority, 🟡 for MEDIUM priority, and 🟢 for LOW priority. If emojis are not supported in your environment, use `[HIGH]`, `[MEDIUM]`, `[LOW]` text labels instead.
 
 ### CRITICAL: Track Suggestion Outcomes for Reply
 
@@ -192,7 +192,10 @@ For EVERY suggestion presented, track the outcome for the final reply:
 
 When user responds:
 - **"yes"**: Outcome will be set after execution (addressed)
-- **"no" or "skip"**: MUST ask user: "Please provide a brief reason for skipping this suggestion:"
+- **"no"**: MUST ask user: "Please provide a brief reason for not addressing this suggestion:"
+  - Set outcome = `not_addressed`, reason = user's response
+  - If user doesn't provide reason, use "User chose not to address"
+- **"skip"**: MUST ask user: "Please provide a brief reason for skipping this suggestion:"
   - Set outcome = `skipped`, reason = user's response
   - If user doesn't provide reason, use "User chose to skip"
 - **"all"**: Track all remaining as pending execution
@@ -313,7 +316,7 @@ no changes needed):
 **MANDATORY**: After completing **Phase 4 (Testing & Commit)**, update the JSON file and call the posting
 script to reply in the existing PR review threads and resolve them.
 
-> **Note**: This phase posts threaded review replies to existing PR review threads, not new issue comments.
+> **Note**: This workflow posts threaded replies to existing PR review threads via the posting script; it does not create new issue comments. Items without a `thread_id` must be marked `skipped` (per Step 2) to avoid posting failures.
 
 ---
 
@@ -331,7 +334,7 @@ For each processed Qodo comment, update its entry in the `qodo` array:
 }
 ```
 
-**For SKIPPED suggestions:**
+**For SKIPPED suggestions (user chose to skip):**
 ```json
 {
   "reply": "Skipped: [user's reason]",
@@ -339,10 +342,10 @@ For each processed Qodo comment, update its entry in the `qodo` array:
 }
 ```
 
-**For NOT ADDRESSED suggestions (AI decided not to implement):**
+**For NOT ADDRESSED suggestions (user chose 'no' OR AI decided not to implement):**
 ```json
 {
-  "reply": "Not addressed: [AI's reason]",
+  "reply": "Not addressed: [reason]",
   "status": "not_addressed"
 }
 ```

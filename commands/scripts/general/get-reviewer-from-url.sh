@@ -65,6 +65,12 @@ get_author() {
         api_response=$(gh api "/repos/${OWNER}/${REPO}/issues/comments/${comment_id}" 2>&1) || {
             error "Failed to fetch issue comment: $api_response"
         }
+        if ! echo "$api_response" | jq -e . >/dev/null 2>&1; then
+            error "Non-JSON response from GitHub API: $api_response"
+        fi
+        if echo "$api_response" | jq -e 'has("message") and (.message | type == "string")' >/dev/null 2>&1; then
+            error "GitHub API error: $(echo "$api_response" | jq -r '.message')"
+        fi
         author=$(echo "$api_response" | jq -r '.user.login // empty')
 
     elif [[ "$FRAGMENT" =~ ^pullrequestreview-([0-9]+)$ ]]; then

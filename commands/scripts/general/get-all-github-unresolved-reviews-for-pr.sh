@@ -313,8 +313,19 @@ fetch_review_comments() {
 process_and_categorize() {
     local threads_json="$1"
 
+    # Validate input JSON early to avoid jq hard-fail
+    if ! jq -e . >/dev/null 2>&1 <<<"$threads_json"; then
+        jq -n '{human: [], qodo: [], coderabbit: []}'
+        return 0
+    fi
+
+    local threads_file
+    threads_file="$(mktemp)"
+    TEMP_FILES+=("$threads_file")
+    printf '%s' "$threads_json" >"$threads_file"
+
     jq -n \
-      --argjson threads "$threads_json" \
+      --slurpfile threads "$threads_file" \
       --argjson qodo_users '["qodo-code-review","qodo-code-review[bot]"]' \
       --argjson coderabbit_users '["coderabbitai","coderabbitai[bot]"]' '
       def detect_source($a):
@@ -328,7 +339,7 @@ process_and_categorize() {
           elif ($t | test("(style|formatting|typo|nitpick|nit:|minor|optional|cosmetic|whitespace|indentation)")) then "LOW"
           else "MEDIUM" end;
 
-      ($threads
+      ($threads[0]
        | map(
            . as $x
            | ($x.author // "") as $author

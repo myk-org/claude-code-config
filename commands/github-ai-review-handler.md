@@ -1,5 +1,5 @@
 ---
-skipConfirmation: true
+skipConfirmation: false
 ---
 
 # GitHub AI Review Handler (Unified)
@@ -41,11 +41,13 @@ This unified command:
 
 ### Comment Sources
 
-**Qodo (`qodo-code-review[bot]`):**
+#### Qodo (`qodo-code-review[bot]`)
+
 - **Issue comments**: URL contains `#issuecomment-XXX` - Cannot be resolved via GraphQL
 - **Inline review comments**: Part of PR review threads - CAN be resolved
 
-**CodeRabbit (`coderabbitai[bot]`):**
+#### CodeRabbit (`coderabbitai[bot]`)
+
 - **Review body comments**: Part of the PR review body
 - **Inline review comments**: Part of PR review threads - CAN be resolved
 
@@ -258,7 +260,7 @@ Processing X approved tasks:
 
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
-2. **Process all approved tasks:**
+1. **Process all approved tasks:**
    - **CRITICAL**: Process ALL tasks created during Phase 1, regardless of priority level
    - **NEVER skip LOW-priority tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
    - Use the `body` field as guidance when implementing changes

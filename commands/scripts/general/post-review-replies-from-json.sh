@@ -217,14 +217,18 @@ for category in "${CATEGORIES[@]}"; do
     # Read thread data
     thread_data=$(jq -c --arg cat "$category" '.[$cat]['"$i"']' "$JSON_PATH")
 
-    thread_id=$(echo "$thread_data" | jq -r '.thread_id // empty')
-    node_id=$(echo "$thread_data" | jq -r '.node_id // empty')
-    status=$(echo "$thread_data" | jq -r '.status // "pending"')
-    reply=$(echo "$thread_data" | jq -r '.reply // empty')
-    skip_reason=$(echo "$thread_data" | jq -r '.skip_reason // empty')
-    posted_at=$(echo "$thread_data" | jq -r '.posted_at // empty')
-    resolved_at=$(echo "$thread_data" | jq -r '.resolved_at // empty')
-    path=$(echo "$thread_data" | jq -r '.path // "unknown"')
+    IFS=$'\t' read -r thread_id node_id status reply skip_reason posted_at resolved_at path < <(
+      jq -r '[
+        (.thread_id // ""),
+        (.node_id // ""),
+        (.status // "pending"),
+        (.reply // ""),
+        (.skip_reason // ""),
+        (.posted_at // ""),
+        (.resolved_at // ""),
+        (.path // "unknown")
+      ] | @tsv' <<<"$thread_data"
+    )
 
     # Determine if we should resolve this thread (MUST be before resolve_only_retry check)
     should_resolve=true
