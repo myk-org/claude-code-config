@@ -123,22 +123,144 @@ resolve_thread() {
   return 0
 }
 
-# Update JSON file to add posted_at timestamp to a thread
-# Args: json_path, category (human|qodo|coderabbit), index, timestamp
-update_json_with_timestamp() {
-  local json_path="$1"
-  local category="$2"
-  local index="$3"
-  local timestamp="$4"
+# Process a single thread (called as background job)
+# Args: category, index, thread_data_json, results_dir
+# Writes result to results_dir/<category>_<index>.json
+process_thread() {
+  local category="$1"
+  local index="$2"
+  local thread_data="$3"
+  local results_dir="$4"
 
-  local tmp_file="${json_path}.tmp"
-  if ! jq --arg cat "$category" --arg idx "$index" --arg ts "$timestamp" \
-    '.[$cat][($idx | tonumber)].posted_at = $ts' "$json_path" > "$tmp_file"; then
-    echo "Error updating JSON file" >&2
-    return 1
+  local result_file="${results_dir}/${category}_${index}.json"
+
+  local thread_id node_id status reply skip_reason posted_at comment_id path
+  thread_id=$(echo "$thread_data" | jq -r '.thread_id // empty')
+  node_id=$(echo "$thread_data" | jq -r '.node_id // empty')
+  status=$(echo "$thread_data" | jq -r '.status // "pending"')
+  reply=$(echo "$thread_data" | jq -r '.reply // empty')
+  skip_reason=$(echo "$thread_data" | jq -r '.skip_reason // empty')
+  posted_at=$(echo "$thread_data" | jq -r '.posted_at // empty')
+  comment_id=$(echo "$thread_data" | jq -r '.comment_id // empty')
+  path=$(echo "$thread_data" | jq -r '.path // "unknown"')
+
+  # Helper to write result
+  write_result() {
+    local result_type="$1"
+    local message="$2"
+    local timestamp="${3:-}"
+    local resolved="${4:-false}"
+    jq -n \
+      --arg cat "$category" \
+      --arg idx "$index" \
+      --arg type "$result_type" \
+      --arg msg "$message" \
+      --arg ts "$timestamp" \
+      --arg path "$path" \
+      --arg status "$status" \
+      --argjson resolved "$resolved" \
+      '{category: $cat, index: ($idx | tonumber), result: $type, message: $msg, timestamp: $ts, path: $path, status: $status, resolved: $resolved}' \
+      > "$result_file"
+  }
+
+  # Skip if already posted
+  if [ -n "$posted_at" ]; then
+    write_result "already_posted" "already posted at $posted_at"
+    return 0
   fi
-  mv -f "$tmp_file" "$json_path"
+
+  # Skip pending threads
+  if [ "$status" = "pending" ]; then
+    write_result "pending" "status is pending"
+    return 0
+  fi
+
+  # Determine which ID to use for GraphQL
+  local effective_thread_id=""
+  if [ -n "$thread_id" ] && [ "$thread_id" != "null" ]; then
+    effective_thread_id="$thread_id"
+  fi
+
+  # Check if we have a usable thread ID
+  if [ -z "$effective_thread_id" ]; then
+    if [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
+      write_result "no_thread_id" "has node_id but no thread_id - node_id is not valid for GraphQL mutations"
+    else
+      write_result "no_thread_id" "no thread_id - cannot post reply (comment_id=$comment_id)"
+    fi
+    return 0
+  fi
+
+  # Build reply message based on status
+  local reply_message=""
+  case "$status" in
+    addressed)
+      if [ -n "$reply" ]; then
+        reply_message="$reply"
+      else
+        reply_message="Addressed."
+      fi
+      ;;
+    skipped)
+      if [ -n "$skip_reason" ]; then
+        reply_message="Skipped: $skip_reason"
+      elif [ -n "$reply" ]; then
+        reply_message="$reply"
+      else
+        reply_message="Skipped."
+      fi
+      ;;
+    not_addressed)
+      if [ -n "$reply" ]; then
+        reply_message="$reply"
+      else
+        reply_message="Not addressed - see reply for details."
+      fi
+      ;;
+    failed)
+      if [ -n "$reply" ]; then
+        reply_message="$reply"
+      else
+        reply_message="Addressed."
+      fi
+      ;;
+    *)
+      write_result "unknown_status" "unknown status: $status"
+      return 0
+      ;;
+  esac
+
+  # Post reply
+  if ! post_thread_reply "$effective_thread_id" "$reply_message" 2>/dev/null; then
+    write_result "failed" "failed to post reply"
+    return 0
+  fi
+
+  # Determine if we should resolve this thread
+  local should_resolve=true
+  if [ "$category" = "human" ] && [ "$status" != "addressed" ]; then
+    should_resolve=false
+  fi
+
+  local timestamp
+  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  # Resolve thread only if appropriate
+  if [ "$should_resolve" = true ]; then
+    if ! resolve_thread "$effective_thread_id" 2>/dev/null; then
+      write_result "resolve_failed" "reply posted but thread not resolved" "$timestamp" false
+      return 0
+    fi
+    write_result "success" "resolved" "$timestamp" true
+  else
+    write_result "success" "replied only (human review - not resolved)" "$timestamp" false
+  fi
+
+  return 0
 }
+
+# Export functions for subshells
+export -f post_thread_reply resolve_thread process_thread
 
 # Validate arguments
 if [ $# -eq 0 ]; then
@@ -182,15 +304,19 @@ if [ "$TOTAL_THREAD_COUNT" -eq 0 ]; then
   exit 0
 fi
 
-# Counters for summary
-addressed_count=0
-skipped_count=0
-pending_count=0
-failed_count=0
-no_thread_id_count=0
-replied_not_resolved_count=0
+# Create temp directory for results
+RESULTS_DIR=$(mktemp -d)
+trap 'rm -rf "$RESULTS_DIR"' EXIT
 
-# Process threads from each category
+# Maximum parallel jobs (don't overwhelm GitHub API)
+MAX_PARALLEL=5
+job_count=0
+
+echo "Processing $TOTAL_THREAD_COUNT threads with up to $MAX_PARALLEL parallel requests..." >&2
+
+# Collect all threads to process
+declare -a all_threads=()
+
 for category in "${CATEGORIES[@]}"; do
   THREAD_COUNT=$(jq --arg cat "$category" '.[$cat] | length' "$JSON_PATH")
 
@@ -198,153 +324,128 @@ for category in "${CATEGORIES[@]}"; do
     continue
   fi
 
-  echo "Processing $THREAD_COUNT thread(s) from category: $category" >&2
-
   for ((i = 0; i < THREAD_COUNT; i++)); do
-    # Read thread data from the specific category
     thread_data=$(jq -c --arg cat "$category" '.[$cat]['"$i"']' "$JSON_PATH")
-
-    thread_id=$(echo "$thread_data" | jq -r '.thread_id // empty')
-    node_id=$(echo "$thread_data" | jq -r '.node_id // empty')
-    status=$(echo "$thread_data" | jq -r '.status // "pending"')
-    reply=$(echo "$thread_data" | jq -r '.reply // empty')
-    skip_reason=$(echo "$thread_data" | jq -r '.skip_reason // empty')
-    posted_at=$(echo "$thread_data" | jq -r '.posted_at // empty')
-    comment_id=$(echo "$thread_data" | jq -r '.comment_id // empty')
-    path=$(echo "$thread_data" | jq -r '.path // "unknown"')
-
-    # Skip if already posted
-    if [ -n "$posted_at" ]; then
-      echo "Skipping ${category}[${i}] ($path): already posted at $posted_at" >&2
-      continue
-    fi
-
-    # Skip pending threads
-    if [ "$status" = "pending" ]; then
-      echo "Skipping ${category}[${i}] ($path): status is pending" >&2
-      pending_count=$((pending_count + 1))
-      continue
-    fi
-
-    # Determine which ID to use for GraphQL
-    # NOTE: Only thread_id (from GraphQL) is valid for mutations.
-    # node_id from REST API is NOT a valid thread ID and will cause GraphQL errors.
-    effective_thread_id=""
-    if [ -n "$thread_id" ] && [ "$thread_id" != "null" ]; then
-      effective_thread_id="$thread_id"
-    fi
-
-    # Check if we have a usable thread ID
-    if [ -z "$effective_thread_id" ]; then
-      # node_id is NOT usable - it's a comment ID, not a thread ID
-      if [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
-        echo "Warning: ${category}[${i}] ($path, comment_id=$comment_id) has node_id but no thread_id - node_id is not valid for GraphQL mutations, cannot post reply" >&2
-      else
-        echo "Warning: No thread_id for ${category}[${i}] ($path, comment_id=$comment_id) - cannot post reply" >&2
-      fi
-      no_thread_id_count=$((no_thread_id_count + 1))
-      continue
-    fi
-
-    # Build reply message based on status
-    reply_message=""
-    case "$status" in
-      addressed)
-        if [ -n "$reply" ]; then
-          reply_message="$reply"
-        else
-          reply_message="Addressed."
-        fi
-        ;;
-      skipped)
-        if [ -n "$skip_reason" ]; then
-          reply_message="Skipped: $skip_reason"
-        elif [ -n "$reply" ]; then
-          reply_message="$reply"
-        else
-          reply_message="Skipped."
-        fi
-        ;;
-      not_addressed)
-        # Handle not_addressed status - post reply and resolve (similar to addressed)
-        if [ -n "$reply" ]; then
-          reply_message="$reply"
-        else
-          reply_message="Not addressed - see reply for details."
-        fi
-        ;;
-      failed)
-        # Retry with the same reply
-        if [ -n "$reply" ]; then
-          reply_message="$reply"
-        else
-          reply_message="Addressed."
-        fi
-        ;;
-      *)
-        echo "Warning: Unknown status '$status' for ${category}[${i}] ($path), skipping" >&2
-        continue
-        ;;
-    esac
-
-    echo "Processing ${category}[${i}] ($path): status=$status" >&2
-
-    # Post reply
-    if ! post_thread_reply "$effective_thread_id" "$reply_message"; then
-      echo "Failed to post reply for ${category}[${i}] ($path)" >&2
-      failed_count=$((failed_count + 1))
-      continue
-    fi
-
-    # Determine if we should resolve this thread
-    # - For qodo/coderabbit: always resolve
-    # - For human: only resolve if status is "addressed"
-    should_resolve=true
-    if [ "$category" = "human" ] && [ "$status" != "addressed" ]; then
-      should_resolve=false
-      echo "Skipping resolution for human review ${category}[${i}] (status: $status) - allows reviewer to follow up" >&2
-    fi
-
-    # Resolve thread only if appropriate
-    if [ "$should_resolve" = true ]; then
-      if ! resolve_thread "$effective_thread_id"; then
-        echo "Failed to resolve ${category}[${i}] ($path) - reply was posted but thread not resolved" >&2
-        failed_count=$((failed_count + 1))
-        continue
-      fi
-    fi
-
-    # Update JSON with timestamp (now includes category)
-    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    if ! update_json_with_timestamp "$JSON_PATH" "$category" "$i" "$timestamp"; then
-      echo "Warning: Failed to update JSON with timestamp for ${category}[${i}]" >&2
-    fi
-
-    # Update counters
-    if [ "$should_resolve" = true ]; then
-      case "$status" in
-        addressed)
-          addressed_count=$((addressed_count + 1))
-          ;;
-        skipped)
-          skipped_count=$((skipped_count + 1))
-          ;;
-        not_addressed)
-          # Count as addressed since we resolved the thread
-          addressed_count=$((addressed_count + 1))
-          ;;
-        failed)
-          # Successfully retried a previously failed thread
-          addressed_count=$((addressed_count + 1))
-          ;;
-      esac
-      echo "Resolved ${category}[${i}] ($path)" >&2
-    else
-      replied_not_resolved_count=$((replied_not_resolved_count + 1))
-      echo "Replied to ${category}[${i}] ($path) (not resolved)" >&2
-    fi
+    all_threads+=("$category|$i|$thread_data")
   done
 done
+
+# Process threads in parallel with controlled concurrency
+for thread_info in "${all_threads[@]}"; do
+  IFS='|' read -r category index thread_data <<< "$thread_info"
+
+  # Run process_thread in background
+  process_thread "$category" "$index" "$thread_data" "$RESULTS_DIR" &
+  job_count=$((job_count + 1))
+
+  # Wait if we hit max parallel jobs
+  if [ "$job_count" -ge "$MAX_PARALLEL" ]; then
+    wait -n 2>/dev/null || true  # Wait for any one job to finish
+    job_count=$((job_count - 1))
+  fi
+done
+
+# Wait for all remaining jobs
+wait
+
+# Collect results and update JSON
+echo "" >&2
+echo "Collecting results..." >&2
+
+# Counters for summary
+addressed_count=0
+skipped_count=0
+pending_count=0
+failed_count=0
+no_thread_id_count=0
+replied_not_resolved_count=0
+already_posted_count=0
+
+# Build list of updates (category, index, timestamp)
+declare -a updates=()
+
+# Process all result files
+for result_file in "$RESULTS_DIR"/*.json; do
+  [ -f "$result_file" ] || continue
+
+  result_data=$(cat "$result_file")
+  result_type=$(echo "$result_data" | jq -r '.result')
+  category=$(echo "$result_data" | jq -r '.category')
+  index=$(echo "$result_data" | jq -r '.index')
+  message=$(echo "$result_data" | jq -r '.message')
+  path=$(echo "$result_data" | jq -r '.path')
+  status=$(echo "$result_data" | jq -r '.status')
+  timestamp=$(echo "$result_data" | jq -r '.timestamp')
+  resolved=$(echo "$result_data" | jq -r '.resolved')
+
+  case "$result_type" in
+    success)
+      if [ "$resolved" = "true" ]; then
+        case "$status" in
+          addressed|not_addressed|failed)
+            addressed_count=$((addressed_count + 1))
+            ;;
+          skipped)
+            skipped_count=$((skipped_count + 1))
+            ;;
+        esac
+        echo "Resolved ${category}[${index}] ($path)" >&2
+      else
+        replied_not_resolved_count=$((replied_not_resolved_count + 1))
+        echo "Replied to ${category}[${index}] ($path) (not resolved)" >&2
+      fi
+      # Queue update for JSON
+      updates+=("$category|$index|$timestamp")
+      ;;
+    resolve_failed)
+      failed_count=$((failed_count + 1))
+      echo "Failed to resolve ${category}[${index}] ($path) - reply was posted but thread not resolved" >&2
+      # Still update timestamp since reply was posted
+      updates+=("$category|$index|$timestamp")
+      ;;
+    failed)
+      failed_count=$((failed_count + 1))
+      echo "Failed to post reply for ${category}[${index}] ($path)" >&2
+      ;;
+    pending)
+      pending_count=$((pending_count + 1))
+      echo "Skipping ${category}[${index}] ($path): status is pending" >&2
+      ;;
+    no_thread_id)
+      no_thread_id_count=$((no_thread_id_count + 1))
+      echo "Warning: No thread_id for ${category}[${index}] ($path) - $message" >&2
+      ;;
+    already_posted)
+      already_posted_count=$((already_posted_count + 1))
+      echo "Skipping ${category}[${index}] ($path): $message" >&2
+      ;;
+    unknown_status)
+      echo "Warning: Unknown status for ${category}[${index}] ($path): $message" >&2
+      ;;
+  esac
+done
+
+# Apply all JSON updates atomically
+if [ ${#updates[@]} -gt 0 ]; then
+  echo "" >&2
+  echo "Updating JSON file with ${#updates[@]} timestamps..." >&2
+
+  # Build jq update expression
+  tmp_json="${JSON_PATH}.tmp"
+  cp "$JSON_PATH" "$tmp_json"
+
+  for update in "${updates[@]}"; do
+    IFS='|' read -r category index timestamp <<< "$update"
+    if ! jq --arg cat "$category" --arg idx "$index" --arg ts "$timestamp" \
+      '.[$cat][($idx | tonumber)].posted_at = $ts' "$tmp_json" > "${tmp_json}.new"; then
+      echo "Warning: Failed to update JSON for ${category}[${index}]" >&2
+      continue
+    fi
+    mv -f "${tmp_json}.new" "$tmp_json"
+  done
+
+  mv -f "$tmp_json" "$JSON_PATH"
+fi
 
 # Print summary
 total_resolved=$((addressed_count + skipped_count))
@@ -364,6 +465,10 @@ fi
 
 if [ "$no_thread_id_count" -gt 0 ]; then
   echo "  Skipped: $no_thread_id_count threads (no thread_id - likely fetched via REST API without GraphQL thread ID)" >&2
+fi
+
+if [ "$already_posted_count" -gt 0 ]; then
+  echo "  Already posted: $already_posted_count threads" >&2
 fi
 
 if [ "$failed_count" -gt 0 ]; then
