@@ -140,7 +140,7 @@ The unified fetcher returns structured JSON with categorized comments.
 - `status`: `pending` initially, updated after processing
 
 **Note**: For inline review comments, `thread_id` is present for GraphQL operations.
-For comments fetched via REST API (specific review URL), `thread_id` may be null but `node_id` is available.
+Comments without `thread_id` cannot be resolved via GraphQL and will be skipped by the posting script.
 
 ### Step 2.5: Filter Positive Comments
 
@@ -351,8 +351,9 @@ The script will:
 - Inline review thread replies (using `thread_id` or `node_id`)
 - Thread resolution (marks threads as resolved after replying)
 
-**IMPORTANT**: The script only processes comments from the `coderabbit` array since that's what this
-command focuses on. Other categories (`human`, `qodo`) are left untouched.
+**IMPORTANT**: The posting script processes all categories with updated status fields, but this command
+only updates the `coderabbit` array. Other categories (`human`, `qodo`) are left with `status: "pending"`
+and will be ignored by the posting script.
 
 ---
 

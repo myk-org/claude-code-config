@@ -45,6 +45,12 @@ fetch_unresolved_threads() {
   local has_next_page="true"
   local page_count=0
 
+  # Temp files for pagination merge (avoids "Argument list too long" with --argjson)
+  local tmp_existing tmp_new
+  tmp_existing=$(mktemp)
+  tmp_new=$(mktemp)
+  trap 'rm -f "$tmp_existing" "$tmp_new"' RETURN
+
   while [ "$has_next_page" = "true" ]; do
     page_count=$((page_count + 1))
     local raw_result
@@ -120,10 +126,12 @@ fetch_unresolved_threads() {
     has_next_page=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage // false')
     cursor=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor // ""')
 
-    # Extract threads from this page and accumulate
+    # Extract threads from this page and accumulate using temp files
     local page_threads
     page_threads=$(echo "$raw_result" | jq '.data.repository.pullRequest.reviewThreads.nodes // []')
-    all_threads=$(jq -n --argjson existing "$all_threads" --argjson new "$page_threads" '$existing + $new')
+    echo "$all_threads" > "$tmp_existing"
+    echo "$page_threads" > "$tmp_new"
+    all_threads=$(jq -s '.[0] + .[1]' "$tmp_existing" "$tmp_new")
 
     if [ "$has_next_page" = "true" ]; then
       echo "Fetching page $((page_count + 1)) of review threads..." >&2

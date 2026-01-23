@@ -265,62 +265,6 @@ Where `<number>` is the PR number from `metadata.pr_number`.
 
 **Note**: The posting script correctly handles human reviews by NOT resolving threads with `skipped` or `not_addressed` statuses. No manual handling is required for these cases.
 
-**STEP 3a (Manual handling for skipped/not_addressed)**: For human reviews that should NOT be resolved,
-post the reply manually without resolving:
-
-```bash
-# Reply without resolving (for skipped/not_addressed human reviews)
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {
-      pullRequestReviewThreadId: $threadId,
-      body: $body
-    }) {
-      comment { id }
-    }
-  }
-' -f threadId="<thread_id>" -f body="<reason>"
-```
-
-Then set those comments' `status` to `"pending"` in the JSON before calling the posting script,
-or skip the posting script entirely and handle all replies manually for human reviews.
-
-**Alternative approach**: Handle all human review replies manually (recommended for human reviews):
-
-For ADDRESSED comments - reply and resolve:
-```bash
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: $threadId, body: $body}) {
-      comment { id }
-    }
-  }
-' -f threadId="<thread_id>" -f body="Done"
-
-gh api graphql -f query='
-  mutation($threadId: ID!) {
-    resolveReviewThread(input: {threadId: $threadId}) {
-      thread { isResolved }
-    }
-  }
-' -f threadId="<thread_id>"
-```
-
-For SKIPPED or NOT ADDRESSED comments - reply WITHOUT resolving:
-```bash
-gh api graphql -f query='
-  mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: $threadId, body: $body}) {
-      comment { id }
-    }
-  }
-' -f threadId="<thread_id>" -f body="<reason>"
-```
-
-**Where to get values:**
-- `<thread_id>`: From each comment's `thread_id` field in the `human` array
-- `<reason>`: The tracked reason for not_addressed or skipped outcomes
-
 **Key difference from AI review handlers:** Human reviewer comments that are not addressed or skipped
 do NOT get resolved - only replied to. This allows the human reviewer to follow up.
 

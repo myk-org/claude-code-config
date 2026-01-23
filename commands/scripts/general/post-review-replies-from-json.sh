@@ -430,18 +430,22 @@ if [ ${#updates[@]} -gt 0 ]; then
   echo "" >&2
   echo "Updating JSON file with ${#updates[@]} timestamps..." >&2
 
-  # Build jq update expression
-  tmp_json="${JSON_PATH}.tmp"
+  # Use mktemp for secure temp file creation
+  tmp_json=$(mktemp)
+  tmp_json_new=$(mktemp)
+  # Add temp files to cleanup on exit/failure
+  trap 'rm -rf "$RESULTS_DIR" "$tmp_json" "$tmp_json_new" 2>/dev/null || true' EXIT
+
   cp "$JSON_PATH" "$tmp_json"
 
   for update in "${updates[@]}"; do
     IFS='|' read -r category index timestamp <<< "$update"
     if ! jq --arg cat "$category" --arg idx "$index" --arg ts "$timestamp" \
-      '.[$cat][($idx | tonumber)].posted_at = $ts' "$tmp_json" > "${tmp_json}.new"; then
+      '.[$cat][($idx | tonumber)].posted_at = $ts' "$tmp_json" > "$tmp_json_new"; then
       echo "Warning: Failed to update JSON for ${category}[${index}]" >&2
       continue
     fi
-    mv -f "${tmp_json}.new" "$tmp_json"
+    mv -f "$tmp_json_new" "$tmp_json"
   done
 
   mv -f "$tmp_json" "$JSON_PATH"

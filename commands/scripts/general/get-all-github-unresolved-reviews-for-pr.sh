@@ -24,9 +24,10 @@ PR_INFO_SCRIPT="$SCRIPT_DIR/get-pr-info.sh"
 declare -a TEMP_FILES=()
 
 # Cleanup function for trap
+# Removes tracked temp files and any orphaned .new files from atomic updates
 cleanup() {
   for f in "${TEMP_FILES[@]:-}"; do
-    rm -f "$f" 2>/dev/null || true
+    rm -f "$f" "${f}.new" 2>/dev/null || true
   done
 }
 trap cleanup EXIT INT TERM
@@ -95,19 +96,19 @@ detect_source() {
 
 # Classify priority from comment body
 # Returns: "HIGH", "MEDIUM", or "LOW"
+# Uses bash native lowercase expansion and here-strings (no subshells)
 classify_priority() {
     local body="$1"
-    local body_lower
-    body_lower=$(echo "$body" | tr '[:upper:]' '[:lower:]')
+    local body_lower="${body,,}"
 
     # HIGH: security, bugs, critical issues
-    if echo "$body_lower" | grep -qE '(security|vulnerability|critical|bug|error|crash|must|required|breaking|urgent|injection|xss|csrf|auth)'; then
+    if grep -qE '(security|vulnerability|critical|bug|error|crash|must|required|breaking|urgent|injection|xss|csrf|auth)' <<< "$body_lower"; then
         echo "HIGH"
         return
     fi
 
     # LOW: style, formatting, minor
-    if echo "$body_lower" | grep -qE '(style|formatting|typo|nitpick|nit:|minor|optional|cosmetic|whitespace|indentation)'; then
+    if grep -qE '(style|formatting|typo|nitpick|nit:|minor|optional|cosmetic|whitespace|indentation)' <<< "$body_lower"; then
         echo "LOW"
         return
     fi
@@ -450,6 +451,15 @@ main() {
 
         elif [[ "$review_url" =~ issuecomment-([0-9]+) ]]; then
             echo "Note: Issue comments (#issuecomment-*) are not review threads, skipping specific fetch" >&2
+
+        elif [[ "$review_url" =~ ^[0-9]+$ ]]; then
+            # Raw numeric review ID (e.g., "12345")
+            local review_id="$review_url"
+            echo "Fetching comments from PR review $review_id (raw ID)..." >&2
+            specific_threads=$(fetch_review_comments "$owner" "$repo" "$pr_number" "$review_id")
+            local specific_count
+            specific_count=$(echo "$specific_threads" | jq 'length')
+            echo "Found $specific_count comment(s) from review $review_id" >&2
 
         else
             echo "Warning: Unrecognized URL fragment in: $review_url" >&2
