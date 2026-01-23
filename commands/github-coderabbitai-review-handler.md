@@ -94,13 +94,13 @@ The script returns structured JSON containing:
 - `summary`: Counts of actionable, nitpicks, duplicates, outside_diff_range (if any), total, plus `by_source` breakdown:
   - `by_source.inline_review`: Count of comments from inline review threads
   - `by_source.review_body`: Count of comments from review body
-- `actionable_comments`: Array of HIGH priority issues with AI instructions (body contains direct AI prompts)
+- `actionable_comments`: Array of HIGH-priority issues with AI instructions (body contains direct AI prompts)
   - Each has: `source` (`"inline_review"` or `"review_body"`), `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `body`
-- `nitpick_comments`: Array of LOW priority style/maintainability issues with clean descriptions
+- `nitpick_comments`: Array of LOW-priority style/maintainability issues with clean descriptions
   - Each has: `source`, `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `line`, `body`
-- `duplicate_comments`: Array of MEDIUM priority duplicates (only present if any exist)
+- `duplicate_comments`: Array of MEDIUM-priority duplicates (only present if any exist)
   - Each has: `source`, `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `line`, `body`
-- `outside_diff_range_comments`: Array of LOW priority comments on code outside the diff (only present if any exist)
+- `outside_diff_range_comments`: Array of LOW-priority comments on code outside the diff (only present if any exist)
   - Each has: `source`, `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `line`, `body`
 
 **Note**: For inline review comments, each has its own `thread_id` for replying and resolving.
@@ -352,7 +352,7 @@ Reply to the thread AND resolve it using GraphQL:
 # Reply to the inline comment thread
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {

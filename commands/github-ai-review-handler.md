@@ -413,7 +413,7 @@ Reply to thread AND resolve using GraphQL:
 # Reply to the inline comment thread
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {
@@ -491,7 +491,7 @@ Reply to thread AND resolve using GraphQL (same as Qodo inline):
 # Reply to the inline comment thread
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {

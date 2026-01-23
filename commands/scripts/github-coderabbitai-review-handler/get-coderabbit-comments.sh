@@ -149,8 +149,15 @@ elif [ $# -eq 1 ]; then
       echo "❌ Error: Failed to get PR information" >&2
       exit 1
     fi
-    REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
-    PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
+    read -r REPO_FULL_NAME PR_NUMBER _extra <<< "$PR_INFO"
+    if [ -z "$REPO_FULL_NAME" ]; then
+      echo "❌ Error: Could not parse repository from PR info: '$PR_INFO'" >&2
+      exit 1
+    fi
+    if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+      echo "❌ Error: PR number must be numeric, got: '$PR_NUMBER'" >&2
+      exit 1
+    fi
     HAS_TARGET=false
   else
     echo "Error: '$1' is not a valid script file path." >&2
@@ -169,8 +176,15 @@ elif [ $# -eq 2 ]; then
       echo "❌ Error: Failed to get PR information" >&2
       exit 1
     fi
-    REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
-    PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
+    read -r REPO_FULL_NAME PR_NUMBER _extra <<< "$PR_INFO"
+    if [ -z "$REPO_FULL_NAME" ]; then
+      echo "❌ Error: Could not parse repository from PR info: '$PR_INFO'" >&2
+      exit 1
+    fi
+    if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+      echo "❌ Error: PR number must be numeric, got: '$PR_NUMBER'" >&2
+      exit 1
+    fi
   elif [[ "$1" =~ / ]]; then
     # First argument looks like owner/repo, second is PR number
     REPO_FULL_NAME="$1"

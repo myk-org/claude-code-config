@@ -8,6 +8,10 @@ done
 
 # Path to generic fetcher script
 GENERIC_FETCHER_SCRIPT="$(dirname "$0")/../general/get-unresolved-review-threads.sh"
+if [ ! -x "$GENERIC_FETCHER_SCRIPT" ]; then
+  echo "Error: Generic fetcher script not found or not executable: $GENERIC_FETCHER_SCRIPT" >&2
+  exit 1
+fi
 
 # Script to extract Qodo AI review comments for processing
 # Usage: get-qodo-comments.sh <pr-info-script-path> [comment_id|comment_url]
@@ -65,7 +69,7 @@ get_review_inline_comments() {
   local pr_number="$3"
   local review_id="$4"
 
-  gh api "/repos/$owner/$repo/pulls/$pr_number/reviews/$review_id/comments?per_page=100" --jq '.'
+  gh api --paginate "/repos/$owner/$repo/pulls/$pr_number/reviews/$review_id/comments" --jq '.'
 }
 
 # Parse inline review comments into suggestion format

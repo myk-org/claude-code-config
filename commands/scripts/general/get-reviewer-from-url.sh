@@ -39,19 +39,19 @@ check_dependencies() {
 parse_url() {
     local url="$1"
 
-    # Remove trailing whitespace
-    url="${url%% }"
-    url="${url%%	}"
+    # Remove trailing whitespace (spaces/tabs/newlines)
+    url="${url%"${url##*[! $'\t\r\n']}"}"
 
-    # Validate URL format
-    if [[ ! "$url" =~ ^https://github\.com/([^/]+)/([^/]+)/pull/([0-9]+)#(.+)$ ]]; then
+    # Validate URL format (with optional /files segment)
+    if [[ ! "$url" =~ ^https://github\.com/([^/]+)/([^/]+)/pull/([0-9]+)(/files)?#(.+)$ ]]; then
         error "Invalid GitHub URL format: $url"
     fi
 
     OWNER="${BASH_REMATCH[1]}"
     REPO="${BASH_REMATCH[2]}"
     PR_NUMBER="${BASH_REMATCH[3]}"
-    FRAGMENT="${BASH_REMATCH[4]}"
+    # BASH_REMATCH[4] is optional /files, BASH_REMATCH[5] is fragment
+    FRAGMENT="${BASH_REMATCH[5]}"
 }
 
 # Get author login from the appropriate API endpoint

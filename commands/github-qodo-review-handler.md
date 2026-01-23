@@ -42,8 +42,8 @@ workflow.**
 
 ### Step 1: Get Qodo comments using the extraction script
 
-MAIN_SCRIPT = ~/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh
-PR_INFO_SCRIPT = ~/.claude/commands/scripts/general/get-pr-info.sh
+MAIN_SCRIPT=~/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh
+PR_INFO_SCRIPT=~/.claude/commands/scripts/general/get-pr-info.sh
 
 ### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
 
@@ -327,7 +327,7 @@ Reply to the thread AND resolve it using GraphQL:
 # Reply to the inline comment thread
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {

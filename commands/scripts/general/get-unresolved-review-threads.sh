@@ -172,6 +172,7 @@ fetch_specific_discussion() {
   # Transform to thread format
   echo "$result" | jq '[{
     thread_id: null,
+    node_id: .node_id,
     comment_id: .id,
     author: .user.login,
     path: .path,
@@ -198,6 +199,7 @@ fetch_review_comments() {
   # NOTE: REST API returns user.login with [bot] suffix for bot accounts
   echo "$result" | jq '[.[] | {
     thread_id: null,
+    node_id: .node_id,
     comment_id: .id,
     author: .user.login,
     path: .path,
