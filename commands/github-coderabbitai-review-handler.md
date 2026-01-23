@@ -32,7 +32,7 @@ workflow.**
 MAIN_SCRIPT = ~/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
 PR_INFO_SCRIPT = ~/.claude/commands/scripts/general/get-pr-info.sh
 
-### 🎯 CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
+### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
 
 **ALWAYS use this exact command format:**
 
@@ -44,24 +44,31 @@ $MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
 
 ---
 
-**User MUST provide a review ID or review URL:**
+**Usage patterns:**
 
-```bash
-# User provided review ID:
-$MAIN_SCRIPT $PR_INFO_SCRIPT 3379917343
+1. **No URL provided**: Fetches all unresolved inline review comments from the PR
+   ```bash
+   $MAIN_SCRIPT $PR_INFO_SCRIPT
+   ```
 
-# User provided review URL:
-$MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-3379917343"
-```
+2. **Review URL provided**: Fetches comments from that specific review only
+   ```bash
+   # User provided review URL:
+   $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-3379917343"
+
+   # User provided review ID:
+   $MAIN_SCRIPT $PR_INFO_SCRIPT 3379917343
+   ```
 
 **If user provides NO input:**
 
-The review ID or URL is REQUIRED. If the user doesn't provide one, instruct them:
+The script will fetch all unresolved inline review comments. If you want to process a specific review,
+instruct the user:
 
 ```text
-To use this command, you need to provide a CodeRabbit review ID or URL.
+Running without arguments will fetch all unresolved inline review comments.
 
-How to get the review URL:
+To process a specific CodeRabbit review, provide its URL or ID:
 1. Go to the GitHub PR page
 2. Find the CodeRabbit review you want to process
 3. Click on the review timestamp/link
@@ -82,15 +89,25 @@ EVERYTHING.**
 The script returns structured JSON containing:
 
 - `metadata`: Contains `owner`, `repo`, `pr_number`, `review_id` for use in reply scripts
-- `summary`: Counts of actionable, nitpicks, duplicates, outside_diff_range (if any), and total
+- `summary`: Counts of actionable, nitpicks, duplicates, outside_diff_range (if any), total, plus `by_source` breakdown:
+  - `by_source.inline_review`: Count of comments from inline review threads
+  - `by_source.review_body`: Count of comments from review body
 - `actionable_comments`: Array of HIGH priority issues with AI instructions (body contains direct AI prompts)
-  - Each has: comment_id, priority, title, file, body (body = AI instruction to execute)
+  - Each has: `source` (`"inline_review"` or `"review_body"`), `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `body`
 - `nitpick_comments`: Array of LOW priority style/maintainability issues with clean descriptions
-  - Each has: comment_id, priority, title, file, line, body
+  - Each has: `source`, `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `line`, `body`
 - `duplicate_comments`: Array of MEDIUM priority duplicates (only present if any exist)
-  - Each has: comment_id, priority, title, file, line, body
+  - Each has: `source`, `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `line`, `body`
 - `outside_diff_range_comments`: Array of LOW priority comments on code outside the diff (only present if any exist)
-  - Each has: comment_id, priority, title, file, line, body
+  - Each has: `source`, `thread_id` (for inline reviews), `comment_id`, `priority`, `title`, `file`, `line`, `body`
+
+**Note**: For inline review comments, each has its own `thread_id` for replying and resolving.
+For review body comments, only `comment_id` is available (no `thread_id`).
+
+**Limitation (MODE 2 - Specific Review)**: When fetching a specific review via URL/ID, inline comments
+have `thread_id: null` because the REST API does not provide thread IDs. These comments cannot be
+resolved via GraphQL - use the existing reply script (`reply-to-pr-review.sh`) instead. Only comments
+fetched via MODE 1 (all unresolved) use GraphQL and have valid `thread_id` values.
 
 ### Step 2.5: Filter Positive Comments from Duplicates
 
@@ -259,7 +276,15 @@ Proceed directly to execution (no confirmation needed since user already approve
 
 ### Step 5: PHASE 3.5 - Post CodeRabbit Reply
 
-**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), generate and post reply to PR.
+**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), generate and post replies.
+
+**Handling differs by source type:**
+
+---
+
+#### For Review Body Comments (source = "review_body")
+
+Post threaded replies using the existing reply script:
 
 **STEP 1**: Generate reply message using this format:
 
@@ -290,7 +315,7 @@ Proceed directly to execution (no confirmation needed since user already approve
 - Include count in header: "### Addressed (3)"
 - File paths should be in backticks for code formatting
 
-**STEP 2**: Post threaded replies to ALL comments:
+**STEP 2**: Post threaded replies:
 
 **For ADDRESSED comments** - reply with "Done" and resolve:
 ```bash
@@ -313,9 +338,66 @@ Proceed directly to execution (no confirmation needed since user already approve
 - `<comment_id>`: From each comment's `comment_id` field
 - `<reason>`: The tracked reason for not_addressed or skipped outcomes
 
-**STEP 3**: Confirm replies were posted successfully before proceeding.
+---
 
-**CHECKPOINT**: Reply posted to PR
+#### For Inline Review Comments (source = "inline_review")
+
+Reply to the thread AND resolve it using GraphQL:
+
+**STEP 1**: For each addressed inline review comment, reply to the thread:
+
+```bash
+# Reply to the inline comment thread
+gh api graphql -f query='
+  mutation($threadId: ID!, $body: String!) {
+    addPullRequestReviewComment(input: {
+      pullRequestReviewThreadId: $threadId,
+      body: $body
+    }) {
+      comment { id }
+    }
+  }
+' -f threadId="$THREAD_ID" -f body="Done"
+```
+
+**STEP 2**: Resolve the thread:
+
+```bash
+# Resolve the thread
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolvePullRequestReviewThread(input: {
+      threadId: $threadId
+    }) {
+      thread { isResolved }
+    }
+  }
+' -f threadId="$THREAD_ID"
+```
+
+**Where to get values:**
+- `$THREAD_ID`: From comment's `thread_id` field
+
+**STEP 3**: For skipped or not addressed inline reviews, reply with the reason but do NOT resolve:
+
+```bash
+gh api graphql -f query='
+  mutation($threadId: ID!, $body: String!) {
+    addPullRequestReviewComment(input: {
+      pullRequestReviewThreadId: $threadId,
+      body: $body
+    }) {
+      comment { id }
+    }
+  }
+' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
+```
+
+---
+
+**STEP 4**: Confirm all replies were posted successfully before proceeding.
+
+**CHECKPOINT**: All replies posted (review body AND/OR inline thread replies)
 
 1. **Post-execution workflow (PHASES 4 & 5 - MANDATORY CHECKPOINTS):**
 
@@ -366,11 +448,12 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
-### PHASE 3.5: Post CodeRabbit Reply (NEW)
+### PHASE 3.5: Post CodeRabbit Reply
 
 - Generate summary reply from tracked outcomes
-- Post reply to PR using reply script
-- **CHECKPOINT**: Reply posted successfully
+- **For review body comments**: Post threaded reply using reply script
+- **For inline review comments**: Reply to thread AND resolve it via GraphQL
+- **CHECKPOINT**: All replies posted successfully
 
 ### PHASE 4: Testing & Commit Phase
 

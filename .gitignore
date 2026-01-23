@@ -36,6 +36,7 @@
 # commands/
 !commands/
 !commands/code-review.md
+!commands/github-ai-review-handler.md
 !commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md
 !commands/github-release.md

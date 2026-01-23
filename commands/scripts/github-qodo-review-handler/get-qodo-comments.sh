@@ -34,6 +34,9 @@ show_usage() {
 
 # Get unresolved Qodo inline review comments using GraphQL
 # Returns JSON array of unresolved comments from qodo-code-review[bot]
+# NOTE: GraphQL API returns author.login as "qodo-code-review" (without [bot] suffix),
+# while REST API returns user.login as "qodo-code-review[bot]" (with suffix).
+# The filter below uses the GraphQL format intentionally.
 get_unresolved_qodo_comments() {
   local owner="$1"
   local repo="$2"
@@ -68,7 +71,7 @@ get_unresolved_qodo_comments() {
      select(.isResolved == false) |
      . as $thread |
      .comments.nodes[] |
-     select(.author.login == "qodo-code-review[bot]") |
+     select(.author.login == "qodo-code-review") |
      {
        thread_id: $thread.id,
        comment_id: .databaseId,
@@ -623,6 +626,8 @@ if [ -n "$ISSUE_COMMENT_ID" ]; then
     exit 1
   }
 
+  # NOTE: REST API returns user.login as "qodo-code-review[bot]" (with [bot] suffix),
+  # while GraphQL API returns author.login as "qodo-code-review" (without suffix).
   if [ "$COMMENT_USER" != "qodo-code-review[bot]" ]; then
     echo "Error: Comment $ISSUE_COMMENT_ID is from '$COMMENT_USER', not Qodo (qodo-code-review[bot])." >&2
     exit 1

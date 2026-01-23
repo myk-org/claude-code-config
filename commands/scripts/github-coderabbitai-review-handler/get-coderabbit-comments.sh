@@ -2,22 +2,27 @@
 set -euo pipefail
 
 # Script to extract CodeRabbit comments for AI processing
-# Usage: get-coderabbit-comments.sh <pr-info-script-path> <review_id|review_url>
-#   OR:  get-coderabbit-comments.sh <owner/repo> <pr_number> <review_id|review_url>
+# Usage: get-coderabbit-comments.sh <pr-info-script-path> [review_id|review_url]
+#   OR:  get-coderabbit-comments.sh <owner/repo> <pr_number> [review_id|review_url]
+#
+# Modes:
+#   1. No review ID/URL: Fetch ALL unresolved inline review comments from coderabbitai[bot]
+#   2. With review ID/URL: Fetch comments from that specific review + parse review body
 
 show_usage() {
-  echo "Usage: $0 <pr-info-script-path> <review_id|review_url>" >&2
-  echo "   OR: $0 <owner/repo> <pr_number> <review_id|review_url>" >&2
+  echo "Usage: $0 <pr-info-script-path> [review_id|review_url]" >&2
+  echo "   OR: $0 <owner/repo> <pr_number> [review_id|review_url]" >&2
   echo "" >&2
-  echo "The review ID or URL is REQUIRED. You can find it from:" >&2
-  echo "  - GitHub PR page: click on a CodeRabbit review, copy the URL" >&2
-  echo "  - The URL will look like: https://github.com/owner/repo/pull/123#pullrequestreview-3657783409" >&2
+  echo "The review ID or URL is OPTIONAL. Behavior:" >&2
+  echo "  - No ID/URL: Fetch all unresolved CodeRabbit inline review comments" >&2
+  echo "  - With ID/URL: Fetch comments from that specific review + parse review body" >&2
   echo "" >&2
   echo "Examples:" >&2
-  echo "  $0 /path/to/get-pr-info.sh 3379917343" >&2
+  echo "  $0 /path/to/get-pr-info.sh                                    # All unresolved" >&2
+  echo "  $0 /path/to/get-pr-info.sh 3379917343                         # Specific review" >&2
   echo "  $0 /path/to/get-pr-info.sh https://github.com/owner/repo/pull/123#pullrequestreview-3379917343" >&2
-  echo "  $0 owner/repo 123 3379917343" >&2
-  echo "  $0 owner/repo 123 https://github.com/owner/repo/pull/123#pullrequestreview-3379917343" >&2
+  echo "  $0 owner/repo 123                                             # All unresolved" >&2
+  echo "  $0 owner/repo 123 3379917343                                  # Specific review" >&2
   exit 1
 }
 
@@ -61,35 +66,138 @@ get_resolved_comment_ids() {
   echo "$result"
 }
 
-# Parse arguments and validate
-if [ $# -eq 2 ]; then
-  # Two arguments: check if first arg is a file (pr-info script)
-  if [ -f "$1" ]; then
-    # First argument is pr-info script path, second is review ID/URL (REQUIRED)
-    PR_INFO_SCRIPT="$1"
-    TARGET_PARAM="$2"
+# Get unresolved CodeRabbit inline review comments using GraphQL
+# Returns JSON array of unresolved comments from coderabbitai[bot]
+get_unresolved_coderabbit_comments() {
+  local owner="$1"
+  local repo="$2"
+  local pr_number="$3"
 
-    # Call the pr-info script and parse output
+  local result
+  if ! result=$(gh api graphql -f query='
+    query($owner: String!, $repo: String!, $pr: Int!) {
+      repository(owner: $owner, name: $repo) {
+        pullRequest(number: $pr) {
+          reviewThreads(first: 100) {
+            nodes {
+              id
+              isResolved
+              comments(first: 10) {
+                nodes {
+                  id
+                  databaseId
+                  author { login }
+                  path
+                  line
+                  body
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" --jq '
+    [.data.repository.pullRequest.reviewThreads.nodes[] |
+     select(.isResolved == false) |
+     . as $thread |
+     .comments.nodes[] |
+     select(.author.login == "coderabbitai") |
+     {
+       thread_id: $thread.id,
+       comment_id: .databaseId,
+       node_id: .id,
+       path: .path,
+       line: .line,
+       body: .body
+     }]
+  ' 2>&1); then
+    echo "Warning: Could not fetch unresolved comments: $result" >&2
+    echo "[]"
+    return 0
+  fi
+  echo "$result"
+}
+
+# Parse inline comments into suggestion format
+parse_inline_comments_to_suggestions() {
+  local comments_json="$1"
+
+  echo "$comments_json" | jq '
+    [.[] |
+    {
+      source: "inline_review",
+      thread_id: .thread_id,
+      comment_id: .comment_id,
+      priority: "HIGH",
+      title: (.body | split("\n")[0] | ltrimstr("**") | rtrimstr("**") | .[0:100]),
+      file: .path,
+      line: (if .line then (.line | tostring) else "" end),
+      body: (if (.body | contains("🤖 Prompt for AI Agents")) then
+              (.body | split("🤖 Prompt for AI Agents")[1] | split("```")[1] | split("```")[0] | gsub("^\\n+|\\n+$"; ""))
+            else
+              .body
+            end)
+    }]
+  '
+}
+
+# Initialize variables
+REPO_FULL_NAME=""
+PR_NUMBER=""
+TARGET_PARAM=""
+HAS_TARGET=false
+
+# Parse arguments and validate
+if [ $# -eq 0 ]; then
+  show_usage
+
+elif [ $# -eq 1 ]; then
+  # One argument: pr-info script only (no target review - fetch all unresolved)
+  if [ -f "$1" ]; then
+    PR_INFO_SCRIPT="$1"
     if ! PR_INFO=$("$PR_INFO_SCRIPT"); then
       echo "❌ Error: Failed to get PR information" >&2
       exit 1
     fi
-
-    # Parse the output (space-separated: REPO_FULL_NAME PR_NUMBER)
     REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
     PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
+    HAS_TARGET=false
   else
-    # First argument is not a file - could be owner/repo format but missing arguments
     echo "Error: '$1' is not a valid script file path." >&2
-    echo "" >&2
+    show_usage
+  fi
+
+elif [ $# -eq 2 ]; then
+  # Two arguments: could be (pr-info-script + target) OR (owner/repo + pr_number)
+  if [ -f "$1" ]; then
+    # First argument is pr-info script path, second is review ID/URL
+    PR_INFO_SCRIPT="$1"
+    TARGET_PARAM="$2"
+    HAS_TARGET=true
+
+    if ! PR_INFO=$("$PR_INFO_SCRIPT"); then
+      echo "❌ Error: Failed to get PR information" >&2
+      exit 1
+    fi
+    REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
+    PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
+  elif [[ "$1" =~ / ]]; then
+    # First argument looks like owner/repo, second is PR number
+    REPO_FULL_NAME="$1"
+    PR_NUMBER="$2"
+    HAS_TARGET=false
+  else
+    echo "Error: '$1' is not a valid script file path or owner/repo format." >&2
     show_usage
   fi
 
 elif [ $# -eq 3 ]; then
-  # Three arguments: owner/repo, PR number, and review ID/URL (REQUIRED)
+  # Three arguments: owner/repo, PR number, and review ID/URL
   REPO_FULL_NAME="$1"
   PR_NUMBER="$2"
   TARGET_PARAM="$3"
+  HAS_TARGET=true
 
 else
   show_usage
@@ -97,6 +205,80 @@ fi
 
 OWNER=$(echo "$REPO_FULL_NAME" | cut -d'/' -f1)
 REPO=$(echo "$REPO_FULL_NAME" | cut -d'/' -f2)
+
+echo "📋 Repository: $OWNER/$REPO, PR: $PR_NUMBER" >&2
+
+# ============================================================================
+# MODE 1: No review ID - Fetch all unresolved inline review comments
+# ============================================================================
+if [ "$HAS_TARGET" = false ]; then
+  echo "📥 Fetching all unresolved inline review comments..." >&2
+
+  UNRESOLVED_COMMENTS=$(get_unresolved_coderabbit_comments "$OWNER" "$REPO" "$PR_NUMBER")
+  UNRESOLVED_COUNT=$(echo "$UNRESOLVED_COMMENTS" | jq '. | length')
+
+  if [ "$UNRESOLVED_COUNT" -eq 0 ]; then
+    echo "✅ No unresolved inline comments found" >&2
+    # Output empty result
+    jq -n \
+      --arg owner "$OWNER" \
+      --arg repo "$REPO" \
+      --arg pr_number "$PR_NUMBER" '
+    {
+      "metadata": {
+        "review_id": null,
+        "owner": $owner,
+        "repo": $repo,
+        "pr_number": $pr_number
+      },
+      "summary": {
+        "inline_review": 0,
+        "total": 0,
+        "by_source": {
+          "inline_review": 0,
+          "review_body": 0
+        }
+      },
+      "suggestions": []
+    }'
+    exit 0
+  fi
+
+  echo "✅ Found $UNRESOLVED_COUNT unresolved inline comments" >&2
+
+  # Parse inline comments into suggestion format
+  SUGGESTIONS=$(parse_inline_comments_to_suggestions "$UNRESOLVED_COMMENTS")
+
+  # Output the result
+  jq -n \
+    --arg owner "$OWNER" \
+    --arg repo "$REPO" \
+    --arg pr_number "$PR_NUMBER" \
+    --argjson inline_count "$UNRESOLVED_COUNT" \
+    --argjson suggestions "$SUGGESTIONS" '
+  {
+    "metadata": {
+      "review_id": null,
+      "owner": $owner,
+      "repo": $repo,
+      "pr_number": $pr_number
+    },
+    "summary": {
+      "inline_review": $inline_count,
+      "total": $inline_count,
+      "by_source": {
+        "inline_review": $inline_count,
+        "review_body": 0
+      }
+    },
+    "suggestions": $suggestions
+  }'
+  exit 0
+fi
+
+# ============================================================================
+# MODE 2: With review ID - Fetch specific review + parse review body
+# ============================================================================
 
 # Step 1: Parse review ID/URL and fetch review data
 # Extract review ID from URL or use numeric ID directly
@@ -172,6 +354,8 @@ REVIEW_BODY=$(echo "$CACHED_REVIEW_JSON" | jq -r '.body')
 # Extract actionable comments with AI prompts
 ACTIONABLE_COMMENTS=$(echo "$INLINE_COMMENTS" | jq '[.[] |
   {
+    source: "inline_review",
+    thread_id: null,
     comment_id: .id,
     priority: "HIGH",
     title: (.body | split("\n")[2] | ltrimstr("**") | rtrimstr("**")),
@@ -409,7 +593,7 @@ if echo "$REVIEW_BODY" | grep -q "Nitpick comments"; then
         gsub(/"/, "\\\"", current_file)
         gsub(/\n/, "\\n", content)
 
-        printf "{\n  \"priority\": \"LOW\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
+        printf "{\n  \"source\": \"review_body\",\n  \"priority\": \"LOW\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
     }
 
     END {
@@ -525,7 +709,7 @@ if echo "$REVIEW_BODY" | grep -q "Duplicate comments"; then
         gsub(/"/, "\\\"", current_file)
         gsub(/\n/, "\\n", content)
 
-        printf "{\n  \"priority\": \"MEDIUM\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
+        printf "{\n  \"source\": \"review_body\",\n  \"priority\": \"MEDIUM\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
     }
 
     END {
@@ -641,7 +825,7 @@ if echo "$REVIEW_BODY" | grep -q "Outside diff range"; then
         gsub(/"/, "\\\"", current_file)
         gsub(/\n/, "\\n", content)
 
-        printf "{\n  \"priority\": \"VERY LOW\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
+        printf "{\n  \"source\": \"review_body\",\n  \"priority\": \"VERY LOW\",\n  \"title\": \"%s\",\n  \"file\": \"%s\",\n  \"line\": \"%s\",\n  \"body\": \"%s\"\n}", title, current_file, line_num, content
     }
 
     END {
@@ -663,6 +847,12 @@ OUTSIDE_DIFF_COUNT=$(echo "$OUTSIDE_DIFF_COMMENTS" | jq '. | length')
 
 # Calculate total
 TOTAL_COUNT=$((ACTIONABLE_COUNT + NITPICK_COUNT + DUPLICATE_COUNT + OUTSIDE_DIFF_COUNT))
+
+# Calculate by_source counts
+# inline_review = actionable comments (from inline review comments)
+# review_body = nitpicks + duplicates + outside_diff (from review body parsing)
+INLINE_REVIEW_COUNT=$ACTIONABLE_COUNT
+REVIEW_BODY_COUNT=$((NITPICK_COUNT + DUPLICATE_COUNT + OUTSIDE_DIFF_COUNT))
 
 # Build JSON dynamically
 JSON_OUTPUT="{"
@@ -688,8 +878,11 @@ fi
 if [ "$RESOLVED_COUNT" -gt 0 ]; then
   JSON_OUTPUT="$JSON_OUTPUT\"resolved_filtered\": $RESOLVED_COUNT,"
 fi
-JSON_OUTPUT="$JSON_OUTPUT\"total\": $TOTAL_COUNT"
-JSON_OUTPUT="$JSON_OUTPUT}"
+JSON_OUTPUT="$JSON_OUTPUT\"total\": $TOTAL_COUNT,"
+JSON_OUTPUT="$JSON_OUTPUT\"by_source\": {"
+JSON_OUTPUT="$JSON_OUTPUT\"inline_review\": $INLINE_REVIEW_COUNT,"
+JSON_OUTPUT="$JSON_OUTPUT\"review_body\": $REVIEW_BODY_COUNT"
+JSON_OUTPUT="$JSON_OUTPUT}}"
 
 # Add comment arrays conditionally
 COMMENT_SECTIONS=""
@@ -713,6 +906,7 @@ echo "$JSON_OUTPUT" | jq '
   if has("duplicate_comments") then
     .duplicate_comments |= map(select((.title + " " + .body) | test("LGTM|looks good|good fix|nice improvement|great work|excellent|perfect|well done|correct implementation|good approach|nice work|good portability|better approach"; "i") | not)) |
     .summary.duplicates = (.duplicate_comments | length) |
-    .summary.total = ((.summary.actionable // 0) + (.summary.nitpicks // 0) + (.summary.duplicates // 0) + (.summary.outside_diff_range // 0))
+    .summary.total = ((.summary.actionable // 0) + (.summary.nitpicks // 0) + (.summary.duplicates // 0) + (.summary.outside_diff_range // 0)) |
+    .summary.by_source.review_body = ((.summary.nitpicks // 0) + (.summary.duplicates // 0) + (.summary.outside_diff_range // 0))
   else . end
 '
