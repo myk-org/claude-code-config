@@ -1,10 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Script to extract human reviewer comments for processing
+# Uses the generic unresolved threads fetcher and filters out AI reviewers
+#
 # Usage: get-human-reviews.sh <owner/repo> <pr_number>
 #        get-human-reviews.sh https://github.com/owner/repo/pull/123
 #        get-human-reviews.sh <pr_number>
+
+# Path to the generic fetcher script
+GENERIC_FETCHER_SCRIPT="$(dirname "$0")/../general/get-unresolved-review-threads.sh"
 
 show_usage() {
     cat <<EOF
@@ -19,7 +24,7 @@ Examples:
   $0 194
 
 Description:
-  Fetches human review comments on a PR (excludes CodeRabbit bot).
+  Fetches human review comments on a PR (excludes AI bots like CodeRabbit and Qodo).
 
   Output: JSON with metadata, summary, and comments array
 
@@ -31,10 +36,36 @@ Options:
 EOF
 }
 
+# Function to get unresolved human comments using the generic fetcher
+get_unresolved_human_comments() {
+  local pr_info_script="$1"
+  local url="${2:-}"
+
+  # Call generic fetcher
+  local all_threads
+  if [ -n "$url" ]; then
+    all_threads=$("$GENERIC_FETCHER_SCRIPT" "$pr_info_script" "$url")
+  else
+    all_threads=$("$GENERIC_FETCHER_SCRIPT" "$pr_info_script")
+  fi
+
+  # Build jq filter to exclude AI reviewers
+  # Filter: author != "qodo-code-review" and author != "coderabbitai"
+  local jq_filter='[.threads[] | select(.author != "qodo-code-review" and .author != "coderabbitai" and .author != "qodo-code-review[bot]" and .author != "coderabbitai[bot]")]'
+
+  echo "$all_threads" | jq "$jq_filter"
+}
+
 # Check for help flag
 if [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--help" ]]; then
     show_usage
     exit 0
+fi
+
+# Validate generic fetcher script exists
+if [ ! -f "$GENERIC_FETCHER_SCRIPT" ]; then
+  echo "Error: Generic fetcher script not found: $GENERIC_FETCHER_SCRIPT" >&2
+  exit 1
 fi
 
 # Parse arguments
@@ -42,26 +73,30 @@ if [[ $# -eq 2 ]]; then
     # Two args: owner/repo and pr_number
     REPO_FULL_NAME="$1"
     PR_NUMBER="$2"
+    REVIEW_URL=""
 
 elif [[ $# -eq 1 ]]; then
     INPUT="$1"
+    REVIEW_URL=""
 
     # Check if it's a GitHub URL
     if [[ "$INPUT" =~ github\.com/([^/]+)/([^/]+)/pull/([0-9]+) ]]; then
         REPO_FULL_NAME="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
         PR_NUMBER="${BASH_REMATCH[3]}"
+        # Preserve the full URL for passing to the fetcher (may contain review fragment)
+        REVIEW_URL="$INPUT"
 
     # Check if it's just a number (PR number only - get repo from current git context)
     elif [[ "$INPUT" =~ ^[0-9]+$ ]]; then
         PR_NUMBER="$INPUT"
         REPO_FULL_NAME=$(gh repo view --json owner,name -q '.owner.login + "/" + .name' 2>/dev/null)
         if [[ -z "$REPO_FULL_NAME" ]]; then
-            echo "❌ Error: Could not determine repository. Run from a git repo or provide full URL." >&2
+            echo "Error: Could not determine repository. Run from a git repo or provide full URL." >&2
             exit 1
         fi
 
     else
-        echo "❌ Error: Invalid input format: $INPUT" >&2
+        echo "Error: Invalid input format: $INPUT" >&2
         show_usage >&2
         exit 1
     fi
@@ -73,95 +108,65 @@ fi
 
 # Validate repository format (owner/repo)
 if [[ ! "$REPO_FULL_NAME" =~ ^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$ ]]; then
-    echo "❌ Error: Invalid repository format. Expected 'owner/repo', got: $REPO_FULL_NAME" >&2
+    echo "Error: Invalid repository format. Expected 'owner/repo', got: $REPO_FULL_NAME" >&2
     exit 1
 fi
 
 # Validate PR number is numeric
 if [[ ! "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
-    echo "❌ Error: PR number must be numeric, got: $PR_NUMBER" >&2
+    echo "Error: PR number must be numeric, got: $PR_NUMBER" >&2
     exit 1
 fi
 
 OWNER="${REPO_FULL_NAME%%/*}"
 REPO="${REPO_FULL_NAME##*/}"
 
-# Step 1: Get the latest commit SHA and timestamp
-LATEST_COMMIT_SHA=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER" --jq '.head.sha')
+# Create a temporary PR info script for the generic fetcher
+# The generic fetcher expects a script that outputs "owner/repo pr_number"
+mkdir -p /tmp/claude
+TEMP_PR_INFO_SCRIPT=$(mktemp /tmp/claude/pr-info-XXXXXX.sh)
+trap 'rm -f "$TEMP_PR_INFO_SCRIPT"' EXIT
 
-if [ -z "$LATEST_COMMIT_SHA" ]; then
-  echo "❌ Error: Could not retrieve latest commit SHA" >&2
-  exit 1
-fi
+cat > "$TEMP_PR_INFO_SCRIPT" <<EOF
+#!/bin/bash
+echo "$REPO_FULL_NAME $PR_NUMBER"
+EOF
+chmod +x "$TEMP_PR_INFO_SCRIPT"
 
-# Get the latest commit timestamp
-LATEST_COMMIT_DATE=$(gh api "/repos/$OWNER/$REPO/commits/$LATEST_COMMIT_SHA" --jq '.commit.committer.date')
-
-if [ -z "$LATEST_COMMIT_DATE" ]; then
-  echo "❌ Error: Could not retrieve latest commit date" >&2
-  exit 1
-fi
-
-# Step 2: Get all reviews submitted after the latest commit, excluding CodeRabbit
-HUMAN_REVIEWS=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews" |
-  jq --arg bot_user "coderabbitai[bot]" --arg latest_date "$LATEST_COMMIT_DATE" \
-    '[.[] | select(.user.login != $bot_user and (.body | length) > 10 and .submitted_at > $latest_date)] | sort_by(.submitted_at)')
-
-# Step 3: Get all review comments from human reviewers
-ALL_COMMENTS='[]'
-
-for review_id in $(echo "$HUMAN_REVIEWS" | jq -r '.[].id'); do
-  REVIEWER=$(echo "$HUMAN_REVIEWS" | jq -r --arg id "$review_id" '.[] | select(.id == ($id | tonumber)) | .user.login')
-
-  # Get inline comments for this review
-  REVIEW_COMMENTS=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews/$review_id/comments" |
-    jq --arg reviewer "$REVIEWER" '[.[] |
-      {
-        comment_id: .id,
-        reviewer: $reviewer,
-        file: .path,
-        line: (.line // .original_line // ""),
-        body: .body
-      }
-    ]')
-
-  # Merge with all comments
-  ALL_COMMENTS=$(echo "$ALL_COMMENTS $REVIEW_COMMENTS" | jq -s 'add')
-done
-
-# Step 4: Get PR review comments (not inline review comments) created after the latest commit
-PR_COMMENTS=$(gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" |
-  jq --arg bot_user "coderabbitai[bot]" --arg latest_date "$LATEST_COMMIT_DATE" '[.[] |
-    select(.user.login != $bot_user and (.body | length) > 10 and .created_at > $latest_date) |
-    {
-      comment_id: .id,
-      reviewer: .user.login,
-      file: .path,
-      line: (.line // .original_line // ""),
-      body: .body
-    }
-  ]')
-
-# Merge PR review comments with review-specific comments
-ALL_COMMENTS=$(echo "$ALL_COMMENTS $PR_COMMENTS" | jq -s 'add')
-
-# Note: We only include review comments (with file/line info) submitted after the latest commit, not general PR conversation comments
-# This ensures we only get human feedback that came after the latest changes
+# Fetch human comments using the generic fetcher
+HUMAN_COMMENTS=$(get_unresolved_human_comments "$TEMP_PR_INFO_SCRIPT" "$REVIEW_URL")
 
 # Count comments
-TOTAL_COUNT=$(echo "$ALL_COMMENTS" | jq '. | length')
+TOTAL_COUNT=$(echo "$HUMAN_COMMENTS" | jq '. | length')
 
-# Build final JSON
-JSON_OUTPUT="{"
-JSON_OUTPUT="$JSON_OUTPUT\"metadata\": {"
-JSON_OUTPUT="$JSON_OUTPUT\"owner\": \"$OWNER\","
-JSON_OUTPUT="$JSON_OUTPUT\"repo\": \"$REPO\","
-JSON_OUTPUT="$JSON_OUTPUT\"pr_number\": $PR_NUMBER"
-JSON_OUTPUT="$JSON_OUTPUT},"
-JSON_OUTPUT="$JSON_OUTPUT\"summary\": {"
-JSON_OUTPUT="$JSON_OUTPUT\"total\": $TOTAL_COUNT"
-JSON_OUTPUT="$JSON_OUTPUT},"
-JSON_OUTPUT="$JSON_OUTPUT\"comments\": $ALL_COMMENTS"
-JSON_OUTPUT="$JSON_OUTPUT}"
+# Transform to expected output format
+# Input format from fetcher: {thread_id, comment_id, author, path, line, body}
+# Output format: {thread_id, comment_id, reviewer, file, line, body}
+FORMATTED_COMMENTS=$(echo "$HUMAN_COMMENTS" | jq '[.[] | {
+  thread_id: .thread_id,
+  comment_id: .comment_id,
+  reviewer: .author,
+  file: .path,
+  line: .line,
+  body: .body
+}]')
 
-echo "$JSON_OUTPUT" | jq '.'
+# Build final JSON output using jq for proper escaping
+jq -n \
+  --arg owner "$OWNER" \
+  --arg repo "$REPO" \
+  --argjson pr_number "$PR_NUMBER" \
+  --argjson total "$TOTAL_COUNT" \
+  --argjson comments "$FORMATTED_COMMENTS" '
+{
+  "metadata": {
+    "owner": $owner,
+    "repo": $repo,
+    "pr_number": $pr_number
+  },
+  "summary": {
+    "total": $total
+  },
+  "comments": $comments
+}
+'

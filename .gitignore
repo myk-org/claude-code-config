@@ -45,6 +45,8 @@
 !commands/scripts/
 !commands/scripts/general/
 !commands/scripts/general/get-pr-info.sh
+!commands/scripts/general/get-reviewer-from-url.sh
+!commands/scripts/general/get-unresolved-review-threads.sh
 !commands/scripts/github-coderabbitai-review-handler/
 !commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh
 !commands/scripts/github-pr-review/

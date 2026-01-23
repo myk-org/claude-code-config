@@ -47,11 +47,13 @@ $MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
 **Usage patterns:**
 
 1. **No URL provided**: Fetches all unresolved inline review comments from the PR
+
    ```bash
    $MAIN_SCRIPT $PR_INFO_SCRIPT
    ```
 
 2. **Review URL provided**: Fetches comments from that specific review only
+
    ```bash
    # User provided review URL:
    $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-3379917343"
@@ -378,12 +380,13 @@ gh api graphql -f query='
 **Where to get values:**
 - `$THREAD_ID`: From comment's `thread_id` field
 
-**STEP 3**: For skipped or not addressed inline reviews, reply with the reason but do NOT resolve:
+**STEP 3**: For skipped or not addressed inline reviews, reply with the reason and resolve:
 
 ```bash
+# Reply with reason
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {
@@ -391,6 +394,17 @@ gh api graphql -f query='
     }
   }
 ' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
+
+# ALWAYS resolve the thread
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolveReviewThread(input: {
+      threadId: $threadId
+    }) {
+      thread { isResolved }
+    }
+  }
+' -f threadId="$THREAD_ID"
 ```
 
 ---

@@ -356,12 +356,13 @@ gh api graphql -f query='
 - `$THREAD_ID`: From suggestion's `thread_id` field
 - For skipped/not addressed: Reply with reason, optionally leave unresolved
 
-**STEP 3**: For skipped or not addressed inline reviews, reply with the reason but do NOT resolve:
+**STEP 3**: For skipped or not addressed inline reviews, reply with the reason and resolve:
 
 ```bash
+# Reply with reason
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {
@@ -369,6 +370,17 @@ gh api graphql -f query='
     }
   }
 ' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
+
+# ALWAYS resolve the thread
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolveReviewThread(input: {
+      threadId: $threadId
+    }) {
+      thread { isResolved }
+    }
+  }
+' -f threadId="$THREAD_ID"
 ```
 
 ---

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Path to generic fetcher script
+GENERIC_FETCHER_SCRIPT="$(dirname "$0")/../general/get-unresolved-review-threads.sh"
+
 # Script to extract CodeRabbit comments for AI processing
 # Usage: get-coderabbit-comments.sh <pr-info-script-path> [review_id|review_url]
 #   OR:  get-coderabbit-comments.sh <owner/repo> <pr_number> [review_id|review_url]
@@ -66,84 +69,36 @@ get_resolved_comment_ids() {
   echo "$result"
 }
 
-# Get unresolved CodeRabbit inline review comments using GraphQL with pagination
+# Get unresolved CodeRabbit inline review comments using generic fetcher
+# Filters results for author = "coderabbitai" only
 # Returns JSON array of unresolved comments from coderabbitai[bot]
 get_unresolved_coderabbit_comments() {
-  local owner="$1"
-  local repo="$2"
-  local pr_number="$3"
+  local pr_info_script="$1"
+  local url="${2:-}"
 
-  local all_comments="[]"
-  local cursor="null"
-  local has_next_page="true"
+  # Verify generic fetcher exists
+  if [ ! -x "$GENERIC_FETCHER_SCRIPT" ]; then
+    echo "Error: Generic fetcher script not found or not executable: $GENERIC_FETCHER_SCRIPT" >&2
+    echo "[]"
+    return 1
+  fi
 
-  while [ "$has_next_page" = "true" ]; do
-    local result
-    if ! result=$(gh api graphql -f query='
-      query($owner: String!, $repo: String!, $pr: Int!, $cursor: String) {
-        repository(owner: $owner, name: $repo) {
-          pullRequest(number: $pr) {
-            reviewThreads(first: 100, after: $cursor) {
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-              nodes {
-                id
-                isResolved
-                comments(first: 10) {
-                  nodes {
-                    id
-                    databaseId
-                    author { login }
-                    path
-                    line
-                    body
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" -f cursor="$cursor" 2>&1); then
-      echo "Warning: Could not fetch unresolved comments: $result" >&2
-      echo "[]"
-      return 0
-    fi
+  # Call generic fetcher
+  local all_threads
+  if [ -n "$url" ]; then
+    all_threads=$("$GENERIC_FETCHER_SCRIPT" "$pr_info_script" "$url")
+  else
+    all_threads=$("$GENERIC_FETCHER_SCRIPT" "$pr_info_script")
+  fi
 
-    # Extract pagination info
-    has_next_page=$(echo "$result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage')
-    cursor=$(echo "$result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor')
-
-    # Extract comments from this page
-    local page_comments
-    page_comments=$(echo "$result" | jq '
-      [.data.repository.pullRequest.reviewThreads.nodes[] |
-       select(.isResolved == false) |
-       . as $thread |
-       .comments.nodes[] |
-       select(.author.login == "coderabbitai") |
-       {
-         thread_id: $thread.id,
-         comment_id: .databaseId,
-         node_id: .id,
-         path: .path,
-         line: .line,
-         body: .body
-       }]
-    ')
-
-    # Merge with accumulated comments
-    all_comments=$(echo "$all_comments" "$page_comments" | jq -s 'add')
-
-    # Handle null cursor (no more pages)
-    if [ "$cursor" = "null" ] || [ -z "$cursor" ]; then
-      break
-    fi
-  done
-
-  echo "$all_comments"
+  # Filter for CodeRabbit author only and transform to expected format
+  echo "$all_threads" | jq '[.threads[] | select(.author == "coderabbitai") | {
+    thread_id: .thread_id,
+    comment_id: .comment_id,
+    path: .path,
+    line: .line,
+    body: .body
+  }]'
 }
 
 # Parse inline comments into suggestion format
@@ -180,6 +135,7 @@ REPO_FULL_NAME=""
 PR_NUMBER=""
 TARGET_PARAM=""
 HAS_TARGET=false
+PR_INFO_SCRIPT=""
 
 # Parse arguments and validate
 if [ $# -eq 0 ]; then
@@ -247,7 +203,22 @@ echo "📋 Repository: $OWNER/$REPO, PR: $PR_NUMBER" >&2
 if [ "$HAS_TARGET" = false ]; then
   echo "📥 Fetching all unresolved inline review comments..." >&2
 
-  UNRESOLVED_COMMENTS=$(get_unresolved_coderabbit_comments "$OWNER" "$REPO" "$PR_NUMBER")
+  # If no PR_INFO_SCRIPT provided (owner/repo mode), create a temporary one
+  TEMP_PR_INFO_SCRIPT=""
+  if [ -z "$PR_INFO_SCRIPT" ]; then
+    TEMP_PR_INFO_SCRIPT=$(mktemp)
+    echo "#!/bin/bash" > "$TEMP_PR_INFO_SCRIPT"
+    echo "echo '$REPO_FULL_NAME $PR_NUMBER'" >> "$TEMP_PR_INFO_SCRIPT"
+    chmod +x "$TEMP_PR_INFO_SCRIPT"
+    PR_INFO_SCRIPT="$TEMP_PR_INFO_SCRIPT"
+  fi
+
+  UNRESOLVED_COMMENTS=$(get_unresolved_coderabbit_comments "$PR_INFO_SCRIPT")
+
+  # Clean up temporary script if created
+  if [ -n "$TEMP_PR_INFO_SCRIPT" ]; then
+    rm -f "$TEMP_PR_INFO_SCRIPT"
+  fi
   UNRESOLVED_COUNT=$(echo "$UNRESOLVED_COMMENTS" | jq '. | length')
 
   if [ "$UNRESOLVED_COUNT" -eq 0 ]; then

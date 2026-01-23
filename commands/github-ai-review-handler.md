@@ -33,6 +33,7 @@ This unified command:
 4. Implements approved changes (AI picks one version for duplicates)
 5. Replies to ALL threads (both Qodo AND CodeRabbit)
 6. Resolves ALL threads (both Qodo AND CodeRabbit)
+7. Supports optional URL arguments with auto-detection of AI source
 
 ---
 
@@ -62,20 +63,52 @@ When the same issue is flagged by BOTH AI reviewers:
 
 ### Step 1: Fetch from BOTH AI reviewers
 
-Run both extraction scripts to get comments from each AI reviewer:
+Run extraction scripts to get comments from each AI reviewer.
+
+**Script paths:**
 
 ```bash
-# Script paths
 QODO_SCRIPT="$HOME/.claude/commands/scripts/github-qodo-review-handler/get-qodo-comments.sh"
 CODERABBIT_SCRIPT="$HOME/.claude/commands/scripts/github-coderabbitai-review-handler/get-coderabbit-comments.sh"
 PR_INFO_SCRIPT="$HOME/.claude/commands/scripts/general/get-pr-info.sh"
-
-# Fetch from both sources
-"$QODO_SCRIPT" "$PR_INFO_SCRIPT"
-"$CODERABBIT_SCRIPT" "$PR_INFO_SCRIPT"
+DETECT_SCRIPT="$HOME/.claude/commands/scripts/general/get-reviewer-from-url.sh"
 ```
 
-**THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The scripts handle EVERYTHING.**
+**Usage patterns:**
+
+1. **No URL provided** - Fetches all unresolved from both:
+
+   ```bash
+   "$QODO_SCRIPT" "$PR_INFO_SCRIPT"
+   "$CODERABBIT_SCRIPT" "$PR_INFO_SCRIPT"
+   ```
+
+2. **URL(s) provided** - Auto-detect source and route appropriately:
+
+   For each URL argument:
+
+   ```bash
+   # Detect which AI reviewer authored the comment
+   SOURCE=$("$DETECT_SCRIPT" "<url>")
+
+   # Route to appropriate script
+   if [ "$SOURCE" = "qodo" ]; then
+     "$QODO_SCRIPT" "$PR_INFO_SCRIPT" "<url>"
+   elif [ "$SOURCE" = "coderabbit" ]; then
+     "$CODERABBIT_SCRIPT" "$PR_INFO_SCRIPT" "<url>"
+   fi
+   ```
+
+   Then also fetch all unresolved from the OTHER source (to catch any additional comments).
+
+**Examples:**
+
+- `/github-ai-review-handler` - All unresolved from both
+- `/github-ai-review-handler <qodo_url>` - Specific Qodo + all CodeRabbit
+- `/github-ai-review-handler <coderabbit_url>` - All Qodo + specific CodeRabbit
+- `/github-ai-review-handler <url1> <url2>` - Specific from each (auto-detected)
+
+**IMPORTANT:** The scripts handle everything. Do NOT do additional bash manipulation.
 
 ### Step 2: Merge and Deduplicate
 
@@ -146,7 +179,9 @@ After receiving JSON from both scripts, merge and detect duplicates.
 
 ### Step 2.5: Filter Positive Comments
 
-**CRITICAL: Before presenting MEDIUM priority comments to user, classify each duplicate/positive comment.**
+#### CRITICAL: Filter Positive Comments Before Presentation
+
+Before presenting MEDIUM priority comments to user, classify each duplicate/positive comment.
 
 For each comment, analyze the title and body to filter out positive feedback:
 
@@ -402,10 +437,10 @@ gh api graphql -f query='
 **For SKIPPED or NOT ADDRESSED suggestions:**
 
 ```bash
-# Reply with reason but do NOT resolve
+# Reply with reason
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {
@@ -413,6 +448,17 @@ gh api graphql -f query='
     }
   }
 ' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
+
+# ALWAYS resolve the thread (even for skipped/not addressed)
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolveReviewThread(input: {
+      threadId: $threadId
+    }) {
+      thread { isResolved }
+    }
+  }
+' -f threadId="$THREAD_ID"
 ```
 
 ---
@@ -469,10 +515,10 @@ gh api graphql -f query='
 **For SKIPPED or NOT ADDRESSED comments:**
 
 ```bash
-# Reply with reason but do NOT resolve
+# Reply with reason
 gh api graphql -f query='
   mutation($threadId: ID!, $body: String!) {
-    addPullRequestReviewComment(input: {
+    addPullRequestReviewThreadReply(input: {
       pullRequestReviewThreadId: $threadId,
       body: $body
     }) {
@@ -480,6 +526,17 @@ gh api graphql -f query='
     }
   }
 ' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
+
+# ALWAYS resolve the thread (even for skipped/not addressed)
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolveReviewThread(input: {
+      threadId: $threadId
+    }) {
+      thread { isResolved }
+    }
+  }
+' -f threadId="$THREAD_ID"
 ```
 
 ---

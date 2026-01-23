@@ -6,6 +6,9 @@ for cmd in gh jq gawk; do
   command -v "$cmd" >/dev/null 2>&1 || { echo "Error: '$cmd' is required but not installed." >&2; exit 1; }
 done
 
+# Path to generic fetcher script
+GENERIC_FETCHER_SCRIPT="$(dirname "$0")/../general/get-unresolved-review-threads.sh"
+
 # Script to extract Qodo AI review comments for processing
 # Usage: get-qodo-comments.sh <pr-info-script-path> [comment_id|comment_url]
 #   OR:  get-qodo-comments.sh <owner/repo> <pr_number> [comment_id|comment_url]
@@ -34,74 +37,25 @@ show_usage() {
   exit 1
 }
 
-# Get unresolved Qodo inline review comments using GraphQL
-# Returns JSON array of unresolved comments from qodo-code-review[bot]
+# Get unresolved Qodo inline review comments using generic fetcher
+# Returns JSON array of unresolved comments from qodo-code-review
 # NOTE: GraphQL API returns author.login as "qodo-code-review" (without [bot] suffix),
 # while REST API returns user.login as "qodo-code-review[bot]" (with suffix).
 # The filter below uses the GraphQL format intentionally.
 get_unresolved_qodo_comments() {
-  local owner="$1"
-  local repo="$2"
-  local pr_number="$3"
+  local pr_info_script="$1"
+  local url="${2:-}"
 
-  local raw_result
-  if ! raw_result=$(gh api graphql -f query='
-    query($owner: String!, $repo: String!, $pr: Int!) {
-      repository(owner: $owner, name: $repo) {
-        pullRequest(number: $pr) {
-          reviewThreads(first: 100) {
-            pageInfo {
-              hasNextPage
-            }
-            nodes {
-              id
-              isResolved
-              comments(first: 10) {
-                nodes {
-                  id
-                  databaseId
-                  author { login }
-                  path
-                  line
-                  body
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  ' -f owner="$owner" -f repo="$repo" -F pr="$pr_number" 2>&1); then
-    echo "Warning: Could not fetch unresolved comments: $raw_result" >&2
-    echo "[]"
-    return 0
+  # Call generic fetcher
+  local all_threads
+  if [ -n "$url" ]; then
+    all_threads=$("$GENERIC_FETCHER_SCRIPT" "$pr_info_script" "$url")
+  else
+    all_threads=$("$GENERIC_FETCHER_SCRIPT" "$pr_info_script")
   fi
 
-  # Check if there are more pages (warn user)
-  local has_more
-  has_more=$(echo "$raw_result" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage // false')
-  if [ "$has_more" = "true" ]; then
-    echo "Warning: More than 100 review threads exist. Some may be missing." >&2
-  fi
-
-  # Extract and filter comments
-  local result
-  result=$(echo "$raw_result" | jq '
-    [.data.repository.pullRequest.reviewThreads.nodes[] |
-     select(.isResolved == false) |
-     . as $thread |
-     .comments.nodes[] |
-     select(.author.login == "qodo-code-review") |
-     {
-       thread_id: $thread.id,
-       comment_id: .databaseId,
-       node_id: .id,
-       path: .path,
-       line: .line,
-       body: .body
-     }]
-  ')
-  echo "$result"
+  # Filter for Qodo author only and return just the threads array
+  echo "$all_threads" | jq '[.threads[] | select(.author == "qodo-code-review")]'
 }
 
 # Get inline comments from a specific PR review
@@ -360,7 +314,7 @@ parse_improve_issue_comment() {
   tmpfile=$(mktemp /tmp/qodo-improve-XXXXXX.txt)
   # Ensure temp file is cleaned up when function returns
   trap 'rm -f "$tmpfile"' RETURN
-  echo "$comment_body" > "$tmpfile"
+  printf '%s' "$comment_body" > "$tmpfile"
 
   while IFS=$'\t' read -r category title impact file line_range file_url importance description diff_block; do
     # Restore multi-line diff blocks (gawk encodes newlines as %%NEWLINE%%)
@@ -538,8 +492,11 @@ elif [ $# -eq 1 ]; then
       echo "Error: Failed to get PR information" >&2
       exit 1
     fi
-    REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
-    PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
+    read -r REPO_FULL_NAME PR_NUMBER _rest <<<"$PR_INFO"
+    if [ -z "${REPO_FULL_NAME:-}" ] || [ -z "${PR_NUMBER:-}" ] || ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+      echo "Error: Invalid PR info output: '$PR_INFO'" >&2
+      exit 1
+    fi
     HAS_TARGET=false
   else
     echo "Error: '$1' is not a valid script file path." >&2
@@ -558,8 +515,11 @@ elif [ $# -eq 2 ]; then
       echo "Error: Failed to get PR information" >&2
       exit 1
     fi
-    REPO_FULL_NAME=$(echo "$PR_INFO" | cut -d' ' -f1)
-    PR_NUMBER=$(echo "$PR_INFO" | cut -d' ' -f2)
+    read -r REPO_FULL_NAME PR_NUMBER _rest <<<"$PR_INFO"
+    if [ -z "${REPO_FULL_NAME:-}" ] || [ -z "${PR_NUMBER:-}" ] || ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+      echo "Error: Invalid PR info output: '$PR_INFO'" >&2
+      exit 1
+    fi
   elif [[ "$1" =~ / ]]; then
     # First argument looks like owner/repo, second is PR number
     REPO_FULL_NAME="$1"
@@ -692,7 +652,20 @@ fi
 # Always fetch unresolved inline review comments (unless we only have a PR review URL)
 if [ -z "${REVIEW_ID:-}" ]; then
   echo "Fetching unresolved inline review comments..." >&2
-  UNRESOLVED_COMMENTS=$(get_unresolved_qodo_comments "$OWNER" "$REPO" "$PR_NUMBER")
+
+  # If PR_INFO_SCRIPT is not set (direct owner/repo mode), create a temporary wrapper script
+  if [ -z "${PR_INFO_SCRIPT:-}" ]; then
+    TEMP_PR_INFO_SCRIPT=$(mktemp /tmp/pr-info-XXXXXX.sh)
+    trap 'rm -f "$TEMP_PR_INFO_SCRIPT"' EXIT
+    cat > "$TEMP_PR_INFO_SCRIPT" <<EOF
+#!/bin/bash
+echo "$REPO_FULL_NAME $PR_NUMBER"
+EOF
+    chmod +x "$TEMP_PR_INFO_SCRIPT"
+    PR_INFO_SCRIPT="$TEMP_PR_INFO_SCRIPT"
+  fi
+
+  UNRESOLVED_COMMENTS=$(get_unresolved_qodo_comments "$PR_INFO_SCRIPT")
   UNRESOLVED_COUNT=$(echo "$UNRESOLVED_COMMENTS" | jq '. | length')
 
   if [ "$UNRESOLVED_COUNT" -gt 0 ]; then
