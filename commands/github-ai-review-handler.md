@@ -278,7 +278,7 @@ Processing X approved tasks:
 
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
-1. **Process all approved tasks:**
+2. **Process all approved tasks:**
    - **CRITICAL**: Process ALL tasks created during Phase 1, regardless of priority level
    - **NEVER skip LOW-priority tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
    - Use the `body` field as guidance when implementing changes

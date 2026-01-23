@@ -468,8 +468,8 @@ main() {
         tmp_all=$(mktemp)
         tmp_specific=$(mktemp)
         TEMP_FILES+=("$tmp_all" "$tmp_specific")
-        echo "$all_threads" > "$tmp_all"
-        echo "$specific_threads" > "$tmp_specific"
+        printf '%s' "$all_threads" > "$tmp_all"
+        printf '%s' "$specific_threads" > "$tmp_specific"
         merged_threads=$(jq -s '
             def key:
               if (.thread_id? and .thread_id != null and .thread_id != "") then "t:" + .thread_id
