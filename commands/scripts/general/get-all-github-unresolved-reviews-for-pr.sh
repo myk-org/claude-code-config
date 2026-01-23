@@ -147,7 +147,7 @@ fetch_unresolved_threads() {
                                 nodes {
                                     id
                                     isResolved
-                                    comments(first: 1) {
+                                    comments(last: 1) {
                                         nodes {
                                             id
                                             databaseId
@@ -181,7 +181,7 @@ fetch_unresolved_threads() {
                                 nodes {
                                     id
                                     isResolved
-                                    comments(first: 1) {
+                                    comments(last: 1) {
                                         nodes {
                                             id
                                             databaseId
@@ -309,78 +309,40 @@ fetch_review_comments() {
 }
 
 # Process threads: add source and priority, categorize
-# Uses temp files to avoid "Argument list too long" error with large JSON
+# Single jq pass for all enrichment and categorization (no shell loops or temp files)
 process_and_categorize() {
     local threads_json="$1"
 
-    # Create temp files to accumulate results (avoids argument length limits)
-    local tmp_human tmp_qodo tmp_coderabbit tmp_threads tmp_item
-    tmp_human=$(mktemp)
-    tmp_qodo=$(mktemp)
-    tmp_coderabbit=$(mktemp)
-    tmp_threads=$(mktemp)
-    tmp_item=$(mktemp)
-    TEMP_FILES+=("$tmp_human" "$tmp_qodo" "$tmp_coderabbit" "$tmp_threads" "$tmp_item")
+    jq -n \
+      --argjson threads "$threads_json" \
+      --argjson qodo_users '["qodo-code-review","qodo-code-review[bot]"]' \
+      --argjson coderabbit_users '["coderabbitai","coderabbitai[bot]"]' '
+      def detect_source($a):
+        if ($qodo_users | index($a)) != null then "qodo"
+        elif ($coderabbit_users | index($a)) != null then "coderabbit"
+        else "human" end;
 
-    # Initialize empty arrays
-    echo '[]' > "$tmp_human"
-    echo '[]' > "$tmp_qodo"
-    echo '[]' > "$tmp_coderabbit"
+      def classify_priority($b):
+        ($b | ascii_downcase) as $t
+        | if ($t | test("(security|vulnerability|critical|bug|error|crash|must|required|breaking|urgent|injection|xss|csrf|auth)")) then "HIGH"
+          elif ($t | test("(style|formatting|typo|nitpick|nit:|minor|optional|cosmetic|whitespace|indentation)")) then "LOW"
+          else "MEDIUM" end;
 
-    # Save threads to temp file for processing
-    echo "$threads_json" > "$tmp_threads"
-
-    # Process each thread
-    local thread_count
-    thread_count=$(jq 'length' < "$tmp_threads")
-
-    for ((i = 0; i < thread_count; i++)); do
-        local thread author body source priority
-
-        thread=$(jq ".[$i]" < "$tmp_threads")
-        author=$(echo "$thread" | jq -r '.author // ""')
-        body=$(echo "$thread" | jq -r '.body // ""')
-
-        source=$(detect_source "$author")
-        priority=$(classify_priority "$body")
-
-        # Enrich thread with source, priority, and status fields
-        local enriched_thread
-        enriched_thread=$(echo "$thread" | jq \
-            --arg source "$source" \
-            --arg priority "$priority" \
-            '. + {
-                priority: $priority,
-                source: $source,
-                reply: null,
-                status: "pending"
-            }')
-
-        # Save enriched thread to temp file
-        echo "$enriched_thread" > "$tmp_item"
-
-        # Categorize by source using temp files
-        case "$source" in
-            qodo)
-                jq -s '.[0] + [.[1]]' "$tmp_qodo" "$tmp_item" > "${tmp_qodo}.new"
-                mv -f "${tmp_qodo}.new" "$tmp_qodo"
-                ;;
-            coderabbit)
-                jq -s '.[0] + [.[1]]' "$tmp_coderabbit" "$tmp_item" > "${tmp_coderabbit}.new"
-                mv -f "${tmp_coderabbit}.new" "$tmp_coderabbit"
-                ;;
-            *)
-                jq -s '.[0] + [.[1]]' "$tmp_human" "$tmp_item" > "${tmp_human}.new"
-                mv -f "${tmp_human}.new" "$tmp_human"
-                ;;
-        esac
-    done
-
-    # Output categorized results using temp files
-    jq -s '{human: .[0], qodo: .[1], coderabbit: .[2]}' "$tmp_human" "$tmp_qodo" "$tmp_coderabbit"
-
-    # Cleanup temp files
-    rm -f "$tmp_human" "$tmp_qodo" "$tmp_coderabbit" "$tmp_threads" "$tmp_item"
+      ($threads
+       | map(
+           . as $x
+           | ($x.author // "") as $author
+           | ($x.body // "") as $body
+           | (detect_source($author)) as $source
+           | (classify_priority($body)) as $priority
+           | $x + {source: $source, priority: $priority, reply: null, status: "pending"}
+         )
+      ) as $enriched
+      | {
+          human: ($enriched | map(select(.source == "human"))),
+          qodo: ($enriched | map(select(.source == "qodo"))),
+          coderabbit: ($enriched | map(select(.source == "coderabbit")))
+        }'
 }
 
 main() {

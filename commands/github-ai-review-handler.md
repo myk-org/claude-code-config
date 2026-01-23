@@ -69,7 +69,7 @@ The unified fetcher produces JSON with this structure:
 
 Each comment in the arrays has:
 - `thread_id`: GraphQL thread ID for replying/resolving
-- `node_id`: REST API node ID (fallback)
+- `node_id`: REST API comment node ID (informational only; posting requires `thread_id`)
 - `comment_id`: REST API comment ID
 - `author`: Username of commenter
 - `path`: File path
@@ -78,7 +78,7 @@ Each comment in the arrays has:
 - `priority`: "HIGH", "MEDIUM", or "LOW" (auto-classified)
 - `source`: "qodo", "coderabbit", or "human"
 - `reply`: null (to be set after processing)
-- `status`: "pending" (to be set to "addressed" or "skipped")
+- `status`: "pending" (to be set to "addressed", "skipped", or "not_addressed")
 
 ### Deduplication
 

@@ -90,6 +90,12 @@ post_thread_reply() {
     return 1
   fi
 
+  # Validate JSON response before parsing
+  if ! echo "$result" | jq -e . >/dev/null 2>&1; then
+    echo "GraphQL returned non-JSON response: $result" >&2
+    return 1
+  fi
+
   # Check for GraphQL errors
   if echo "$result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
     local error_msg
@@ -236,7 +242,7 @@ for category in "${CATEGORIES[@]}"; do
       effective_thread_id="$thread_id"
     elif [ -n "$node_id" ] && [ "$node_id" != "null" ]; then
       # Try to derive thread_id from the review comment node id
-      thread_lookup_result=$(
+      if ! thread_lookup_result=$(
         gh api graphql -f query='
           query($nodeId: ID!) {
             node(id: $nodeId) {
@@ -248,9 +254,9 @@ for category in "${CATEGORIES[@]}"; do
             }
           }
         ' -f nodeId="$node_id" 2>&1
-      ) || {
+      ); then
         thread_lookup_result=""
-      }
+      fi
 
       if [ -n "$thread_lookup_result" ] \
         && echo "$thread_lookup_result" | jq -e . >/dev/null 2>&1 \

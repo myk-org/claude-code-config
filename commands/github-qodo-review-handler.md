@@ -1,7 +1,7 @@
 ---
 name: github-qodo-review-handler
 description: Processes Qodo AI code review comments
-skipConfirmation: true
+skipConfirmation: false
 ---
 
 # GitHub Qodo AI Review Handler
@@ -304,8 +304,8 @@ no changes needed):
 
 ### PHASE 5 - Post Qodo Reply
 
-**MANDATORY**: After Phase 4 approval (or if all tasks were implemented), update the JSON file and call the
-posting script.
+**MANDATORY**: After completing **Phase 4 (Testing & Commit)**, update the JSON file and call the posting
+script.
 
 ---
 
@@ -348,14 +348,14 @@ Write the updated JSON back to the same file path.
 After updating the JSON file, call the posting script:
 
 ```bash
-~/.claude/commands/scripts/general/post-review-replies-from-json.sh "$JSON_PATH"
+~/.claude/commands/scripts/general/post-review-replies-from-json.sh "/tmp/claude/pr-<number>-reviews.json"
 ```
 
-Where `$JSON_PATH` is the value from `metadata.json_path` (e.g., `/tmp/claude/pr-<number>-reviews.json`).
+Replace the quoted path with the exact value from `metadata.json_path` (paste it directly; do not create shell variables).
 
 The script will:
 - Read the JSON file
-- For each comment with status "addressed" or "skipped":
+- For each comment with status "addressed", "skipped", or "not_addressed":
   - Post the reply to the thread
   - Resolve the thread
 - Skip comments with status "pending"
