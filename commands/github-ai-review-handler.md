@@ -98,8 +98,8 @@ Run the unified fetcher to get all unresolved reviews from both Qodo and CodeRab
 
 **Script path:**
 
-```bash
-UNIFIED_SCRIPT="$HOME/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh"
+```text
+~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
 ```
 
 **Usage:**
@@ -107,13 +107,13 @@ UNIFIED_SCRIPT="$HOME/.claude/commands/scripts/general/get-all-github-unresolved
 1. **No URL provided** - Fetches all unresolved from both:
 
    ```bash
-   "$UNIFIED_SCRIPT"
+   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
    ```
 
 2. **URL provided** - Fetches all unresolved plus ensures specific review is included:
 
    ```bash
-   "$UNIFIED_SCRIPT" "<review_url>"
+   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "<review_url>"
    ```
 
 **Examples:**

@@ -252,7 +252,9 @@ for category in "${CATEGORIES[@]}"; do
         thread_lookup_result=""
       }
 
-      if [ -n "$thread_lookup_result" ] && ! echo "$thread_lookup_result" | jq -e '.errors' >/dev/null 2>&1; then
+      if [ -n "$thread_lookup_result" ] \
+        && echo "$thread_lookup_result" | jq -e . >/dev/null 2>&1 \
+        && ! echo "$thread_lookup_result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
         effective_thread_id=$(echo "$thread_lookup_result" | jq -r '.data.node.pullRequestReviewThread.id // empty')
       fi
     fi

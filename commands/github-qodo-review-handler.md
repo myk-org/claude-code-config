@@ -309,7 +309,7 @@ posting script.
 
 ---
 
-#### Step 7.1: Update the JSON file
+#### Step 5.1: Update the JSON file
 
 Read the JSON file from `metadata.json_path` (e.g., `/tmp/claude/pr-<number>-reviews.json`).
 
@@ -343,7 +343,7 @@ Write the updated JSON back to the same file path.
 
 ---
 
-#### Step 7.2: Call the posting script
+#### Step 5.2: Call the posting script
 
 After updating the JSON file, call the posting script:
 

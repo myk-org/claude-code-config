@@ -58,7 +58,7 @@ fetch_unresolved_threads() {
   local tmp_existing tmp_new
   tmp_existing=$(mktemp)
   tmp_new=$(mktemp)
-  trap 'rm -f "$tmp_existing" "$tmp_new"' RETURN
+  TEMP_FILES+=("$tmp_existing" "$tmp_new")
 
   while [ "$has_next_page" = "true" ]; do
     page_count=$((page_count + 1))
@@ -129,6 +129,16 @@ fetch_unresolved_threads() {
         echo "Warning: Could not fetch unresolved threads (page $page_count): $raw_result" >&2
         break
       fi
+    fi
+
+    # Guard against GraphQL errors / non-JSON output (gh may exit 0 with .errors)
+    if ! echo "$raw_result" | jq -e . >/dev/null 2>&1; then
+      echo "Warning: GraphQL returned non-JSON response (page $page_count)" >&2
+      break
+    fi
+    if echo "$raw_result" | jq -e '.errors? | length > 0' >/dev/null 2>&1; then
+      echo "Warning: GraphQL errors while fetching review threads (page $page_count): $(echo "$raw_result" | jq -r '.errors[0].message // "Unknown error"')" >&2
+      break
     fi
 
     # Extract pagination info
