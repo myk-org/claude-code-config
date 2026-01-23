@@ -26,12 +26,15 @@ workflow.**
 
 ## Key Differences from CodeRabbit
 
-**IMPORTANT**: Qodo uses **issue comments** (not review threads), which means:
+**IMPORTANT**: Qodo uses **two types of comments**, which affects how we handle them:
 
 1. **Bot username**: `qodo-code-review[bot]`
-2. **Comment type**: Issue comment (URL contains `#issuecomment-XXX`, NOT `#pullrequestreview-XXX`)
-3. **Reply mechanism**: Post a NEW issue comment (cannot thread replies to specific comments)
-4. **No resolve functionality**: Issue comments cannot be "resolved" like review comments
+2. **Comment types**:
+   - **Issue comments**: URL contains `#issuecomment-XXX` - Cannot be resolved, reply is a new issue comment
+   - **Inline review comments**: Part of PR review threads - CAN be resolved, reply threads and resolves
+3. **Reply mechanism differs by type**:
+   - Issue comments: Post a NEW issue comment (cannot thread replies)
+   - Inline reviews: Reply to thread AND resolve it via GraphQL
 
 ---
 
@@ -54,34 +57,39 @@ $MAIN_SCRIPT $PR_INFO_SCRIPT <USER_INPUT_IF_PROVIDED>
 
 ---
 
-**User MUST provide a comment ID or comment URL:**
+**Usage patterns:**
 
-```bash
-# User provided comment ID:
-$MAIN_SCRIPT $PR_INFO_SCRIPT 2838476123
+1. **No URL provided**: Fetches all unresolved inline review comments from the PR
+   ```bash
+   $MAIN_SCRIPT $PR_INFO_SCRIPT
+   ```
 
-# User provided comment URL:
-$MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#issuecomment-2838476123"
-```
+2. **Issue comment URL provided**: Fetches that issue comment + all unresolved inline comments
+   ```bash
+   $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#issuecomment-2838476123"
+   ```
+
+3. **PR review URL provided**: Fetches comments from that specific review only
+   ```bash
+   $MAIN_SCRIPT $PR_INFO_SCRIPT "https://github.com/owner/repo/pull/123#pullrequestreview-2838476123"
+   ```
 
 **If user provides NO input:**
 
-The comment ID or URL is REQUIRED. If the user doesn't provide one, instruct them:
+The script will fetch all unresolved inline review comments. If you want to also process an issue comment,
+instruct the user:
 
 ```text
-To use this command, you need to provide a Qodo comment ID or URL.
+Running without arguments will fetch all unresolved inline review comments.
 
-How to get the comment URL:
+To also include a specific Qodo issue comment, provide its URL:
 1. Go to the GitHub PR page
 2. Find the Qodo review comment you want to process (from qodo-code-review[bot])
 3. Click on the comment timestamp/link
-4. Copy the URL from your browser (it will contain #issuecomment-XXXXXXXXXX)
+4. Copy the URL from your browser
 
 Example:
   /github-qodo-review-handler https://github.com/owner/repo/pull/123#issuecomment-2838476123
-
-Or just provide the comment ID number:
-  /github-qodo-review-handler 2838476123
 ```
 
 **THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The scripts handle
@@ -92,8 +100,13 @@ EVERYTHING.**
 The script returns structured JSON containing:
 
 - `metadata`: Contains `owner`, `repo`, `pr_number`, `comment_id`, `comment_type` (review|improve)
-- `summary`: Counts by priority level
+- `summary`: Counts by priority level, plus `by_source` breakdown:
+  - `by_source.issue_comment`: Count of suggestions from issue comments
+  - `by_source.inline_review`: Count of suggestions from inline review threads
 - `suggestions`: Array of items with:
+  - `source`: Either `"issue_comment"` or `"inline_review"` - indicates comment origin
+  - `thread_id`: (inline reviews only) The GraphQL thread ID for replying/resolving
+  - `comment_id`: (inline reviews only) The specific comment ID in the thread
   - `priority`: HIGH, MEDIUM, or LOW
   - `category`: The type of suggestion (e.g., "Enhancement", "Bug Fix", "Code Style")
   - `title`: Brief description of the suggestion
@@ -103,9 +116,9 @@ The script returns structured JSON containing:
   - `description`: Full description of the suggestion
   - `suggested_diff`: The proposed code change (if provided)
 
-**Note**: Unlike CodeRabbit (which has separate comment_ids for each inline review),
-Qodo posts a single issue comment. The `metadata.comment_id` applies to the entire
-comment, not individual suggestions.
+**Note**: For issue comments, the `metadata.comment_id` applies to the entire comment.
+For inline reviews, each suggestion has its own `thread_id` and `comment_id` for
+replying and resolving.
 
 ### Step 3: PHASE 1 - Collect User Decisions (COLLECTION ONLY - NO PROCESSING)
 
@@ -125,6 +138,7 @@ For ALL suggestions, use this unified format:
 
 ```text
 🔴 [PRIORITY] Priority - Suggestion X of Y
+📍 Source: [Inline Review | Issue Comment]
 📁 File: [file path]
 📍 Lines: [line_range]
 📋 Title: [title]
@@ -137,6 +151,7 @@ Do you want to address this suggestion? (yes/no/skip/all)
 ```
 
 Note: Use 🔴 for HIGH priority, 🟡 for MEDIUM priority, and 🟢 for LOW priority.
+Note: Source indicates where the suggestion came from - "Inline Review" can be resolved, "Issue Comment" cannot.
 
 **CRITICAL: Track Suggestion Outcomes for Reply**
 
@@ -251,12 +266,15 @@ no changes needed):
 
 ### Step 6: PHASE 3.5 - Post Qodo Reply
 
-**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), generate and post reply to PR.
+**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), generate and post replies.
 
-**IMPORTANT DIFFERENCE FROM CODERABBIT**: Since Qodo uses issue comments (not review threads):
-- **NO threaded replies** - cannot reply directly to the Qodo comment
-- **NO resolve functionality** - issue comments cannot be marked as resolved
-- Post a **NEW issue comment** as the reply
+**Handling differs by source type:**
+
+---
+
+#### For Issue Comment Suggestions
+
+Post a **NEW issue comment** as the reply (cannot thread or resolve):
 
 **STEP 1**: Generate reply message using this format:
 
@@ -294,15 +312,73 @@ gh api "/repos/$OWNER/$REPO/issues/$PR_NUMBER/comments" \
   -X POST -f body="$REPLY_MESSAGE"
 ```
 
+---
+
+#### For Inline Review Suggestions
+
+Reply to the thread AND resolve it using GraphQL:
+
+**STEP 1**: For each addressed inline review suggestion, reply to the thread:
+
+```bash
+# Reply to the inline comment thread
+gh api graphql -f query='
+  mutation($threadId: ID!, $body: String!) {
+    addPullRequestReviewComment(input: {
+      pullRequestReviewThreadId: $threadId,
+      body: $body
+    }) {
+      comment { id }
+    }
+  }
+' -f threadId="$THREAD_ID" -f body="Done"
+```
+
+**STEP 2**: Resolve the thread:
+
+```bash
+# Resolve the thread
+gh api graphql -f query='
+  mutation($threadId: ID!) {
+    resolvePullRequestReviewThread(input: {
+      threadId: $threadId
+    }) {
+      thread { isResolved }
+    }
+  }
+' -f threadId="$THREAD_ID"
+```
+
 **Where to get values:**
+- `$THREAD_ID`: From suggestion's `thread_id` field
+- For skipped/not addressed: Reply with reason, optionally leave unresolved
+
+**STEP 3**: For skipped or not addressed inline reviews, reply with the reason but do NOT resolve:
+
+```bash
+gh api graphql -f query='
+  mutation($threadId: ID!, $body: String!) {
+    addPullRequestReviewComment(input: {
+      pullRequestReviewThreadId: $threadId,
+      body: $body
+    }) {
+      comment { id }
+    }
+  }
+' -f threadId="$THREAD_ID" -f body="Not addressed: [reason]"
+```
+
+---
+
+**Where to get values (for issue comments):**
 - `$OWNER`: From JSON `metadata.owner`
 - `$REPO`: From JSON `metadata.repo`
 - `$PR_NUMBER`: From JSON `metadata.pr_number`
 - `$REPLY_MESSAGE`: The generated reply from STEP 1
 
-**STEP 3**: Confirm reply was posted successfully before proceeding.
+**STEP 4**: Confirm all replies were posted successfully before proceeding.
 
-**CHECKPOINT**: Reply posted to PR
+**CHECKPOINT**: All replies posted (issue comment AND/OR inline thread replies)
 
 ### Step 7: PHASE 4 - Testing & Commit
 
@@ -362,8 +438,9 @@ that CANNOT be skipped:
 ### PHASE 3.5: Post Qodo Reply
 
 - Generate summary reply from tracked outcomes
-- Post NEW issue comment to PR (cannot thread or resolve)
-- **CHECKPOINT**: Reply posted successfully
+- **For issue comment suggestions**: Post NEW issue comment to PR (cannot thread or resolve)
+- **For inline review suggestions**: Reply to thread AND resolve it via GraphQL
+- **CHECKPOINT**: All replies posted successfully
 
 ### PHASE 4: Testing & Commit Phase
 
