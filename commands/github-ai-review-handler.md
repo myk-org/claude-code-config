@@ -81,6 +81,12 @@ Each comment in the arrays has:
 - `source`: "qodo", "coderabbit", or "human"
 - `reply`: null (to be set after processing)
 - `status`: "pending" (to be set to "addressed", "skipped", or "not_addressed")
+- `replies`: Array of subsequent comments in the thread (if any). Each reply has:
+  - `author`: Username of who replied
+  - `body`: Reply content
+  - `created_at`: When the reply was posted
+
+**IMPORTANT**: Before creating a task for a suggestion, check if there are `replies`. If the PR author already rejected the suggestion in a reply, auto-skip it with their reason instead of asking again.
 
 ### Deduplication
 

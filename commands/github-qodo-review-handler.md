@@ -101,9 +101,9 @@ EVERYTHING.**
 
 The script returns structured JSON with categorized comments. **Filter to use ONLY the `qodo` array.**
 
-**CRITICAL guard**: If any `qodo` item has a missing or empty `thread_id`, you MUST NOT create an execution task for it. Instead, mark it as:
+**CRITICAL guard**: If any `qodo` item has a missing, empty, or whitespace-only `thread_id`, you MUST NOT create an execution task for it. Instead, mark it as:
 - `status`: `"skipped"`
-- `reply`: `"Skipped: No thread_id available to reply/resolve"`
+- `reply`: `"Skipped: No valid thread_id available to reply/resolve"`
 
 This prevents downstream script failures when trying to post replies to comments that cannot be resolved.
 
@@ -130,7 +130,14 @@ This prevents downstream script failures when trying to post replies to comments
       "priority": "HIGH",
       "source": "qodo",
       "reply": null,
-      "status": "pending"
+      "status": "pending",
+      "replies": [
+        {
+          "author": "username",
+          "body": "Reply content...",
+          "created_at": "2024-01-24T12:00:00Z"
+        }
+      ]
     }
   ],
   "coderabbit": [ ... ]
@@ -149,6 +156,12 @@ This prevents downstream script failures when trying to post replies to comments
 - `source`: Always "qodo" for items in this array
 - `reply`: Reply message (initially null, you will set this)
 - `status`: Status (initially "pending", you will update to "addressed", "skipped", or "not_addressed")
+- `replies`: Array of subsequent comments in the thread (if any). Each reply has:
+  - `author`: Username of who replied
+  - `body`: Reply content
+  - `created_at`: When the reply was posted
+
+**IMPORTANT**: Before creating a task for a suggestion, check if there are `replies`. If the PR author already rejected the suggestion in a reply, auto-skip it with their reason instead of asking again.
 
 **IMPORTANT**: The `metadata.json_path` contains the path to the saved JSON file. You will update this
 file in Phase 5 before calling the posting script.
@@ -170,7 +183,7 @@ process anything during this phase.**
 For ALL suggestions, use this unified format:
 
 ```text
-[PRIORITY_EMOJI] [PRIORITY] Priority - Suggestion X of Y
+[HIGH|MEDIUM|LOW] Priority - Suggestion X of Y
 File: [path]
 Line: [line]
 Body: [body - truncate if very long, show first 200 chars]
@@ -178,7 +191,7 @@ Body: [body - truncate if very long, show first 200 chars]
 Do you want to address this suggestion? (yes/no/skip/all)
 ```
 
-Note: Use 🔴 for HIGH priority, 🟡 for MEDIUM priority, and 🟢 for LOW priority. If emojis are not supported in your environment, use `[HIGH]`, `[MEDIUM]`, `[LOW]` text labels instead.
+Note: If your environment supports emojis, you may optionally prefix with 🔴 for HIGH, 🟡 for MEDIUM, or 🟢 for LOW, but the text label `[HIGH|MEDIUM|LOW]` must always be present for accessibility.
 
 ### CRITICAL: Track Suggestion Outcomes for Reply
 
@@ -257,8 +270,8 @@ Proceed directly to execution (no confirmation needed since user already approve
 
 ### PHASE 3 - Review Unimplemented Changes
 
-**MANDATORY CHECKPOINT**: Before proceeding to posting reply, MUST review any approved suggestions where AI
-decided not to make changes.
+**MANDATORY CHECKPOINT**: Before proceeding to **Phase 4 (Testing & Commit)**, you MUST review any approved
+suggestions where AI decided not to make changes.
 
 If AI decided NOT to implement changes for ANY approved tasks (tasks where user said "yes" but AI determined
 no changes needed):
@@ -281,7 +294,7 @@ no changes needed):
 - **MANDATORY**: Ask user for confirmation:
 
   ```text
-  Do you approve proceeding without these changes? (yes/no)
+  Do you approve proceeding to testing/commit without these changes? (yes/no)
   - yes: Proceed to Phase 4 (Testing & Commit)
   - no: Reconsider and implement the changes
   ```

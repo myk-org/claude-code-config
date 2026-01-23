@@ -147,7 +147,7 @@ fetch_unresolved_threads() {
                                 nodes {
                                     id
                                     isResolved
-                                    comments(last: 1) {
+                                    comments(first: 100) {
                                         nodes {
                                             id
                                             databaseId
@@ -155,6 +155,7 @@ fetch_unresolved_threads() {
                                             path
                                             line
                                             body
+                                            createdAt
                                         }
                                     }
                                 }
@@ -181,7 +182,7 @@ fetch_unresolved_threads() {
                                 nodes {
                                     id
                                     isResolved
-                                    comments(last: 1) {
+                                    comments(first: 100) {
                                         nodes {
                                             id
                                             databaseId
@@ -189,6 +190,7 @@ fetch_unresolved_threads() {
                                             path
                                             line
                                             body
+                                            createdAt
                                         }
                                     }
                                 }
@@ -239,20 +241,28 @@ fetch_unresolved_threads() {
         echo "Fetched $page_count pages of review threads" >&2
     fi
 
-    # Filter unresolved threads and extract first comment details
+    # Filter unresolved threads and extract first comment details with replies
     echo "$all_threads" | jq '
         [.[] |
          select(.isResolved == false) |
          . as $thread |
-         .comments.nodes[0] as $comment |
+         (.comments.nodes // []) as $all_comments |
+         select(($all_comments | length) > 0) |
+         ($all_comments[0]) as $first |
+         ($all_comments[1:]) as $rest |
          {
              thread_id: $thread.id,
-             node_id: ($comment.id // null),
-             comment_id: ($comment.databaseId // null),
-             author: ($comment.author.login // null),
-             path: ($comment.path // null),
-             line: ($comment.line // null),
-             body: ($comment.body // "")
+             node_id: ($first.id // null),
+             comment_id: ($first.databaseId // null),
+             author: ($first.author.login // null),
+             path: ($first.path // null),
+             line: ($first.line // null),
+             body: ($first.body // ""),
+             replies: [$rest[] | {
+                 author: (.author.login // null),
+                 body: (.body // ""),
+                 created_at: (.createdAt // null)
+             }]
          }]
     '
 }
@@ -449,7 +459,7 @@ main() {
         fi
     fi
 
-    # Merge specific threads with all threads, deduplicating by comment_id
+    # Merge specific threads with all threads, deduplicating by prioritized keys
     # Uses temp files to avoid "Argument list too long" error with large JSON
     if [ "$(echo "$specific_threads" | jq 'length')" -gt 0 ]; then
         local tmp_all tmp_specific merged_threads
@@ -459,8 +469,14 @@ main() {
         echo "$all_threads" > "$tmp_all"
         echo "$specific_threads" > "$tmp_specific"
         merged_threads=$(jq -s '
-            (.[0] | map(.comment_id) | map(select(. != null))) as $existing_ids |
-            .[0] + [.[1][] | select(.comment_id as $id | ($existing_ids | index($id)) == null)]
+            def key:
+              if (.thread_id? and .thread_id != null and .thread_id != "") then "t:" + .thread_id
+              elif (.node_id? and .node_id != null and .node_id != "") then "n:" + .node_id
+              elif (.comment_id? and .comment_id != null) then "c:" + (.comment_id|tostring)
+              else null end;
+
+            (.[0] | map(key) | map(select(. != null))) as $existing_keys |
+            .[0] + [.[1][] | select(key as $k | $k == null or ($existing_keys | index($k)) == null)]
         ' "$tmp_all" "$tmp_specific")
         rm -f "$tmp_all" "$tmp_specific"
         all_threads="$merged_threads"

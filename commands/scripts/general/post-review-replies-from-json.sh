@@ -200,8 +200,8 @@ no_thread_id_count=0
 replied_not_resolved_count=0
 already_posted_count=0
 
-# Track updates to apply to JSON
-declare -a updates=()
+# Track updates as JSON array for atomic application
+updates_json='[]'
 
 # Process each category
 for category in "${CATEGORIES[@]}"; do
@@ -217,18 +217,15 @@ for category in "${CATEGORIES[@]}"; do
     # Read thread data
     thread_data=$(jq -c --arg cat "$category" '.[$cat]['"$i"']' "$JSON_PATH")
 
-    IFS=$'\t' read -r thread_id node_id status reply skip_reason posted_at resolved_at path < <(
-      jq -r '[
-        (.thread_id // ""),
-        (.node_id // ""),
-        (.status // "pending"),
-        (.reply // ""),
-        (.skip_reason // ""),
-        (.posted_at // ""),
-        (.resolved_at // ""),
-        (.path // "unknown")
-      ] | @tsv' <<<"$thread_data"
-    )
+    # Extract fields individually to handle special characters properly
+    thread_id="$(jq -r '.thread_id // ""' <<<"$thread_data")"
+    node_id="$(jq -r '.node_id // ""' <<<"$thread_data")"
+    status="$(jq -r '.status // "pending"' <<<"$thread_data")"
+    reply="$(jq -r '.reply // ""' <<<"$thread_data")"
+    skip_reason="$(jq -r '.skip_reason // ""' <<<"$thread_data")"
+    posted_at="$(jq -r '.posted_at // ""' <<<"$thread_data")"
+    resolved_at="$(jq -r '.resolved_at // ""' <<<"$thread_data")"
+    path="$(jq -r '.path // "unknown"' <<<"$thread_data")"
 
     # Determine if we should resolve this thread (MUST be before resolve_only_retry check)
     should_resolve=true
@@ -351,7 +348,8 @@ for category in "${CATEGORIES[@]}"; do
         # Record posted_at if we just posted (so next run can retry resolve only)
         if [ "$resolve_only_retry" = false ]; then
           posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          updates+=("$category|$i|posted_at|$posted_at_timestamp")
+          updates_json=$(jq -c --arg cat "$category" --argjson idx "$i" --arg field "posted_at" --arg ts "$posted_at_timestamp" \
+            '. + [{"cat":$cat,"idx":($idx|tonumber),"field":$field,"ts":$ts}]' <<<"$updates_json")
         fi
         failed_count=$((failed_count + 1))
         echo "Failed to resolve ${category}[${i}] ($path) - reply was posted but thread not resolved" >&2
@@ -360,10 +358,12 @@ for category in "${CATEGORIES[@]}"; do
       # Record both timestamps after successful resolve
       if [ "$resolve_only_retry" = false ]; then
         posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-        updates+=("$category|$i|posted_at|$posted_at_timestamp")
+        updates_json=$(jq -c --arg cat "$category" --argjson idx "$i" --arg field "posted_at" --arg ts "$posted_at_timestamp" \
+          '. + [{"cat":$cat,"idx":($idx|tonumber),"field":$field,"ts":$ts}]' <<<"$updates_json")
       fi
       resolved_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-      updates+=("$category|$i|resolved_at|$resolved_at_timestamp")
+      updates_json=$(jq -c --arg cat "$category" --argjson idx "$i" --arg field "resolved_at" --arg ts "$resolved_at_timestamp" \
+        '. + [{"cat":$cat,"idx":($idx|tonumber),"field":$field,"ts":$ts}]' <<<"$updates_json")
       case "$status" in
         addressed|not_addressed|failed)
           addressed_count=$((addressed_count + 1))
@@ -377,7 +377,8 @@ for category in "${CATEGORIES[@]}"; do
       # For threads we don't resolve, record posted_at after successful reply
       if [ "$resolve_only_retry" = false ]; then
         posted_at_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-        updates+=("$category|$i|posted_at|$posted_at_timestamp")
+        updates_json=$(jq -c --arg cat "$category" --argjson idx "$i" --arg field "posted_at" --arg ts "$posted_at_timestamp" \
+          '. + [{"cat":$cat,"idx":($idx|tonumber),"field":$field,"ts":$ts}]' <<<"$updates_json")
       fi
       replied_not_resolved_count=$((replied_not_resolved_count + 1))
       echo "Replied to ${category}[${i}] ($path) (not resolved)" >&2
@@ -386,28 +387,22 @@ for category in "${CATEGORIES[@]}"; do
 done
 
 # Apply all JSON updates atomically
-if [ ${#updates[@]} -gt 0 ]; then
+if [ "$(jq 'length' <<<"$updates_json")" -gt 0 ]; then
   echo "" >&2
-  echo "Updating JSON file with ${#updates[@]} timestamps..." >&2
+  echo "Updating JSON file with $(jq 'length' <<<"$updates_json") timestamps..." >&2
 
-  # Use mktemp for secure temp file creation
   tmp_json=$(mktemp)
-  tmp_json_new=$(mktemp)
-  TEMP_FILES+=("$tmp_json" "$tmp_json_new")
+  TEMP_FILES+=("$tmp_json")
 
-  cp "$JSON_PATH" "$tmp_json"
-
-  for update in "${updates[@]}"; do
-    IFS='|' read -r cat idx field ts <<< "$update"
-    if ! jq --arg cat "$cat" --arg idx "$idx" --arg field "$field" --arg ts "$ts" \
-      '.[$cat][($idx | tonumber)][$field] = $ts' "$tmp_json" > "$tmp_json_new"; then
-      echo "Warning: Failed to update JSON for ${cat}[${idx}].${field}" >&2
-      continue
-    fi
-    mv -f "$tmp_json_new" "$tmp_json"
-  done
-
-  mv -f "$tmp_json" "$JSON_PATH"
+  if ! jq --argjson updates "$updates_json" '
+    reduce $updates[] as $u (.;
+      .[$u.cat][$u.idx][$u.field] = $u.ts
+    )
+  ' "$JSON_PATH" >"$tmp_json"; then
+    echo "Error: Failed to apply JSON updates" >&2
+  else
+    mv -f "$tmp_json" "$JSON_PATH"
+  fi
 fi
 
 # Print summary
