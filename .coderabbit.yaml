@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit AI Review Instructions
-# Based on project-specific rules from CLAUDE.md
+# Based on project-specific rules from AI_REVIEW.md
 
 # Language for reviews
 language: en-US
@@ -65,11 +65,11 @@ reviews:
 
 # Knowledge base configuration
 knowledge_base:
-  # Enable code guidelines enforcement from CODERABBITAI.md
+  # Enable code guidelines enforcement from AI_REVIEW.md
   code_guidelines:
     enabled: true
     filePatterns:
-      - "CODERABBITAI.md"
+      - "AI_REVIEW.md"
   # Enable learning from repository patterns
   learnings:
     scope: auto

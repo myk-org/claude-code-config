@@ -5,7 +5,7 @@
 # Core config files
 !.coderabbit.yaml
 !.gitignore
-!CODERABBITAI.md
+!AI_REVIEW.md
 !README.md
 !settings.json
 !statusline.sh
@@ -91,3 +91,6 @@
 !pyproject.toml
 !.pre-commit-config.yaml
 !.flake8
+
+# Qodo config
+!.pr_agent.toml
