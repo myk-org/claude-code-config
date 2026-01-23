@@ -126,9 +126,9 @@ The script returns structured JSON with categorized comments. **Filter to use ON
 ```
 
 **Field descriptions:**
-- `thread_id`: GraphQL thread ID for replying/resolving (required for posting)
-- `node_id`: REST API node ID (fallback for posting)
-- `comment_id`: REST API comment ID
+- `thread_id`: GraphQL thread ID (required for replying/resolving threads)
+- `node_id`: REST API comment node ID (informational only; posting requires `thread_id`)
+- `comment_id`: REST API comment ID (used for non-thread operations like fetching details)
 - `author`: The bot username
 - `path`: File path affected
 - `line`: Line number

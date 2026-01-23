@@ -467,14 +467,19 @@ main() {
     fi
 
     # Merge specific threads with all threads, deduplicating by comment_id
+    # Uses temp files to avoid "Argument list too long" error with large JSON
     if [ "$(echo "$specific_threads" | jq 'length')" -gt 0 ]; then
-        local merged_threads
-        merged_threads=$(jq -n \
-            --argjson all "$all_threads" \
-            --argjson specific "$specific_threads" '
-            ($all | map(.comment_id) | map(select(. != null))) as $existing_ids |
-            $all + [$specific[] | select(.comment_id as $id | ($existing_ids | index($id)) == null)]
-        ')
+        local tmp_all tmp_specific merged_threads
+        tmp_all=$(mktemp)
+        tmp_specific=$(mktemp)
+        TEMP_FILES+=("$tmp_all" "$tmp_specific")
+        echo "$all_threads" > "$tmp_all"
+        echo "$specific_threads" > "$tmp_specific"
+        merged_threads=$(jq -s '
+            (.[0] | map(.comment_id) | map(select(. != null))) as $existing_ids |
+            .[0] + [.[1][] | select(.comment_id as $id | ($existing_ids | index($id)) == null)]
+        ' "$tmp_all" "$tmp_specific")
+        rm -f "$tmp_all" "$tmp_specific"
         all_threads="$merged_threads"
     fi
 

@@ -77,9 +77,9 @@ The script returns structured JSON containing:
 - `coderabbit`: Array of CodeRabbit AI comments (ignore for this handler)
 
 **Each comment in the `human` array has:**
-- `thread_id`: GraphQL thread ID for replying/resolving
-- `node_id`: REST API node ID (fallback)
-- `comment_id`: REST API comment ID
+- `thread_id`: GraphQL thread ID (required for replying/resolving threads)
+- `node_id`: REST API comment node ID (informational only; posting requires `thread_id`)
+- `comment_id`: REST API comment ID (used for non-thread operations like fetching details)
 - `author`: The reviewer's username
 - `path`: File path
 - `line`: Line number
