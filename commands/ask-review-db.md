@@ -1,4 +1,6 @@
 ---
+name: ask-review-db
+description: Query the reviews database for analytics and insights about PR review history.
 skipConfirmation: true
 ---
 

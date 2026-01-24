@@ -119,7 +119,7 @@ def get_current_commit_sha() -> str:
             log(f"Warning: Could not get commit SHA: {result.stderr.strip()}")
             return "unknown"
         return result.stdout.strip()  # Full SHA for traceability
-    except Exception as e:
+    except (subprocess.SubprocessError, OSError) as e:
         log(f"Warning: Could not get commit SHA: {e}")
         return "unknown"
 

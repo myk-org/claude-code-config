@@ -283,7 +283,7 @@ class TestGetCurrentCommitSha:
     @patch("subprocess.run")
     def test_returns_unknown_on_exception(self, mock_run: Any) -> None:
         """Should return 'unknown' on exception."""
-        mock_run.side_effect = Exception("Unexpected error")
+        mock_run.side_effect = OSError("Unexpected error")
 
         result = store_reviews.get_current_commit_sha()
 
