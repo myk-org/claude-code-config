@@ -27,6 +27,20 @@ workflow.**
 
 ## Instructions
 
+### Task Tracking
+
+This workflow uses Claude Code's task system for progress tracking. Tasks are created at each phase with dependencies to ensure proper ordering.
+
+**Task visibility:** Use `/tasks` to see all tasks or `Ctrl+T` to toggle task panel.
+
+**Task phases:**
+- Phase 1: Collection tasks (fetch, present to user)
+- Phase 2: Execution tasks (one per approved comment, run in parallel)
+- Phase 3: Review task
+- Phase 4: Post tasks (update JSON, post & resolve, store to DB)
+- Phase 5: Test task
+- Phase 6: Push task (optional)
+
 ### Step 1: Fetch all review comments using the unified fetcher
 
 ### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
@@ -151,6 +165,13 @@ Responses: yes | no | all | skip human | skip qodo | skip coderabbit | skip ai
 
 ### Step 4: PHASE 1 - Collect User Decisions (COLLECTION ONLY - NO PROCESSING)
 
+**Create Phase 1 task:**
+```
+TaskCreate: "Collect user decisions on review comments"
+  - activeForm: "Collecting decisions"
+  - Status: in_progress
+```
+
 **CRITICAL: This is the COLLECTION phase. Do NOT execute, implement, or process ANY comments yet. Only ask
 questions and create tasks.**
 
@@ -242,6 +263,28 @@ and create tasks.**
 
 After ALL comments have been reviewed in Phase 1:
 
+**Create execution tasks (parallel):**
+
+For each approved comment, create a task:
+```
+TaskCreate: "[File: path, Line: N] Brief description from body"
+  - activeForm: "Implementing [brief]"
+  - Status: pending
+```
+
+Set all execution tasks to `blockedBy` the Phase 1 collection task.
+
+Then set all tasks to `in_progress` and process in parallel. Mark each as `completed` when done.
+
+```text
+Example task list for 3 approved comments:
+├── Task 2: [scripts/foo.py:42] Add error handling (in_progress)
+├── Task 3: [scripts/bar.py:10] Fix variable naming (in_progress)
+└── Task 4: [tests/test_foo.py:25] Add missing test (in_progress)
+```
+
+Process multiple tasks in parallel by delegating to appropriate specialists simultaneously.
+
 1. **Show approved tasks and proceed directly:**
 
 ```text
@@ -308,6 +351,24 @@ no changes needed):
 ### Step 7: PHASE 4 - Post Review Replies
 
 **MANDATORY**: After Phase 3 approval (or if all tasks were implemented), update the JSON file and post replies.
+
+**Create Phase 4 tasks with dependencies:**
+
+```
+TaskCreate: "Update JSON with replies and status"
+  - activeForm: "Updating JSON"
+  - blockedBy: [all execution tasks]
+
+TaskCreate: "Post replies and resolve threads"
+  - activeForm: "Posting replies"
+  - blockedBy: [update JSON task]
+
+TaskCreate: "Store reviews to database"
+  - activeForm: "Storing to database"
+  - blockedBy: [post replies task]
+```
+
+Execute each task in order, respecting dependencies.
 
 ---
 
@@ -386,6 +447,13 @@ set `status` and `reply` correctly.
 
 ### Step 8: PHASE 5 - Testing & Commit
 
+**Create Phase 5 task:**
+```
+TaskCreate: "Run tests with coverage"
+  - activeForm: "Running tests"
+  - blockedBy: [store to DB task]
+```
+
 **MANDATORY STEP 1**: Run all tests WITH coverage
 
 **MANDATORY STEP 2**: Check BOTH test results AND coverage results:
@@ -403,6 +471,13 @@ set `status` and `reply` correctly.
 **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
 ### Step 9: PHASE 6 - Push to Remote
+
+**Create Phase 6 task (if user approves):**
+```
+TaskCreate: "Push changes to remote"
+  - activeForm: "Pushing to remote"
+  - blockedBy: [test task]
+```
 
 **MANDATORY STEP 1**: After successful commit (or commit decline), MUST ask: "Changes committed
 successfully. Do you want to push the changes to remote? (yes/no)"
@@ -466,6 +541,21 @@ that CANNOT be skipped:
   push the changes to remote? (yes/no)"
 - **MANDATORY STEP 2**: If user says yes: Push the changes to remote
 - **CHECKPOINT**: Push confirmation asked (even if user declined)
+
+### Task Tracking Throughout Workflow
+
+Tasks are created and managed automatically:
+
+| Phase | Tasks Created | Dependencies |
+|-------|--------------|--------------|
+| 1 | 1 (collection) | None |
+| 2 | N (one per approved comment) | blockedBy: Phase 1 |
+| 3 | 0 (manual review) | - |
+| 4 | 3 (JSON, post, store) | blockedBy: Phase 2, then chained |
+| 5 | 1 (testing) | blockedBy: Phase 4 store |
+| 6 | 1 (push, optional) | blockedBy: Phase 5 |
+
+Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 
 ---
 
