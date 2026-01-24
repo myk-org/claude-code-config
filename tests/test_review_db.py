@@ -499,7 +499,7 @@ class TestReviewDB:
         ]
 
         for query in dangerous_queries:
-            with pytest.raises(ValueError, match="SQL keyword|Multiple SQL statements"):
+            with pytest.raises(ValueError, match=r"SQL keyword|Multiple SQL statements"):
                 db.query(query)
 
 

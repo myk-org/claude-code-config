@@ -59,6 +59,13 @@ def _body_similarity(body1: str, body2: str) -> float:
     tokens2 = set(re.findall(r"[a-z0-9]+", body2.lower()))
     if not tokens1 or not tokens2:
         return 0.0
+
+    # Guard against huge bodies (e.g., pasted logs)
+    if len(tokens1) > 2000:
+        tokens1 = set(list(tokens1)[:2000])
+    if len(tokens2) > 2000:
+        tokens2 = set(list(tokens2)[:2000])
+
     intersection = tokens1 & tokens2
     union = tokens1 | tokens2
     return len(intersection) / len(union)
@@ -432,8 +439,18 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
         except Exception as e:
             print_stderr(f"Warning: Failed to initialize ReviewDB: {e}")
 
-    # Cache dismissed comments per-path for performance
+    # Preload and index dismissed comments once per run for performance
     dismissed_by_path: dict[str, list[dict[str, Any]]] = {}
+    if db:
+        try:
+            for c in db.get_dismissed_comments(owner, repo):
+                p = (c.get("path") or "").strip()
+                b = (c.get("body") or "").strip()
+                if p and b:
+                    dismissed_by_path.setdefault(p, []).append(c)
+        except Exception as e:
+            print_stderr(f"Warning: Failed to preload dismissed comments: {e}")
+            dismissed_by_path = {}
 
     for thread in threads:
         author = thread.get("author")
@@ -451,21 +468,15 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
         }
 
         # Check for previously dismissed similar comment
-        if db:
+        if dismissed_by_path:
             path = (thread.get("path") or "").strip()
             thread_body = (thread.get("body") or "").strip()
             if path and thread_body:
                 try:
-                    # Cache dismissed comments per-path for performance
-                    if path not in dismissed_by_path:
-                        dismissed_by_path[path] = [
-                            c for c in db.get_dismissed_comments(owner, repo) if c.get("path") == path and c.get("body")
-                        ]
-
                     # Find best matching dismissed comment
                     best = None
                     best_score = 0.0
-                    for prev in dismissed_by_path[path]:
+                    for prev in dismissed_by_path.get(path, []):
                         score = _body_similarity(thread_body, prev["body"])
                         if score >= 0.6 and score > best_score:
                             best = prev
@@ -478,7 +489,7 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                             enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
                             enriched["is_auto_skipped"] = True
                 except Exception as e:
-                    print_stderr(f"Warning: Failed to query ReviewDB for similar comment: {e}")
+                    print_stderr(f"Warning: Failed to match dismissed comment: {e}")
 
         if source == "human":
             human.append(enriched)
