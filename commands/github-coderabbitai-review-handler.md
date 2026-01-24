@@ -32,7 +32,7 @@ workflow.**
 **Script path:**
 
 ```text
-FETCHER_SCRIPT = ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+FETCHER_SCRIPT = uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 ```
 
 ### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
@@ -52,18 +52,18 @@ $FETCHER_SCRIPT [USER_INPUT_IF_PROVIDED]
 1. **No URL provided**: Fetches all unresolved inline review comments from the PR
 
    ```bash
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
    ```
 
 2. **Review URL provided**: Fetches comments from that specific review plus all unresolved
 
    ```bash
    # User provided review URL:
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh \
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py \
      "https://github.com/owner/repo/pull/123#pullrequestreview-3379917343"
 
    # User provided review ID:
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh 3379917343
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py 3379917343
    ```
 
 **If user provides NO input:**
@@ -331,13 +331,13 @@ Use `jq` or similar to update the JSON file in place.
 **Script path:**
 
 ```text
-POSTING_SCRIPT = ~/.claude/commands/scripts/general/post-review-replies-from-json.sh
+POSTING_SCRIPT = uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py
 ```
 
 **Run the posting script:**
 
 ```bash
-~/.claude/commands/scripts/general/post-review-replies-from-json.sh /tmp/claude/pr-<number>-reviews.json
+uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py /tmp/claude/pr-<number>-reviews.json
 ```
 
 The script will:
