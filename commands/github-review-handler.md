@@ -33,7 +33,7 @@ workflow.**
 **ALWAYS use this exact command format:**
 
 ```bash
-~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh [review_url]
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py [review_url]
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
@@ -45,18 +45,18 @@ workflow.**
 1. **No URL provided**: Fetches all unresolved review threads from the PR
 
    ```bash
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
    ```
 
 2. **Review URL provided**: Fetches threads with specific review context
 
    ```bash
    # User provided review URL:
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh \
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py \
      "https://github.com/owner/repo/pull/123#pullrequestreview-456"
 
    # User provided discussion URL:
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh \
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py \
      "https://github.com/owner/repo/pull/123#discussion_r789"
    ```
 
@@ -254,7 +254,7 @@ jq '.human[0].status = "addressed" | .human[0].reply = "Done"' /tmp/claude/pr-12
 **STEP 3**: Call the posting script to handle replies and resolution
 
 ```bash
-~/.claude/commands/scripts/general/post-review-replies-from-json.sh /tmp/claude/pr-<number>-reviews.json
+uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py /tmp/claude/pr-<number>-reviews.json
 ```
 
 Where `<number>` is the PR number from `metadata.pr_number`.
