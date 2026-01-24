@@ -323,41 +323,23 @@ no changes needed):
 
   ```text
   Do you approve proceeding without these changes? (yes/no)
-  - yes: Proceed to Phase 4 (Testing & Commit)
+  - yes: Proceed to Phase 3.5 (Update JSON and Post Replies)
   - no: Reconsider and implement the changes
   ```
 
 - **If user says "no"**: Re-implement the changes as requested
-- **If user says "yes"**: Proceed to Phase 4
+- **If user says "yes"**: Proceed to Phase 3.5
 
-**If ALL approved tasks were implemented**: Proceed directly to Phase 4
+**If ALL approved tasks were implemented**: Proceed directly to Phase 3.5
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### Step 6: PHASE 4 - Testing & Commit
+### Step 6: PHASE 3.5 - Update JSON and Post Replies
 
-**MANDATORY STEP 1**: Run all tests WITH coverage
-
-**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
-- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
-  the changes? (yes/no)"
-  - If user says "yes": Commit the changes
-  - If user says "no": Acknowledge and proceed to Phase 5 checkpoint (ask about posting replies anyway)
-- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
-  - Analyze coverage gaps and add missing tests
-  - Re-run tests with coverage until BOTH pass
-- **If tests fail**:
-  - Analyze and fix test failures
-  - Re-run until tests pass
-
-**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
-
-### Step 7: PHASE 5 - Update JSON and Post Replies
-
-**MANDATORY**: After Phase 4 (testing and commit), update the JSON file and post replies to all AI
+**MANDATORY**: After Phase 3 (unimplemented changes review), update the JSON file and post replies to all AI
 reviewers.
 
-#### Step 7a: Update the JSON File
+#### Step 6a: Update the JSON File
 
 Read the JSON file from the path stored in `metadata.json_path` and update each processed comment:
 
@@ -392,7 +374,7 @@ Update BOTH the original Qodo thread AND the duplicate CodeRabbit thread (or vic
 
 Write the updated JSON back to the same file path.
 
-#### Step 7b: Post Replies Using the Posting Script
+#### Step 6b: Post Replies Using the Posting Script
 
 After updating the JSON, call the posting script:
 
@@ -411,7 +393,25 @@ Where `<json_path>` is the value from `metadata.json_path` (e.g., `/tmp/claude/p
 
 **CHECKPOINT**: All replies posted to ALL AI sources (Qodo AND CodeRabbit)
 
-### Step 8: PHASE 6 - Push to Remote
+### Step 7: PHASE 4 - Testing & Commit
+
+**MANDATORY STEP 1**: Run all tests WITH coverage
+
+**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
+- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
+  the changes? (yes/no)"
+  - If user says "yes": Commit the changes
+  - If user says "no": Acknowledge and proceed to Phase 5 checkpoint (ask about pushing anyway)
+- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
+  - Analyze coverage gaps and add missing tests
+  - Re-run tests with coverage until BOTH pass
+- **If tests fail**:
+  - Analyze and fix test failures
+  - Re-run until tests pass
+
+**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
+
+### Step 8: PHASE 5 - Push to Remote
 
 **MANDATORY STEP 1**: After successful commit (or commit decline), MUST ask: "Changes committed
 successfully. Do you want to push the changes to remote? (yes/no)"
@@ -425,7 +425,7 @@ successfully. Do you want to push the changes to remote? (yes/no)"
 
 ## CRITICAL WORKFLOW - STRICT PHASE SEQUENCE
 
-This workflow has **6 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
+This workflow has **5 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
 that CANNOT be skipped:
 
 ### PHASE 1: Collection Phase
@@ -451,6 +451,14 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
+### PHASE 3.5: Update JSON and Post Replies
+
+- Update JSON file (at `metadata.json_path`) with `reply` and `status` for each processed comment
+- For duplicates, update BOTH the Qodo AND CodeRabbit threads
+- Call the posting script: `post-review-replies-from-json.py <json_path>`
+- The script posts replies, resolves threads, and updates timestamps
+- **CHECKPOINT**: All replies posted to ALL AI sources
+
 ### PHASE 4: Testing & Commit Phase
 
 - **MANDATORY STEP 1**: Run all tests WITH coverage
@@ -462,15 +470,7 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says yes: Commit the changes
 - **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
-### PHASE 5: Update JSON and Post Replies
-
-- Update JSON file (at `metadata.json_path`) with `reply` and `status` for each processed comment
-- For duplicates, update BOTH the Qodo AND CodeRabbit threads
-- Call the posting script: `post-review-replies-from-json.py <json_path>`
-- The script posts replies, resolves threads, and updates timestamps
-- **CHECKPOINT**: All replies posted to ALL AI sources
-
-### PHASE 6: Push Phase
+### PHASE 5: Push Phase
 
 - **MANDATORY STEP 1**: After successful commit, MUST ask user: "Changes committed successfully. Do you want to
   push the changes to remote? (yes/no)"
@@ -481,7 +481,7 @@ that CANNOT be skipped:
 
 ## ENFORCEMENT RULES
 
-- **NEVER skip phases** - all 6 phases are mandatory
+- **NEVER skip phases** - all 5 phases are mandatory
 - **NEVER skip checkpoints** - each phase must reach its checkpoint before proceeding
 - **NEVER skip confirmations** - commit and push confirmations are REQUIRED even if previously discussed
 - **NEVER assume** - always ask for confirmation, never assume user wants to commit/push

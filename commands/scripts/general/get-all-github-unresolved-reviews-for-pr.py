@@ -31,7 +31,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-# Known AI reviewer usernames (keep in sync with get-reviewer-from-url.sh)
+# Known AI reviewer usernames
 QODO_USERS = ["qodo-code-review", "qodo-code-review[bot]"]
 CODERABBIT_USERS = ["coderabbitai", "coderabbitai[bot]"]
 

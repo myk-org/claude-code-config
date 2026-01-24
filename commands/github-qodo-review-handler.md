@@ -275,7 +275,7 @@ Proceed directly to execution (no confirmation needed since user already approve
 
 ### PHASE 3 - Review Unimplemented Changes
 
-**MANDATORY CHECKPOINT**: Before proceeding to **Phase 4 (Testing & Commit)**, you MUST review any approved
+**MANDATORY CHECKPOINT**: Before proceeding to **Phase 3.5 (Post Qodo Reply)**, you MUST review any approved
 suggestions where AI decided not to make changes.
 
 If AI decided NOT to implement changes for ANY approved tasks (tasks where user said "yes" but AI determined
@@ -300,45 +300,27 @@ no changes needed):
 
   ```text
   Do you approve proceeding to testing/commit without these changes? (yes/no)
-  - yes: Proceed to Phase 4 (Testing & Commit)
+  - yes: Proceed to Phase 3.5 (Post Qodo Reply)
   - no: Reconsider and implement the changes
   ```
 
 - **If user says "no"**: Re-implement the changes as requested
-- **If user says "yes"**: Proceed to Phase 4 (Testing & Commit)
+- **If user says "yes"**: Proceed to Phase 3.5 (Post Qodo Reply)
 
-**If ALL approved tasks were implemented**: Proceed directly to Phase 4
+**If ALL approved tasks were implemented**: Proceed directly to Phase 3.5
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### PHASE 4 - Testing & Commit
+### PHASE 3.5 - Post Qodo Reply
 
-**MANDATORY STEP 1**: Run all tests WITH coverage
-
-**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
-- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
-  the changes? (yes/no)"
-  - If user says "yes": Commit the changes
-  - If user says "no": Acknowledge and proceed to Phase 4 checkpoint (ask about push anyway)
-- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
-  - Analyze coverage gaps and add missing tests
-  - Re-run tests with coverage until BOTH pass
-- **If tests fail**:
-  - Analyze and fix test failures
-  - Re-run until tests pass
-
-**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
-
-### PHASE 5 - Post Qodo Reply
-
-**MANDATORY**: After completing **Phase 4 (Testing & Commit)**, update the JSON file and call the posting
+**MANDATORY**: After completing **Phase 3 (Unimplemented Changes Review)**, update the JSON file and call the posting
 script to reply in the existing PR review threads and resolve them.
 
 > **Note**: This workflow posts threaded replies to existing PR review threads via the posting script; it does not create new issue comments. Items without a `thread_id` must be marked `skipped` (per Step 2) to avoid posting failures.
 
 ---
 
-#### Step 5.1: Update the JSON file
+#### Step 3.5.1: Update the JSON file
 
 Read the JSON file from `metadata.json_path` (e.g., `/tmp/claude/pr-<number>-reviews.json`).
 
@@ -372,7 +354,7 @@ Write the updated JSON back to the same file path.
 
 ---
 
-#### Step 5.2: Call the posting script
+#### Step 3.5.2: Call the posting script
 
 After updating the JSON file, call the posting script:
 
@@ -392,9 +374,27 @@ The script will:
 
 **CHECKPOINT**: All Qodo replies posted successfully
 
-### PHASE 6 - Push to Remote
+### PHASE 4 - Testing & Commit
 
-**MANDATORY STEP 1**: After Phase 5 completion, MUST ask about pushing:
+**MANDATORY STEP 1**: Run all tests WITH coverage
+
+**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
+- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
+  the changes? (yes/no)"
+  - If user says "yes": Commit the changes
+  - If user says "no": Acknowledge and proceed to Phase 4 checkpoint (ask about push anyway)
+- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
+  - Analyze coverage gaps and add missing tests
+  - Re-run tests with coverage until BOTH pass
+- **If tests fail**:
+  - Analyze and fix test failures
+  - Re-run until tests pass
+
+**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
+
+### PHASE 5 - Push to Remote
+
+**MANDATORY STEP 1**: After Phase 4 completion, MUST ask about pushing:
 - If a commit was made: "Changes committed successfully. Do you want to push the changes to remote? (yes/no)"
 - If no commit was made: "No new commit was created. Do you want to push any existing commits to remote? (yes/no)"
 
@@ -406,7 +406,7 @@ The script will:
 
 ## CRITICAL WORKFLOW - STRICT PHASE SEQUENCE
 
-This workflow has **6 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
+This workflow has **5 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
 that CANNOT be skipped:
 
 ### PHASE 1: Collection Phase
@@ -429,6 +429,12 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
+### PHASE 3.5: Post Qodo Reply
+
+- Update the JSON file with reply messages and status for each processed comment
+- Call the posting script to post replies and resolve threads
+- **CHECKPOINT**: All replies posted successfully
+
 ### PHASE 4: Testing & Commit Phase
 
 - **MANDATORY STEP 1**: Run all tests WITH coverage
@@ -440,15 +446,9 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says yes: Commit the changes
 - **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
 
-### PHASE 5: Post Qodo Reply
+### PHASE 5: Push Phase
 
-- Update the JSON file with reply messages and status for each processed comment
-- Call the posting script to post replies and resolve threads
-- **CHECKPOINT**: All replies posted successfully
-
-### PHASE 6: Push Phase
-
-- **MANDATORY STEP 1**: After Phase 5 completion, MUST ask about pushing:
+- **MANDATORY STEP 1**: After Phase 4 completion, MUST ask about pushing:
   - If a commit was made: "Changes committed successfully. Do you want to push the changes to remote? (yes/no)"
   - If no commit was made: "No new commit was created. Do you want to push any existing commits to remote? (yes/no)"
 - **MANDATORY STEP 2**: If user says yes: Push the changes to remote
@@ -458,7 +458,7 @@ that CANNOT be skipped:
 
 ## ENFORCEMENT RULES
 
-- **NEVER skip phases** - all 6 phases are mandatory
+- **NEVER skip phases** - all 5 phases are mandatory
 - **NEVER skip checkpoints** - each phase must reach its checkpoint before proceeding
 - **NEVER skip confirmations** - commit and push confirmations are REQUIRED even if previously discussed
 - **NEVER assume** - always ask for confirmation, never assume user wants to commit/push

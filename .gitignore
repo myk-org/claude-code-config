@@ -46,8 +46,6 @@
 !commands/scripts/general/
 !commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 !commands/scripts/general/get-pr-info.sh
-!commands/scripts/general/get-reviewer-from-url.sh
-!commands/scripts/general/get-unresolved-review-threads.sh
 !commands/scripts/general/post-review-replies-from-json.py
 !commands/scripts/general/store-reviews-to-db.py
 !commands/scripts/github-pr-review/

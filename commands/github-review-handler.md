@@ -254,7 +254,7 @@ jq '.human[0].status = "addressed" | .human[0].reply = "Done"' /tmp/claude/pr-12
 **STEP 3**: Call the posting script to handle replies and resolution
 
 ```bash
-uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py /tmp/claude/pr-<number>-reviews.json
+uv run "$HOME/.claude/commands/scripts/general/post-review-replies-from-json.py" /tmp/claude/pr-<number>-reviews.json
 ```
 
 Where `<number>` is the PR number from `metadata.pr_number`.
