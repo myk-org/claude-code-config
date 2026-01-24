@@ -34,7 +34,7 @@ workflow.**
 **ALWAYS use this exact command format:**
 
 ```bash
-uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py [optional_url]
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py "[optional_url]"
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
@@ -166,7 +166,7 @@ File: [path]
 Line: [line]
 Body: [body - truncate if very long, show first 200 chars]
 
-Do you want to address? (yes/no/all/skip [source])
+Do you want to address? (yes/no/all/skip human/skip qodo/skip coderabbit/skip ai)
 ```
 
 Note: If displaying emojis, use the label as well: HIGH, MEDIUM, or LOW must always appear as text for
@@ -177,12 +177,12 @@ accessibility.
 | Response | Action |
 |----------|--------|
 | `yes` | Create task, continue to next |
-| `no` | Ask reason, mark `skipped`, continue |
+| `no` | Ask reason, mark `not_addressed`, continue |
 | `all` | Create tasks for ALL remaining comments |
 | `skip human` | Skip all remaining human comments |
 | `skip qodo` | Skip all remaining Qodo comments |
 | `skip coderabbit` | Skip all remaining CodeRabbit comments |
-| `skip ai` | Skip all remaining Qodo + CodeRabbit comments |
+| `skip ai` | Skip all remaining AI comments (Qodo + CodeRabbit) |
 
 #### CRITICAL: Track Comment Outcomes for Reply
 
@@ -207,7 +207,7 @@ For EVERY comment presented, track the outcome for the final reply:
 
 **For "no" response:**
 - MUST ask user: "Please provide a brief reason:"
-- Set outcome = `skipped`, reason = user's response
+- Set outcome = `not_addressed`, reason = user's response
 - If user doesn't provide reason, use "User declined"
 - Continue to next comment immediately
 
@@ -477,7 +477,7 @@ that CANNOT be skipped:
 | Response | Effect |
 |----------|--------|
 | `yes` | Create task for this comment |
-| `no` | Mark as skipped (ask reason) |
+| `no` | Mark as not_addressed (ask reason) |
 | `all` | Create tasks for ALL remaining comments |
 | `skip human` | Skip all remaining human comments |
 | `skip qodo` | Skip all remaining Qodo comments |
@@ -496,7 +496,7 @@ that CANNOT be skipped:
 
 **Fetcher script:**
 ```bash
-uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py [optional_url]
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py "[optional_url]"
 ```
 
 **Posting script:**
