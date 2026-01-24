@@ -469,12 +469,19 @@ set `status` and `reply` correctly.
 
 ### Step 9: PHASE 6 - Commit & Push
 
-**Create Phase 6 task (if user approves):**
+**Create Phase 6 tasks (separate for commit and push):**
+
 ```
-TaskCreate: "Commit and push changes"
-  - activeForm: "Committing and pushing"
+TaskCreate: "Commit changes"
+  - activeForm: "Committing changes"
   - blockedBy: [store to DB task]
+
+TaskCreate: "Push to remote"
+  - activeForm: "Pushing to remote"
+  - blockedBy: [commit task]
 ```
+
+**IMPORTANT**: Always create separate tasks for commit and push, even if user says "commit and push" in one request.
 
 **MANDATORY STEP 1**: After replies are posted, MUST ask: "All replies posted. Do you want to commit the changes? (yes/no)"
 
@@ -552,7 +559,7 @@ Tasks are created and managed automatically:
 | 3 | 0 (manual review) | - |
 | 4 | 1 (testing) | blockedBy: Phase 2 |
 | 5 | 3 (JSON, post, store) | blockedBy: Phase 4, then chained |
-| 6 | 1 (commit & push, optional) | blockedBy: Phase 5 store |
+| 6 | 2 (commit, push) | blockedBy: Phase 5 store, then chained |
 
 Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 
