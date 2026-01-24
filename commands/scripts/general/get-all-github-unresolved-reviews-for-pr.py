@@ -35,11 +35,22 @@ from pathlib import Path
 from typing import Any
 
 _REVIEW_DB_PATH = Path(__file__).with_name("review_db.py")
+if not _REVIEW_DB_PATH.is_file():
+    raise RuntimeError(f"review_db.py not found at {_REVIEW_DB_PATH}")
+
 _spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
 if _spec is None or _spec.loader is None:
     raise RuntimeError(f"Unable to load review_db from {_REVIEW_DB_PATH}")
+
 _review_db = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_review_db)
+try:
+    _spec.loader.exec_module(_review_db)
+except Exception as e:
+    raise RuntimeError(f"Failed to import review_db from {_REVIEW_DB_PATH}: {e}") from e
+
+if not hasattr(_review_db, "ReviewDB"):
+    raise RuntimeError(f"review_db module at {_REVIEW_DB_PATH} does not export ReviewDB")
+
 ReviewDB = _review_db.ReviewDB
 
 # Known AI reviewer usernames
@@ -425,16 +436,17 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
 
         # Check for previously dismissed similar comment
         if db:
-            path = thread.get("path", "")
-            thread_body = thread.get("body", "")
+            path = (thread.get("path") or "").strip()
+            thread_body = (thread.get("body") or "").strip()
             if path and thread_body:
                 try:
                     similar = db.find_similar_comment(owner, repo, path, thread_body)
                     if similar:
-                        enriched["status"] = "skipped"
-                        reason = similar.get("reply", "No reason recorded")
-                        enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
-                        enriched["is_auto_skipped"] = True
+                        reason = (similar.get("reply") or "").strip()
+                        if reason:
+                            enriched["status"] = "skipped"
+                            enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
+                            enriched["is_auto_skipped"] = True
                 except Exception as e:
                     print_stderr(f"Warning: Failed to query ReviewDB for similar comment: {e}")
 

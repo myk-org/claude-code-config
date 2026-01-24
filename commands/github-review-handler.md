@@ -211,6 +211,10 @@ accessibility.
 | `skip coderabbit` | Skip all remaining CodeRabbit comments |
 | `skip ai` | Skip all remaining AI comments (Qodo + CodeRabbit) |
 
+**AI Challenge Mode**: When you respond "no", Claude may challenge your decision if it independently
+believes the comment is worth addressing (regardless of the source's priority label). Claude will
+explain its reasoning once - your final decision is always respected.
+
 #### CRITICAL: Track Comment Outcomes for Reply
 
 For EVERY comment presented, track the outcome for the final reply:
@@ -233,10 +237,40 @@ For EVERY comment presented, track the outcome for the final reply:
 - **Skip to Phase 2 immediately**
 
 **For "no" response:**
-- MUST ask user: "Please provide a brief reason:"
-- Set outcome = `not_addressed`, reason = user's response
-- If user doesn't provide reason, use "User declined"
-- Continue to next comment immediately
+
+1. **AI Independent Evaluation**: Before accepting "no", Claude independently evaluates whether this comment is worth addressing, ignoring the source's priority label. Consider:
+   - Security implications (authentication, authorization, injection, data exposure)
+   - Bug/correctness risk (logic errors, edge cases, race conditions)
+   - Maintainability impact (code clarity, technical debt)
+   - Best practices violations that could cause issues later
+
+2. **Challenge Decision**:
+   - If Claude believes the comment IS worth addressing -> Challenge the user (see below)
+   - If Claude agrees with dismissal -> Accept "no" and ask for reason
+
+3. **Challenge Flow** (one challenge only):
+   ```text
+   I'd push back on this one. [Explain WHY Claude thinks it's worth addressing,
+   referencing specific concerns like security, bugs, or maintainability.
+   Be concrete, not generic.]
+
+   Do you want to reconsider? (yes/no)
+   ```
+
+   - If user says "yes" -> Create task, continue to next comment
+   - If user still says "no" -> Accept gracefully, ask for reason, continue
+
+4. **After final "no"**:
+   - MUST ask user: "Please provide a brief reason:"
+   - Set outcome = `not_addressed`, reason = user's response
+   - If user doesn't provide reason, use "User declined"
+   - Continue to next comment immediately
+
+**Key principles:**
+- Challenge ONCE only - respect user's final decision
+- Provide concrete reasoning, not generic "you should do this"
+- Be a collaborator, not a nag
+- Claude's evaluation is independent of source priority (CodeRabbit LOW might be Claude HIGH)
 
 **For "skip human" response:**
 - Ask reason once: "Please provide a brief reason for skipping all remaining human comments:"
@@ -518,6 +552,18 @@ set `status` and `reply` correctly.
 - Execute the push
 
 **CHECKPOINT**: Commit and push confirmations MUST be asked - this is the final step of the workflow
+
+### Step 10: Final Cleanup
+
+**MANDATORY**: Before completing the workflow, ensure all tasks are properly closed.
+
+1. Run `TaskList` to check for any tasks still in `pending` or `in_progress` status
+2. For each incomplete task:
+   - If the work was actually completed, mark it as `completed`
+   - If the task was skipped or no longer relevant, mark it as `completed` with a note
+3. Verify all tasks show `completed` status
+
+This prevents stale tasks from accumulating across workflow runs.
 
 ---
 

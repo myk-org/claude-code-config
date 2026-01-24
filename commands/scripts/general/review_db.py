@@ -66,30 +66,13 @@ def _get_git_root() -> Path:
 
 
 def _body_similarity(body1: str, body2: str) -> float:
-    """Calculate word overlap ratio between two bodies using Jaccard similarity.
-
-    This uses a simple word overlap algorithm:
-    - Split both bodies into lowercase word sets
-    - Calculate intersection / union (Jaccard index)
-
-    Args:
-        body1: First text body to compare.
-        body2: Second text body to compare.
-
-    Returns:
-        Float between 0.0 and 1.0 representing similarity.
-        0.0 means no overlap, 1.0 means identical word sets.
-
-    Example:
-        >>> _body_similarity("Add error handling here", "Add error handling for edge cases")
-        0.5  # 3 common words out of 6 unique words
-    """
-    words1 = set(body1.lower().split())
-    words2 = set(body2.lower().split())
-    if not words1 or not words2:
+    """Calculate word overlap ratio between two bodies using Jaccard similarity."""
+    tokens1 = set(re.findall(r"[A-Za-z0-9_]+", body1.lower()))
+    tokens2 = set(re.findall(r"[A-Za-z0-9_]+", body2.lower()))
+    if not tokens1 or not tokens2:
         return 0.0
-    intersection = words1 & words2
-    union = words1 | words2
+    intersection = tokens1 & tokens2
+    union = tokens1 | tokens2
     return len(intersection) / len(union)
 
 
@@ -130,12 +113,9 @@ class ReviewDB:
             self.db_path = db_path
 
     def _connect(self) -> sqlite3.Connection:
-        """Create a database connection with row factory for dict results.
-
-        Returns:
-            sqlite3.Connection configured for dict-like row access.
-        """
-        conn = sqlite3.connect(str(self.db_path))
+        """Create a database connection with row factory for dict results."""
+        db_uri = f"file:{self.db_path}?mode=ro"
+        conn = sqlite3.connect(db_uri, uri=True)
         conn.row_factory = sqlite3.Row
         return conn
 
