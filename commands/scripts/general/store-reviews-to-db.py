@@ -118,7 +118,7 @@ def get_current_commit_sha() -> str:
         if result.returncode != 0:
             log(f"Warning: Could not get commit SHA: {result.stderr.strip()}")
             return "unknown"
-        return result.stdout.strip()[:12]  # Short SHA (12 chars)
+        return result.stdout.strip()  # Full SHA for traceability
     except Exception as e:
         log(f"Warning: Could not get commit SHA: {e}")
         return "unknown"
@@ -195,7 +195,7 @@ def store_reviews(json_path: Path) -> None:
     # Get current commit SHA
     commit_sha = get_current_commit_sha()
 
-    log(f"Storing reviews for {owner}/{repo}#{pr_number} (commit: {commit_sha})...")
+    log(f"Storing reviews for {owner}/{repo}#{pr_number} (commit: {commit_sha[:7]})...")
 
     # Get project root and database path
     project_root = get_project_root()

@@ -254,14 +254,13 @@ class TestGetCurrentCommitSha:
     """Tests for get_current_commit_sha() git SHA detection."""
 
     @patch("subprocess.run")
-    def test_returns_short_sha(self, mock_run: Any) -> None:
-        """Should return 12-character short SHA."""
+    def test_returns_full_sha(self, mock_run: Any) -> None:
+        """Should return full SHA for traceability."""
         mock_run.return_value = MagicMock(returncode=0, stdout="abc1234567890abcdef\n", stderr="")
 
         result = store_reviews.get_current_commit_sha()
 
-        assert result == "abc123456789"  # pragma: allowlist secret
-        assert len(result) == 12
+        assert result == "abc1234567890abcdef"  # pragma: allowlist secret
 
     @patch("subprocess.run")
     def test_strips_whitespace(self, mock_run: Any) -> None:
@@ -270,7 +269,7 @@ class TestGetCurrentCommitSha:
 
         result = store_reviews.get_current_commit_sha()
 
-        assert result == "abc123456789"  # pragma: allowlist secret
+        assert result == "abc1234567890"  # pragma: allowlist secret
 
     @patch("subprocess.run")
     def test_returns_unknown_on_git_error(self, mock_run: Any) -> None:

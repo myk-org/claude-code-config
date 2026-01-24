@@ -21,6 +21,9 @@ Dependencies: gh CLI, get-pr-info.sh (in same directory)
 from __future__ import annotations
 
 import argparse
+
+# Import ReviewDB from same directory without mutating sys.path
+import importlib.util
 import json
 import os
 import re
@@ -31,9 +34,13 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-# Add script directory to path for local imports
-sys.path.insert(0, str(Path(__file__).parent))
-from review_db import ReviewDB
+_REVIEW_DB_PATH = Path(__file__).with_name("review_db.py")
+_spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
+if _spec is None or _spec.loader is None:
+    raise RuntimeError(f"Unable to load review_db from {_REVIEW_DB_PATH}")
+_review_db = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_review_db)
+ReviewDB = _review_db.ReviewDB
 
 # Known AI reviewer usernames
 QODO_USERS = ["qodo-code-review", "qodo-code-review[bot]"]
@@ -394,6 +401,13 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
     qodo: list[dict[str, Any]] = []
     coderabbit: list[dict[str, Any]] = []
 
+    # Instantiate ReviewDB once outside the loop for performance
+    db = None
+    try:
+        db = ReviewDB()
+    except Exception as e:
+        print_stderr(f"Warning: Failed to initialize ReviewDB: {e}")
+
     for thread in threads:
         author = thread.get("author")
         body = thread.get("body")
@@ -410,15 +424,19 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
         }
 
         # Check for previously dismissed similar comment
-        try:
-            db = ReviewDB()
-            similar = db.find_similar_comment(owner, repo, thread.get("path", ""), thread.get("body", ""))
-            if similar:
-                enriched["status"] = "skipped"
-                enriched["reply"] = f"Auto-skipped: Previously dismissed - {similar.get('reply', 'No reason recorded')}"
-                enriched["is_auto_skipped"] = True
-        except Exception:
-            pass  # If DB check fails, continue normally
+        if db:
+            path = thread.get("path", "")
+            thread_body = thread.get("body", "")
+            if path and thread_body:
+                try:
+                    similar = db.find_similar_comment(owner, repo, path, thread_body)
+                    if similar:
+                        enriched["status"] = "skipped"
+                        reason = similar.get("reply", "No reason recorded")
+                        enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
+                        enriched["is_auto_skipped"] = True
+                except Exception as e:
+                    print_stderr(f"Warning: Failed to query ReviewDB for similar comment: {e}")
 
         if source == "human":
             human.append(enriched)

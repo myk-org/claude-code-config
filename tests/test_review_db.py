@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     pr_number INTEGER NOT NULL,
     owner TEXT NOT NULL,
     repo TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    UNIQUE(owner, repo, pr_number)
+    commit_sha TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments (
@@ -59,8 +59,8 @@ def temp_db() -> Generator[Path, None, None]:
 
     # Insert test review
     conn.execute(
-        "INSERT INTO reviews (pr_number, owner, repo, created_at) VALUES (?, ?, ?, ?)",
-        (123, "test-org", "test-repo", "2024-01-01T00:00:00Z"),
+        "INSERT INTO reviews (pr_number, owner, repo, commit_sha, created_at) VALUES (?, ?, ?, ?, ?)",
+        (123, "test-org", "test-repo", "abc123def456", "2024-01-01T00:00:00Z"),  # pragma: allowlist secret
     )
     review_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
@@ -439,28 +439,28 @@ class TestReviewDB:
         """Test that DELETE queries are rejected."""
         db = ReviewDB(db_path=temp_db)
 
-        with pytest.raises(ValueError, match="DELETE.*not allowed"):
+        with pytest.raises(ValueError, match="Only SELECT/CTE queries are allowed"):
             db.query("DELETE FROM comments")
 
     def test_query_rejects_update(self, temp_db: Path) -> None:
         """Test that UPDATE queries are rejected."""
         db = ReviewDB(db_path=temp_db)
 
-        with pytest.raises(ValueError, match="UPDATE.*not allowed"):
+        with pytest.raises(ValueError, match="Only SELECT/CTE queries are allowed"):
             db.query("UPDATE comments SET status = 'foo'")
 
     def test_query_rejects_insert(self, temp_db: Path) -> None:
         """Test that INSERT queries are rejected."""
         db = ReviewDB(db_path=temp_db)
 
-        with pytest.raises(ValueError, match="INSERT.*not allowed"):
+        with pytest.raises(ValueError, match="Only SELECT/CTE queries are allowed"):
             db.query("INSERT INTO comments (source) VALUES ('test')")
 
     def test_query_rejects_drop(self, temp_db: Path) -> None:
         """Test that DROP queries are rejected."""
         db = ReviewDB(db_path=temp_db)
 
-        with pytest.raises(ValueError, match="DROP.*not allowed"):
+        with pytest.raises(ValueError, match="Only SELECT/CTE queries are allowed"):
             db.query("DROP TABLE comments")
 
     def test_query_case_insensitive_select(self, temp_db: Path) -> None:
@@ -592,7 +592,7 @@ class TestReviewDBCLI:
         )
 
         assert result.returncode != 0
-        assert "DELETE" in result.stderr and "not allowed" in result.stderr
+        assert "Only SELECT/CTE queries are allowed" in result.stderr
 
     def test_cli_query_rejects_multi_statement(self, temp_db: Path) -> None:
         """Test that CLI rejects multi-statement queries."""

@@ -26,6 +26,7 @@ Usage as CLI:
 
 import argparse
 import json
+import re
 import sqlite3
 import subprocess
 import sys
@@ -494,13 +495,18 @@ class ReviewDB:
             >>> for r in results:
             ...     print(f"{r['path']}: {r['cnt']} skipped")
         """
-        # Safety check: only allow SELECT statements
-        sql_stripped = sql.strip().upper()
+        # Safety check: only allow SELECT/CTE statements
+        sql_stripped = sql.strip()
+        sql_upper = sql_stripped.upper()
 
         # Block multiple statements (semicolon in middle of query)
-        sql_clean = sql.strip().rstrip(";")  # Remove trailing semicolon
+        sql_clean = sql_stripped.rstrip(";")
         if ";" in sql_clean:
             raise ValueError("Multiple SQL statements are not allowed")
+
+        # Allow SELECT and WITH (CTE) as read-only entrypoints
+        if not (sql_upper.startswith("SELECT") or sql_upper.startswith("WITH")):
+            raise ValueError("Only SELECT/CTE queries are allowed for safety")
 
         # Block dangerous keywords that shouldn't appear in read-only queries
         dangerous_keywords = [
@@ -515,11 +521,8 @@ class ReviewDB:
             "PRAGMA",
         ]
         for keyword in dangerous_keywords:
-            if keyword in sql_stripped.split():  # Check as whole words
+            if re.search(rf"\b{re.escape(keyword)}\b", sql_upper):
                 raise ValueError(f"SQL keyword '{keyword}' is not allowed in queries")
-
-        if not sql_stripped.startswith("SELECT"):
-            raise ValueError("Only SELECT statements are allowed for safety")
 
         if not self.db_path.exists():
             log(f"Database not found: {self.db_path}")
@@ -635,14 +638,21 @@ def _cmd_stats(args: argparse.Namespace) -> None:
     db_path = Path(args.db_path) if args.db_path else None
     db = ReviewDB(db_path=db_path)
 
-    if args.by_reviewer:
+    # Safely check flags with defaults (both default to False when not specified)
+    by_source = getattr(args, "by_source", False)
+    by_reviewer = getattr(args, "by_reviewer", False)
+
+    # If neither flag is set, default to by-source behavior
+    if not by_source and not by_reviewer:
+        by_source = True
+
+    if by_reviewer:
         results = db.get_reviewer_stats()
         if args.json:
             print(json.dumps(results, indent=2))
         else:
             print(_format_table(results, ["author", "total", "addressed", "not_addressed", "skipped"]))
-    else:
-        # Default to by-source
+    elif by_source:
         results = db.get_stats_by_source()
         if args.json:
             print(json.dumps(results, indent=2))
@@ -751,8 +761,7 @@ Examples:
     stats_group.add_argument(
         "--by-source",
         action="store_true",
-        default=True,
-        help="Group by source (human/qodo/coderabbit) [default]",
+        help="Group by source (human/qodo/coderabbit)",
     )
     stats_group.add_argument(
         "--by-reviewer",

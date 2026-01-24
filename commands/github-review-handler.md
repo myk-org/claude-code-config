@@ -406,6 +406,7 @@ For each comment that was processed, update its entry in the appropriate array (
 `coderabbit`):
 
 **For ADDRESSED comments:**
+
 ```json
 {
   "reply": "Done",
@@ -414,6 +415,7 @@ For each comment that was processed, update its entry in the appropriate array (
 ```
 
 **For SKIPPED comments:**
+
 ```json
 {
   "reply": "Skipped: [user's reason]",
@@ -422,6 +424,7 @@ For each comment that was processed, update its entry in the appropriate array (
 ```
 
 **For NOT ADDRESSED comments:**
+
 ```json
 {
   "reply": "Not addressed: [reason]",
@@ -430,6 +433,16 @@ For each comment that was processed, update its entry in the appropriate array (
 ```
 
 **STEP 2**: Write the updated JSON back to the file at `metadata.json_path`
+
+**STEP 2.5**: Validate JSON before proceeding
+
+After writing the JSON file, validate it to ensure proper escaping:
+
+```bash
+uv run -c "import json; json.load(open('<path from metadata.json_path>'))"
+```
+
+If validation fails, fix the JSON (usually unescaped quotes in body content) and re-validate before proceeding.
 
 **STEP 3**: Call the posting script
 
@@ -481,11 +494,13 @@ set `status` and `reply` correctly.
 
 **MANDATORY STEP 2**: If user says "yes":
 - Create commit task:
+
   ```text
   TaskCreate: "Commit changes"
     - activeForm: "Committing changes"
     - blockedBy: [store to DB task]
   ```
+
 - Execute the commit
 
 **MANDATORY STEP 3**: After commit (or commit decline), MUST ask: "Do you want to push to remote? (yes/no)"
@@ -493,11 +508,13 @@ set `status` and `reply` correctly.
 
 **MANDATORY STEP 4**: If user says "yes":
 - Create push task:
+
   ```text
   TaskCreate: "Push to remote"
     - activeForm: "Pushing to remote"
     - blockedBy: [commit task] (if commit was made, otherwise blockedBy: [store to DB task])
   ```
+
 - Execute the push
 
 **CHECKPOINT**: Commit and push confirmations MUST be asked - this is the final step of the workflow
