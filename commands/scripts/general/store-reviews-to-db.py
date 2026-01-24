@@ -106,14 +106,19 @@ def create_tables(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
 
 
-def get_current_commit_sha() -> str:
-    """Get the current git commit SHA."""
+def get_current_commit_sha(cwd: Path | None = None) -> str:
+    """Get the current git commit SHA.
+
+    Args:
+        cwd: Working directory for git command. If None, uses current directory.
+    """
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
             capture_output=True,
             text=True,
             timeout=5,
+            cwd=cwd,
         )
         if result.returncode != 0:
             log(f"Warning: Could not get commit SHA: {result.stderr.strip()}")
@@ -192,13 +197,14 @@ def store_reviews(json_path: Path) -> None:
         log("Error: JSON missing required fields (owner, repo, pr_number)")
         sys.exit(1)
 
-    # Get current commit SHA
-    commit_sha = get_current_commit_sha()
+    # Get project root and database path
+    project_root = get_project_root()
+
+    # Get current commit SHA (anchored to repo root for correctness)
+    commit_sha = get_current_commit_sha(cwd=project_root)
 
     log(f"Storing reviews for {owner}/{repo}#{pr_number} (commit: {commit_sha[:7]})...")
 
-    # Get project root and database path
-    project_root = get_project_root()
     db_path = project_root / ".claude" / "data" / "reviews.db"
 
     log(f"Database: {db_path}")

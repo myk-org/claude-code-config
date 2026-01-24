@@ -70,7 +70,7 @@ uv run ~/.claude/commands/scripts/general/review_db.py query "SELECT * FROM comm
 ### Database Schema Reference
 
 **reviews table:**
-- id, pr_number, owner, repo, created_at
+- id, pr_number, owner, repo, commit_sha, created_at
 
 **comments table:**
 - id, review_id, source, thread_id, node_id, comment_id

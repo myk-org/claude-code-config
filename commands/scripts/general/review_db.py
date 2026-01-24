@@ -33,6 +33,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 
 def log(message: str) -> None:
@@ -67,10 +68,17 @@ def _get_git_root() -> Path:
 
 def _body_similarity(body1: str, body2: str) -> float:
     """Calculate word overlap ratio between two bodies using Jaccard similarity."""
-    tokens1 = set(re.findall(r"[A-Za-z0-9_]+", body1.lower()))
-    tokens2 = set(re.findall(r"[A-Za-z0-9_]+", body2.lower()))
+    tokens1 = set(re.findall(r"[a-z0-9]+", body1.lower()))
+    tokens2 = set(re.findall(r"[a-z0-9]+", body2.lower()))
     if not tokens1 or not tokens2:
         return 0.0
+
+    # Guard against huge bodies (e.g., pasted logs)
+    if len(tokens1) > 2000:
+        tokens1 = set(list(tokens1)[:2000])
+    if len(tokens2) > 2000:
+        tokens2 = set(list(tokens2)[:2000])
+
     intersection = tokens1 & tokens2
     union = tokens1 | tokens2
     return len(intersection) / len(union)
@@ -114,7 +122,7 @@ class ReviewDB:
 
     def _connect(self) -> sqlite3.Connection:
         """Create a database connection with row factory for dict results."""
-        db_uri = f"file:{self.db_path}?mode=ro"
+        db_uri = f"file:{quote(str(self.db_path))}?mode=ro"
         conn = sqlite3.connect(db_uri, uri=True)
         conn.row_factory = sqlite3.Row
         return conn
@@ -500,8 +508,16 @@ class ReviewDB:
             "DETACH",
             "PRAGMA",
         ]
+
+        # Remove string literals before scanning for dangerous keywords
+        def _strip_sql_strings(s: str) -> str:
+            # Remove single-quoted string literals (handles escaped '' within strings)
+            return re.sub(r"'([^']|'')*'", "''", s)
+
+        sql_upper_stripped = _strip_sql_strings(sql_upper)
+
         for keyword in dangerous_keywords:
-            if re.search(rf"\b{re.escape(keyword)}\b", sql_upper):
+            if re.search(rf"\b{re.escape(keyword)}\b", sql_upper_stripped):
                 raise ValueError(f"SQL keyword '{keyword}' is not allowed in queries")
 
         if not self.db_path.exists():

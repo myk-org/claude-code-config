@@ -35,23 +35,34 @@ from pathlib import Path
 from typing import Any
 
 _REVIEW_DB_PATH = Path(__file__).with_name("review_db.py")
-if not _REVIEW_DB_PATH.is_file():
-    raise RuntimeError(f"review_db.py not found at {_REVIEW_DB_PATH}")
 
-_spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
-if _spec is None or _spec.loader is None:
-    raise RuntimeError(f"Unable to load review_db from {_REVIEW_DB_PATH}")
 
-_review_db = importlib.util.module_from_spec(_spec)
-try:
-    _spec.loader.exec_module(_review_db)
-except Exception as e:
-    raise RuntimeError(f"Failed to import review_db from {_REVIEW_DB_PATH}: {e}") from e
+def _load_review_db() -> type | None:
+    """Lazily load ReviewDB class, returning None if unavailable."""
+    try:
+        if not _REVIEW_DB_PATH.exists():
+            return None
+        spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
+        if spec is None or spec.loader is None:
+            return None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return getattr(module, "ReviewDB", None)
+    except Exception as e:
+        print_stderr(f"Warning: review_db integration disabled: {e}")
+        return None
 
-if not hasattr(_review_db, "ReviewDB"):
-    raise RuntimeError(f"review_db module at {_REVIEW_DB_PATH} does not export ReviewDB")
 
-ReviewDB = _review_db.ReviewDB
+def _body_similarity(body1: str, body2: str) -> float:
+    """Calculate word overlap ratio between two bodies using Jaccard similarity."""
+    tokens1 = set(re.findall(r"[a-z0-9]+", body1.lower()))
+    tokens2 = set(re.findall(r"[a-z0-9]+", body2.lower()))
+    if not tokens1 or not tokens2:
+        return 0.0
+    intersection = tokens1 & tokens2
+    union = tokens1 | tokens2
+    return len(intersection) / len(union)
+
 
 # Known AI reviewer usernames
 QODO_USERS = ["qodo-code-review", "qodo-code-review[bot]"]
@@ -412,12 +423,17 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
     qodo: list[dict[str, Any]] = []
     coderabbit: list[dict[str, Any]] = []
 
-    # Instantiate ReviewDB once outside the loop for performance
+    # Lazily load ReviewDB and instantiate once outside the loop for performance
+    ReviewDB = _load_review_db()
     db = None
-    try:
-        db = ReviewDB()
-    except Exception as e:
-        print_stderr(f"Warning: Failed to initialize ReviewDB: {e}")
+    if ReviewDB:
+        try:
+            db = ReviewDB(db_path=None)  # Auto-detect path
+        except Exception as e:
+            print_stderr(f"Warning: Failed to initialize ReviewDB: {e}")
+
+    # Cache dismissed comments per-path for performance
+    dismissed_by_path: dict[str, list[dict[str, Any]]] = {}
 
     for thread in threads:
         author = thread.get("author")
@@ -440,9 +456,23 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
             thread_body = (thread.get("body") or "").strip()
             if path and thread_body:
                 try:
-                    similar = db.find_similar_comment(owner, repo, path, thread_body)
-                    if similar:
-                        reason = (similar.get("reply") or "").strip()
+                    # Cache dismissed comments per-path for performance
+                    if path not in dismissed_by_path:
+                        dismissed_by_path[path] = [
+                            c for c in db.get_dismissed_comments(owner, repo) if c.get("path") == path and c.get("body")
+                        ]
+
+                    # Find best matching dismissed comment
+                    best = None
+                    best_score = 0.0
+                    for prev in dismissed_by_path[path]:
+                        score = _body_similarity(thread_body, prev["body"])
+                        if score >= 0.6 and score > best_score:
+                            best = prev
+                            best_score = score
+
+                    if best:
+                        reason = (best.get("reply") or "").strip()
                         if reason:
                             enriched["status"] = "skipped"
                             enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
