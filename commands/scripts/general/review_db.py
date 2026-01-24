@@ -30,7 +30,7 @@ import re
 import sqlite3
 import subprocess
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -122,7 +122,8 @@ class ReviewDB:
 
     def _connect(self) -> sqlite3.Connection:
         """Create a database connection with row factory for dict results."""
-        db_uri = f"file:{quote(str(self.db_path))}?mode=ro"
+        db_path = self.db_path.resolve()
+        db_uri = f"file:{quote(str(db_path), safe='/')}?mode=ro"
         conn = sqlite3.connect(db_uri, uri=True)
         conn.row_factory = sqlite3.Row
         return conn
@@ -387,7 +388,7 @@ class ReviewDB:
                     if len(cluster) >= min_occurrences:
                         # Get most common reason
                         reasons = [c["reason"] for c in cluster if c["reason"]]
-                        most_common_reason = max(set(reasons), key=reasons.count) if reasons else None
+                        most_common_reason = Counter(reasons).most_common(1)[0][0] if reasons else None
                         patterns.append({
                             "path": path,
                             "body_sample": cluster[0]["body"],
