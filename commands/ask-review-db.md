@@ -85,5 +85,5 @@ For questions not covered by predefined queries, use the `query` subcommand with
 Example: "Show me all HIGH-priority comments that were skipped"
 
 ```bash
-uv run ~/.claude/commands/scripts/general/review_db.py query 'SELECT path, line, body, reply FROM comments WHERE priority = "HIGH" AND status = "skipped"' --json
+uv run ~/.claude/commands/scripts/general/review_db.py query 'SELECT path, line, body, reply FROM comments WHERE priority = "HIGH" AND status = "skipped" LIMIT 100' --json
 ```

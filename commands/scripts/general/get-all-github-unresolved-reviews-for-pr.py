@@ -36,24 +36,36 @@ from typing import Any
 
 _REVIEW_DB_PATH = Path(__file__).with_name("review_db.py")
 
+_REVIEW_DB_CACHE: tuple[type | None, Any | None] | None = None
+
 
 def _load_review_db() -> tuple[type | None, Any | None]:
-    """Lazily load ReviewDB and _body_similarity, returning (None, None) if unavailable."""
+    """Lazily load ReviewDB and similarity function, returning (None, None) if unavailable."""
+    global _REVIEW_DB_CACHE
+    if _REVIEW_DB_CACHE is not None:
+        return _REVIEW_DB_CACHE
+
     try:
         if not _REVIEW_DB_PATH.exists():
-            return None, None
+            _REVIEW_DB_CACHE = (None, None)
+            return _REVIEW_DB_CACHE
+
         spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
         if spec is None or spec.loader is None:
-            return None, None
+            _REVIEW_DB_CACHE = (None, None)
+            return _REVIEW_DB_CACHE
+
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        return getattr(module, "ReviewDB", None), getattr(module, "_body_similarity", None)
+        _REVIEW_DB_CACHE = (getattr(module, "ReviewDB", None), getattr(module, "_body_similarity", None))
+        return _REVIEW_DB_CACHE
     except Exception as e:
         print_stderr(f"Warning: review_db integration disabled: {e}")
-        return None, None
+        _REVIEW_DB_CACHE = (None, None)
+        return _REVIEW_DB_CACHE
 
 
-def _body_similarity(body1: str, body2: str) -> float:
+def _fallback_body_similarity(body1: str, body2: str) -> float:
     """Calculate word overlap ratio between two bodies using Jaccard similarity."""
     tokens1 = set(re.findall(r"[a-z0-9]+", body1.lower()))
     tokens2 = set(re.findall(r"[a-z0-9]+", body2.lower()))
@@ -432,7 +444,7 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
 
     # Lazily load ReviewDB and instantiate once outside the loop for performance
     ReviewDB, sim_fn = _load_review_db()
-    similarity = sim_fn or _body_similarity  # Use imported or fallback
+    similarity = sim_fn or _fallback_body_similarity  # Use imported or fallback
     db = None
     if ReviewDB:
         try:

@@ -223,11 +223,8 @@ def store_reviews(json_path: Path) -> None:
         create_tables(conn)
 
         # Insert new review record (append-only, never update)
+        # RuntimeError in insert_review handles invalid lastrowid
         review_id = insert_review(conn, owner, repo, pr_number, commit_sha)
-        if not review_id:
-            log("Error: Failed to insert review record")
-            conn.rollback()
-            sys.exit(1)
 
         # Count comments by source
         counts: dict[str, int] = {"human": 0, "qodo": 0, "coderabbit": 0}
