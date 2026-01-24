@@ -138,7 +138,10 @@ def insert_review(conn: sqlite3.Connection, owner: str, repo: str, pr_number: in
         "INSERT INTO reviews (owner, repo, pr_number, commit_sha, created_at) VALUES (?, ?, ?, ?, ?)",
         (owner, repo, pr_number, commit_sha, created_at),
     )
-    return cursor.lastrowid or 0
+    review_id = cursor.lastrowid
+    if not review_id:
+        raise RuntimeError("Failed to insert review record")
+    return int(review_id)
 
 
 def insert_comment(conn: sqlite3.Connection, review_id: int, source: str, comment: dict[str, Any]) -> None:
@@ -221,6 +224,10 @@ def store_reviews(json_path: Path) -> None:
 
         # Insert new review record (append-only, never update)
         review_id = insert_review(conn, owner, repo, pr_number, commit_sha)
+        if not review_id:
+            log("Error: Failed to insert review record")
+            conn.rollback()
+            sys.exit(1)
 
         # Count comments by source
         counts: dict[str, int] = {"human": 0, "qodo": 0, "coderabbit": 0}

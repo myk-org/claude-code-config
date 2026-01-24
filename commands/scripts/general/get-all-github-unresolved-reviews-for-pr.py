@@ -37,20 +37,20 @@ from typing import Any
 _REVIEW_DB_PATH = Path(__file__).with_name("review_db.py")
 
 
-def _load_review_db() -> type | None:
-    """Lazily load ReviewDB class, returning None if unavailable."""
+def _load_review_db() -> tuple[type | None, Any | None]:
+    """Lazily load ReviewDB and _body_similarity, returning (None, None) if unavailable."""
     try:
         if not _REVIEW_DB_PATH.exists():
-            return None
+            return None, None
         spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
         if spec is None or spec.loader is None:
-            return None
+            return None, None
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        return getattr(module, "ReviewDB", None)
+        return getattr(module, "ReviewDB", None), getattr(module, "_body_similarity", None)
     except Exception as e:
         print_stderr(f"Warning: review_db integration disabled: {e}")
-        return None
+        return None, None
 
 
 def _body_similarity(body1: str, body2: str) -> float:
@@ -431,7 +431,8 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
     coderabbit: list[dict[str, Any]] = []
 
     # Lazily load ReviewDB and instantiate once outside the loop for performance
-    ReviewDB = _load_review_db()
+    ReviewDB, sim_fn = _load_review_db()
+    similarity = sim_fn or _body_similarity  # Use imported or fallback
     db = None
     if ReviewDB:
         try:
@@ -477,7 +478,10 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                     best = None
                     best_score = 0.0
                     for prev in dismissed_by_path.get(path, []):
-                        score = _body_similarity(thread_body, prev["body"])
+                        prev_body = (prev.get("body") or "").strip()
+                        if not prev_body:
+                            continue
+                        score = similarity(thread_body, prev_body)
                         if score >= 0.6 and score > best_score:
                             best = prev
                             best_score = score
@@ -486,6 +490,7 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                         reason = (best.get("reply") or "").strip()
                         if reason:
                             enriched["status"] = "skipped"
+                            enriched["skip_reason"] = reason
                             enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
                             enriched["is_auto_skipped"] = True
                 except Exception as e:

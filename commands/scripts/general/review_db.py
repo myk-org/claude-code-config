@@ -494,7 +494,7 @@ class ReviewDB:
             raise ValueError("Multiple SQL statements are not allowed")
 
         # Allow SELECT and WITH (CTE) as read-only entrypoints
-        if not (sql_upper.startswith("SELECT") or sql_upper.startswith("WITH")):
+        if not sql_upper.startswith(("SELECT", "WITH")):
             raise ValueError("Only SELECT/CTE queries are allowed for safety")
 
         # Block dangerous keywords that shouldn't appear in read-only queries
@@ -510,10 +510,20 @@ class ReviewDB:
             "PRAGMA",
         ]
 
-        # Remove string literals before scanning for dangerous keywords
+        # Helper functions to strip SQL comments and strings before safety checks
+        def _strip_sql_comments(s: str) -> str:
+            # Remove block comments then line comments
+            s = re.sub(r"/\*.*?\*/", "", s, flags=re.DOTALL)
+            s = re.sub(r"--[^\n]*", "", s)
+            return s
+
         def _strip_sql_strings(s: str) -> str:
             # Remove single-quoted string literals (handles escaped '' within strings)
             return re.sub(r"'([^']|'')*'", "''", s)
+
+        # Strip comments and get uppercase version for safety checks
+        sql_for_checks = _strip_sql_comments(sql_stripped)
+        sql_upper = sql_for_checks.upper()
 
         sql_upper_stripped = _strip_sql_strings(sql_upper)
 
@@ -582,7 +592,7 @@ def _format_table(data: list[dict[str, Any]], columns: list[str] | None = None) 
             values.append(val.ljust(widths[col]))
         rows.append(" | ".join(values))
 
-    return "\n".join([header, separator] + rows)
+    return "\n".join([header, separator, *rows])
 
 
 def _cmd_dismissed(args: argparse.Namespace) -> None:
