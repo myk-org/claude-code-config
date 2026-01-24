@@ -37,9 +37,9 @@ This workflow uses Claude Code's task system for progress tracking. Tasks are cr
 - Phase 1: Collection tasks (fetch, present to user)
 - Phase 2: Execution tasks (one per approved comment, run in parallel)
 - Phase 3: Review task
-- Phase 4: Post tasks (update JSON, post & resolve, store to DB)
-- Phase 5: Test task
-- Phase 6: Push task (optional)
+- Phase 4: Test task (just testing)
+- Phase 5: Post tasks (update JSON, post & resolve, store to DB)
+- Phase 6: Commit & Push task (optional)
 
 ### Step 1: Fetch all review comments using the unified fetcher
 
@@ -337,27 +337,49 @@ no changes needed):
 
   ```text
   Do you approve proceeding without these changes? (yes/no)
-  - yes: Proceed to Phase 4 (Post Review Replies)
+  - yes: Proceed to Phase 4 (Testing)
   - no: Reconsider and implement the changes
   ```
 
 - **If user says "no"**: Re-implement the changes as requested
-- **If user says "yes"**: Proceed to Phase 4 (Post Review Replies)
+- **If user says "yes"**: Proceed to Phase 4 (Testing)
 
 **If ALL approved tasks were implemented**: Proceed directly to Phase 4
 
 **CHECKPOINT**: User has reviewed and approved all unimplemented changes OR all approved tasks were implemented
 
-### Step 7: PHASE 4 - Post Review Replies
+### Step 7: PHASE 4 - Testing
 
-**MANDATORY**: After Phase 3 approval (or if all tasks were implemented), update the JSON file and post replies.
+**Create Phase 4 task:**
+```
+TaskCreate: "Run tests with coverage"
+  - activeForm: "Running tests"
+  - blockedBy: [all execution tasks]
+```
 
-**Create Phase 4 tasks with dependencies:**
+**MANDATORY STEP 1**: Run all tests WITH coverage
+
+**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
+- **If tests pass AND coverage passes**: Proceed to Phase 5 (Post Review Replies)
+- **If tests pass BUT coverage fails**: This is a FAILURE
+  - Analyze coverage gaps and add missing tests
+  - Re-run tests with coverage until BOTH pass
+- **If tests fail**:
+  - Analyze and fix test failures
+  - Re-run until tests pass
+
+**CHECKPOINT**: Tests AND coverage BOTH pass
+
+### Step 8: PHASE 5 - Post Review Replies
+
+**MANDATORY**: After Phase 4 (tests pass), update the JSON file and post replies.
+
+**Create Phase 5 tasks with dependencies:**
 
 ```
 TaskCreate: "Update JSON with replies and status"
   - activeForm: "Updating JSON"
-  - blockedBy: [all execution tasks]
+  - blockedBy: [test task]
 
 TaskCreate: "Post replies and resolve threads"
   - activeForm: "Posting replies"
@@ -406,20 +428,20 @@ For each comment that was processed, update its entry in the appropriate array (
 **STEP 3**: Call the posting script
 
 ```bash
-uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py /tmp/claude/pr-<number>-reviews.json
+uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py "<path from metadata.json_path>"
 ```
 
-Where `<number>` is the PR number from `metadata.pr_number`.
+Use the actual path value from `metadata.json_path` in the JSON output.
 
 **STEP 4**: Store reviews to database
 
 After posting replies, persist the review data to the database for analytics:
 
 ```bash
-uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py /tmp/claude/pr-<number>-reviews.json
+uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py "<path from metadata.json_path>"
 ```
 
-Where `<number>` is the PR number from `metadata.pr_number`.
+Use the actual path value from `metadata.json_path` in the JSON output.
 
 This stores all processed reviews (addressed, skipped, not_addressed) for future reference and statistics.
 
@@ -445,47 +467,25 @@ set `status` and `reply` correctly.
 
 **CHECKPOINT**: Replies posted to PR
 
-### Step 8: PHASE 5 - Testing & Commit
-
-**Create Phase 5 task:**
-```
-TaskCreate: "Run tests with coverage"
-  - activeForm: "Running tests"
-  - blockedBy: [store to DB task]
-```
-
-**MANDATORY STEP 1**: Run all tests WITH coverage
-
-**MANDATORY STEP 2**: Check BOTH test results AND coverage results:
-- **If tests pass AND coverage passes**: MUST ask: "All tests and coverage pass. Do you want to commit
-  the changes? (yes/no)"
-  - If user says "yes": Commit the changes
-  - If user says "no": Acknowledge and proceed to Phase 6 checkpoint (ask about push anyway)
-- **If tests pass BUT coverage fails**: This is a FAILURE - do NOT ask about commit yet
-  - Analyze coverage gaps and add missing tests
-  - Re-run tests with coverage until BOTH pass
-- **If tests fail**:
-  - Analyze and fix test failures
-  - Re-run until tests pass
-
-**CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
-
-### Step 9: PHASE 6 - Push to Remote
+### Step 9: PHASE 6 - Commit & Push
 
 **Create Phase 6 task (if user approves):**
 ```
-TaskCreate: "Push changes to remote"
-  - activeForm: "Pushing to remote"
-  - blockedBy: [test task]
+TaskCreate: "Commit and push changes"
+  - activeForm: "Committing and pushing"
+  - blockedBy: [store to DB task]
 ```
 
-**MANDATORY STEP 1**: After successful commit (or commit decline), MUST ask: "Changes committed
-successfully. Do you want to push the changes to remote? (yes/no)"
+**MANDATORY STEP 1**: After replies are posted, MUST ask: "All replies posted. Do you want to commit the changes? (yes/no)"
+
+**MANDATORY STEP 2**: If user says "yes": Commit the changes
+
+**MANDATORY STEP 3**: After commit (or commit decline), MUST ask: "Do you want to push to remote? (yes/no)"
 - If no commit was made, ask: "Do you want to push any existing commits to remote? (yes/no)"
 
-**MANDATORY STEP 2**: If user says "yes": Push the changes to remote
+**MANDATORY STEP 4**: If user says "yes": Push the changes to remote
 
-**CHECKPOINT**: Push confirmation MUST be asked - this is the final step of the workflow
+**CHECKPOINT**: Commit and push confirmations MUST be asked - this is the final step of the workflow
 
 ---
 
@@ -517,30 +517,29 @@ that CANNOT be skipped:
 - **MANDATORY STEP 4**: If user says no, re-implement the changes
 - **CHECKPOINT**: User has approved all unimplemented changes OR all tasks were implemented
 
-### PHASE 4: Post Review Replies
-
-- Update JSON file with reply messages and status for each comment
-- Call the posting script to post replies
-- Script handles source-specific resolution (human: only addressed resolved; AI: all resolved)
-- **CHECKPOINT**: All replies posted successfully
-
-### PHASE 5: Testing & Commit Phase
+### PHASE 4: Testing Phase
 
 - **MANDATORY STEP 1**: Run all tests WITH coverage
 - **MANDATORY STEP 2**: Check BOTH tests AND coverage - only proceed if BOTH pass
   - If tests pass BUT coverage fails - FIX coverage gaps (this is a FAILURE)
   - If tests fail - FIX test failures
-- **MANDATORY STEP 3**: Once BOTH pass, MUST ask user: "All tests and coverage pass. Do you want to commit
-  the changes? (yes/no)"
-- **MANDATORY STEP 4**: If user says yes: Commit the changes
-- **CHECKPOINT**: Tests AND coverage BOTH pass, AND commit confirmation asked (even if user declined)
+- **CHECKPOINT**: Tests AND coverage BOTH pass
 
-### PHASE 6: Push Phase
+### PHASE 5: Post Review Replies
 
-- **MANDATORY STEP 1**: After successful commit, MUST ask user: "Changes committed successfully. Do you want to
-  push the changes to remote? (yes/no)"
-- **MANDATORY STEP 2**: If user says yes: Push the changes to remote
-- **CHECKPOINT**: Push confirmation asked (even if user declined)
+- Update JSON file with reply messages and status for each comment
+- Call the posting script to post replies
+- Script handles source-specific resolution (human: only addressed resolved; AI: all resolved)
+- Store reviews to database
+- **CHECKPOINT**: All replies posted successfully
+
+### PHASE 6: Commit & Push Phase
+
+- **MANDATORY STEP 1**: After replies posted, MUST ask user: "All replies posted. Do you want to commit the changes? (yes/no)"
+- **MANDATORY STEP 2**: If user says yes: Commit the changes
+- **MANDATORY STEP 3**: MUST ask user: "Do you want to push to remote? (yes/no)"
+- **MANDATORY STEP 4**: If user says yes: Push the changes to remote
+- **CHECKPOINT**: Commit and push confirmations asked (even if user declined)
 
 ### Task Tracking Throughout Workflow
 
@@ -551,9 +550,9 @@ Tasks are created and managed automatically:
 | 1 | 1 (collection) | None |
 | 2 | N (one per approved comment) | blockedBy: Phase 1 |
 | 3 | 0 (manual review) | - |
-| 4 | 3 (JSON, post, store) | blockedBy: Phase 2, then chained |
-| 5 | 1 (testing) | blockedBy: Phase 4 store |
-| 6 | 1 (push, optional) | blockedBy: Phase 5 |
+| 4 | 1 (testing) | blockedBy: Phase 2 |
+| 5 | 3 (JSON, post, store) | blockedBy: Phase 4, then chained |
+| 6 | 1 (commit & push, optional) | blockedBy: Phase 5 store |
 
 Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 
@@ -570,7 +569,11 @@ Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 **If tests OR coverage fail**:
 
 - Analyze and fix failures (add tests for coverage gaps)
-- Re-run tests with coverage until BOTH pass before proceeding to Phase 5's commit confirmation.
+- Re-run tests with coverage until BOTH pass before proceeding to Phase 5.
+
+**If commit or push is declined**:
+
+- Respect user's decision and proceed to next step (Phase 6's commit confirmation is mandatory to ask, but user can decline)
 
 ---
 
@@ -605,10 +608,10 @@ uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-
 
 **Posting script:**
 ```bash
-uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py /tmp/claude/pr-<number>-reviews.json
+uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py "<path from metadata.json_path>"
 ```
 
 **Storage script:**
 ```bash
-uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py /tmp/claude/pr-<number>-reviews.json
+uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py "<path from metadata.json_path>"
 ```
