@@ -89,12 +89,14 @@ The script returns structured JSON containing:
 
 #### Thread ID Guard
 
-**CRITICAL**: Before processing any comment, validate the `thread_id`:
+**CRITICAL**: Before processing any comment, validate the `thread_id`.
 
 If any item has a missing, empty, or whitespace-only `thread_id`:
 - Set `status: "skipped"`
 - Set `reply: "Skipped: No valid thread_id available to reply/resolve"`
 - Exclude from user presentation
+- **Still write this update back to `metadata.json_path`** (so the final JSON reflects the outcome)
+- **Do not expect a reply/resolution to be posted** for these items (the posting script cannot act without a valid `thread_id`)
 
 #### Filter Positive Comments
 
@@ -133,9 +135,9 @@ For duplicates:
 1. **Merge** all arrays: `human` + `qodo` + `coderabbit`
 2. **Filter** out: positive comments, pre-rejected, missing thread_id, duplicates
 3. **Sort by priority** across ALL sources:
-   - ALL HIGH priority first (regardless of source)
-   - ALL MEDIUM priority second
-   - ALL LOW priority last
+   - ALL HIGH-priority first (regardless of source)
+   - ALL MEDIUM-priority second
+   - ALL LOW-priority last
 
 ### Step 3: Display Summary Header
 
@@ -251,7 +253,7 @@ Processing X approved tasks:
 
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
-2. **Process all approved tasks:**
+1. **Process all approved tasks:**
    - **CRITICAL**: Process ALL tasks created during Phase 1
    - **NEVER skip tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
    - Route to appropriate specialists based on comment content
