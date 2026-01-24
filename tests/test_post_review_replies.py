@@ -122,14 +122,17 @@ class TestRunGraphql:
 
     @patch("subprocess.run")
     def test_variables_passed_correctly(self, mock_run: Any) -> None:
-        """Variables should be passed with -f flag."""
+        """Variables should be passed with -f flag, handling multiple and special characters."""
         mock_run.return_value = MagicMock(returncode=0, stdout='{"data": {}}', stderr="")
 
-        post_review_replies.run_graphql("query", {"key": "value"})
+        variables = {"key1": "value1", "key2": "value with spaces"}
+        post_review_replies.run_graphql("query", variables)
 
         call_args = mock_run.call_args[0][0]
-        assert "-f" in call_args
-        assert "key=value" in call_args
+        # 3 -f flags: 1 for query, 2 for variables
+        assert call_args.count("-f") == 3
+        assert "key1=value1" in call_args
+        assert "key2=value with spaces" in call_args
 
 
 # =============================================================================
@@ -830,13 +833,16 @@ class TestMainInputValidation:
 
         assert excinfo.value.code == 1
 
-    def test_no_arguments(self) -> None:
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_no_arguments(self, mock_deps: Any) -> None:
         """No arguments should show usage and exit."""
+        del mock_deps  # Injected by @patch decorator, unused in test
         with patch("sys.argv", ["script"]):
             with pytest.raises(SystemExit) as excinfo:
                 post_review_replies.main()
 
-        assert excinfo.value.code == 1
+        # argparse exits with 2 for missing required arguments
+        assert excinfo.value.code == 2
 
 
 # =============================================================================

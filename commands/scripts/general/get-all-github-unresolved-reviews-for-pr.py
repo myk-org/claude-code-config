@@ -144,7 +144,11 @@ def run_gh_graphql(query: str, variables: dict[str, Any]) -> dict[str, Any] | No
         else:
             cmd.extend(["-f", f"{key}={value}"])
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        print_stderr("Error: GraphQL query timed out after 120 seconds")
+        return None
 
     if result.returncode != 0:
         return None
@@ -164,7 +168,11 @@ def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
         cmd.append("--paginate")
     cmd.append(endpoint)
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        print_stderr(f"Error: API call to {endpoint} timed out after 120 seconds")
+        return None
 
     if result.returncode != 0:
         return None
@@ -197,7 +205,8 @@ def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
             return merged
         else:
             return json.loads(result.stdout)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print_stderr(f"Error parsing JSON from gh api: {e}")
         return None
 
 
@@ -477,11 +486,16 @@ def main() -> int:
 
         # Get PR info
         print_stderr("Getting PR information...")
-        result = subprocess.run(
-            [str(pr_info_script)],
-            capture_output=True,
-            text=True,
-        )
+        try:
+            result = subprocess.run(
+                [str(pr_info_script)],
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            print_stderr("Error: PR info script timed out after 120 seconds")
+            return 1
 
         if result.returncode != 0:
             print_stderr(f"Error: Failed to get PR information: {result.stderr.strip()}")

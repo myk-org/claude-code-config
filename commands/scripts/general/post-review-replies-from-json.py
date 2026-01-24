@@ -49,6 +49,7 @@ Output:
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import shutil
@@ -73,20 +74,6 @@ def check_dependencies() -> None:
             sys.exit(1)
 
 
-def show_usage() -> None:
-    """Show usage information and exit."""
-    eprint(f"Usage: {sys.argv[0]} <json_path>")
-    eprint("")
-    eprint("Reads review JSON and posts replies/resolves threads.")
-    eprint("")
-    eprint("Arguments:")
-    eprint("  json_path  Path to JSON file with review data")
-    eprint("")
-    eprint("Example:")
-    eprint(f"  {sys.argv[0]} /tmp/claude/reviews.json")
-    sys.exit(1)
-
-
 def run_graphql(query: str, variables: dict[str, str]) -> tuple[bool, dict[str, Any] | str]:
     """
     Run a GraphQL query via gh api graphql.
@@ -97,7 +84,10 @@ def run_graphql(query: str, variables: dict[str, str]) -> tuple[bool, dict[str, 
     for key, value in variables.items():
         cmd.extend(["-f", f"{key}={value}"])
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        return False, "GraphQL query timed out after 120 seconds"
 
     # Combine stdout and stderr for error reporting (matching bash behavior)
     output = result.stdout or result.stderr or ""
@@ -237,13 +227,13 @@ def apply_updates_to_json(json_path: Path, updates: list[dict[str, Any]]) -> Non
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
         os.replace(tmp_path, json_path)
-    except Exception:
+    except (json.JSONDecodeError, OSError, KeyError) as exc:
         # Clean up temp file on error
         try:
             os.unlink(tmp_path)
         except OSError:
             pass
-        eprint("Error: Failed to apply JSON updates")
+        eprint(f"Error: Failed to apply JSON updates: {exc}")
         sys.exit(1)
 
 
@@ -251,11 +241,19 @@ def main() -> None:
     """Main entry point."""
     check_dependencies()
 
-    # Validate arguments
-    if len(sys.argv) < 2:
-        show_usage()
+    # Parse arguments
+    parser = argparse.ArgumentParser(
+        description="Post replies and resolve review threads from a JSON file",
+        add_help=True,
+    )
+    parser.add_argument(
+        "json_path",
+        type=Path,
+        help="Path to JSON file with review data",
+    )
+    args = parser.parse_args()
 
-    json_path = Path(sys.argv[1])
+    json_path = args.json_path
 
     # Validate JSON file exists
     if not json_path.is_file():

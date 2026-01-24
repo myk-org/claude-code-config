@@ -14,6 +14,7 @@ import json
 import sqlite3
 import subprocess
 import sys
+import time
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -280,6 +281,9 @@ class TestUpsertReview:
         cursor = conn.execute("SELECT created_at FROM reviews")
         first_created_at = cursor.fetchone()[0]
 
+        # Wait briefly to ensure timestamp changes
+        time.sleep(0.01)
+
         # Re-run
         store_reviews.upsert_review(conn, "owner", "repo", 123)
         cursor = conn.execute("SELECT created_at FROM reviews")
@@ -288,6 +292,8 @@ class TestUpsertReview:
         # Created at should be updated (or at least exist)
         assert first_created_at is not None
         assert second_created_at is not None
+        # Verify the timestamp actually changed between runs
+        assert second_created_at >= first_created_at
         conn.close()
 
     def test_different_prs_get_different_ids(self, tmp_path: Path) -> None:
@@ -916,12 +922,15 @@ class TestEdgeCases:
         json_path = tmp_path / "reviews.json"
         json_path.write_text(json.dumps(data))
 
-        # Should handle string pr_number (or fail gracefully)
-        try:
-            store_reviews.store_reviews(json_path)
-        except (TypeError, sqlite3.InterfaceError):
-            # If it fails, that's expected behavior for non-int pr_number
-            pass
+        store_reviews.store_reviews(json_path)
+
+        # Verify pr_number is stored as integer 123
+        db_path = tmp_path / ".claude" / "data" / "reviews.db"
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.execute("SELECT pr_number FROM reviews")
+        pr_number = cursor.fetchone()[0]
+        assert pr_number == 123
+        conn.close()
 
     @patch.object(store_reviews, "get_project_root")
     def test_creates_data_directory(self, mock_root: Any, tmp_path: Path) -> None:

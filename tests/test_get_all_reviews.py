@@ -780,6 +780,11 @@ class TestGetThreadKey:
         """Empty thread should return None."""
         assert get_all_reviews.get_thread_key({}) is None
 
+    def test_empty_string_ids(self) -> None:
+        """Empty string IDs should be treated as missing."""
+        thread = {"thread_id": "", "node_id": "", "comment_id": 789}
+        assert get_all_reviews.get_thread_key(thread) == "c:789"
+
 
 class TestMergeThreads:
     """Tests for merge_threads() deduplication."""
