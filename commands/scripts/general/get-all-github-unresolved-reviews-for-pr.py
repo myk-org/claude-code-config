@@ -601,7 +601,7 @@ def main() -> int:
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(final_output, f, indent=2)
-            tmp_path.rename(json_path)
+            os.replace(tmp_path, json_path)
         except Exception:
             tmp_path.unlink(missing_ok=True)
             raise

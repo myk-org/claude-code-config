@@ -248,19 +248,14 @@ class TestCheckDependencies:
         mock_which.assert_called_once_with("gh")
 
     @patch("shutil.which")
-    def test_pr_info_script_missing(self, mock_which: Any, tmp_path: Path) -> None:
+    def test_pr_info_script_missing(self, mock_which: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Missing PR info script should exit with error."""
         mock_which.return_value = "/usr/bin/gh"
 
-        # Temporarily change script directory
-        original_file = get_all_reviews.__file__
-        try:
-            get_all_reviews.__file__ = str(tmp_path / "fake-script.py")
-            with pytest.raises(SystemExit) as excinfo:
-                get_all_reviews.check_dependencies()
-            assert excinfo.value.code == 1
-        finally:
-            get_all_reviews.__file__ = original_file
+        monkeypatch.setattr(get_all_reviews, "__file__", str(tmp_path / "fake-script.py"))
+        with pytest.raises(SystemExit) as excinfo:
+            get_all_reviews.check_dependencies()
+        assert excinfo.value.code == 1
 
     @patch("shutil.which")
     def test_all_dependencies_available(self, mock_which: Any) -> None:
