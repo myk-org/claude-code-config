@@ -91,6 +91,12 @@ def ensure_database_directory(db_path: Path) -> None:
     if not db_dir.exists():
         log(f"Creating directory: {db_dir}")
         db_dir.mkdir(parents=True, mode=0o700)
+    else:
+        # Ensure existing directory has correct permissions
+        try:
+            db_dir.chmod(0o700)
+        except OSError:
+            pass
 
 
 def create_tables(conn: sqlite3.Connection) -> None:
@@ -205,6 +211,8 @@ def store_reviews(json_path: Path) -> None:
     # Open database and perform operations in a transaction
     conn = sqlite3.connect(str(db_path))
     try:
+        # Enable foreign key constraints for referential integrity
+        conn.execute("PRAGMA foreign_keys=ON")
         create_tables(conn)
 
         # Upsert review record

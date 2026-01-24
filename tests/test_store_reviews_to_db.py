@@ -11,7 +11,9 @@ This test suite covers:
 
 import importlib.util
 import json
+import os
 import sqlite3
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -114,12 +116,15 @@ class TestEnsureDatabaseDirectory:
 
     def test_directory_has_correct_permissions(self, tmp_path: Path) -> None:
         """Should create directory with 0700 permissions."""
+        if os.name == "nt":
+            pytest.skip("POSIX permissions are not reliable on Windows")
+
         db_path = tmp_path / "newdir" / "reviews.db"
 
         store_reviews.ensure_database_directory(db_path)
 
-        # Check permissions (octal)
-        mode = db_path.parent.stat().st_mode & 0o777
+        # Check permissions using stat.S_IMODE for clearer permission masking
+        mode = stat.S_IMODE(db_path.parent.stat().st_mode)
         assert mode == 0o700
 
     def test_existing_directory_unchanged(self, tmp_path: Path) -> None:

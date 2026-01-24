@@ -12,6 +12,7 @@ This test suite covers:
 
 import importlib.util
 import re
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -329,6 +330,15 @@ class TestRunGhGraphql:
         assert "-F" in call_args
         assert "count=42" in call_args
 
+    @patch("subprocess.run")
+    def test_timeout_returns_none(self, mock_run: Any) -> None:
+        """Timed out query should return None."""
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd=["gh"], timeout=120)
+
+        result = get_all_reviews.run_gh_graphql("query { test }", {})
+
+        assert result is None
+
 
 # =============================================================================
 # Tests for run_gh_api()
@@ -359,8 +369,8 @@ class TestRunGhApi:
     @patch("subprocess.run")
     def test_paginated_response(self, mock_run: Any) -> None:
         """Paginated response should merge arrays."""
-        # Simulate paginated output (multiple JSON arrays concatenated)
-        mock_run.return_value = MagicMock(returncode=0, stdout='[{"id": 1}][{"id": 2}]', stderr="")
+        # With --slurp, gh wraps pages in an outer array: [[page1], [page2]]
+        mock_run.return_value = MagicMock(returncode=0, stdout='[[{"id": 1}], [{"id": 2}]]', stderr="")
 
         result = get_all_reviews.run_gh_api("/repos/owner/repo/comments", paginate=True)
 
@@ -368,13 +378,14 @@ class TestRunGhApi:
 
     @patch("subprocess.run")
     def test_paginate_flag(self, mock_run: Any) -> None:
-        """Paginate=True should add --paginate flag."""
+        """Paginate=True should add --paginate and --slurp flags."""
         mock_run.return_value = MagicMock(returncode=0, stdout="[]", stderr="")
 
         get_all_reviews.run_gh_api("/test", paginate=True)
 
         call_args = mock_run.call_args[0][0]
         assert "--paginate" in call_args
+        assert "--slurp" in call_args
 
 
 # =============================================================================

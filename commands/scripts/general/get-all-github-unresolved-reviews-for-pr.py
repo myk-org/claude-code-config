@@ -165,7 +165,7 @@ def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
     """Run a REST API call via gh api. Returns parsed JSON or None on error."""
     cmd = ["gh", "api"]
     if paginate:
-        cmd.append("--paginate")
+        cmd.extend(["--paginate", "--slurp"])
     cmd.append(endpoint)
 
     try:
@@ -178,33 +178,18 @@ def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
         return None
 
     try:
-        # For paginated results, gh outputs multiple JSON arrays concatenated
-        if paginate:
-            # Parse as multiple JSON arrays and merge
-            arrays = []
-            decoder = json.JSONDecoder()
-            text = result.stdout.strip()
-            idx = 0
-            while idx < len(text):
-                try:
-                    obj, end_idx = decoder.raw_decode(text, idx)
-                    arrays.append(obj)
-                    idx = end_idx
-                    # Skip whitespace
-                    while idx < len(text) and text[idx] in " \t\n\r":
-                        idx += 1
-                except json.JSONDecodeError:
-                    break
-            # Flatten arrays
+        data = json.loads(result.stdout)
+        # With --slurp, paginated results are wrapped in an outer array
+        # Flatten nested arrays for consistency
+        if paginate and isinstance(data, list):
             merged = []
-            for arr in arrays:
-                if isinstance(arr, list):
-                    merged.extend(arr)
+            for item in data:
+                if isinstance(item, list):
+                    merged.extend(item)
                 else:
-                    merged.append(arr)
+                    merged.append(item)
             return merged
-        else:
-            return json.loads(result.stdout)
+        return data
     except json.JSONDecodeError as e:
         print_stderr(f"Error parsing JSON from gh api: {e}")
         return None

@@ -213,12 +213,36 @@ def apply_updates_to_json(json_path: Path, updates: list[dict[str, Any]]) -> Non
     with open(json_path, encoding="utf-8") as f:
         data = json.load(f)
 
-    # Apply updates
+    # Valid fields that can be updated
+    valid_fields = {"posted_at", "resolved_at"}
+
+    # Apply updates with validation
     for update in updates:
         cat = update["cat"]
         idx = update["idx"]
         field = update["field"]
         ts = update["ts"]
+
+        # Validate category exists
+        if cat not in data:
+            eprint(f"Warning: category '{cat}' not found in JSON, skipping update")
+            continue
+
+        # Validate index is valid
+        if not isinstance(data[cat], list) or idx < 0 or idx >= len(data[cat]):
+            eprint(f"Warning: invalid index {idx} for category '{cat}', skipping update")
+            continue
+
+        # Validate field is valid
+        if field not in valid_fields:
+            eprint(f"Warning: invalid field '{field}', expected one of {valid_fields}, skipping update")
+            continue
+
+        # Validate timestamp is non-empty string
+        if not isinstance(ts, str) or not ts:
+            eprint(f"Warning: invalid timestamp '{ts}' for {cat}[{idx}].{field}, skipping update")
+            continue
+
         data[cat][idx][field] = ts
 
     # Write atomically via temp file
