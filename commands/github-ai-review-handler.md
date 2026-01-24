@@ -109,7 +109,7 @@ Run the unified fetcher to get all unresolved reviews from both Qodo and CodeRab
 **Script path:**
 
 ```text
-~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 ```
 
 **Usage:**
@@ -117,13 +117,13 @@ Run the unified fetcher to get all unresolved reviews from both Qodo and CodeRab
 1. **No URL provided** - Fetches all unresolved from both:
 
    ```bash
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
    ```
 
 2. **URL provided** - Fetches all unresolved plus ensures specific review is included:
 
    ```bash
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "<review_url>"
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py "<review_url>"
    ```
 
 **Examples:**
@@ -148,7 +148,7 @@ to track origin.
 - `status`: `"skipped"`
 - `reply`: `"Skipped: No valid thread_id available to reply/resolve"`
 
-This prevents downstream failures when calling `post-review-replies-from-json.sh`.
+This prevents downstream failures when calling `post-review-replies-from-json.py`.
 
 ### Step 2.5: Detect Duplicates and Filter Positive Comments
 
@@ -397,7 +397,7 @@ Write the updated JSON back to the same file path.
 After updating the JSON, call the posting script:
 
 ```bash
-~/.claude/commands/scripts/general/post-review-replies-from-json.sh "<json_path>"
+uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py "<json_path>"
 ```
 
 Where `<json_path>` is the value from `metadata.json_path` (e.g., `/tmp/claude/pr-123-reviews.json`).
@@ -466,7 +466,7 @@ that CANNOT be skipped:
 
 - Update JSON file (at `metadata.json_path`) with `reply` and `status` for each processed comment
 - For duplicates, update BOTH the Qodo AND CodeRabbit threads
-- Call the posting script: `post-review-replies-from-json.sh <json_path>`
+- Call the posting script: `post-review-replies-from-json.py <json_path>`
 - The script posts replies, resolves threads, and updates timestamps
 - **CHECKPOINT**: All replies posted to ALL AI sources
 

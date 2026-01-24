@@ -50,12 +50,12 @@ workflow.**
 
 ```bash
 # No URL provided (default)
-~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 ```
 
 ```bash
 # URL provided
-~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "https://github.com/owner/repo/pull/123#pullrequestreview-456"
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py "https://github.com/owner/repo/pull/123#pullrequestreview-456"
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
@@ -81,13 +81,13 @@ workflow.**
 1. **No URL provided**: Fetches all unresolved inline review comments from the PR
 
    ```bash
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
    ```
 
 2. **PR review URL provided**: Fetches comments from that specific review plus all unresolved
 
    ```bash
-   ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh "https://github.com/owner/repo/pull/123#pullrequestreview-2838476123"
+   uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py "https://github.com/owner/repo/pull/123#pullrequestreview-2838476123"
    ```
 
 **If user provides NO input:**
@@ -377,7 +377,7 @@ Write the updated JSON back to the same file path.
 After updating the JSON file, call the posting script:
 
 ```bash
-~/.claude/commands/scripts/general/post-review-replies-from-json.sh "/tmp/claude/pr-<number>-reviews.json"
+uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py "/tmp/claude/pr-<number>-reviews.json"
 ```
 
 Replace the quoted path with the exact value from `metadata.json_path` (paste it directly; do not create shell variables).

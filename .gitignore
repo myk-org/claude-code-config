@@ -48,7 +48,10 @@
 !commands/scripts/general/get-reviewer-from-url.sh
 !commands/scripts/general/get-unresolved-review-threads.sh
 !commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
+!commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 !commands/scripts/general/post-review-replies-from-json.sh
+!commands/scripts/general/post-review-replies-from-json.py
+!commands/scripts/general/store-reviews-to-db.py
 !commands/scripts/github-pr-review/
 !commands/scripts/github-pr-review/get-claude-md.sh
 !commands/scripts/github-pr-review/get-pr-diff.sh
@@ -86,7 +89,10 @@
 !tests/
 !tests/__init__.py
 !tests/test_git_protection.py
+!tests/test_get_all_reviews.py
+!tests/test_post_review_replies.py
 !tests/test_rule_enforcer.py
+!tests/test_store_reviews_to_db.py
 
 # Config files
 !tox.toml
@@ -96,3 +102,6 @@
 
 # Qodo config
 !.pr_agent.toml
+
+# Claude data directory (SQLite databases)
+.claude/data/
