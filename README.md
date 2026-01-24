@@ -4,10 +4,10 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 
 ## Requirements
 
-- **Claude Code v2.1.19 or higher** - This configuration uses v2.1.19 features (see below)
+- **Claude Code v2.1.17 or higher** - This configuration uses v2.1.17 features (see below)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager (used for running hook scripts)
 
-### Claude Code v2.1.19 Features Used
+### Claude Code v2.1.17 Features Used
 
 This configuration leverages these features:
 

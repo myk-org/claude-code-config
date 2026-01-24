@@ -31,6 +31,10 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+# Add script directory to path for local imports
+sys.path.insert(0, str(Path(__file__).parent))
+from review_db import ReviewDB
+
 # Known AI reviewer usernames
 QODO_USERS = ["qodo-code-review", "qodo-code-review[bot]"]
 CODERABBIT_USERS = ["coderabbitai", "coderabbitai[bot]"]
@@ -384,8 +388,8 @@ def fetch_review_comments(owner: str, repo: str, pr_number: str, review_id: str)
     ]
 
 
-def process_and_categorize(threads: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
-    """Process threads: add source and priority, categorize."""
+def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str) -> dict[str, list[dict[str, Any]]]:
+    """Process threads: add source and priority, categorize, and auto-skip previously dismissed."""
     human: list[dict[str, Any]] = []
     qodo: list[dict[str, Any]] = []
     coderabbit: list[dict[str, Any]] = []
@@ -404,6 +408,17 @@ def process_and_categorize(threads: list[dict[str, Any]]) -> dict[str, list[dict
             "reply": None,
             "status": "pending",
         }
+
+        # Check for previously dismissed similar comment
+        try:
+            db = ReviewDB()
+            similar = db.find_similar_comment(owner, repo, thread.get("path", ""), thread.get("body", ""))
+            if similar:
+                enriched["status"] = "skipped"
+                enriched["reply"] = f"Auto-skipped: Previously dismissed - {similar.get('reply', 'No reason recorded')}"
+                enriched["is_auto_skipped"] = True
+        except Exception:
+            pass  # If DB check fails, continue normally
 
         if source == "human":
             human.append(enriched)
@@ -575,7 +590,7 @@ def main() -> int:
 
         # Process and categorize threads
         print_stderr("Categorizing threads by source...")
-        categorized = process_and_categorize(all_threads)
+        categorized = process_and_categorize(all_threads, owner, repo)
 
         # Build final output
         final_output = {
@@ -613,6 +628,11 @@ def main() -> int:
         qodo_count = len(final_output["qodo"])
         coderabbit_count = len(final_output["coderabbit"])
         print_stderr(f"Categories: human={human_count}, qodo={qodo_count}, coderabbit={coderabbit_count}")
+
+        # Count auto-skipped comments
+        auto_skipped = sum(1 for cat in categorized.values() for c in cat if c.get("is_auto_skipped"))
+        if auto_skipped:
+            print_stderr(f"Auto-skipped {auto_skipped} previously dismissed comment(s)")
 
         # Output to stdout
         print(json.dumps(final_output, indent=2))

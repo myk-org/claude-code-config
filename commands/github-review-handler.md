@@ -48,7 +48,7 @@ This workflow uses Claude Code's task system for progress tracking. Tasks are cr
 **ALWAYS use this exact command format:**
 
 ```bash
-uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py "[optional_url]"
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 ```
 
 **That's it. Nothing more. No script extraction. No variable assignments. Just one simple command.**
@@ -111,6 +111,7 @@ If any item has a missing, empty, or whitespace-only `thread_id`:
 - Exclude from user presentation
 - **Still write this update back to `metadata.json_path`** (so the final JSON reflects the outcome)
 - **Do not expect a reply/resolution to be posted** for these items (the posting script cannot act without a valid `thread_id`)
+- **Treat these entries as immutable for the rest of the workflow** (do not re-present them, do not change their `status`/`reply` in later phases)
 
 #### Filter Positive Comments
 
@@ -138,6 +139,10 @@ Detect duplicates across sources using these criteria:
 - Overlapping or adjacent line ranges (within 5 lines)
 - Similar title/category (fuzzy match on body content)
 
+**Stable identifier (required):**
+- Prefer `thread_id` when present (unique per thread)
+- Otherwise use a deterministic composite: `<source>:<comment_id>`
+
 For duplicates:
 - Mark with `is_duplicate: true` on the duplicate
 - Set `duplicate_of: <stable_id>` pointing to the original
@@ -159,14 +164,13 @@ For duplicates:
 
 ```text
 Found XX comments (Human: X, Qodo: X, CodeRabbit: X)
-
-Responses: yes | no | all | skip human | skip qodo | skip coderabbit | skip ai
 ```
 
 ### Step 4: PHASE 1 - Collect User Decisions (COLLECTION ONLY - NO PROCESSING)
 
 **Create Phase 1 task:**
-```
+
+```text
 TaskCreate: "Collect user decisions on review comments"
   - activeForm: "Collecting decisions"
   - Status: in_progress
@@ -266,7 +270,8 @@ After ALL comments have been reviewed in Phase 1:
 **Create execution tasks (parallel):**
 
 For each approved comment, create a task:
-```
+
+```text
 TaskCreate: "[File: path, Line: N] Brief description from body"
   - activeForm: "Implementing [brief]"
   - Status: pending
@@ -351,7 +356,8 @@ no changes needed):
 ### Step 7: PHASE 4 - Testing
 
 **Create Phase 4 task:**
-```
+
+```text
 TaskCreate: "Run tests with coverage"
   - activeForm: "Running tests"
   - blockedBy: [all execution tasks]
@@ -376,7 +382,7 @@ TaskCreate: "Run tests with coverage"
 
 **Create Phase 5 tasks with dependencies:**
 
-```
+```text
 TaskCreate: "Update JSON with replies and status"
   - activeForm: "Updating JSON"
   - blockedBy: [test task]
@@ -471,7 +477,7 @@ set `status` and `reply` correctly.
 
 **Create Phase 6 tasks (separate for commit and push):**
 
-```
+```text
 TaskCreate: "Commit changes"
   - activeForm: "Committing changes"
   - blockedBy: [store to DB task]
@@ -610,7 +616,7 @@ Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 
 **Fetcher script:**
 ```bash
-uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py "[optional_url]"
+uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 ```
 
 **Posting script:**

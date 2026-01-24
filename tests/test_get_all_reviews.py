@@ -674,7 +674,7 @@ class TestProcessAndCategorize:
             {"author": "regular-user", "body": "Please fix this"},
         ]
 
-        result = get_all_reviews.process_and_categorize(threads)
+        result = get_all_reviews.process_and_categorize(threads, "test-owner", "test-repo")
 
         assert len(result["human"]) == 1
         assert len(result["qodo"]) == 0
@@ -686,7 +686,7 @@ class TestProcessAndCategorize:
             {"author": "qodo-code-review[bot]", "body": "Consider this change"},
         ]
 
-        result = get_all_reviews.process_and_categorize(threads)
+        result = get_all_reviews.process_and_categorize(threads, "test-owner", "test-repo")
 
         assert len(result["human"]) == 0
         assert len(result["qodo"]) == 1
@@ -698,7 +698,7 @@ class TestProcessAndCategorize:
             {"author": "coderabbitai[bot]", "body": "Suggestion here"},
         ]
 
-        result = get_all_reviews.process_and_categorize(threads)
+        result = get_all_reviews.process_and_categorize(threads, "test-owner", "test-repo")
 
         assert len(result["human"]) == 0
         assert len(result["qodo"]) == 0
@@ -710,7 +710,7 @@ class TestProcessAndCategorize:
             {"author": "user", "body": "Comment"},
         ]
 
-        result = get_all_reviews.process_and_categorize(threads)
+        result = get_all_reviews.process_and_categorize(threads, "test-owner", "test-repo")
 
         assert result["human"][0]["source"] == "human"
 
@@ -720,7 +720,7 @@ class TestProcessAndCategorize:
             {"author": "user", "body": "Security vulnerability here"},
         ]
 
-        result = get_all_reviews.process_and_categorize(threads)
+        result = get_all_reviews.process_and_categorize(threads, "test-owner", "test-repo")
 
         assert result["human"][0]["priority"] == "HIGH"
 
@@ -730,7 +730,7 @@ class TestProcessAndCategorize:
             {"author": "user", "body": "Comment"},
         ]
 
-        result = get_all_reviews.process_and_categorize(threads)
+        result = get_all_reviews.process_and_categorize(threads, "test-owner", "test-repo")
 
         assert result["human"][0]["reply"] is None
         assert result["human"][0]["status"] == "pending"
@@ -747,7 +747,7 @@ class TestProcessAndCategorize:
             },
         ]
 
-        result = get_all_reviews.process_and_categorize(threads)
+        result = get_all_reviews.process_and_categorize(threads, "test-owner", "test-repo")
 
         assert result["human"][0]["thread_id"] == "t1"
         assert result["human"][0]["path"] == "file.py"

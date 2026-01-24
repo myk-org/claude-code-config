@@ -3,10 +3,11 @@
 This test suite covers:
 - Database creation and schema validation
 - JSON parsing and storage
-- UPSERT behavior (update existing records)
+- Append-only behavior (insert new records, never update)
 - Comment storage across categories
 - Error handling for missing files/invalid JSON
 - Project root detection
+- Commit SHA detection
 """
 
 import importlib.util
@@ -174,9 +175,13 @@ class TestCreateTables:
 
         cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='index'")
         indexes = [row[0] for row in cursor.fetchall()]
+        # Comment indexes
         assert "idx_comments_review_id" in indexes
         assert "idx_comments_source" in indexes
         assert "idx_comments_status" in indexes
+        # Review indexes
+        assert "idx_reviews_pr" in indexes
+        assert "idx_reviews_commit" in indexes
         conn.close()
 
     def test_idempotent(self, tmp_path: Path) -> None:
@@ -203,6 +208,7 @@ class TestCreateTables:
         assert "pr_number" in columns
         assert "owner" in columns
         assert "repo" in columns
+        assert "commit_sha" in columns
         assert "created_at" in columns
         conn.close()
 
@@ -240,71 +246,92 @@ class TestCreateTables:
 
 
 # =============================================================================
-# Tests for upsert_review()
+# Tests for get_current_commit_sha()
 # =============================================================================
 
 
-class TestUpsertReview:
-    """Tests for upsert_review() insert/update behavior."""
+class TestGetCurrentCommitSha:
+    """Tests for get_current_commit_sha() git SHA detection."""
+
+    @patch("subprocess.run")
+    def test_returns_short_sha(self, mock_run: Any) -> None:
+        """Should return 12-character short SHA."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="abc1234567890abcdef\n", stderr="")
+
+        result = store_reviews.get_current_commit_sha()
+
+        assert result == "abc123456789"  # pragma: allowlist secret
+        assert len(result) == 12
+
+    @patch("subprocess.run")
+    def test_strips_whitespace(self, mock_run: Any) -> None:
+        """Should strip trailing whitespace from SHA."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="  abc1234567890  \n", stderr="")
+
+        result = store_reviews.get_current_commit_sha()
+
+        assert result == "abc123456789"  # pragma: allowlist secret
+
+    @patch("subprocess.run")
+    def test_returns_unknown_on_git_error(self, mock_run: Any) -> None:
+        """Should return 'unknown' on git error."""
+        mock_run.return_value = MagicMock(returncode=128, stdout="", stderr="fatal: not a git repository")
+
+        result = store_reviews.get_current_commit_sha()
+
+        assert result == "unknown"
+
+    @patch("subprocess.run")
+    def test_returns_unknown_on_exception(self, mock_run: Any) -> None:
+        """Should return 'unknown' on exception."""
+        mock_run.side_effect = Exception("Unexpected error")
+
+        result = store_reviews.get_current_commit_sha()
+
+        assert result == "unknown"
+
+
+# =============================================================================
+# Tests for insert_review()
+# =============================================================================
+
+
+class TestInsertReview:
+    """Tests for insert_review() append-only behavior."""
 
     def test_inserts_new_review(self, tmp_path: Path) -> None:
-        """Should insert new review."""
+        """Should insert new review with commit SHA."""
         db_path = tmp_path / "test.db"
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        review_id = store_reviews.upsert_review(conn, "owner", "repo", 123)
+        review_id = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
 
-        cursor = conn.execute("SELECT id, owner, repo, pr_number FROM reviews WHERE id = ?", (review_id,))
+        cursor = conn.execute("SELECT id, owner, repo, pr_number, commit_sha FROM reviews WHERE id = ?", (review_id,))
         row = cursor.fetchone()
         assert row is not None
         assert row[1] == "owner"
         assert row[2] == "repo"
         assert row[3] == 123
+        assert row[4] == "abc1234567"  # pragma: allowlist secret
         conn.close()
 
-    def test_returns_existing_review_id(self, tmp_path: Path) -> None:
-        """Should return existing review ID on duplicate."""
+    def test_always_creates_new_record(self, tmp_path: Path) -> None:
+        """Should always create new record even for same PR (append-only)."""
         db_path = tmp_path / "test.db"
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        review_id1 = store_reviews.upsert_review(conn, "owner", "repo", 123)
-        review_id2 = store_reviews.upsert_review(conn, "owner", "repo", 123)
+        review_id1 = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
+        review_id2 = store_reviews.insert_review(conn, "owner", "repo", 123, "def7890123")
 
-        assert review_id1 == review_id2
+        # Different IDs for each insert
+        assert review_id1 != review_id2
+
+        # Both records exist
+        cursor = conn.execute("SELECT COUNT(*) FROM reviews WHERE pr_number = 123")
+        assert cursor.fetchone()[0] == 2
         conn.close()
-
-    def test_updates_created_at_on_rerun(self, tmp_path: Path) -> None:
-        """Should update created_at on re-run."""
-        # Configure mock to return different timestamps on each call
-        first_timestamp = "2024-01-15T10:00:00+00:00"
-        second_timestamp = "2024-01-15T10:05:00+00:00"
-
-        mock_datetime_obj = MagicMock()
-        mock_datetime_obj.isoformat.side_effect = [first_timestamp, second_timestamp]
-
-        with patch.object(store_reviews, "datetime") as mock_datetime:
-            mock_datetime.now.return_value = mock_datetime_obj
-
-            db_path = tmp_path / "test.db"
-            conn = sqlite3.connect(str(db_path))
-            store_reviews.create_tables(conn)
-
-            store_reviews.upsert_review(conn, "owner", "repo", 123)
-            cursor = conn.execute("SELECT created_at FROM reviews")
-            first_created_at = cursor.fetchone()[0]
-
-            # Re-run (mock returns second timestamp)
-            store_reviews.upsert_review(conn, "owner", "repo", 123)
-            cursor = conn.execute("SELECT created_at FROM reviews")
-            second_created_at = cursor.fetchone()[0]
-
-            conn.close()
-
-        # Verify exact timestamps
-        assert first_created_at == first_timestamp
-        assert second_created_at == second_timestamp
 
     def test_different_prs_get_different_ids(self, tmp_path: Path) -> None:
         """Should get different IDs for different PRs."""
@@ -312,80 +339,22 @@ class TestUpsertReview:
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        review_id1 = store_reviews.upsert_review(conn, "owner", "repo", 123)
-        review_id2 = store_reviews.upsert_review(conn, "owner", "repo", 456)
+        review_id1 = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
+        review_id2 = store_reviews.insert_review(conn, "owner", "repo", 456, "abc1234567")
 
         assert review_id1 != review_id2
         conn.close()
 
-    def test_unique_constraint(self, tmp_path: Path) -> None:
-        """Should enforce unique constraint on owner/repo/pr_number."""
+    def test_stores_commit_sha(self, tmp_path: Path) -> None:
+        """Should store commit SHA correctly."""
         db_path = tmp_path / "test.db"
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        store_reviews.upsert_review(conn, "owner", "repo", 123)
+        review_id = store_reviews.insert_review(conn, "owner", "repo", 123, "my_commit_sha")
 
-        # Count should be 1 after multiple upserts
-        store_reviews.upsert_review(conn, "owner", "repo", 123)
-        cursor = conn.execute("SELECT COUNT(*) FROM reviews")
-        assert cursor.fetchone()[0] == 1
-        conn.close()
-
-
-# =============================================================================
-# Tests for delete_existing_comments()
-# =============================================================================
-
-
-class TestDeleteExistingComments:
-    """Tests for delete_existing_comments() cleanup."""
-
-    def test_deletes_comments_for_review(self, tmp_path: Path) -> None:
-        """Should delete all comments for a review."""
-        db_path = tmp_path / "test.db"
-        conn = sqlite3.connect(str(db_path))
-        store_reviews.create_tables(conn)
-
-        review_id = store_reviews.upsert_review(conn, "owner", "repo", 123)
-        store_reviews.insert_comment(conn, review_id, "human", {"body": "test1"})
-        store_reviews.insert_comment(conn, review_id, "human", {"body": "test2"})
-
-        deleted_count = store_reviews.delete_existing_comments(conn, review_id)
-
-        assert deleted_count == 2
-        cursor = conn.execute("SELECT COUNT(*) FROM comments WHERE review_id = ?", (review_id,))
-        assert cursor.fetchone()[0] == 0
-        conn.close()
-
-    def test_does_not_delete_other_reviews(self, tmp_path: Path) -> None:
-        """Should not delete comments from other reviews."""
-        db_path = tmp_path / "test.db"
-        conn = sqlite3.connect(str(db_path))
-        store_reviews.create_tables(conn)
-
-        review_id1 = store_reviews.upsert_review(conn, "owner", "repo", 123)
-        review_id2 = store_reviews.upsert_review(conn, "owner", "repo", 456)
-        store_reviews.insert_comment(conn, review_id1, "human", {"body": "test1"})
-        store_reviews.insert_comment(conn, review_id2, "human", {"body": "test2"})
-
-        store_reviews.delete_existing_comments(conn, review_id1)
-
-        cursor = conn.execute("SELECT COUNT(*) FROM comments WHERE review_id = ?", (review_id2,))
-        assert cursor.fetchone()[0] == 1
-        conn.close()
-
-    def test_returns_zero_for_no_comments(self, tmp_path: Path) -> None:
-        """Should return 0 when no comments exist."""
-        db_path = tmp_path / "test.db"
-        conn = sqlite3.connect(str(db_path))
-        store_reviews.create_tables(conn)
-
-        review_id = store_reviews.upsert_review(conn, "owner", "repo", 123)
-
-        deleted_count = store_reviews.delete_existing_comments(conn, review_id)
-
-        assert deleted_count == 0
+        cursor = conn.execute("SELECT commit_sha FROM reviews WHERE id = ?", (review_id,))
+        assert cursor.fetchone()[0] == "my_commit_sha"
         conn.close()
 
 
@@ -403,7 +372,7 @@ class TestInsertComment:
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        review_id = store_reviews.upsert_review(conn, "owner", "repo", 123)
+        review_id = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
         comment = {
             "thread_id": "t1",
             "node_id": "n1",
@@ -433,7 +402,7 @@ class TestInsertComment:
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        review_id = store_reviews.upsert_review(conn, "owner", "repo", 123)
+        review_id = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
 
         store_reviews.insert_comment(conn, review_id, "qodo", {"body": "test"})
 
@@ -447,7 +416,7 @@ class TestInsertComment:
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        review_id = store_reviews.upsert_review(conn, "owner", "repo", 123)
+        review_id = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
         comment = {"body": "Minimal comment"}
 
         store_reviews.insert_comment(conn, review_id, "human", comment)
@@ -464,7 +433,7 @@ class TestInsertComment:
         conn = sqlite3.connect(str(db_path))
         store_reviews.create_tables(conn)
 
-        review_id = store_reviews.upsert_review(conn, "owner", "repo", 123)
+        review_id = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
 
         store_reviews.insert_comment(conn, review_id, "human", {"body": "human comment"})
         store_reviews.insert_comment(conn, review_id, "qodo", {"body": "qodo comment"})
@@ -544,9 +513,11 @@ class TestStoreReviews:
         conn.close()
 
     @patch.object(store_reviews, "get_project_root")
-    def test_deletes_old_comments_on_rerun(self, mock_root: Any, tmp_path: Path) -> None:
-        """Should delete old comments on re-run."""
+    @patch.object(store_reviews, "get_current_commit_sha")
+    def test_appends_on_rerun(self, mock_sha: Any, mock_root: Any, tmp_path: Path) -> None:
+        """Should append new review on re-run, not delete old."""
         mock_root.return_value = tmp_path
+        mock_sha.side_effect = ["commit_first", "commit_second"]
 
         # First run
         data = {
@@ -562,16 +533,27 @@ class TestStoreReviews:
         json_path = self._create_test_json(tmp_path, data)
         store_reviews.store_reviews(json_path)
 
-        # Second run with different comments
+        # Second run with different comments (different commit)
         data["human"] = [{"body": "new comment"}]
         json_path = self._create_test_json(tmp_path, data)
         store_reviews.store_reviews(json_path)
 
         db_path = tmp_path / ".claude" / "data" / "reviews.db"
         conn = sqlite3.connect(str(db_path))
-        cursor = conn.execute("SELECT body FROM comments")
+
+        # Both reviews should exist
+        cursor = conn.execute("SELECT COUNT(*) FROM reviews WHERE pr_number = 1")
+        review_count = cursor.fetchone()[0]
+        assert review_count == 2
+
+        # All comments should exist (2 old + 1 new = 3)
+        cursor = conn.execute("SELECT body FROM comments ORDER BY id")
         bodies = [row[0] for row in cursor.fetchall()]
-        assert bodies == ["new comment"]
+        assert len(bodies) == 3
+        assert "old comment 1" in bodies
+        assert "old comment 2" in bodies
+        assert "new comment" in bodies
+
         conn.close()
 
     @patch.object(store_reviews, "get_project_root")
