@@ -475,28 +475,30 @@ set `status` and `reply` correctly.
 
 ### Step 9: PHASE 6 - Commit & Push
 
-**Create Phase 6 tasks (separate for commit and push):**
-
-```text
-TaskCreate: "Commit changes"
-  - activeForm: "Committing changes"
-  - blockedBy: [store to DB task]
-
-TaskCreate: "Push to remote"
-  - activeForm: "Pushing to remote"
-  - blockedBy: [commit task]
-```
-
-**IMPORTANT**: Always create separate tasks for commit and push, even if user says "commit and push" in one request.
+**IMPORTANT**: Tasks are created ONLY after user confirms each step. Never create tasks before asking.
 
 **MANDATORY STEP 1**: After replies are posted, MUST ask: "All replies posted. Do you want to commit the changes? (yes/no)"
 
-**MANDATORY STEP 2**: If user says "yes": Commit the changes
+**MANDATORY STEP 2**: If user says "yes":
+- Create commit task:
+  ```text
+  TaskCreate: "Commit changes"
+    - activeForm: "Committing changes"
+    - blockedBy: [store to DB task]
+  ```
+- Execute the commit
 
 **MANDATORY STEP 3**: After commit (or commit decline), MUST ask: "Do you want to push to remote? (yes/no)"
 - If no commit was made, ask: "Do you want to push any existing commits to remote? (yes/no)"
 
-**MANDATORY STEP 4**: If user says "yes": Push the changes to remote
+**MANDATORY STEP 4**: If user says "yes":
+- Create push task:
+  ```text
+  TaskCreate: "Push to remote"
+    - activeForm: "Pushing to remote"
+    - blockedBy: [commit task] (if commit was made, otherwise blockedBy: [store to DB task])
+  ```
+- Execute the push
 
 **CHECKPOINT**: Commit and push confirmations MUST be asked - this is the final step of the workflow
 
@@ -548,10 +550,11 @@ that CANNOT be skipped:
 
 ### PHASE 6: Commit & Push Phase
 
+- **IMPORTANT**: Create tasks ONLY after user confirms each step (not before asking)
 - **MANDATORY STEP 1**: After replies posted, MUST ask user: "All replies posted. Do you want to commit the changes? (yes/no)"
-- **MANDATORY STEP 2**: If user says yes: Commit the changes
+- **MANDATORY STEP 2**: If user says yes: Create commit task, then execute
 - **MANDATORY STEP 3**: MUST ask user: "Do you want to push to remote? (yes/no)"
-- **MANDATORY STEP 4**: If user says yes: Push the changes to remote
+- **MANDATORY STEP 4**: If user says yes: Create push task, then execute
 - **CHECKPOINT**: Commit and push confirmations asked (even if user declined)
 
 ### Task Tracking Throughout Workflow
@@ -565,7 +568,7 @@ Tasks are created and managed automatically:
 | 3 | 0 (manual review) | - |
 | 4 | 1 (testing) | blockedBy: Phase 2 |
 | 5 | 3 (JSON, post, store) | blockedBy: Phase 4, then chained |
-| 6 | 2 (commit, push) | blockedBy: Phase 5 store, then chained |
+| 6 | 0-2 (commit if yes, push if yes) | Created after user confirms each |
 
 Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 
