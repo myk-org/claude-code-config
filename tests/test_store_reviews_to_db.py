@@ -14,7 +14,6 @@ import json
 import sqlite3
 import subprocess
 import sys
-import time
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -273,28 +272,34 @@ class TestUpsertReview:
 
     def test_updates_created_at_on_rerun(self, tmp_path: Path) -> None:
         """Should update created_at on re-run."""
-        db_path = tmp_path / "test.db"
-        conn = sqlite3.connect(str(db_path))
-        store_reviews.create_tables(conn)
+        # Configure mock to return different timestamps on each call
+        first_timestamp = "2024-01-15T10:00:00+00:00"
+        second_timestamp = "2024-01-15T10:05:00+00:00"
 
-        store_reviews.upsert_review(conn, "owner", "repo", 123)
-        cursor = conn.execute("SELECT created_at FROM reviews")
-        first_created_at = cursor.fetchone()[0]
+        mock_datetime_obj = MagicMock()
+        mock_datetime_obj.isoformat.side_effect = [first_timestamp, second_timestamp]
 
-        # Wait briefly to ensure timestamp changes
-        time.sleep(0.01)
+        with patch.object(store_reviews, "datetime") as mock_datetime:
+            mock_datetime.now.return_value = mock_datetime_obj
 
-        # Re-run
-        store_reviews.upsert_review(conn, "owner", "repo", 123)
-        cursor = conn.execute("SELECT created_at FROM reviews")
-        second_created_at = cursor.fetchone()[0]
+            db_path = tmp_path / "test.db"
+            conn = sqlite3.connect(str(db_path))
+            store_reviews.create_tables(conn)
 
-        # Created at should be updated (or at least exist)
-        assert first_created_at is not None
-        assert second_created_at is not None
-        # Verify the timestamp actually changed between runs
-        assert second_created_at >= first_created_at
-        conn.close()
+            store_reviews.upsert_review(conn, "owner", "repo", 123)
+            cursor = conn.execute("SELECT created_at FROM reviews")
+            first_created_at = cursor.fetchone()[0]
+
+            # Re-run (mock returns second timestamp)
+            store_reviews.upsert_review(conn, "owner", "repo", 123)
+            cursor = conn.execute("SELECT created_at FROM reviews")
+            second_created_at = cursor.fetchone()[0]
+
+            conn.close()
+
+        # Verify exact timestamps
+        assert first_created_at == first_timestamp
+        assert second_created_at == second_timestamp
 
     def test_different_prs_get_different_ids(self, tmp_path: Path) -> None:
         """Should get different IDs for different PRs."""

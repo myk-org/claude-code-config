@@ -189,7 +189,7 @@ def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
                 try:
                     obj, end_idx = decoder.raw_decode(text, idx)
                     arrays.append(obj)
-                    idx += end_idx
+                    idx = end_idx
                     # Skip whitespace
                     while idx < len(text) and text[idx] in " \t\n\r":
                         idx += 1
