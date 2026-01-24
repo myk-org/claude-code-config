@@ -348,6 +348,18 @@ uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py /tmp/
 
 Where `<number>` is the PR number from `metadata.pr_number`.
 
+**STEP 4**: Store reviews to database
+
+After posting replies, persist the review data to the database for analytics:
+
+```bash
+uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py /tmp/claude/pr-<number>-reviews.json
+```
+
+Where `<number>` is the PR number from `metadata.pr_number`.
+
+This stores all processed reviews (addressed, skipped, not_addressed) for future reference and statistics.
+
 ---
 
 #### CRITICAL: Source-Specific Resolution Behavior
@@ -502,4 +514,9 @@ uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-
 **Posting script:**
 ```bash
 uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py /tmp/claude/pr-<number>-reviews.json
+```
+
+**Storage script:**
+```bash
+uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py /tmp/claude/pr-<number>-reviews.json
 ```
