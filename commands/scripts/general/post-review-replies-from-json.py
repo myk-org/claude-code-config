@@ -89,17 +89,19 @@ def run_graphql(query: str, variables: dict[str, str]) -> tuple[bool, dict[str, 
     except subprocess.TimeoutExpired:
         return False, "GraphQL query timed out after 120 seconds"
 
-    # Combine stdout and stderr for error reporting (matching bash behavior)
-    output = result.stdout or result.stderr or ""
+    # Use stdout for JSON parsing, combined output for error reporting
+    stdout = result.stdout or ""
+    stderr = result.stderr or ""
+    error_output = (stdout + ("\n" + stderr if stderr else "")).strip()
 
     if result.returncode != 0:
-        return False, output.strip()
+        return False, error_output
 
-    # Validate JSON response
+    # Validate JSON response - parse stdout only
     try:
-        data = json.loads(output)
+        data = json.loads(stdout)
     except json.JSONDecodeError:
-        return False, output.strip()
+        return False, error_output
 
     # Check for GraphQL errors
     if data.get("errors") and len(data["errors"]) > 0:
