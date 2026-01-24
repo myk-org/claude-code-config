@@ -151,6 +151,8 @@ def run_gh_graphql(query: str, variables: dict[str, Any]) -> dict[str, Any] | No
         return None
 
     if result.returncode != 0:
+        if result.stderr:
+            print_stderr(f"Warning: GraphQL query failed: {result.stderr.strip()}")
         return None
 
     try:
@@ -444,7 +446,10 @@ def merge_threads(all_threads: list[dict[str, Any]], specific_threads: list[dict
     merged = list(all_threads)
     for thread in specific_threads:
         key = get_thread_key(thread)
-        if key is None or key not in existing_keys:
+        if key is None:
+            print_stderr("Warning: Thread has no identifiers for deduplication")
+            merged.append(thread)
+        elif key not in existing_keys:
             merged.append(thread)
 
     return merged
@@ -577,7 +582,7 @@ def main() -> int:
             "metadata": {
                 "owner": owner,
                 "repo": repo,
-                "pr_number": pr_number,
+                "pr_number": int(pr_number),
                 "json_path": str(json_path),
             },
             "human": categorized["human"],
