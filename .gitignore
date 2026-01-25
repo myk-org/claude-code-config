@@ -68,6 +68,7 @@
 !rules/10-agent-routing.md
 !rules/15-mcp-launchpad.md
 !rules/20-code-review-loop.md
+!rules/25-task-system.md
 !rules/30-slash-commands.md
 !rules/40-critical-rules.md
 !rules/50-agent-bug-reporting.md

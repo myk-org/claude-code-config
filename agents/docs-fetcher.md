@@ -3,8 +3,9 @@ name: docs-fetcher
 description: Fetches current documentation for external libraries and frameworks. Prioritizes llms.txt when available, falls back to web parsing.
 ---
 
-> **You ARE the specialist. Do the work directly. The orchestrator already routed this task to you.**
+# Docs Fetcher
 
+> **You ARE the specialist. Do the work directly. The orchestrator already routed this task to you.**
 
 You are a Documentation Fetcher specialist focused on retrieving and extracting relevant documentation from external library and framework websites.
 
@@ -26,7 +27,7 @@ You are a Documentation Fetcher specialist focused on retrieving and extracting 
 
 ## Workflow
 
-```
+```text
 Request: {library} + {topic}
     ↓
 WebSearch → Find official docs URL
@@ -73,7 +74,8 @@ Always return documentation in this structure:
 ## Example Invocations
 
 ### Example 1: FastAPI OAuth
-```
+
+```text
 Query: "Fetch FastAPI docs for OAuth2 authentication"
 
 Output:
@@ -96,7 +98,8 @@ FastAPI provides OAuth2 with Password (and hashing), Bearer with JWT tokens...
 ```
 
 ### Example 2: React Hooks
-```
+
+```text
 Query: "Get React documentation for useEffect hooks"
 
 Output:
@@ -136,13 +139,16 @@ useEffect is a Hook that lets you synchronize a component with an external syste
 ## Special Cases
 
 ### llms.txt Format
+
 - H1: Title of documentation
 - H2: Main sections
 - Links: `[text](url)` format
 - Parse efficiently, extract matching H2 sections
 
 ### No Official Docs Found
+
 If official documentation cannot be located:
+
 ```markdown
 ## {Library} - {Topic}
 
@@ -156,6 +162,7 @@ If official documentation cannot be located:
 ```
 
 ## Notes
+
 - Always prefer official documentation over third-party sources
 - Include version information when available in docs
 - For framework-specific queries, search within that framework's domain

@@ -26,18 +26,18 @@ skipConfirmation: true
 
 - `/github-release` - Normal release (determines version from commits)
 - `/github-release --dry-run` - Preview without creating release
-- `/github-release --prerelease` - Create a pre-release
+- `/github-release --prerelease` - Create a prerelease
 - `/github-release --draft` - Create a draft release
-- `/github-release --dry-run --prerelease` - Preview a pre-release
-- `/github-release --prerelease --draft` - Create a draft pre-release
+- `/github-release --dry-run --prerelease` - Preview a prerelease
+- `/github-release --prerelease --draft` - Create a draft prerelease
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `--dry-run` | Preview the release without creating it. Skips user approval and release creation. |
-| `--prerelease` | Mark the release as a pre-release (beta). |
-| `--draft` | Create a draft release (not published until manually released). |
+| Option         | Description                                                                        |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `--dry-run`    | Preview the release without creating it. Skips user approval and release creation. |
+| `--prerelease` | Mark the release as a prerelease (beta).                                          |
+| `--draft`      | Create a draft release (not published until manually released).                    |
 
 ---
 
@@ -78,9 +78,35 @@ PHASE 5: Summary (MAIN CONVERSATION)
 
 ---
 
+## Task Tracking
+
+This workflow uses Claude Code's task system for progress tracking. Tasks are created at each phase with dependencies to ensure proper ordering.
+
+**Task visibility:** Use `/tasks` to see all tasks or `Ctrl+T` to toggle task panel.
+
+**Task phases:**
+
+- Phase 1: Validation (bash-expert)
+- Phase 2: Changelog analysis (blockedBy Phase 1) - main conversation
+- Phase 3: User approval (main conversation, no task)
+- Phase 4: Create release (blockedBy user approval)
+- Phase 5: Summary (main conversation, no task)
+
+**Note:** Tasks are SKIPPED when `--dry-run` is specified (no actual release created).
+
+---
+
 ## Instructions
 
 ### PHASE 1: Validation (DELEGATE TO bash-expert)
+
+**Create Phase 1 task (skip if --dry-run):**
+
+```text
+TaskCreate: "Validate release prerequisites"
+  - activeForm: "Validating prerequisites"
+  - status: in_progress
+```
 
 **Route to `bash-expert` agent with this prompt:**
 
@@ -89,13 +115,13 @@ PHASE 5: Summary (MAIN CONVERSATION)
 
 Execute the release info script to validate prerequisites and gather repository data for creating a GitHub release.
 
-## Script Path
+### Script Path
 
 ```bash
 GET_RELEASE_INFO=~/.claude/commands/scripts/github-release/get-release-info.sh
 ```
 
-## Execution
+### Execution
 
 Run the script:
 
@@ -104,12 +130,13 @@ $GET_RELEASE_INFO
 ```
 
 The script will:
+
 1. Get the current repository owner and name
 2. Find the latest git tag (if any)
 3. Collect all commits since the last tag (or all commits if no tag)
 4. Get the current branch name
 
-## Expected Output
+### Expected Output
 
 The script returns JSON with this structure:
 
@@ -159,7 +186,7 @@ The script returns JSON with this structure:
 
 If no tags exist, `last_tag` will be `null`.
 
-## Output Format
+### Output Format
 
 Return the complete JSON output from the script.
 
@@ -170,11 +197,11 @@ If the script fails, include an "error" field with the error message:
   "error": "Error message here"
 }
 ```
-```
 
 **Store the agent's JSON response for Phase 2.**
 
 **If agent returns malformed JSON:**
+
 - Show error: "Failed to parse agent response. Expected valid JSON."
 - Display first 500 characters of raw agent output
 - Abort workflow
@@ -206,22 +233,32 @@ If the script fails, include an "error" field with the error message:
 
 ### PHASE 2: Changelog & Version Analysis (MAIN CONVERSATION - DO NOT DELEGATE)
 
+**Create Phase 2 task:**
+
+```text
+TaskCreate: "Analyze commits and generate changelog"
+  - activeForm: "Analyzing commits"
+  - blockedBy: [Phase 1 task]
+  - status: in_progress
+```
+
 **Parse commits and determine version bump:**
 
 #### Step 1: Categorize Commits
 
 Parse each commit message using conventional commit patterns:
 
-| Pattern | Category | Version Impact |
-|---------|----------|----------------|
-| `BREAKING CHANGE:` or `!:` in message | Breaking Changes | MAJOR |
-| `feat:` or `feat(scope):` | Features | MINOR |
-| `fix:` or `fix(scope):` | Bug Fixes | PATCH |
-| `docs:` or `docs(scope):` | Documentation | PATCH |
-| `chore:`, `build:`, `ci:`, `refactor:`, `perf:`, `test:`, `style:` | Maintenance | PATCH |
-| No pattern match | Other | PATCH |
+| Pattern                                                            | Category         | Version Impact |
+| ------------------------------------------------------------------ | ---------------- | -------------- |
+| `BREAKING CHANGE:` or `!:` in message                              | Breaking Changes | MAJOR          |
+| `feat:` or `feat(scope):`                                          | Features         | MINOR          |
+| `fix:` or `fix(scope):`                                            | Bug Fixes        | PATCH          |
+| `docs:` or `docs(scope):`                                          | Documentation    | PATCH          |
+| `chore:`, `build:`, `ci:`, `refactor:`, `perf:`, `test:`, `style:` | Maintenance      | PATCH          |
+| No pattern match                                                   | Other            | PATCH          |
 
 **Parsing Rules:**
+
 1. Check for `BREAKING CHANGE:` anywhere in commit message (case insensitive) -> Breaking Changes
 2. Check for `!:` after type (e.g., `feat!:`) -> Breaking Changes
 3. Match type prefix at start of message (case insensitive)
@@ -238,16 +275,18 @@ Based on highest-priority change category:
 
 **Calculate new version:**
 
-- If `latest_tag` is `null` (first release):
-  - Default to `v0.1.0` for initial development
-  - Or `v1.0.0` if any breaking change or explicit feat indicates production-ready
+If `latest_tag` is `null` (first release):
 
-- If `latest_tag` exists:
-  - Parse current version: `vMAJOR.MINOR.PATCH`
-  - Apply bump:
-    - MAJOR: increment MAJOR, reset MINOR and PATCH to 0
-    - MINOR: increment MINOR, reset PATCH to 0
-    - PATCH: increment PATCH
+- Default to `v0.1.0` for initial development
+- Or `v1.0.0` if any breaking change or explicit feat indicates production-ready
+
+If `latest_tag` exists:
+
+- Parse current version: `vMAJOR.MINOR.PATCH`
+- Apply bump:
+  - MAJOR: increment MAJOR, reset MINOR and PATCH to 0
+  - MINOR: increment MINOR, reset PATCH to 0
+  - PATCH: increment PATCH
 
 #### Step 3: Generate Changelog Preview
 
@@ -278,11 +317,13 @@ Build changelog with sections (only include sections with content):
 ```
 
 **If first release (no latest_tag):**
+
 ```markdown
 **Full Changelog**: https://github.com/{owner}/{repo}/commits/{new_tag}
 ```
 
 **Store:**
+
 - `proposed_version`: The calculated new version (e.g., `v1.3.0`)
 - `version_bump`: The bump type (MAJOR, MINOR, or PATCH)
 - `bump_reason`: Why this bump was chosen (e.g., "Contains 2 new features")
@@ -296,6 +337,7 @@ Build changelog with sections (only include sections with content):
 ### PHASE 3: User Approval (MAIN CONVERSATION - MANDATORY STOP)
 
 **If `--dry-run` is specified:**
+
 - Display the proposed version and changelog preview (same format as below)
 - Display: "DRY RUN: No release will be created."
 - Skip user approval prompt
@@ -303,7 +345,7 @@ Build changelog with sections (only include sections with content):
 
 **If NOT dry-run:**
 
-## STOP - MANDATORY USER INTERACTION
+### STOP - MANDATORY USER INTERACTION
 
 **YOU MUST STOP HERE AND WAIT FOR USER INPUT.**
 
@@ -352,7 +394,7 @@ Do NOT create any release without user confirmation.
 - `major` - Override to MAJOR version bump
 - `minor` - Override to MINOR version bump
 - `patch` - Override to PATCH version bump
-- `prerelease` - Toggle pre-release flag
+- `prerelease` - Toggle prerelease flag
 - `draft` - Toggle draft flag
 - `no` or `n` - Cancel release
 
@@ -361,7 +403,7 @@ Your choice:
 
 ---
 
-## DO NOT PROCEED WITHOUT USER RESPONSE
+### DO NOT PROCEED WITHOUT USER RESPONSE
 
 **You MUST wait for user to type their selection before continuing.**
 **This is NOT optional. The workflow STOPS here until user responds.**
@@ -370,18 +412,19 @@ Your choice:
 
 **Parse user input:**
 
-| Input | Action |
-|-------|--------|
-| `yes`, `y`, `Y` | Proceed with proposed version |
-| `major`, `MAJOR` | Recalculate version with MAJOR bump, show updated preview, ask again |
-| `minor`, `MINOR` | Recalculate version with MINOR bump, show updated preview, ask again |
-| `patch`, `PATCH` | Recalculate version with PATCH bump, show updated preview, ask again |
-| `prerelease` | Toggle pre-release flag, show updated preview, ask again |
-| `draft` | Toggle draft flag, show updated preview, ask again |
-| `no`, `n`, `N` | Cancel workflow, show "Release cancelled." and stop |
-| Other | Show "Invalid input. Please enter 'yes', 'no', 'major', 'minor', 'patch', 'prerelease', or 'draft'." and ask again |
+| Input            | Action                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `yes`, `y`, `Y`  | Proceed with proposed version                                                                                      |
+| `major`, `MAJOR` | Recalculate version with MAJOR bump, show updated preview, ask again                                               |
+| `minor`, `MINOR` | Recalculate version with MINOR bump, show updated preview, ask again                                               |
+| `patch`, `PATCH` | Recalculate version with PATCH bump, show updated preview, ask again                                               |
+| `prerelease`     | Toggle prerelease flag, show updated preview, ask again                                                           |
+| `draft`          | Toggle draft flag, show updated preview, ask again                                                                 |
+| `no`, `n`, `N`   | Cancel workflow, show "Release cancelled." and stop                                                                |
+| Other            | Show "Invalid input. Please enter 'yes', 'no', 'major', 'minor', 'patch', 'prerelease', or 'draft'." and ask again |
 
 **When user overrides version:**
+
 1. Recalculate the new version based on override
 2. Update `proposed_version` and `version_bump`
 3. Update `bump_reason` to "User override: {bump_type}"
@@ -398,6 +441,14 @@ Your choice:
 
 **Only proceed after user has explicitly approved.**
 
+**Create Phase 4 task:**
+
+```text
+TaskCreate: "Create GitHub release"
+  - activeForm: "Creating release"
+  - status: in_progress
+```
+
 **Route to `bash-expert` agent with this prompt:**
 
 ```markdown
@@ -405,7 +456,7 @@ Your choice:
 
 Create a GitHub release with the provided version and changelog.
 
-## Release Information
+### Release Information
 
 ```json
 {
@@ -417,7 +468,7 @@ Create a GitHub release with the provided version and changelog.
 }
 ```
 
-## Changelog Content
+### Changelog Content
 
 The changelog content is provided below. Write it to a temp file.
 
@@ -425,17 +476,18 @@ The changelog content is provided below. Write it to a temp file.
 {changelog}
 ```
 
-## Instructions
+### Release Creation Instructions
 
-### Step 1: Write Changelog to Temp File
+#### Step 1: Write Changelog to Temp File
 
 Use the Write tool to create the changelog file:
+
 - Path: `/tmp/claude/release-changelog.md`
 - Content: The changelog markdown above
 
 **IMPORTANT**: Use the Write tool directly (not bash commands) to ensure proper formatting.
 
-### Step 2: Create Release
+#### Step 2: Create Release
 
 Run the release script:
 
@@ -445,15 +497,16 @@ $CREATE_RELEASE "{owner}/{repo}" "{tag}" /tmp/claude/release-changelog.md [--pre
 ```
 
 Parameters:
+
 - `owner/repo`: Repository in owner/repo format (e.g., myorg/myrepo)
 - `tag`: Tag/version to create (e.g., v1.3.0)
 - Changelog file path
-- `--prerelease`: Optional flag to mark as pre-release
+- `--prerelease`: Optional flag to mark as prerelease
 - `--draft`: Optional flag to mark as draft
 
 Note: The script uses the tag as the release title automatically.
 
-### Output Format
+#### Result Format
 
 Return a JSON object with the results:
 
@@ -486,14 +539,15 @@ Return a JSON object with the results:
 ```
 
 Show progress while working:
+
 ```text
 Creating release {tag} for {owner}/{repo}...
 ```
 
 Return ONLY the JSON object after completion.
-```
 
 **Replace placeholders:**
+
 - `{owner}`, `{repo}` from Phase 1 data
 - `{proposed_version}` from Phase 3 approval
 - `{prerelease_flag}`, `{draft_flag}` - true/false based on flags
@@ -502,6 +556,7 @@ Return ONLY the JSON object after completion.
 **Parse the agent's JSON response.**
 
 **If agent returns malformed JSON:**
+
 - Show error: "Failed to parse agent response. Expected valid JSON."
 - Display first 500 characters of raw agent output
 - Abort workflow
@@ -563,6 +618,7 @@ The release has been created on GitHub. {draft_message}
 ```
 
 Where `{draft_message}` is:
+
 - If draft: "This is a draft release. Visit the URL to publish it."
 - If not draft: "The release is now live."
 
@@ -587,15 +643,43 @@ Please check:
 
 ---
 
+### Final Cleanup
+
+**MANDATORY**: Before completing the workflow, ensure all tasks are properly closed.
+
+1. Run `TaskList` to check for any tasks still in `pending` or `in_progress` status
+2. Mark all completed tasks as `completed`
+3. Verify all tasks show `completed` status
+
+**Note:** For `--dry-run` mode, tasks may have been skipped entirely, which is expected.
+
+### Task Tracking Throughout Workflow
+
+Tasks are created and managed automatically:
+
+| Phase | Tasks Created          | Dependencies             |
+| ----- | ---------------------- | ------------------------ |
+| 1     | 1 (validation)         | None                     |
+| 2     | 1 (changelog analysis) | blockedBy: Phase 1       |
+| 3     | 0 (user approval)      | -                        |
+| 4     | 1 (create release)     | blockedBy: user approval |
+| 5     | 0 (summary)            | -                        |
+
+Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
+
+**Note:** For `--dry-run` mode, Phase 4 task is skipped.
+
+---
+
 ## Prerequisites
 
 Before creating a release, the following conditions MUST be met:
 
-| Requirement | Check | Error Message |
-|-------------|-------|---------------|
-| Default branch | Must be on main/master | "You must be on the default branch ({default_branch}) to create a release. Current branch: {current_branch}" |
-| Clean working tree | No uncommitted changes | "Working tree is not clean. Please commit or stash your changes first." |
-| Synced with remote | No unpushed/unpulled commits | "You have X unpushed commit(s)..." or "You are X commit(s) behind remote..." |
+| Requirement        | Check                        | Error Message                                                                                                 |
+| ------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Default branch     | Must be on main/master       | "You must be on the default branch ({default_branch}) to create a release. Current branch: {current_branch}"  |
+| Clean working tree | No uncommitted changes       | "Working tree is not clean. Please commit or stash your changes first."                                       |
+| Synced with remote | No unpushed/unpulled commits | "You have X unpushed commit(s)..." or "You are X commit(s) behind remote..."                                  |
 
 The command will ABORT if any prerequisite fails.
 
@@ -606,6 +690,7 @@ The command will ABORT if any prerequisite fails.
 ### First Release (No Tags)
 
 When `latest_tag` is `null`:
+
 - Default to `v0.1.0` for initial development
 - If commits contain breaking changes or production-ready features, suggest `v1.0.0`
 - Show "(first release)" in preview
@@ -614,6 +699,7 @@ When `latest_tag` is `null`:
 ### No Commits Since Last Tag
 
 When `commit_count` is 0:
+
 - Show: "No commits found since {latest_tag}. Nothing to release."
 - Abort workflow gracefully
 - Do not prompt for version or changelog
@@ -621,6 +707,7 @@ When `commit_count` is 0:
 ### User Overrides Version
 
 When user enters `major`, `minor`, or `patch`:
+
 1. Keep the same commits and categories
 2. Recalculate version based on override:
    - MAJOR: `vX.0.0` where X = current major + 1
@@ -633,42 +720,49 @@ When user enters `major`, `minor`, or `patch`:
 ### Tag Already Exists
 
 When create-release script returns "tag already exists" error:
+
 - Show clear error: "Tag {version} already exists"
 - Suggest: "Use a different version or delete the existing tag first"
 - Do not retry automatically
 
-### Pre-release Version Formats
+### Prerelease Version Formats
 
 When `--prerelease` flag is set:
+
 - Version format remains standard: `v1.2.3`
-- GitHub release is marked as pre-release
-- Show "Pre-release: yes" in preview
+- GitHub release is marked as prerelease
+- Show "Prerelease: yes" in preview
 
 ---
 
 ## Error Handling
 
 **If Phase 1 (validation) fails:**
+
 - Show error message from bash-expert agent
 - Common issues: not in a git repo, gh not authenticated
 - Abort workflow
 
 **If Phase 2 (analysis) fails:**
+
 - Show error message
 - Common issues: malformed commit messages, version parsing
 - Abort workflow
 
 **If Phase 3 (approval) - user cancels:**
+
 - Show "Release cancelled."
 - Complete workflow gracefully (not an error)
 
 **If Phase 4 (release creation) fails:**
+
 - Show error from script
 - Common issues: tag exists, no permission, network error
 - Do not retry automatically
 - Suggest troubleshooting steps
 
 **If invalid user input in Phase 3:**
+
 - Show error message
 - Re-display options
 - Wait for valid input
@@ -678,6 +772,7 @@ When `--prerelease` flag is set:
 ## Enforcement Rules
 
 **NEVER skip phases** - all phases are mandatory:
+
 1. Phase 1: Validation (bash-expert agent)
 2. Phase 2: Changelog Analysis (main conversation)
 3. Phase 3: User Approval (main conversation - MANDATORY STOP)

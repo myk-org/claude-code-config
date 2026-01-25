@@ -18,6 +18,7 @@
 ## Allowed Direct Actions
 
 ✅ **ALLOWED** direct actions:
+
 - Read files (Read tool for single files)
 - Run `mcpl` (via Bash) for MCP server discovery only
 - Ask clarifying questions
@@ -44,5 +45,6 @@ Before ANY code changes, run the pre-implementation checklist:
 → **See the "Pre-Implementation Checklist" section below** - Do NOT skip this step.
 
 **Quick check:**
+
 - [ ] GitHub issue created?
 - [ ] On issue branch (`feat/issue-N-...` or `fix/issue-N-...`)?

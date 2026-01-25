@@ -9,7 +9,7 @@
 
 When the orchestrator discovers a logic flaw or bug in an agent's configuration or instructions, follow this workflow.
 
-## Scope - Agents Covered by This Rule
+## Agents Covered by This Rule
 
 This rule applies ONLY to agents defined in this repository (`agents/` directory):
 
@@ -40,12 +40,14 @@ This rule applies ONLY to agents defined in this repository (`agents/` directory
 ## When to Trigger
 
 **Trigger this process when you discover:**
+
 - Flawed logic in an agent's instructions (in `agents/` directory - see scope list above)
 - An agent producing incorrect results due to its configuration
 - An agent's behavior contradicting its intended purpose
 - Agent instructions that cause systematic errors
 
 **DO NOT trigger for:**
+
 - Runtime errors (network failures, missing files, etc.)
 - External tool failures
 - User code bugs (those are normal review feedback)
@@ -56,7 +58,7 @@ This rule applies ONLY to agents defined in this repository (`agents/` directory
 
 ## Workflow
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │  Orchestrator discovers agent logic bug         │
 │                    ↓                            │
@@ -89,6 +91,7 @@ This rule applies ONLY to agents defined in this repository (`agents/` directory
 **Title format:** `bug(agents): [agent-name] - brief description`
 
 **Body template:**
+
 ```markdown
 ## Agent
 [Agent name from agents/ directory]
@@ -116,7 +119,7 @@ This rule applies ONLY to agents defined in this repository (`agents/` directory
 
 ## Example Interaction
 
-```
+```text
 Orchestrator: "I found a logic bug in git-expert. The merged branch
 check incorrectly flags fresh branches as 'already merged' when the
 branch HEAD equals main HEAD, even though the branch has never been

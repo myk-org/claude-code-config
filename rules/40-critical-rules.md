@@ -3,10 +3,11 @@
 ## Parallel Execution (MANDATORY)
 
 **Before EVERY response:** Can operations run in parallel?
+
 - **YES** → Execute ALL in ONE message
 - **NO** → PROVE dependency
 
-### Examples
+### Parallel Execution Examples
 
 ❌ **WRONG:** Agent1 → wait → Agent2 → wait → Agent3
 ✅ **RIGHT:** Agent1 + Agent2 + Agent3 in ONE message
@@ -26,18 +27,21 @@ This keeps the project directory clean and prevents accidental commits of tempor
 ## Python Execution with uv
 
 **MANDATORY** - When running arbitrary Python files:
-- ✅ **ONLY** use `uv run --with <package>` syntax
-- ❌ **FORBIDDEN** - `uv run pip install` - NEVER use this
 
-### Examples
+- **ONLY** use `uv run --with <package>` syntax
+- **FORBIDDEN** - `uv run pip install` - NEVER use this
+
+### Python uv Examples
 
 ✅ **Correct:**
+
 ```bash
 uv run --with requests script.py
 uv run --with requests --with pandas script.py
 ```
 
 ❌ **Wrong:**
+
 ```bash
 uv run pip install requests
 ```
@@ -58,9 +62,10 @@ Clone to `/tmp/claude/` and explore using Read/Glob/Grep - NOT via WebFetch.
 - ✅ Use sparse checkout if only specific directories are needed
 - ✅ Delete the clone when done if not needed
 
-### Examples
+### Git Clone Examples
 
 ✅ **Correct:**
+
 ```bash
 # Shallow clone to temp directory
 git clone --depth 1 https://github.com/org/repo.git /tmp/claude/repo
@@ -74,6 +79,7 @@ rm -rf /tmp/claude/repo
 ```
 
 ❌ **Wrong:**
+
 ```bash
 # Full clone with history
 git clone https://github.com/org/repo.git /tmp/claude/repo
@@ -85,6 +91,7 @@ WebFetch(https://github.com/org/repo/blob/main/src/file.py)
 ### Private Repositories
 
 For private repositories, ensure authentication is configured:
+
 - **SSH**: `git clone --depth 1 git@github.com:org/private-repo.git /tmp/claude/repo`
 - **Credential helper**: Ensure `git config --global credential.helper` is set
 

@@ -34,6 +34,7 @@ This workflow uses Claude Code's task system for progress tracking. Tasks are cr
 **Task visibility:** Use `/tasks` to see all tasks or `Ctrl+T` to toggle task panel.
 
 **Task phases:**
+
 - Phase 1: Collection tasks (fetch, present to user)
 - Phase 2: Execution tasks (one per approved comment, run in parallel)
 - Phase 3: Review task
@@ -43,7 +44,7 @@ This workflow uses Claude Code's task system for progress tracking. Tasks are cr
 
 ### Step 1: Fetch all review comments using the unified fetcher
 
-### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
+#### CRITICAL: Simple Command - DO NOT OVERCOMPLICATE
 
 **ALWAYS use this exact command format:**
 
@@ -70,8 +71,7 @@ uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-
      "https://github.com/owner/repo/pull/123#pullrequestreview-456"
    ```
 
-**THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The script handles
-EVERYTHING.**
+**THAT'S ALL. DO NOT extract scripts, get PR info, or do ANY bash manipulation. The script handles EVERYTHING.**
 
 ### Step 2: Process the JSON output
 
@@ -84,20 +84,20 @@ The script returns structured JSON containing:
 
 **Each comment has:**
 
-| Field | Description |
-|-------|-------------|
-| `thread_id` | GraphQL thread ID (required for replying/resolving threads) |
-| `node_id` | REST API comment node ID (informational only) |
-| `comment_id` | Numeric comment ID |
-| `author` | The reviewer's username |
-| `path` | File path |
-| `line` | Line number |
-| `body` | Comment text |
-| `priority` | HIGH, MEDIUM, or LOW (auto-classified) |
-| `source` | "human", "qodo", or "coderabbit" |
-| `reply` | Reply message (null until set) |
-| `status` | Processing status ("pending", "addressed", "skipped", "not_addressed") |
-| `replies` | Array of thread replies (check if already rejected) |
+| Field        | Description                                                            |
+| ------------ | ---------------------------------------------------------------------- |
+| `thread_id`  | GraphQL thread ID (required for replying/resolving threads)            |
+| `node_id`    | REST API comment node ID (informational only)                          |
+| `comment_id` | Numeric comment ID                                                     |
+| `author`     | The reviewer's username                                                |
+| `path`       | File path                                                              |
+| `line`       | Line number                                                            |
+| `body`       | Comment text                                                           |
+| `priority`   | HIGH, MEDIUM, or LOW (auto-classified)                                 |
+| `source`     | "human", "qodo", or "coderabbit"                                       |
+| `reply`      | Reply message (null until set)                                         |
+| `status`     | Processing status ("pending", "addressed", "skipped", "not_addressed") |
+| `replies`    | Array of thread replies (check if already rejected)                    |
 
 ### Step 2.5: Pre-processing
 
@@ -106,6 +106,7 @@ The script returns structured JSON containing:
 **CRITICAL**: Before processing any comment, validate the `thread_id`.
 
 If any item has a missing, empty, or whitespace-only `thread_id`:
+
 - Set `status: "skipped"`
 - Set `reply: "Skipped: No valid thread_id available to reply/resolve"`
 - Exclude from user presentation
@@ -118,11 +119,13 @@ If any item has a missing, empty, or whitespace-only `thread_id`:
 For each comment, analyze the body to filter out positive feedback:
 
 **POSITIVE (Filter Out) - Comments that are:**
+
 - Praise/acknowledgment: "good", "great", "nice", "excellent", "perfect", "well done", "correct"
 - Positive feedback on fixes: "good fix", "nice improvement", "better approach"
 - Acknowledgment without suggestions: No action words like "should", "consider", "recommend", "suggest"
 
 **ACTIONABLE (Keep) - Comments that:**
+
 - Contain suggestions: "should", "consider", "recommend", "suggest", "could", "might want to"
 - Point out issues: "issue", "problem", "concern", "potential", "risk"
 - Request changes: "change", "update", "modify", "improve", "refactor"
@@ -135,15 +138,18 @@ auto-skip it with their reason instead of asking again.
 #### Duplicate Detection
 
 Detect duplicates across sources using these criteria:
+
 - Same file path
 - Overlapping or adjacent line ranges (within 5 lines)
 - Similar title/category (fuzzy match on body content)
 
 **Stable identifier (required):**
+
 - Prefer `thread_id` when present (unique per thread)
 - Otherwise use a deterministic composite: `<source>:<comment_id>`
 
 For duplicates:
+
 - Mark with `is_duplicate: true` on the duplicate
 - Set `duplicate_of: <stable_id>` pointing to the original
 - Add `duplicate_sources: ["qodo", "coderabbit"]` on the original if applicable
@@ -173,11 +179,10 @@ Found XX comments (Human: X, Qodo: X, CodeRabbit: X)
 ```text
 TaskCreate: "Collect user decisions on review comments"
   - activeForm: "Collecting decisions"
-  - Status: in_progress
+  - status: in_progress
 ```
 
-**CRITICAL: This is the COLLECTION phase. Do NOT execute, implement, or process ANY comments yet. Only ask
-questions and create tasks.**
+**CRITICAL: This is the COLLECTION phase. Do NOT execute, implement, or process ANY comments yet. Only ask questions and create tasks.**
 
 Go through ALL merged comments in priority order (HIGH -> MEDIUM -> LOW), collecting user decisions.
 
@@ -201,15 +206,15 @@ accessibility.
 
 #### Response Options
 
-| Response | Action |
-|----------|--------|
-| `yes` | Create task, continue to next |
-| `no` | Ask reason, mark `not_addressed`, continue |
-| `all` | Create tasks for ALL remaining comments |
-| `skip human` | Skip all remaining human comments |
-| `skip qodo` | Skip all remaining Qodo comments |
-| `skip coderabbit` | Skip all remaining CodeRabbit comments |
-| `skip ai` | Skip all remaining AI comments (Qodo + CodeRabbit) |
+| Response          | Action                                             |
+| ----------------- | -------------------------------------------------- |
+| `yes`             | Create task, continue to next                      |
+| `no`              | Ask reason, mark `not_addressed`, continue         |
+| `all`             | Create tasks for ALL remaining comments            |
+| `skip human`      | Skip all remaining human comments                  |
+| `skip qodo`       | Skip all remaining Qodo comments                   |
+| `skip coderabbit` | Skip all remaining CodeRabbit comments             |
+| `skip ai`         | Skip all remaining AI comments (Qodo + CodeRabbit) |
 
 **AI Challenge Mode**: When you respond "no", Claude may challenge your decision if it independently
 believes the comment is worth addressing (regardless of the source's priority label). Claude will
@@ -218,6 +223,7 @@ explain its reasoning once - your final decision is always respected.
 #### CRITICAL: Track Comment Outcomes for Reply
 
 For EVERY comment presented, track the outcome for the final reply:
+
 - **Thread ID**: The `thread_id` from JSON (needed for threaded replies)
 - **Source**: human, qodo, or coderabbit
 - **Comment number**: Sequential (1, 2, 3...)
@@ -227,11 +233,13 @@ For EVERY comment presented, track the outcome for the final reply:
 - **Reason**: Required for `not_addressed` and `skipped` outcomes
 
 **For "yes" response:**
+
 - Create a task with appropriate agent assignment
 - Show confirmation: "Task created: [brief description]"
 - **DO NOT execute the task - Continue to next comment immediately**
 
 **For "all" response:**
+
 - Create tasks for the current comment AND **ALL remaining comments** automatically
 - Show summary: "Created tasks for current comment + X remaining comments"
 - **Skip to Phase 2 immediately**
@@ -239,14 +247,14 @@ For EVERY comment presented, track the outcome for the final reply:
 **For "no" response:**
 
 1. **AI Independent Evaluation**: Before accepting "no", Claude independently evaluates whether this comment is worth addressing, ignoring the source's priority label. Consider:
-   - Security implications (authentication, authorization, injection, data exposure)
-   - Bug/correctness risk (logic errors, edge cases, race conditions)
-   - Maintainability impact (code clarity, technical debt)
-   - Best practices violations that could cause issues later
+      - Security implications (authentication, authorization, injection, data exposure)
+      - Bug/correctness risk (logic errors, edge cases, race conditions)
+      - Maintainability impact (code clarity, technical debt)
+      - Best practices violations that could cause issues later
 
 2. **Challenge Decision**:
-   - If Claude believes the comment IS worth addressing -> Challenge the user (see below)
-   - If Claude agrees with dismissal -> Accept "no" and ask for reason
+      - If Claude believes the comment IS worth addressing -> Challenge the user (see below)
+      - If Claude agrees with dismissal -> Accept "no" and ask for reason
 
 3. **Challenge Flow** (one challenge only):
 
@@ -258,43 +266,47 @@ For EVERY comment presented, track the outcome for the final reply:
    Do you want to reconsider? (yes/no)
    ```
 
-   - If user says "yes" -> Create task, continue to next comment
-   - If user still says "no" -> Accept gracefully, ask for reason, continue
+      - If user says "yes" -> Create task, continue to next comment
+      - If user still says "no" -> Accept gracefully, ask for reason, continue
 
 4. **After final "no"**:
-   - MUST ask user: "Please provide a brief reason:"
-   - Set outcome = `not_addressed`, reason = user's response
-   - If user doesn't provide reason, use "User declined"
-   - Continue to next comment immediately
+      - MUST ask user: "Please provide a brief reason:"
+      - Set outcome = `not_addressed`, reason = user's response
+      - If user doesn't provide reason, use "User declined"
+      - Continue to next comment immediately
 
 **Key principles:**
+
 - Challenge ONCE only - respect user's final decision
 - Provide concrete reasoning, not generic "you should do this"
 - Be a collaborator, not a nag
 - Claude's evaluation is independent of source priority (CodeRabbit LOW might be Claude HIGH)
 
 **For "skip human" response:**
+
 - Ask reason once: "Please provide a brief reason for skipping all remaining human comments:"
 - Mark ALL remaining human source comments as `skipped` with the reason
 - Continue presenting non-human comments
 
 **For "skip qodo" response:**
+
 - Ask reason once: "Please provide a brief reason for skipping all remaining Qodo comments:"
 - Mark ALL remaining qodo source comments as `skipped` with the reason
 - Continue presenting non-qodo comments
 
 **For "skip coderabbit" response:**
+
 - Ask reason once: "Please provide a brief reason for skipping all remaining CodeRabbit comments:"
 - Mark ALL remaining coderabbit source comments as `skipped` with the reason
 - Continue presenting non-coderabbit comments
 
 **For "skip ai" response:**
+
 - Ask reason once: "Please provide a brief reason for skipping all remaining AI comments:"
 - Mark ALL remaining qodo AND coderabbit source comments as `skipped` with the reason
 - Continue presenting human comments only
 
-**REMINDER: Do NOT execute, implement, fix, or process anything during this phase. Only collect decisions
-and create tasks.**
+**REMINDER: Do NOT execute, implement, fix, or process anything during this phase. Only collect decisions and create tasks.**
 
 ### Step 5: PHASE 2 - Process All Approved Tasks (EXECUTION PHASE)
 
@@ -309,7 +321,7 @@ For each approved comment, create a task:
 ```text
 TaskCreate: "[File: path, Line: N] Brief description from body"
   - activeForm: "Implementing [brief]"
-  - Status: pending
+  - status: pending
 ```
 
 Set all execution tasks to `blockedBy` the Phase 1 collection task.
@@ -318,14 +330,14 @@ Then set all tasks to `in_progress` and process in parallel. Mark each as `compl
 
 ```text
 Example task list for 3 approved comments:
-├── Task 2: [scripts/foo.py:42] Add error handling (in_progress)
-├── Task 3: [scripts/bar.py:10] Fix variable naming (in_progress)
-└── Task 4: [tests/test_foo.py:25] Add missing test (in_progress)
+Task 2: [scripts/foo.py:42] Add error handling (in_progress)
+Task 3: [scripts/bar.py:10] Fix variable naming (in_progress)
+Task 4: [tests/test_foo.py:25] Add missing test (in_progress)
 ```
 
 Process multiple tasks in parallel by delegating to appropriate specialists simultaneously.
 
-1. **Show approved tasks and proceed directly:**
+**Show approved tasks and proceed directly:**
 
 ```text
 Processing X approved tasks:
@@ -336,50 +348,51 @@ Processing X approved tasks:
 
 Proceed directly to execution (no confirmation needed since user already approved each task in Phase 1)
 
-1. **Process all approved tasks:**
-   - **CRITICAL**: Process ALL tasks created during Phase 1
-   - **NEVER skip tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
-   - Route to appropriate specialists based on comment content
-   - Process multiple tasks in parallel when possible
-   - Mark each task as completed after finishing
-   - **Track unimplemented changes**: If AI decides NOT to make changes for an approved task, track the reason
+**Process all approved tasks:**
 
-   **Update outcome tracking after each task:**
-   - If changes were made successfully: Set outcome = `addressed`
-   - If AI decided NOT to make changes: Set outcome = `not_addressed`, reason = [explanation of why]
+- **CRITICAL**: Process ALL tasks created during Phase 1
+- **NEVER skip tasks** - if a task was created in Phase 1, it MUST be executed in Phase 2
+- Route to appropriate specialists based on comment content
+- Process multiple tasks in parallel when possible
+- Mark each task as completed after finishing
+- **Track unimplemented changes**: If AI decides NOT to make changes for an approved task, track the reason
+
+**Update outcome tracking after each task:**
+
+- If changes were made successfully: Set outcome = `addressed`
+- If AI decided NOT to make changes: Set outcome = `not_addressed`, reason = [explanation of why]
 
 ### Step 6: PHASE 3 - Review Unimplemented Changes
 
 **MANDATORY CHECKPOINT**: Before proceeding to posting replies, MUST review any approved comments where AI
 decided not to make changes.
 
-If AI decided NOT to implement changes for ANY approved tasks (tasks where user said "yes" but AI determined
-no changes needed):
+If AI decided NOT to implement changes for ANY approved tasks (tasks where user said "yes" but AI determined no changes needed):
 
-- **Show summary of unimplemented changes:**
+**Show summary of unimplemented changes:**
 
-  ```text
-  Unimplemented Changes Review (X approved comments not changed):
+```text
+Unimplemented Changes Review (X approved comments not changed):
 
-  1. [PRIORITY] Priority - Source: [Human/@author | Qodo | CodeRabbit]
-     File: [path] - Line: [line]
-     Comment: [body (truncated)]
-     Reason AI did not implement: [Explain why no changes were made]
+1. [PRIORITY] Priority - Source: [Human/@author | Qodo | CodeRabbit]
+   File: [path] - Line: [line]
+   Comment: [body (truncated)]
+   Reason AI did not implement: [Explain why no changes were made]
 
-  2. [PRIORITY] Priority - Source: [Human/@author | Qodo | CodeRabbit]
-     File: [path] - Line: [line]
-     Comment: [body (truncated)]
-     Reason AI did not implement: [Explain why no changes were made]
-  ...
-  ```
+2. [PRIORITY] Priority - Source: [Human/@author | Qodo | CodeRabbit]
+   File: [path] - Line: [line]
+   Comment: [body (truncated)]
+   Reason AI did not implement: [Explain why no changes were made]
+...
+```
 
-- **MANDATORY**: Ask user for confirmation:
+**MANDATORY**: Ask user for confirmation:
 
-  ```text
-  Do you approve proceeding without these changes? (yes/no)
-  - yes: Proceed to Phase 4 (Testing)
-  - no: Reconsider and implement the changes
-  ```
+```text
+Do you approve proceeding without these changes? (yes/no)
+- yes: Proceed to Phase 4 (Testing)
+- no: Reconsider and implement the changes
+```
 
 - **If user says "no"**: Re-implement the changes as requested
 - **If user says "yes"**: Proceed to Phase 4 (Testing)
@@ -401,6 +414,7 @@ TaskCreate: "Run tests with coverage"
 **MANDATORY STEP 1**: Run all tests WITH coverage
 
 **MANDATORY STEP 2**: Check BOTH test results AND coverage results:
+
 - **If tests pass AND coverage passes**: Proceed to Phase 5 (Post Review Replies)
 - **If tests pass BUT coverage fails**: This is a FAILURE
   - Analyze coverage gaps and add missing tests
@@ -503,21 +517,18 @@ This stores all processed reviews (addressed, skipped, not_addressed) for future
 
 #### CRITICAL: Source-Specific Resolution Behavior
 
-| Source | Resolve skipped/not_addressed? | Reason |
-|--------|-------------------------------|--------|
-| human | NO | Allow human reviewer to follow up |
-| qodo | YES | AI bot, close all threads after reply |
-| coderabbit | YES | AI bot, close all threads after reply |
+| Source     | Resolve skipped/not_addressed? | Reason                                |
+| ---------- | ------------------------------ | ------------------------------------- |
+| human      | NO                             | Allow human reviewer to follow up     |
+| qodo       | YES                            | AI bot, close all threads after reply |
+| coderabbit | YES                            | AI bot, close all threads after reply |
 
 **What this means:**
 
-- **Human reviews**: Only `addressed` threads are resolved. `skipped` and `not_addressed` threads get
-  replies but remain OPEN for the human reviewer to follow up.
-- **AI reviews (Qodo/CodeRabbit)**: ALL threads are resolved after reply, regardless of status. The reply
-  acknowledges the comment, and the thread closes.
+- **Human reviews**: Only `addressed` threads are resolved. `skipped` and `not_addressed` threads get replies but remain OPEN for the human reviewer to follow up.
+- **AI reviews (Qodo/CodeRabbit)**: ALL threads are resolved after reply, regardless of status. The reply acknowledges the comment, and the thread closes.
 
-**NOTE**: The posting script handles this logic automatically based on the `source` field. You only need to
-set `status` and `reply` correctly.
+**NOTE**: The posting script handles this logic automatically based on the `source` field. You only need to set `status` and `reply` correctly.
 
 **CHECKPOINT**: Replies posted to PR
 
@@ -528,6 +539,7 @@ set `status` and `reply` correctly.
 **MANDATORY STEP 1**: After replies are posted, MUST ask: "All replies posted. Do you want to commit the changes? (yes/no)"
 
 **MANDATORY STEP 2**: If user says "yes":
+
 - Create commit task:
 
   ```text
@@ -539,9 +551,11 @@ set `status` and `reply` correctly.
 - Execute the commit
 
 **MANDATORY STEP 3**: After commit (or commit decline), MUST ask: "Do you want to push to remote? (yes/no)"
+
 - If no commit was made, ask: "Do you want to push any existing commits to remote? (yes/no)"
 
 **MANDATORY STEP 4**: If user says "yes":
+
 - Create push task:
 
   ```text
@@ -570,8 +584,7 @@ This prevents stale tasks from accumulating across workflow runs.
 
 ## CRITICAL WORKFLOW - STRICT PHASE SEQUENCE
 
-This workflow has **6 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS**
-that CANNOT be skipped:
+This workflow has **6 MANDATORY PHASES** that MUST be executed in order. Each phase has **REQUIRED CHECKPOINTS** that CANNOT be skipped:
 
 ### PHASE 1: Collection Phase
 
@@ -612,7 +625,7 @@ that CANNOT be skipped:
 - Store reviews to database
 - **CHECKPOINT**: All replies posted successfully
 
-### PHASE 6: Commit & Push Phase
+### PHASE 6: Commit and Push Phase
 
 - **IMPORTANT**: Create tasks ONLY after user confirms each step (not before asking)
 - **MANDATORY STEP 1**: After replies posted, MUST ask user: "All replies posted. Do you want to commit the changes? (yes/no)"
@@ -625,14 +638,14 @@ that CANNOT be skipped:
 
 Tasks are created and managed automatically:
 
-| Phase | Tasks Created | Dependencies |
-|-------|--------------|--------------|
-| 1 | 1 (collection) | None |
-| 2 | N (one per approved comment) | blockedBy: Phase 1 |
-| 3 | 0 (manual review) | - |
-| 4 | 1 (testing) | blockedBy: Phase 2 |
-| 5 | 3 (JSON, post, store) | blockedBy: Phase 4, then chained |
-| 6 | 0-2 (commit if yes, push if yes) | Created after user confirms each |
+| Phase | Tasks Created                    | Dependencies                     |
+| ----- | -------------------------------- | -------------------------------- |
+| 1     | 1 (collection)                   | None                             |
+| 2     | N (one per approved comment)     | blockedBy: Phase 1               |
+| 3     | 0 (manual review)                | -                                |
+| 4     | 1 (testing)                      | blockedBy: Phase 2               |
+| 5     | 3 (JSON, post, store)            | blockedBy: Phase 4, then chained |
+| 6     | 0-2 (commit if yes, push if yes) | Created after user confirms each |
 
 Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 
@@ -646,12 +659,12 @@ Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 - **NEVER assume** - always ask for confirmation, never assume user wants to commit/push
 - **COMPLETE each phase fully** before starting the next phase
 
-**If tests OR coverage fail**:
+**If tests OR coverage fail:**
 
 - Analyze and fix failures (add tests for coverage gaps)
 - Re-run tests with coverage until BOTH pass before proceeding to Phase 5.
 
-**If commit or push is declined**:
+**If commit or push is declined:**
 
 - Respect user's decision and proceed to next step (Phase 6's commit confirmation is mandatory to ask, but user can decline)
 
@@ -661,37 +674,40 @@ Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
 
 ### Response Options Summary
 
-| Response | Effect |
-|----------|--------|
-| `yes` | Create task for this comment |
-| `no` | Mark as not_addressed (ask reason) |
-| `all` | Create tasks for ALL remaining comments |
-| `skip human` | Skip all remaining human comments |
-| `skip qodo` | Skip all remaining Qodo comments |
-| `skip coderabbit` | Skip all remaining CodeRabbit comments |
-| `skip ai` | Skip all remaining Qodo AND CodeRabbit comments |
+| Response          | Effect                                          |
+| ----------------- | ----------------------------------------------- |
+| `yes`             | Create task for this comment                    |
+| `no`              | Mark as not_addressed (ask reason)              |
+| `all`             | Create tasks for ALL remaining comments         |
+| `skip human`      | Skip all remaining human comments               |
+| `skip qodo`       | Skip all remaining Qodo comments                |
+| `skip coderabbit` | Skip all remaining CodeRabbit comments          |
+| `skip ai`         | Skip all remaining Qodo AND CodeRabbit comments |
 
 ### Resolution Behavior Summary
 
-| Source | addressed | skipped | not_addressed |
-|--------|-----------|---------|---------------|
-| Human | Resolve | Keep Open | Keep Open |
-| Qodo | Resolve | Resolve | Resolve |
-| CodeRabbit | Resolve | Resolve | Resolve |
+| Source     | addressed | skipped   | not_addressed |
+| ---------- | --------- | --------- | ------------- |
+| Human      | Resolve   | Keep Open | Keep Open     |
+| Qodo       | Resolve   | Resolve   | Resolve       |
+| CodeRabbit | Resolve   | Resolve   | Resolve       |
 
 ### Scripts Reference
 
 **Fetcher script:**
+
 ```bash
 uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
 ```
 
 **Posting script:**
+
 ```bash
 uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py "<path from metadata.json_path>"
 ```
 
 **Storage script:**
+
 ```bash
 uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py "<path from metadata.json_path>"
 ```

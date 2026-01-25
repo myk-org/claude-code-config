@@ -11,11 +11,11 @@
 
 ## Execution Mode Comparison
 
-| Scenario | Normal Mode | During Slash Command |
-|----------|-------------|---------------------|
-| Run bash script | ❌ Delegate to bash-expert | ✅ Run directly |
-| Execute git command | ❌ Delegate to git-expert | ✅ Run directly |
-| Any shell command | ❌ Delegate to specialist | ✅ Run directly |
+| Scenario            | Normal Mode                | During Slash Command |
+|---------------------|----------------------------|----------------------|
+| Run bash script     | Delegate to bash-expert    | Run directly         |
+| Execute git command | Delegate to git-expert     | Run directly         |
+| Any shell command   | Delegate to specialist     | Run directly         |
 
 ## Why These Rules Exist
 
