@@ -45,7 +45,8 @@ uv run ~/.claude/commands/scripts/general/review_db.py dismissed --owner <owner>
 ```
 
 #### 5. Custom Query
-Run a custom SELECT query (SELECT only, for safety). Always include a `LIMIT` to keep output manageable.
+
+Run a custom query (**single statement SELECT only**; no semicolon-chained statements, no PRAGMA/ATTACH/DDL/DML). Always include a `LIMIT` to keep output manageable.
 
 ```bash
 uv run ~/.claude/commands/scripts/general/review_db.py query "SELECT * FROM comments WHERE status = 'skipped' ORDER BY id DESC LIMIT 10" --json

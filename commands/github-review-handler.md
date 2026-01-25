@@ -249,6 +249,7 @@ For EVERY comment presented, track the outcome for the final reply:
    - If Claude agrees with dismissal -> Accept "no" and ask for reason
 
 3. **Challenge Flow** (one challenge only):
+
    ```text
    I'd push back on this one. [Explain WHY Claude thinks it's worth addressing,
    referencing specific concerns like security, bugs, or maintainability.

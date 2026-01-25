@@ -477,12 +477,12 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
             **thread,
             "source": source,
             "priority": priority,
-            "reply": None,
-            "status": "pending",
+            "reply": thread.get("reply"),
+            "status": thread.get("status", "pending"),
         }
 
-        # Check for previously dismissed similar comment
-        if dismissed_by_path:
+        # Check for previously dismissed similar comment (only if status is pending)
+        if dismissed_by_path and enriched.get("status") == "pending":
             path = (thread.get("path") or "").strip()
             thread_body = (thread.get("body") or "").strip()
             if path and thread_body:

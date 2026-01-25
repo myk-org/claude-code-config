@@ -507,9 +507,9 @@ class ReviewDB:
         sql_for_checks = _strip_sql_comments(sql_stripped)
         sql_upper = sql_for_checks.upper()
 
-        # Block multiple statements (semicolon in middle of query)
-        sql_clean = sql_stripped.rstrip(";")
-        if ";" in sql_clean:
+        # Block multiple statements (semicolon separating statements, not in strings/comments)
+        sql_stmt_check = _strip_sql_strings(sql_for_checks).rstrip(";")
+        if ";" in sql_stmt_check:
             raise ValueError("Multiple SQL statements are not allowed")
 
         # Allow SELECT and WITH (CTE) as read-only entrypoints

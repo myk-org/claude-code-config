@@ -123,7 +123,11 @@ def get_current_commit_sha(cwd: Path | None = None) -> str:
         if result.returncode != 0:
             log(f"Warning: Could not get commit SHA: {result.stderr.strip()}")
             return "unknown"
-        return result.stdout.strip()  # Full SHA for traceability
+        sha = result.stdout.strip()
+        if not sha:
+            log("Warning: Could not get commit SHA: empty output")
+            return "unknown"
+        return sha  # Full SHA for traceability
     except (subprocess.SubprocessError, OSError) as e:
         log(f"Warning: Could not get commit SHA: {e}")
         return "unknown"
