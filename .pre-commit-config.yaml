@@ -61,4 +61,4 @@ repos:
     hooks:
       - id: markdownlint
         args: [--config, .markdownlint.yaml]
-        files: \.md$
+        types: [markdown]

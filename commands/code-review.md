@@ -1,4 +1,6 @@
 ---
+name: code-review
+description: Review uncommitted changes or changes compared to a specified branch
 skipConfirmation: true
 ---
 
@@ -21,7 +23,8 @@ skipConfirmation: true
 Compare current branch against the specified branch:
 
 ```bash
-git diff "$ARGUMENTS"
+read -r -a args <<<"$ARGUMENTS"
+git diff "${args[@]}"
 ```
 
 **If no argument provided (`$ARGUMENTS` is empty):**

@@ -105,7 +105,7 @@ This workflow uses Claude Code's task system for progress tracking. Tasks are cr
 ```text
 TaskCreate: "Validate release prerequisites"
   - activeForm: "Validating prerequisites"
-  - Status: in_progress
+  - status: in_progress
 ```
 
 **Route to `bash-expert` agent with this prompt:**
@@ -239,7 +239,7 @@ If the script fails, include an "error" field with the error message:
 TaskCreate: "Analyze commits and generate changelog"
   - activeForm: "Analyzing commits"
   - blockedBy: [Phase 1 task]
-  - Status: in_progress
+  - status: in_progress
 ```
 
 **Parse commits and determine version bump:**
@@ -446,7 +446,7 @@ Your choice:
 ```text
 TaskCreate: "Create GitHub release"
   - activeForm: "Creating release"
-  - Status: in_progress
+  - status: in_progress
 ```
 
 **Route to `bash-expert` agent with this prompt:**

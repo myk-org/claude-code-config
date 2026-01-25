@@ -69,8 +69,8 @@ This workflow uses Claude Code's task system for progress tracking. Tasks are cr
 
 - Phase 1a: Data fetching (bash-expert)
 - Phase 1b: Code analysis (blockedBy 1a)
-- Phase 2: User selection (main conversation, no task)
-- Phase 3: Post comments (blockedBy user selection)
+- Phase 2: User selection (TaskCreate: Await user selection)
+- Phase 3: Post comments (blockedBy Phase 2 task)
 - Phase 4: Summary (main conversation, no task)
 
 ---
@@ -106,7 +106,7 @@ GET_CLAUDE_MD_SCRIPT=~/.claude/commands/scripts/github-pr-review/get-claude-md.s
 Run the diff script with the provided arguments:
 
 ```bash
-$GET_DIFF_SCRIPT "{ARGUMENTS}"
+$GET_DIFF_SCRIPT {ARGUMENTS}
 ```
 
 Arguments to pass: `{ARGUMENTS}`
@@ -355,6 +355,15 @@ Return ONLY the JSON object, no additional commentary.
 
 ### PHASE 2: User Selection (MAIN CONVERSATION - DO NOT DELEGATE)
 
+**Create Phase 2 task:**
+
+```text
+TaskCreate: "Await user selection"
+  - activeForm: "Waiting for user selection"
+  - blockedBy: [Phase 1b task]
+  - status: in_progress
+```
+
 ### STOP - MANDATORY USER INTERACTION
 
 **YOU MUST STOP HERE AND WAIT FOR USER INPUT.**
@@ -495,7 +504,8 @@ Your choice:
 ```text
 TaskCreate: "Post review comments to PR"
   - activeForm: "Posting comments"
-  - Status: in_progress
+  - blockedBy: [Phase 2 task]
+  - status: in_progress
 ```
 
 **Route to `bash-expert` agent with this prompt:**
@@ -730,8 +740,8 @@ Tasks are created and managed automatically:
 | ----- | --------------------- | -------------------------- |
 | 1a    | 1 (data fetching)     | None                       |
 | 1b    | 1 (code analysis)     | blockedBy: Phase 1a        |
-| 2     | 0 (user interaction)  | -                          |
-| 3     | 1 (post comments)     | blockedBy: user selection  |
+| 2     | 1 (await selection)   | blockedBy: Phase 1b        |
+| 3     | 1 (post comments)     | blockedBy: Phase 2         |
 | 4     | 0 (summary)           | -                          |
 
 Use `TaskList` to check progress. Use `TaskUpdate` to mark tasks completed.
