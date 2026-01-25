@@ -155,6 +155,8 @@ claude-code-config/
 
 **Claude Code provides task tracking tools for complex workflows.**
 
+**Tasks persist to disk** at `~/.claude/tasks/<session-uuid>/` and can be resumed across sessions.
+
 **Available tools:**
 
 - `TaskCreate` - Create new tasks with subject, description, activeForm
@@ -164,15 +166,19 @@ claude-code-config/
 
 **When to use tasks:**
 
-- Commands with 2+ phases that benefit from progress tracking
-- Multi-step workflows where user visibility is important
-- Slash commands with dependent phases (e.g., github-review-handler)
+- Complex work that might be interrupted mid-session
+- Multi-step workflows where progress tracking helps
+- Work you might need to resume in a new session
+- Operations where seeing status helps the user
+- Slash commands with dependent phases
+
+**Key question:** "Is this work I'd want to track and potentially resume?"
 
 **When NOT to use:**
 
-- Simple single-step operations
+- Simple operations that complete quickly
 - Agent work (agents are ephemeral)
-- Quick fixes or trivial operations
+- Trivial fixes or single-action operations
 
 **Task naming:**
 

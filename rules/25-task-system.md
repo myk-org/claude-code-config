@@ -21,7 +21,7 @@ This means tasks have value beyond the current session. If work is interrupted, 
 
 ## When to Use the Task System
 
-**Tasks persist to disk** at `~/.claude/tasks/` and can be resumed across sessions. Use this to decide when tasks add value.
+**Tasks persist to disk** at `~/.claude/tasks/<session-uuid>/` and can be resumed across sessions. Use this to decide when tasks add value.
 
 **USE the task system for:**
 
