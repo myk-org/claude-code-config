@@ -21,6 +21,9 @@ Dependencies: gh CLI, get-pr-info.sh (in same directory)
 from __future__ import annotations
 
 import argparse
+
+# Import ReviewDB from same directory without mutating sys.path
+import importlib.util
 import json
 import os
 import re
@@ -31,7 +34,57 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-# Known AI reviewer usernames (keep in sync with get-reviewer-from-url.sh)
+_REVIEW_DB_PATH = Path(__file__).with_name("review_db.py")
+
+_REVIEW_DB_CACHE: tuple[type | None, Any | None] | None = None
+
+
+def _load_review_db() -> tuple[type | None, Any | None]:
+    """Lazily load ReviewDB and similarity function, returning (None, None) if unavailable."""
+    global _REVIEW_DB_CACHE
+    if _REVIEW_DB_CACHE is not None:
+        return _REVIEW_DB_CACHE
+
+    try:
+        if not _REVIEW_DB_PATH.exists():
+            _REVIEW_DB_CACHE = (None, None)
+            return _REVIEW_DB_CACHE
+
+        spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
+        if spec is None or spec.loader is None:
+            _REVIEW_DB_CACHE = (None, None)
+            return _REVIEW_DB_CACHE
+
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _REVIEW_DB_CACHE = (getattr(module, "ReviewDB", None), getattr(module, "_body_similarity", None))
+        return _REVIEW_DB_CACHE
+    except Exception as e:
+        print_stderr(f"Warning: review_db integration disabled: {e}")
+        _REVIEW_DB_CACHE = (None, None)
+        return _REVIEW_DB_CACHE
+
+
+def _fallback_body_similarity(body1: str, body2: str) -> float:
+    """Calculate word overlap ratio between two bodies using Jaccard similarity."""
+    tokens1 = set(re.findall(r"[a-z0-9]+", body1.lower()))
+    tokens2 = set(re.findall(r"[a-z0-9]+", body2.lower()))
+    if not tokens1 or not tokens2:
+        return 0.0
+
+    # Guard against huge bodies (e.g., pasted logs)
+    # Sort before truncating for deterministic behavior
+    if len(tokens1) > 2000:
+        tokens1 = set(sorted(tokens1)[:2000])
+    if len(tokens2) > 2000:
+        tokens2 = set(sorted(tokens2)[:2000])
+
+    intersection = tokens1 & tokens2
+    union = tokens1 | tokens2
+    return len(intersection) / len(union)
+
+
+# Known AI reviewer usernames
 QODO_USERS = ["qodo-code-review", "qodo-code-review[bot]"]
 CODERABBIT_USERS = ["coderabbitai", "coderabbitai[bot]"]
 
@@ -384,11 +437,34 @@ def fetch_review_comments(owner: str, repo: str, pr_number: str, review_id: str)
     ]
 
 
-def process_and_categorize(threads: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
-    """Process threads: add source and priority, categorize."""
+def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str) -> dict[str, list[dict[str, Any]]]:
+    """Process threads: add source and priority, categorize, and auto-skip previously dismissed."""
     human: list[dict[str, Any]] = []
     qodo: list[dict[str, Any]] = []
     coderabbit: list[dict[str, Any]] = []
+
+    # Lazily load ReviewDB and instantiate once outside the loop for performance
+    ReviewDB, sim_fn = _load_review_db()
+    similarity = sim_fn or _fallback_body_similarity  # Use imported or fallback
+    db = None
+    if ReviewDB:
+        try:
+            db = ReviewDB(db_path=None)  # Auto-detect path
+        except Exception as e:
+            print_stderr(f"Warning: Failed to initialize ReviewDB: {e}")
+
+    # Preload and index dismissed comments once per run for performance
+    dismissed_by_path: dict[str, list[dict[str, Any]]] = {}
+    if db:
+        try:
+            for c in db.get_dismissed_comments(owner, repo):
+                p = (c.get("path") or "").strip()
+                b = (c.get("body") or "").strip()
+                if p and b:
+                    dismissed_by_path.setdefault(p, []).append(c)
+        except Exception as e:
+            print_stderr(f"Warning: Failed to preload dismissed comments: {e}")
+            dismissed_by_path = {}
 
     for thread in threads:
         author = thread.get("author")
@@ -401,9 +477,39 @@ def process_and_categorize(threads: list[dict[str, Any]]) -> dict[str, list[dict
             **thread,
             "source": source,
             "priority": priority,
-            "reply": None,
-            "status": "pending",
+            "reply": thread.get("reply"),
+            "status": thread.get("status", "pending"),
         }
+
+        # Check for previously dismissed similar comment (only if status is pending)
+        if dismissed_by_path and enriched.get("status") == "pending":
+            path = (thread.get("path") or "").strip()
+            thread_body = (thread.get("body") or "").strip()
+            if path and thread_body:
+                try:
+                    # Find best matching dismissed comment
+                    best = None
+                    best_score = 0.0
+                    for prev in dismissed_by_path.get(path, []):
+                        prev_body = (prev.get("body") or "").strip()
+                        if not prev_body:
+                            continue
+                        score = similarity(thread_body, prev_body)
+                        if score >= 0.6 and score > best_score:
+                            best = prev
+                            best_score = score
+                            if best_score == 1.0:
+                                break
+
+                    if best:
+                        reason = (best.get("skip_reason") or best.get("reply") or "").strip()
+                        if reason:
+                            enriched["status"] = "skipped"
+                            enriched["skip_reason"] = reason
+                            enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
+                            enriched["is_auto_skipped"] = True
+                except Exception as e:
+                    print_stderr(f"Warning: Failed to match dismissed comment: {e}")
 
         if source == "human":
             human.append(enriched)
@@ -575,7 +681,7 @@ def main() -> int:
 
         # Process and categorize threads
         print_stderr("Categorizing threads by source...")
-        categorized = process_and_categorize(all_threads)
+        categorized = process_and_categorize(all_threads, owner, repo)
 
         # Build final output
         final_output = {
@@ -613,6 +719,11 @@ def main() -> int:
         qodo_count = len(final_output["qodo"])
         coderabbit_count = len(final_output["coderabbit"])
         print_stderr(f"Categories: human={human_count}, qodo={qodo_count}, coderabbit={coderabbit_count}")
+
+        # Count auto-skipped comments
+        auto_skipped = sum(1 for cat in categorized.values() for c in cat if c.get("is_auto_skipped"))
+        if auto_skipped:
+            print_stderr(f"Auto-skipped {auto_skipped} previously dismissed comment(s)")
 
         # Output to stdout
         print(json.dumps(final_output, indent=2))

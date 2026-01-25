@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     pr_number INTEGER NOT NULL,
     owner TEXT NOT NULL,
     repo TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    UNIQUE(owner, repo, pr_number)
+    commit_sha TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments (
@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS comments (
 CREATE INDEX IF NOT EXISTS idx_comments_review_id ON comments(review_id);
 CREATE INDEX IF NOT EXISTS idx_comments_source ON comments(source);
 CREATE INDEX IF NOT EXISTS idx_comments_status ON comments(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_pr ON reviews(owner, repo, pr_number);
+CREATE INDEX IF NOT EXISTS idx_reviews_commit ON reviews(commit_sha);
 """
 
 
@@ -104,41 +106,46 @@ def create_tables(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
 
 
-def upsert_review(conn: sqlite3.Connection, owner: str, repo: str, pr_number: int) -> int:
-    """Insert or update review record, returning the review_id."""
+def get_current_commit_sha(cwd: Path | None = None) -> str:
+    """Get the current git commit SHA.
+
+    Args:
+        cwd: Working directory for git command. If None, uses current directory.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd=cwd,
+        )
+        if result.returncode != 0:
+            log(f"Warning: Could not get commit SHA: {result.stderr.strip()}")
+            return "unknown"
+        sha = result.stdout.strip()
+        if not sha:
+            log("Warning: Could not get commit SHA: empty output")
+            return "unknown"
+        return sha  # Full SHA for traceability
+    except (subprocess.SubprocessError, OSError) as e:
+        log(f"Warning: Could not get commit SHA: {e}")
+        return "unknown"
+
+
+def insert_review(conn: sqlite3.Connection, owner: str, repo: str, pr_number: int, commit_sha: str) -> int:
+    """Insert a new review record. Always appends, never updates."""
     cursor = conn.cursor()
-
-    # Check if review already exists
-    cursor.execute(
-        "SELECT id FROM reviews WHERE owner = ? AND repo = ? AND pr_number = ?",
-        (owner, repo, pr_number),
-    )
-    row = cursor.fetchone()
-
     created_at = datetime.now(timezone.utc).isoformat()
 
-    if row:
-        review_id: int = row[0]
-        # Update created_at to reflect re-run
-        cursor.execute(
-            "UPDATE reviews SET created_at = ? WHERE id = ?",
-            (created_at, review_id),
-        )
-    else:
-        cursor.execute(
-            "INSERT INTO reviews (owner, repo, pr_number, created_at) VALUES (?, ?, ?, ?)",
-            (owner, repo, pr_number, created_at),
-        )
-        review_id = cursor.lastrowid or 0
-
-    return review_id
-
-
-def delete_existing_comments(conn: sqlite3.Connection, review_id: int) -> int:
-    """Delete existing comments for this review_id. Returns count of deleted rows."""
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM comments WHERE review_id = ?", (review_id,))
-    return cursor.rowcount
+    cursor.execute(
+        "INSERT INTO reviews (owner, repo, pr_number, commit_sha, created_at) VALUES (?, ?, ?, ?, ?)",
+        (owner, repo, pr_number, commit_sha, created_at),
+    )
+    review_id = cursor.lastrowid
+    if not review_id:
+        raise RuntimeError("Failed to insert review record")
+    return int(review_id)
 
 
 def insert_comment(conn: sqlite3.Connection, review_id: int, source: str, comment: dict[str, Any]) -> None:
@@ -197,10 +204,14 @@ def store_reviews(json_path: Path) -> None:
         log("Error: JSON missing required fields (owner, repo, pr_number)")
         sys.exit(1)
 
-    log(f"Storing reviews for {owner}/{repo}#{pr_number}...")
-
     # Get project root and database path
     project_root = get_project_root()
+
+    # Get current commit SHA (anchored to repo root for correctness)
+    commit_sha = get_current_commit_sha(cwd=project_root)
+
+    log(f"Storing reviews for {owner}/{repo}#{pr_number} (commit: {commit_sha[:7]})...")
+
     db_path = project_root / ".claude" / "data" / "reviews.db"
 
     log(f"Database: {db_path}")
@@ -215,13 +226,9 @@ def store_reviews(json_path: Path) -> None:
         conn.execute("PRAGMA foreign_keys=ON")
         create_tables(conn)
 
-        # Upsert review record
-        review_id = upsert_review(conn, owner, repo, pr_number)
-
-        # Delete existing comments for re-runs
-        deleted_count = delete_existing_comments(conn, review_id)
-        if deleted_count > 0:
-            log(f"Deleted {deleted_count} existing comments (re-run)")
+        # Insert new review record (append-only, never update)
+        # RuntimeError in insert_review handles invalid lastrowid
+        review_id = insert_review(conn, owner, repo, pr_number, commit_sha)
 
         # Count comments by source
         counts: dict[str, int] = {"human": 0, "qodo": 0, "coderabbit": 0}
@@ -240,7 +247,7 @@ def store_reviews(json_path: Path) -> None:
         count_parts = [f"{v} {k}" for k, v in counts.items() if v > 0]
         count_summary = ", ".join(count_parts) if count_parts else "0 comments"
 
-        log(f"Stored review with {total_comments} comments ({count_summary})")
+        log(f"Stored review (commit: {commit_sha[:7]}) with {total_comments} comments ({count_summary})")
 
     except sqlite3.Error as e:
         conn.rollback()

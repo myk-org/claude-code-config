@@ -9,6 +9,7 @@
 !README.md
 !settings.json
 !statusline.sh
+!.markdownlint.yaml
 
 # agents/
 !agents/
@@ -35,22 +36,17 @@
 
 # commands/
 !commands/
+!commands/ask-review-db.md
 !commands/code-review.md
-!commands/github-ai-review-handler.md
-!commands/github-coderabbitai-review-handler.md
 !commands/github-pr-review.md
 !commands/github-release.md
-!commands/github-qodo-review-handler.md
 !commands/github-review-handler.md
 !commands/scripts/
 !commands/scripts/general/
 !commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
-!commands/scripts/general/get-all-github-unresolved-reviews-for-pr.sh
 !commands/scripts/general/get-pr-info.sh
-!commands/scripts/general/get-reviewer-from-url.sh
-!commands/scripts/general/get-unresolved-review-threads.sh
 !commands/scripts/general/post-review-replies-from-json.py
-!commands/scripts/general/post-review-replies-from-json.sh
+!commands/scripts/general/review_db.py
 !commands/scripts/general/store-reviews-to-db.py
 !commands/scripts/github-pr-review/
 !commands/scripts/github-pr-review/get-claude-md.sh
@@ -91,6 +87,7 @@
 !tests/test_git_protection.py
 !tests/test_get_all_reviews.py
 !tests/test_post_review_replies.py
+!tests/test_review_db.py
 !tests/test_rule_enforcer.py
 !tests/test_store_reviews_to_db.py
 
