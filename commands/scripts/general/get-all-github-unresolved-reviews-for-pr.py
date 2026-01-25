@@ -73,10 +73,11 @@ def _fallback_body_similarity(body1: str, body2: str) -> float:
         return 0.0
 
     # Guard against huge bodies (e.g., pasted logs)
+    # Sort before truncating for deterministic behavior
     if len(tokens1) > 2000:
-        tokens1 = set(list(tokens1)[:2000])
+        tokens1 = set(sorted(tokens1)[:2000])
     if len(tokens2) > 2000:
-        tokens2 = set(list(tokens2)[:2000])
+        tokens2 = set(sorted(tokens2)[:2000])
 
     intersection = tokens1 & tokens2
     union = tokens1 | tokens2
