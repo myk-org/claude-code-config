@@ -473,7 +473,7 @@ For each comment that was processed, update its entry in the appropriate array (
 After writing the JSON file, validate it to ensure proper escaping:
 
 ```bash
-uv run -c "import json; json.load(open('<path from metadata.json_path>'))"
+uv run python -c "import json; json.load(open('<path from metadata.json_path>'))"
 ```
 
 If validation fails, fix the JSON (usually unescaped quotes in body content) and re-validate before proceeding.

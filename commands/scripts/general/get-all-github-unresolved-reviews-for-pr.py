@@ -498,9 +498,11 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                         if score >= 0.6 and score > best_score:
                             best = prev
                             best_score = score
+                            if best_score == 1.0:
+                                break
 
                     if best:
-                        reason = (best.get("reply") or "").strip()
+                        reason = (best.get("reply") or best.get("skip_reason") or "").strip()
                         if reason:
                             enriched["status"] = "skipped"
                             enriched["skip_reason"] = reason

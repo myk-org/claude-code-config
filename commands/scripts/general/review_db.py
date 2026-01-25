@@ -124,8 +124,12 @@ class ReviewDB:
     def _connect(self) -> sqlite3.Connection:
         """Create a database connection with row factory for dict results."""
         db_path = self.db_path.resolve()
-        db_uri = f"file:{quote(str(db_path), safe='/')}?mode=ro"
-        conn = sqlite3.connect(db_uri, uri=True)
+        path_str = db_path.as_posix()
+        db_uri = f"file:{quote(path_str, safe='/:')}?mode=ro"
+        try:
+            conn = sqlite3.connect(db_uri, uri=True)
+        except sqlite3.Error as e:
+            raise RuntimeError(f"Failed to open database (read-only): {db_path}") from e
         conn.row_factory = sqlite3.Row
         return conn
 
@@ -487,7 +491,21 @@ class ReviewDB:
         """
         # Safety check: only allow SELECT/CTE statements
         sql_stripped = sql.strip()
-        sql_upper = sql_stripped.upper()
+
+        # Helper functions to strip SQL comments and strings before safety checks
+        def _strip_sql_comments(s: str) -> str:
+            # Remove block comments then line comments
+            s = re.sub(r"/\*.*?\*/", "", s, flags=re.DOTALL)
+            s = re.sub(r"--[^\n]*", "", s)
+            return s
+
+        def _strip_sql_strings(s: str) -> str:
+            # Remove single-quoted string literals (handles escaped '' within strings)
+            return re.sub(r"'([^']|'')*'", "''", s)
+
+        # Strip comments first, then compute uppercase for all checks
+        sql_for_checks = _strip_sql_comments(sql_stripped)
+        sql_upper = sql_for_checks.upper()
 
         # Block multiple statements (semicolon in middle of query)
         sql_clean = sql_stripped.rstrip(";")
@@ -510,21 +528,6 @@ class ReviewDB:
             "DETACH",
             "PRAGMA",
         ]
-
-        # Helper functions to strip SQL comments and strings before safety checks
-        def _strip_sql_comments(s: str) -> str:
-            # Remove block comments then line comments
-            s = re.sub(r"/\*.*?\*/", "", s, flags=re.DOTALL)
-            s = re.sub(r"--[^\n]*", "", s)
-            return s
-
-        def _strip_sql_strings(s: str) -> str:
-            # Remove single-quoted string literals (handles escaped '' within strings)
-            return re.sub(r"'([^']|'')*'", "''", s)
-
-        # Strip comments and get uppercase version for safety checks
-        sql_for_checks = _strip_sql_comments(sql_stripped)
-        sql_upper = sql_for_checks.upper()
 
         sql_upper_stripped = _strip_sql_strings(sql_upper)
 
