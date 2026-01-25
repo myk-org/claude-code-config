@@ -98,7 +98,7 @@ claude-code-config/
 ├── .pre-commit-config.yaml    # Pre-commit hooks
 ├── .flake8                    # Flake8 configuration
 ├── README.md                  # Installation and usage guide
-└── AI_REVIEW.md               # This file - AI review tool context
+└── CLAUDE.md                  # This file - project context
 ```
 
 ---
@@ -277,12 +277,14 @@ The `review_db.py` module provides query access to the reviews SQLite database a
    ```
 
 4. **Whitelist in .gitignore** (REQUIRED):
+
    - Open `.gitignore`
    - Find the `# agents/` section
    - Add `!agents/my-new-expert.md` in alphabetical order
    - Required because `agents/` is gitignored by default with specific files whitelisted
 
 5. **Add scripts to settings.json** (REQUIRED if agent uses scripts):
+
    - If your agent needs helper scripts, create them in `commands/scripts/<agent-name>/`
    - Open `settings.json`
    - Add the script to `allowedTools` array:
@@ -294,6 +296,7 @@ The `review_db.py` module provides query access to the reviews SQLite database a
 6. **Test the agent** - Ask Claude to delegate a task to it
 
 7. **Update bug reporting rule** (REQUIRED):
+
    - Open `rules/50-agent-bug-reporting.md`
    - Add the new agent to the "Scope - Agents Covered" list
    - This ensures bugs in the new agent are tracked via GitHub issues
@@ -307,18 +310,22 @@ The `review_db.py` module provides query access to the reviews SQLite database a
    ```
 
 2. **Remove whitelist entry** from `.gitignore`:
+
    - Open `.gitignore`
    - Find the `# agents/` section
    - Remove the `!agents/my-old-expert.md` line
 
 3. **Remove routing rule** from `rules/10-agent-routing.md`:
+
    - Delete the row mapping tasks to this agent
 
 4. **Update bug reporting rule**:
+
    - Open `rules/50-agent-bug-reporting.md`
    - Remove the agent from the "Scope - Agents Covered" list
 
 5. **Clean up scripts** (if applicable):
+
    - Delete any scripts from `commands/scripts/<agent-name>/`
    - Remove entries from `settings.json` → `allowedTools` and `permissions.allow`
 
@@ -350,6 +357,7 @@ The `review_db.py` module provides query access to the reviews SQLite database a
    ```
 
 3. **Whitelist in .gitignore** (REQUIRED):
+
    - Open `.gitignore`
    - Find the `# commands/` section
    - Add `!commands/my-command.md` in alphabetical order
@@ -357,6 +365,7 @@ The `review_db.py` module provides query access to the reviews SQLite database a
    - Required because `commands/` is gitignored by default with specific files whitelisted
 
 4. **Add scripts to settings.json** (REQUIRED if command uses scripts):
+
    - Open `settings.json`
    - Add the script to `allowedTools` array:
      - For bash scripts: `"Bash(~/.claude/commands/scripts/<command>/<script>.sh*)"`
@@ -498,14 +507,15 @@ The following directories are completely gitignored, with only specific files tr
 
 ```json
 "allowedTools": [
-  "Edit(/tmp/claude/**)",
-  "Write(/tmp/claude/**)",
-  "Bash(mkdir -p /tmp/claude*)",
-  "Bash(claude *)",
-  "Bash(mcpl*)",
-  "Bash(sed -n *)",
-  "Bash(grep *)",
-  "Grep"
+  "Edit(/tmp/claude/**)",           // Only /tmp/claude/
+  "Write(/tmp/claude/**)",          // Only /tmp/claude/
+  "Bash(mkdir -p /tmp/claude*)",    // Create temp dir
+  "Bash(claude *)",                 // Agent delegation
+  "Bash(mcpl*)",                     // MCP server discovery
+  "Bash(sed -n *)",                 // Read-only sed
+  "Bash(grep *)",                   // Search
+  "Grep",                           // Grep tool
+  // Slash command scripts...
 ]
 ```
 
