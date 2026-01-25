@@ -63,6 +63,28 @@ When invoked:
 - If CLAUDE.md says "never do X" - finding X is CRITICAL
 - If CLAUDE.md says "always do Y" - missing Y is CRITICAL
 
+## CRITICAL: Findings Must Be Actionable
+
+**ONLY include findings that require action.** Never include positive confirmations.
+
+**DO NOT INCLUDE in findings:**
+
+- "No action required" observations
+- Confirmations that code is correct
+- Praise for good patterns
+- Acknowledgments of proper implementation
+
+**ONLY INCLUDE in findings:**
+
+- Issues that need to be fixed
+- Problems that need investigation
+- Code that should be changed
+- Patterns that need improvement
+
+**If a code section is correct and well-implemented, do NOT create a finding for it.**
+
+Return an empty findings array if no actionable issues are found.
+
 Provide feedback organized by priority:
 
 - Critical issues (must fix)
