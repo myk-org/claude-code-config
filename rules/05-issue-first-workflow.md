@@ -32,6 +32,7 @@ Before ANY code changes, complete this checklist:
 ## When This Workflow Applies
 
 **USE this workflow for:**
+
 - New features or enhancements
 - Bug fixes that require code changes
 - Refactoring tasks
@@ -39,6 +40,7 @@ Before ANY code changes, complete this checklist:
 - Tasks that benefit from tracking and documentation
 
 **SKIP this workflow for:**
+
 - Trivial fixes (typos, single-line changes)
 - Questions or explanations (no code changes)
 - Exploration or research tasks
@@ -90,6 +92,7 @@ When user confirms they want to work on the issue, **delegate to git-expert**:
 2. **Create issue branch**: `git checkout -b <type>/issue-<number>-<short-description> origin/main`
 
 **Branch naming:**
+
 - `feat/issue-70-issue-first-workflow`
 - `fix/issue-42-memory-leak`
 - `refactor/issue-99-cleanup-utils`
@@ -100,6 +103,7 @@ When user confirms they want to work on the issue, **delegate to git-expert**:
 ## Issue Format
 
 The `github-expert` agent handles issue formatting. When delegating issue creation, provide:
+
 - Type (fix/feat/refactor/docs)
 - Problem/feature description
 - Requirements list
@@ -166,6 +170,7 @@ After creating the issue, always ask:
 > Do you want to work on it now?
 
 Wait for explicit confirmation before:
+
 - Creating the branch
 - Starting any implementation work
 
@@ -173,10 +178,10 @@ Wait for explicit confirmation before:
 
 ## Edge Cases
 
-| Scenario | Behavior |
-|----------|----------|
-| User says "just fix it" | Skip workflow, do directly |
-| User provides partial requirements | Ask clarifying questions, then create issue |
-| Issue already exists | Ask if user wants to continue existing issue |
-| Urgent/hotfix request | Skip workflow, note in commit message |
-| Multiple unrelated requests | Create separate issues for each |
+| Scenario                           | Behavior                                     |
+|------------------------------------|----------------------------------------------|
+| User says "just fix it"            | Skip workflow, do directly                   |
+| User provides partial requirements | Ask clarifying questions, then create issue  |
+| Issue already exists               | Ask if user wants to continue existing issue |
+| Urgent/hotfix request              | Skip workflow, note in commit message        |
+| Multiple unrelated requests        | Create separate issues for each              |

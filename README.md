@@ -4,16 +4,18 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 
 ## Requirements
 
-- **Claude Code v2.1.17 or higher** - This configuration uses v2.1.17 features (see below)
+- **Claude Code v2.1.19 or higher** - This configuration uses v2.1.19 features (see below)
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager (used for running hook scripts)
 
-### Claude Code v2.1.17 Features Used
+### Claude Code v2.1.19 Features Used
 
 This configuration leverages these features:
 
 - **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert) (v2.1.0)
 - **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only) (v2.1.0)
 - **`additionalContext` in PreToolUse** - Provides guidance when blocking commands (v2.1.9)
+- **Task management system** - Built-in task tracking with `TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet` for complex workflows (v2.1.16)
+- **Slash command argument syntax** - Bracket syntax `$ARGUMENTS[0]` and shorthand `$0`, `$1` for positional arguments (v2.1.19)
 
 > Note: `context: fork` was evaluated but not used due to compatibility issues with multi-phase workflows.
 
@@ -28,6 +30,7 @@ git clone https://github.com/myk-org/claude-code-config ~/.claude
 ```
 
 **See also:**
+
 - [Backup Existing Config](#backup-existing-config) - If you have an existing ~/.claude
 - [GNU Stow Integration](#integration-with-dotfiles-gnu-stow) - For dotfiles users
 
@@ -40,6 +43,7 @@ git clone https://github.com/myk-org/claude-code-config ~/git/claude-code-config
 ```
 
 **Then choose how to use it:**
+
 - [Symlink Approach](#symlink-approach) - Symlink components to ~/.claude
 - [Copy Approach](#copy-approach) - Copy files to ~/.claude
 
@@ -105,6 +109,7 @@ rm -rf /tmp/claude-code-config
 ```
 
 **Updating with this approach:**
+
 ```bash
 git clone https://github.com/myk-org/claude-code-config /tmp/claude-code-config
 cp -r /tmp/claude-code-config/agents ~/.claude/
@@ -122,7 +127,7 @@ If you manage your dotfiles with GNU Stow, use this **clone + overlay** approach
 
 ### How It Works
 
-```
+```text
 Step 1: git clone this repo directly to ~/.claude (base config)
 Step 2: stow your dotfiles (private .claude files overlay on top)
 ```
@@ -130,7 +135,8 @@ Step 2: stow your dotfiles (private .claude files overlay on top)
 ### Directory Structure
 
 **This repo (cloned directly to ~/.claude):**
-```
+
+```text
 ~/.claude/                    ← git clone destination
 ├── agents/                   # Public agents (from this repo)
 ├── commands/                 # Commands
@@ -141,7 +147,8 @@ Step 2: stow your dotfiles (private .claude files overlay on top)
 ```
 
 **Your dotfiles (private overlay via stow):**
-```
+
+```text
 dotfiles/
 ├── .zshrc
 ├── .config/
@@ -189,7 +196,7 @@ cd ~/.claude && git pull
 ## Agents
 
 | Agent | Purpose |
-|-------|---------|
+| ----- | ------- |
 | `python-expert` | Python development, testing, async patterns |
 | `go-expert` | Go development, goroutines, modules |
 | `java-expert` | Java/Spring Boot development |
@@ -212,16 +219,20 @@ cd ~/.claude && git pull
 
 ### Automatic Documentation Fetching
 
-When specialist agents work with external libraries or frameworks, they can automatically fetch the latest documentation through the `docs-fetcher` agent. This ensures that code follows current best practices and uses up-to-date APIs.
+When specialist agents work with external libraries or frameworks, they can automatically fetch the latest
+documentation through the `docs-fetcher` agent. This ensures that code follows current best practices and
+uses up-to-date APIs.
 
 **Key features:**
+
 - Prioritizes `llms.txt` files (LLM-optimized documentation)
 - Falls back to official documentation sites
 - Caches results for faster subsequent access
 - Provides context-relevant excerpts to specialist agents
 
 **Example workflow:**
-```
+
+```text
 python-expert working with FastAPI
          ↓
     docs-fetcher fetches FastAPI docs
@@ -232,7 +243,7 @@ python-expert uses current best practices
 ## Slash Commands
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `/github-pr-review` | Review a GitHub PR and post inline comments. Posts as single review with summary. |
 | `/github-review-handler` | Process human reviewer comments from a PR. |
 | `/github-coderabbitai-review-handler` | Process CodeRabbit AI review comments. |
@@ -242,8 +253,8 @@ python-expert uses current best practices
 
 Skills are similar to slash commands but auto-invoke based on task context rather than requiring explicit invocation.
 
-| Skill | Description |
-|-------|-------------|
+| Skill           | Description                                                                        |
+| --------------- | ---------------------------------------------------------------------------------- |
 | `agent-browser` | Browser automation for web testing, form filling, screenshots, and data extraction |
 
 ### agent-browser Installation
@@ -264,11 +275,13 @@ See [agent-browser](https://github.com/vercel-labs/agent-browser) for installati
 This configuration uses [mcp-launchpad](https://github.com/kenneth-liao/mcp-launchpad) (`mcpl`) for on-demand MCP server access.
 
 **Benefits over native MCP loading:**
+
 - Tools are NOT loaded into context at session start
 - No 30% context consumption from tool definitions
 - Agents discover and call tools on-demand via CLI
 
 **Installation:**
+
 ```bash
 uv tool install https://github.com/kenneth-liao/mcp-launchpad.git
 ```
@@ -280,23 +293,26 @@ See `rules/15-mcp-launchpad.md` for detailed usage instructions and command refe
 This configuration implements an **orchestrator pattern** where Claude acts as a manager delegating to specialist agents. Here's why:
 
 ### Context Preservation
+
 - **Main conversation stays lean** - The orchestrator only tracks high-level progress
 - **Specialists work in isolation** - Each agent handles its task without bloating the main context
 - **Parallel execution** - Multiple agents can work simultaneously on independent tasks
 
 ### Expertise Separation
+
 - **Domain knowledge** - Each agent has specialized instructions for its domain (Python best practices, Git workflows, Docker patterns)
 - **Tool restrictions** - Agents only use tools relevant to their specialty
 - **Consistent patterns** - Same agent = same coding style and conventions
 
 ### Quality Assurance
+
 - **Mandatory code review** - Every code change goes through `code-reviewer`
 - **Automated testing** - `test-automator` runs after changes
 - **Review loop** - Changes iterate until approved
 
 ### Workflow Example
 
-```
+```text
 User: "Add a new feature to handle user auth"
          │
          ▼
@@ -320,16 +336,17 @@ User: "Add a new feature to handle user auth"
     └──────────────┘
             │
             ▼
-       ✅ Done
+       Done
 ```
 
 ### Benefits
+
 - **Reduced token usage** - Specialist context is discarded after task completion
 - **Better code quality** - Domain experts produce better code
 - **Faster execution** - Parallel agents vs sequential operations
 - **Maintainability** - Easy to add/modify agents for new domains
 
-## How It Works
+## Orchestrator Pattern Details
 
 The `CLAUDE.md` file defines an orchestrator pattern where:
 
@@ -345,7 +362,7 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 
 ## File Structure
 
-```
+```text
 ~/.claude/
 ├── agents/           # Specialist agent definitions
 ├── commands/         # Slash commands

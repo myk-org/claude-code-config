@@ -19,6 +19,7 @@ skipConfirmation: true
 **If argument is provided (`$ARGUMENTS` is not empty):**
 
 Compare current branch against the specified branch:
+
 ```bash
 git diff $ARGUMENTS
 ```
@@ -26,6 +27,7 @@ git diff $ARGUMENTS
 **If no argument provided (`$ARGUMENTS` is empty):**
 
 Get all uncommitted changes (staged + unstaged):
+
 ```bash
 git diff HEAD
 ```
@@ -38,7 +40,7 @@ git diff HEAD
 
 **Prompt for the agent:**
 
-```
+```text
 Review the following code changes from git diff.
 
 Analyze for:
@@ -62,6 +64,7 @@ Git diff output:
 Display the code-reviewer agent's findings to the user in a clear, organized format.
 
 Group findings by:
+
 - Critical issues (must fix)
 - Warnings (should fix)
 - Suggestions (nice to have)

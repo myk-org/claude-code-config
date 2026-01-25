@@ -39,6 +39,7 @@ Each agent has a specific domain. If a task falls outside your domain:
 Agents can access MCP (Model Context Protocol) servers via the `mcpl` command (MCP Launchpad).
 
 **Key points:**
+
 - **Never guess tool names** - always search/discover first
 - Use `mcpl search "<query>"` to find tools across all servers
 - Use `mcpl call <server> <tool> '<json>'` to execute tools
@@ -46,6 +47,7 @@ Agents can access MCP (Model Context Protocol) servers via the `mcpl` command (M
 For full documentation, see `rules/15-mcp-launchpad.md` (auto-loaded for orchestrator).
 
 **Quick reference:**
+
 ```bash
 mcpl search "<query>"              # Find tools
 mcpl list <server>                 # List server's tools

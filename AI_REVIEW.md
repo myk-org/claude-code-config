@@ -46,6 +46,7 @@ claude-code-config/
 │   └── test-runner.md         # Test execution
 │
 ├── commands/                  # Custom slash commands
+│   ├── ask-review-db.md       # Query review database for analytics
 │   ├── code-review.md         # Local code review
 │   ├── github-coderabbitai-review-handler.md  # AI review processor
 │   ├── github-pr-review.md    # PR review with inline comments
@@ -53,7 +54,8 @@ claude-code-config/
 │   ├── github-review-handler.md  # Human review processor
 │   └── scripts/               # Helper scripts for commands
 │       ├── general/
-│       │   └── get-pr-info.sh
+│       │   ├── get-pr-info.sh
+│       │   └── review_db.py      # Review database utility (query/analytics)
 │       ├── github-coderabbitai-review-handler/
 │       │   └── get-coderabbit-comments.sh
 │       ├── github-pr-review/
@@ -72,6 +74,7 @@ claude-code-config/
 │   ├── 10-agent-routing.md          # Agent selection logic
 │   ├── 15-mcp-launchpad.md          # MCP Launchpad CLI for MCP servers
 │   ├── 20-code-review-loop.md       # Mandatory review workflow
+│   ├── 25-task-system.md            # Task system usage guidelines
 │   ├── 30-slash-commands.md         # Slash command execution
 │   ├── 40-critical-rules.md         # Parallel execution, temp files
 │   └── 50-agent-bug-reporting.md    # Bug reporting for agent issues
@@ -95,7 +98,7 @@ claude-code-config/
 ├── .pre-commit-config.yaml    # Pre-commit hooks
 ├── .flake8                    # Flake8 configuration
 ├── README.md                  # Installation and usage guide
-└── CODERABBITAI.md            # This file - project context
+└── AI_REVIEW.md               # This file - AI review tool context
 ```
 
 ---
@@ -113,10 +116,12 @@ claude-code-config/
 ### 2. Orchestrator vs Specialist
 
 **Orchestrator (Main Claude):**
+
 - CANNOT use: Edit, Write, NotebookEdit, Bash (except allowed commands)
 - CAN: Read, route to agents, execute slash commands directly
 
 **Specialist Agents:**
+
 - IGNORE orchestrator rules
 - Use Edit/Write/Bash freely within their domain
 - Work in isolated context (discarded after task)
@@ -124,6 +129,7 @@ claude-code-config/
 ### 3. Enforcement Hooks
 
 **`rule-enforcer.py` blocks violations:**
+
 - Triggers on `PreToolUse` for Edit/Write/Bash
 - Checks if caller is orchestrator or agent
 - Rejects orchestrator violations with error message
@@ -131,6 +137,7 @@ claude-code-config/
 ### 4. Slash Commands
 
 **Special execution rules:**
+
 - Slash commands execute DIRECTLY in orchestrator (not delegated)
 - ALL internal operations run in orchestrator context
 - Slash command prompt overrides general CLAUDE.md rules
@@ -144,23 +151,68 @@ claude-code-config/
 - Agents execute MCP tools directly via `mcpl`
 - See `rules/15-mcp-launchpad.md` for full command reference
 
+### 6. Task System
+
+**Claude Code provides task tracking tools for complex workflows.**
+
+**Available tools:**
+
+- `TaskCreate` - Create new tasks with subject, description, activeForm
+- `TaskUpdate` - Update task status, add dependencies (blockedBy/blocks)
+- `TaskList` - View all tasks and their status
+- `TaskGet` - Get full details of a specific task
+
+**When to use tasks:**
+
+- Commands with 2+ phases that benefit from progress tracking
+- Multi-step workflows where user visibility is important
+- Slash commands with dependent phases (e.g., github-review-handler)
+
+**When NOT to use:**
+
+- Simple single-step operations
+- Agent work (agents are ephemeral)
+- Quick fixes or trivial operations
+
+**Task naming:**
+
+- `subject`: Imperative form ("Run tests", "Post comments")
+- `activeForm`: Present continuous ("Running tests", "Posting comments")
+
+**Reference:** See `rules/25-task-system.md` for full guidelines.
+
+### 7. Review Database
+
+The `review_db.py` module provides query access to the reviews SQLite database at `.claude/data/reviews.db`.
+
+**Key features:**
+
+- **Auto-skip**: Previously dismissed comments are automatically skipped when fetching new reviews
+- **Analytics**: Query addressed rates, duplicate patterns, reviewer stats
+- **CLI + Module**: Can be used via CLI (`uv run review_db.py ...`) or imported by Python scripts
+
+**Command:** `/ask-review-db` - Query the database for review analytics
+
 ---
 
 ## Key Agents
 
 ### Language Specialists
+
 - **python-expert** - Python development, async, testing
 - **go-expert** - Go development, goroutines, modules
 - **java-expert** - Java/Spring Boot development
 - **frontend-expert** - JS/TS/React/Vue/Angular
 
 ### Infrastructure
+
 - **docker-expert** - Dockerfiles, container orchestration
 - **kubernetes-expert** - K8s/OpenShift, Helm, GitOps
 - **jenkins-expert** - CI/CD pipelines, Jenkinsfiles
 - **bash-expert** - Shell scripting automation
 
 ### Development Workflow
+
 - **git-expert** - Git operations, branching strategies
 - **code-reviewer** - Code quality, security review (MANDATORY after changes)
 - **test-automator** - Test suite creation, CI pipelines
@@ -168,14 +220,17 @@ claude-code-config/
 - **debugger** - Error analysis and debugging
 
 ### Documentation
+
 - **docs-fetcher** - Fetches external library/framework docs (prioritizes llms.txt)
 - **technical-documentation-writer** - User-focused documentation
 - **api-documenter** - OpenAPI/Swagger specifications
 
 ### Analysis
+
 - **codebase-refactor-analyst** - Refactoring analysis and planning
 
 ### Fallback
+
 - **general-purpose** - Handles tasks without specific specialist
 
 ---
@@ -185,11 +240,13 @@ claude-code-config/
 ### Adding a New Agent
 
 1. **Create agent file** in `agents/`:
+
    ```bash
    touch agents/my-new-expert.md
    ```
 
 2. **Define agent structure**:
+
    ```markdown
    ---
    name: my-new-expert
@@ -208,6 +265,7 @@ claude-code-config/
    ```
 
 3. **Add routing rule** in `rules/10-agent-routing.md`:
+
    ```markdown
    | My Domain | my-new-expert |
    ```
@@ -237,6 +295,7 @@ claude-code-config/
 ### Removing an Agent
 
 1. **Delete the agent file** from `agents/`:
+
    ```bash
    rm agents/my-old-expert.md
    ```
@@ -266,11 +325,13 @@ claude-code-config/
 ### Adding a Slash Command
 
 1. **Create command file** in `commands/`:
+
    ```bash
    touch commands/my-command.md
    ```
 
 2. **Define command structure**:
+
    ```markdown
    ---
    name: my-command
@@ -302,6 +363,7 @@ claude-code-config/
 ### Testing Changes
 
 **Test orchestrator rules:**
+
 ```bash
 # Edit rules/
 # Start new Claude conversation
@@ -309,6 +371,7 @@ claude-code-config/
 ```
 
 **Test agent:**
+
 ```bash
 # Edit agents/my-expert.md
 # Ask Claude to delegate task to my-expert
@@ -316,6 +379,7 @@ claude-code-config/
 ```
 
 **Test hooks:**
+
 ```bash
 # Edit scripts/rule-enforcer.py
 # Try violating rule (e.g., orchestrator using Write)
@@ -325,16 +389,19 @@ claude-code-config/
 ### Running Tests
 
 **Run all tests via tox:**
+
 ```bash
 uvx --with tox-uv tox
 ```
 
 **Run tests for specific Python version:**
+
 ```bash
 uvx --with tox-uv tox -e py313
 ```
 
 **Run pre-commit checks:**
+
 ```bash
 pre-commit run --all-files
 ```
@@ -350,6 +417,7 @@ When adding ANY new script that will be run during a command/skill/agent:
 5. ✅ Test that the script runs without permission prompts
 
 **Example for bash script:**
+
 ```json
 // In settings.json:
 "allowedTools": [
@@ -363,6 +431,7 @@ When adding ANY new script that will be run during a command/skill/agent:
 ```
 
 **Example for Python script:**
+
 ```json
 // In settings.json:
 "allowedTools": [
@@ -384,12 +453,14 @@ When adding ANY new script that will be run during a command/skill/agent:
 **Critical directories follow a gitignore-by-default pattern with explicit whitelisting:**
 
 The following directories are completely gitignored, with only specific files tracked:
+
 - `agents/` - Each agent must be explicitly whitelisted
 - `commands/` - Each command and its scripts must be explicitly whitelisted
 - `rules/` - Each rule must be explicitly whitelisted
 - `scripts/` - Each script must be explicitly whitelisted
 
 **When adding ANY new file to these directories, you MUST:**
+
 1. Open `.gitignore`
 2. Find the corresponding section (e.g., `# agents/`)
 3. Add `!path/to/your-file.ext` in alphabetical order
@@ -421,25 +492,36 @@ The following directories are completely gitignored, with only specific files tr
 
 ```json
 "allowedTools": [
-  "Edit(/tmp/claude/**)",           // Only /tmp/claude/
-  "Write(/tmp/claude/**)",          // Only /tmp/claude/
-  "Bash(mkdir -p /tmp/claude*)",    // Create temp dir
-  "Bash(claude *)",                 // Agent delegation
-  "Bash(mcpl*)",                     // MCP server discovery
-  "Bash(sed -n *)",                 // Read-only sed
-  "Bash(grep *)",                   // Search
-  "Grep",                           // Grep tool
-  // Slash command scripts...
+  "Edit(/tmp/claude/**)",
+  "Write(/tmp/claude/**)",
+  "Bash(mkdir -p /tmp/claude*)",
+  "Bash(claude *)",
+  "Bash(mcpl*)",
+  "Bash(sed -n *)",
+  "Bash(grep *)",
+  "Grep"
 ]
 ```
 
 This enforces that orchestrator delegates work instead of doing it directly.
+
+### CLAUDE.md and AI_REVIEW.md Sync
+
+**When modifying CLAUDE.md, also update AI_REVIEW.md.**
+
+These files must stay in sync:
+
+- `CLAUDE.md` - Instructions for Claude Code
+- `AI_REVIEW.md` - Instructions for AI code review tools (CodeRabbit, Qodo)
+
+Both files contain the same project context and guidelines. When you change one, change the other.
 
 ---
 
 ## Common Tasks
 
 ### Update Agent Behavior
+
 ```bash
 # Edit the agent file
 vim ~/.claude/agents/python-expert.md
@@ -448,6 +530,7 @@ vim ~/.claude/agents/python-expert.md
 ```
 
 ### Add New Rule Category
+
 ```bash
 # Create new rule file with numbering
 touch ~/.claude/rules/50-my-new-rules.md
@@ -456,6 +539,7 @@ touch ~/.claude/rules/50-my-new-rules.md
 ```
 
 ### Debug Hook Failures
+
 ```bash
 # Check hook script output
 # Hooks print to stderr, visible in Claude Code console
@@ -465,6 +549,7 @@ uv run ~/.claude/scripts/rule-enforcer.py
 ```
 
 ### View Loaded Rules
+
 ```bash
 # Rules are injected on every prompt
 # Check conversation context to see loaded rules
@@ -475,21 +560,25 @@ uv run ~/.claude/scripts/rule-enforcer.py
 ## Architecture Principles
 
 ### 1. Separation of Concerns
+
 - **Orchestrator** = Traffic controller
 - **Agents** = Execution specialists
 - **Hooks** = Enforcement layer
 
 ### 2. Context Preservation
+
 - Specialist context discarded after task
 - Main conversation stays focused
 - Parallel execution possible
 
 ### 3. Quality Assurance
+
 - Mandatory code review loop
 - Test automation after changes
 - Iterate until approved
 
 ### 4. Flexibility
+
 - Easy to add/modify agents
 - Rules auto-load from directory
 - Hooks customize behavior
@@ -504,6 +593,7 @@ uv run ~/.claude/scripts/rule-enforcer.py
 | Semantic (understand code, map relationships) | ✅ Use AI agents |
 
 **Benefits of scripts:**
+
 - **Consistent behavior** - Same logic every time
 - **No permission prompts** - Pre-approved in `allowedTools`
 - **Faster execution** - No AI deliberation
@@ -511,6 +601,7 @@ uv run ~/.claude/scripts/rule-enforcer.py
 - **Easier debugging** - Test scripts independently
 
 **Example - General workflow:**
+
 ```text
 Phase 1: setup-environment.sh      → Deterministic (script)
 Phase 2: find-source-files.sh      → Deterministic (script)
@@ -522,6 +613,7 @@ Phase 5: general-purpose           → Semantic (AI agent)
 **Script location:** `commands/scripts/<command-name>/`
 
 **When to create a script:**
+
 1. File operations (find, list, filter)
 2. Hash/checksum calculations
 3. JSON parsing/generation
@@ -534,21 +626,25 @@ Phase 5: general-purpose           → Semantic (AI agent)
 ## Troubleshooting
 
 ### Orchestrator Still Using Edit/Write
+
 - Check `rule-enforcer.py` is running (PreToolUse hook)
 - Verify `settings.json` has correct hook configuration
 - Check for errors in hook script output
 
 ### Rules Not Loading
+
 - Verify files are in `rules/` directory
 - Check `rule-injector.py` hook is configured (UserPromptSubmit)
 - Ensure files are readable (chmod +r)
 
 ### Agent Not Being Called
+
 - Check routing table in `rules/10-agent-routing.md`
 - Verify agent file exists in `agents/`
 - Test with explicit delegation request
 
 ### Slash Command Not Working
+
 - Verify file exists in `commands/`
 - Check file has correct frontmatter (name, description)
 - Restart Claude Code if recently added

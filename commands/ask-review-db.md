@@ -17,6 +17,7 @@ This command provides access to the reviews database for analytics. You can ask 
 ### Available Queries
 
 #### 1. Stats by Source
+
 Show addressed rate by source (human vs AI reviewers).
 
 ```bash
@@ -24,6 +25,7 @@ uv run ~/.claude/commands/scripts/general/review_db.py stats --by-source --json
 ```
 
 #### 2. Stats by Reviewer
+
 Show statistics by individual reviewer.
 
 ```bash
@@ -31,6 +33,7 @@ uv run ~/.claude/commands/scripts/general/review_db.py stats --by-reviewer --jso
 ```
 
 #### 3. Duplicate Patterns
+
 Find recurring dismissed suggestions (things AI keeps suggesting that you keep rejecting).
 
 ```bash
@@ -38,6 +41,7 @@ uv run ~/.claude/commands/scripts/general/review_db.py patterns --min 2 --json
 ```
 
 #### 4. Dismissed Comments
+
 Get all dismissed comments for a specific repo.
 
 ```bash
@@ -61,19 +65,21 @@ uv run ~/.claude/commands/scripts/general/review_db.py query "SELECT * FROM comm
 
 ### Example Questions and Queries
 
-| Question | Query |
-|----------|-------|
-| "What's Qodo's addressed rate?" | `stats --by-source` |
-| "Who gives the most duplicate comments?" | `patterns --min 2` |
-| "What did I skip from CodeRabbit?" | `dismissed --owner X --repo Y` + filter |
-| "Show recent skipped comments" | `query "SELECT * FROM comments WHERE status='skipped' ORDER BY id DESC LIMIT 10"` |
+| Question                                 | Query                                                                             |
+| ---------------------------------------- | --------------------------------------------------------------------------------- |
+| "What's Qodo's addressed rate?"          | `stats --by-source`                                                               |
+| "Who gives the most duplicate comments?" | `patterns --min 2`                                                                |
+| "What did I skip from CodeRabbit?"       | `dismissed --owner X --repo Y` + filter                                           |
+| "Show recent skipped comments"           | `query "SELECT * FROM comments WHERE status='skipped' ORDER BY id DESC LIMIT 10"` |
 
 ### Database Schema Reference
 
 **reviews table:**
+
 - id, pr_number, owner, repo, commit_sha, created_at
 
 **comments table:**
+
 - id, review_id, source, thread_id, node_id, comment_id
 - author, path, line, body, priority
 - status (addressed/not_addressed/skipped), reply, skip_reason

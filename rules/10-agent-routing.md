@@ -2,34 +2,36 @@
 
 ## Routing Table
 
-| Domain/Tool | Agent |
-|-------------|-------|
-| **Languages (by file type)** | |
-| Python (.py) | `python-expert` |
-| Go (.go) | `go-expert` |
-| Java (.java) | `java-expert` |
-| Frontend (JS/TS/React/Vue) | `frontend-expert` |
-| Shell scripts (.sh) | `bash-expert` |
-| Markdown (.md) | `technical-documentation-writer` |
-| **Infrastructure** | |
-| Docker | `docker-expert` |
-| Kubernetes/OpenShift | `kubernetes-expert` |
-| Jenkins/CI/Groovy | `jenkins-expert` |
-| **Development** | |
-| Git operations (local) | `git-expert` |
-| GitHub (PRs, issues, releases, workflows) | `github-expert` |
-| Tests | `test-automator` |
-| Debugging | `debugger` |
-| API docs | `api-documenter` |
-| Claude Code docs (features, hooks, settings, commands, MCP, IDE, Agent SDK, Claude API) | `claude-code-guide` (built-in) |
-| External library/framework docs (React, FastAPI, Django, etc.) | `docs-fetcher` |
+| Domain/Tool                                                                      | Agent                              |
+|----------------------------------------------------------------------------------|------------------------------------|
+| **Languages (by file type)**                                                     |                                    |
+| Python (.py)                                                                     | `python-expert`                    |
+| Go (.go)                                                                         | `go-expert`                        |
+| Java (.java)                                                                     | `java-expert`                      |
+| Frontend (JS/TS/React/Vue)                                                       | `frontend-expert`                  |
+| Shell scripts (.sh)                                                              | `bash-expert`                      |
+| Markdown (.md)                                                                   | `technical-documentation-writer`   |
+| **Infrastructure**                                                               |                                    |
+| Docker                                                                           | `docker-expert`                    |
+| Kubernetes/OpenShift                                                             | `kubernetes-expert`                |
+| Jenkins/CI/Groovy                                                                | `jenkins-expert`                   |
+| **Development**                                                                  |                                    |
+| Git operations (local)                                                           | `git-expert`                       |
+| GitHub (PRs, issues, releases, workflows)                                        | `github-expert`                    |
+| Tests                                                                            | `test-automator`                   |
+| Debugging                                                                        | `debugger`                         |
+| API docs                                                                         | `api-documenter`                   |
+| Claude Code docs (features, hooks, settings, commands, MCP, IDE, Agent SDK, API) | `claude-code-guide` (built-in)     |
+| External library/framework docs (React, FastAPI, Django, etc.)                   | `docs-fetcher`                     |
 
 ### Built-in vs Custom Agents
 
 **Built-in agents** are provided by Claude Code itself and do NOT require definition files in `agents/`:
+
 - `claude-code-guide` - Has current Claude Code documentation built into Claude Code
 
 **Custom agents** are defined in this repository's `agents/` directory and require definition files:
+
 - All other agents in the routing table above (e.g., `python-expert`, `docs-fetcher`, `git-expert`)
 
 ## Routing by Intent, Not Tool
@@ -37,6 +39,7 @@
 **Important:** Route based on the task intent, not just the tool being used.
 
 Examples:
+
 - Running Python tests? → `python-expert` (not bash-expert)
 - Editing Python files? → `python-expert` (even with sed/awk)
 - Shell script creation? → `bash-expert`
@@ -50,10 +53,10 @@ Examples:
 
 ### Two Documentation Agents
 
-| Documentation Type | Agent | Notes |
-|--------------------|-------|-------|
-| Claude Code, Agent SDK, Claude API | `claude-code-guide` | Built-in agent (no definition file needed) |
-| External libraries/frameworks | `docs-fetcher` | Custom agent (defined in `agents/docs-fetcher.md`) |
+| Documentation Type                 | Agent               | Notes                                              |
+|------------------------------------|---------------------|----------------------------------------------------|
+| Claude Code, Agent SDK, Claude API | `claude-code-guide` | Built-in agent (no definition file needed)         |
+| External libraries/frameworks      | `docs-fetcher`      | Custom agent (defined in `agents/docs-fetcher.md`) |
 
 ### claude-code-guide (Built-in)
 
@@ -62,6 +65,7 @@ Examples:
 > This is different from custom agents like `docs-fetcher` which require definition files.
 
 **Use for Claude Code ecosystem documentation:**
+
 - Claude Code features, hooks, settings
 - Slash commands and custom commands
 - MCP server configuration
@@ -74,6 +78,7 @@ Examples:
 ### docs-fetcher (External Docs)
 
 **Use for external library/framework documentation:**
+
 - React, Vue, Angular, FastAPI, Django, etc.
 - Third-party tools (Oh My Posh, Starship, etc.)
 - Any documentation not part of Claude Code ecosystem
@@ -83,6 +88,7 @@ Examples:
 **The orchestrator MUST NEVER fetch documentation directly.**
 
 ❌ **FORBIDDEN** - Orchestrator using WebFetch for external docs:
+
 ```text
 WebFetch(https://react.dev/...)
 WebFetch(https://fastapi.tiangolo.com/...)
@@ -90,6 +96,7 @@ WebFetch(https://ohmyposh.dev/...)
 ```
 
 ✅ **REQUIRED** - Delegate to the appropriate agent:
+
 ```text
 # For Claude Code docs:
 Task(subagent_type="claude-code-guide", prompt="How do I configure hooks in Claude Code?")
@@ -108,6 +115,7 @@ Task(subagent_type="docs-fetcher", prompt="Fetch Oh My Posh configuration docs..
 ### When to Spawn Each Agent
 
 **Use `claude-code-guide` when:**
+
 - Questions about Claude Code features or configuration
 - How to use hooks, settings.json, slash commands
 - MCP server setup for Claude Code
@@ -115,12 +123,14 @@ Task(subagent_type="docs-fetcher", prompt="Fetch Oh My Posh configuration docs..
 - IDE integration questions
 
 **Use `docs-fetcher` when:**
+
 - Fetching library/framework documentation (React, FastAPI, Django, etc.)
 - Looking up configuration guides for external tools
 - Getting API references for third-party services
 - User asks about external tool documentation
 
 **Exceptions - Skip both when:**
+
 - Standard library only (no external dependencies)
 - User explicitly says "skip docs" or "I know the API"
 - Simple operations with obvious patterns
