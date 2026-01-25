@@ -11,6 +11,7 @@ Allows commits on:
 """
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -22,11 +23,13 @@ GIT_EXECUTABLE = shutil.which("git") or "git"
 
 def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
     """Run a git command with standard settings."""
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "Never"}
     return subprocess.run(
         [GIT_EXECUTABLE, *args],
         capture_output=True,
         text=True,
         timeout=2,
+        env=env,
     )
 
 
@@ -35,9 +38,10 @@ def get_current_branch() -> str | None:
     try:
         # First try rev-parse (works for repos with commits)
         result = _run_git(["rev-parse", "--abbrev-ref", "HEAD"])
+        rev_parse_failed = result.returncode != 0
         if result.returncode == 0:
             branch = result.stdout.strip()
-            if branch != "HEAD":
+            if branch and branch != "HEAD":
                 return branch
 
         # Fallback: try symbolic-ref for orphan branches (no commits yet)
@@ -45,10 +49,12 @@ def get_current_branch() -> str | None:
         if result.returncode == 0:
             ref = result.stdout.strip()
             # Extract branch name from refs/heads/branch-name
-            if ref.startswith("refs/heads/"):
+            if ref and ref.startswith("refs/heads/"):
                 return ref[len("refs/heads/") :]
 
-        print("Warning: could not determine current Git branch", file=sys.stderr)
+        # Only warn if rev-parse actually failed (not just returned "HEAD" for valid detached state)
+        if rev_parse_failed:
+            print("Warning: could not determine current Git branch", file=sys.stderr)
         return None
     except Exception as e:
         print(f"Warning: could not determine current Git branch: {e}", file=sys.stderr)
