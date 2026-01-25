@@ -502,7 +502,7 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                                 break
 
                     if best:
-                        reason = (best.get("reply") or best.get("skip_reason") or "").strip()
+                        reason = (best.get("skip_reason") or best.get("reply") or "").strip()
                         if reason:
                             enriched["status"] = "skipped"
                             enriched["skip_reason"] = reason

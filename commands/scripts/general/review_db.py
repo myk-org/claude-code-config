@@ -504,7 +504,8 @@ class ReviewDB:
             return re.sub(r"'([^']|'')*'", "''", s)
 
         # Strip comments first, then compute uppercase for all checks
-        sql_for_checks = _strip_sql_comments(sql_stripped)
+        # Use .lstrip() to handle queries with leading comments like "/*note*/ SELECT ..."
+        sql_for_checks = _strip_sql_comments(sql_stripped).lstrip()
         sql_upper = sql_for_checks.upper()
 
         # Block multiple statements (semicolon separating statements, not in strings/comments)
