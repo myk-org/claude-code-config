@@ -7,23 +7,38 @@
 
 ---
 
+## Disk Persistence
+
+Tasks are saved to disk and persist across sessions:
+
+- **Location:** `~/.claude/tasks/<session-uuid>/`
+- **Format:** Each task is a JSON file (1.json, 2.json, etc.)
+- **Contents:** Full task structure including subject, description, status, blockedBy
+
+This means tasks have value beyond the current session. If work is interrupted, you (or the user) can see what was in progress and potentially resume.
+
+---
+
 ## When to Use the Task System
+
+**Tasks persist to disk** at `~/.claude/tasks/` and can be resumed across sessions. Use this to decide when tasks add value.
 
 **USE the task system for:**
 
-- Complex commands with 2+ phases
-- Multi-step workflows where user visibility is important
-- Operations that benefit from progress tracking
-- Slash commands with multiple dependent phases
-- Workflows that span multiple user interactions
+- Complex work that might be interrupted mid-session
+- Multi-step workflows where progress tracking helps
+- Work you might need to resume in a new session
+- Operations where seeing status helps the user
+- Slash commands with dependent phases
+
+**Key question:** "Is this work I'd want to track and potentially resume?"
 
 **DO NOT use tasks for:**
 
-- Simple single-step operations
-- Agent work (agents are ephemeral, do not need tracking)
-- Quick fixes or trivial operations
-- Operations that complete in one action
-- Internal agent processing steps
+- Simple operations that complete quickly
+- Agent work (agents are ephemeral, don't need tracking)
+- Trivial fixes or single-action operations
+- Internal processing steps
 
 ---
 
