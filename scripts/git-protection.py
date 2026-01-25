@@ -11,6 +11,7 @@ Allows commits on:
 """
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -20,20 +21,44 @@ import sys
 GIT_EXECUTABLE = shutil.which("git") or "git"
 
 
+def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
+    """Run a git command with standard settings."""
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "Never"}
+    return subprocess.run(
+        [GIT_EXECUTABLE, "--no-optional-locks", *args],
+        capture_output=True,
+        text=True,
+        timeout=5,
+        env=env,
+    )
+
+
 def get_current_branch() -> str | None:
     """Get the current git branch name. Returns None if detached HEAD or error."""
     try:
-        result = subprocess.run(
-            [GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD"],
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
+        # First try rev-parse (works for repos with commits)
+        result = _run_git(["rev-parse", "--abbrev-ref", "HEAD"])
         if result.returncode == 0:
             branch = result.stdout.strip()
-            return None if branch == "HEAD" else branch
+            if branch and branch != "HEAD":
+                return branch
+            if branch == "HEAD":
+                # Valid detached HEAD state - no need to try symbolic-ref
+                return None
+
+        # Fallback: try symbolic-ref for orphan branches (no commits yet)
+        result = _run_git(["symbolic-ref", "HEAD"])
+        if result.returncode == 0:
+            ref = result.stdout.strip()
+            # Extract branch name from refs/heads/branch-name
+            if ref and ref.startswith("refs/heads/"):
+                return ref[len("refs/heads/") :]
+
+        # rev-parse failed - warn and return None
+        print("Warning: could not determine current Git branch", file=sys.stderr)
         return None
-    except Exception:
+    except Exception as e:
+        print(f"Warning: could not determine current Git branch: {e}", file=sys.stderr)
         return None
 
 
@@ -41,12 +66,7 @@ def get_main_branch() -> str | None:
     """Get the main branch name (main or master). Returns None if not found."""
     for branch_name in ["main", "master"]:
         try:
-            result = subprocess.run(
-                [GIT_EXECUTABLE, "rev-parse", "--verify", "--end-of-options", branch_name],
-                capture_output=True,
-                text=True,
-                timeout=2,
-            )
+            result = _run_git(["rev-parse", "--verify", "--end-of-options", branch_name])
             if result.returncode == 0:
                 return branch_name
         except Exception:
@@ -145,12 +165,7 @@ def is_branch_merged(current_branch: str, main_branch: str) -> bool:
     try:
         # First check if branch has unique commits compared to main
         # If count is 0, this is a fresh branch with no unique commits
-        unique_commits_result = subprocess.run(
-            [GIT_EXECUTABLE, "rev-list", "--count", f"{main_branch}..{current_branch}"],
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
+        unique_commits_result = _run_git(["rev-list", "--count", f"{main_branch}..{current_branch}"])
         if unique_commits_result.returncode != 0:
             return False
 
@@ -164,12 +179,7 @@ def is_branch_merged(current_branch: str, main_branch: str) -> bool:
 
         # Check if branch HEAD is an ancestor of main HEAD
         # This means all branch commits are reachable from main (i.e., merged)
-        ancestor_result = subprocess.run(
-            [GIT_EXECUTABLE, "merge-base", "--is-ancestor", current_branch, main_branch],
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
+        ancestor_result = _run_git(["merge-base", "--is-ancestor", current_branch, main_branch])
         # Return code 0 means branch is ancestor of main (merged)
         # Return code 1 means branch is not ancestor (not merged)
         return ancestor_result.returncode == 0
@@ -181,23 +191,13 @@ def is_branch_ahead_of_remote() -> bool:
     """Check if current branch has unpushed commits or no remote tracking."""
     try:
         # First check if branch has a remote tracking branch
-        result = subprocess.run(
-            [GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
+        result = _run_git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
         # If no remote tracking branch, allow amend (local-only branch)
         if result.returncode != 0:
             return True
 
         # Check if ahead of remote
-        result = subprocess.run(
-            [GIT_EXECUTABLE, "status", "--short", "--branch"],
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
+        result = _run_git(["status", "--short", "--branch"])
         if result.returncode == 0:
             return "ahead" in result.stdout
         return False
@@ -208,11 +208,7 @@ def is_branch_ahead_of_remote() -> bool:
 def is_git_repository() -> bool:
     """Check if current directory is inside a git repository."""
     try:
-        result = subprocess.run(
-            [GIT_EXECUTABLE, "rev-parse", "--git-dir"],
-            capture_output=True,
-            timeout=2,
-        )
+        result = _run_git(["rev-parse", "--git-dir"])
         return result.returncode == 0
     except Exception:
         return False
@@ -221,12 +217,7 @@ def is_git_repository() -> bool:
 def is_github_repo() -> bool:
     """Check if the current repository is hosted on GitHub."""
     try:
-        result = subprocess.run(
-            [GIT_EXECUTABLE, "remote", "get-url", "origin"],
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
+        result = _run_git(["remote", "get-url", "origin"])
         if result.returncode != 0:
             return False
 
