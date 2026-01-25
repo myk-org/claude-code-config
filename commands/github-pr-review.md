@@ -84,7 +84,7 @@ This workflow uses Claude Code's task system for progress tracking. Tasks are cr
 ```text
 TaskCreate: "Fetch PR data and diff"
   - activeForm: "Fetching PR data"
-  - Status: in_progress
+  - status: in_progress
 ```
 
 **Route to `bash-expert` agent with this prompt:**
@@ -126,7 +126,8 @@ Store the complete JSON output.
 Run the script to fetch CLAUDE.md (uses same args as Step 1):
 
 ```bash
-CLAUDE_CONTENT=$($GET_CLAUDE_MD_SCRIPT "{ARGUMENTS}")
+read -r -a args <<<"{ARGUMENTS}"
+CLAUDE_CONTENT=$("$GET_CLAUDE_MD_SCRIPT" "${args[@]}")
 ```
 
 The script checks local files first, then upstream GitHub. Returns empty if not found.

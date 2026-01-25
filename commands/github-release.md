@@ -725,13 +725,13 @@ When create-release script returns "tag already exists" error:
 - Suggest: "Use a different version or delete the existing tag first"
 - Do not retry automatically
 
-### Pre-release Version Formats
+### Prerelease Version Formats
 
 When `--prerelease` flag is set:
 
 - Version format remains standard: `v1.2.3`
 - GitHub release is marked as prerelease
-- Show "Pre-release: yes" in preview
+- Show "Prerelease: yes" in preview
 
 ---
 
