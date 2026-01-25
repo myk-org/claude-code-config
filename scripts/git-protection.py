@@ -23,6 +23,7 @@ GIT_EXECUTABLE = shutil.which("git") or "git"
 def get_current_branch() -> str | None:
     """Get the current git branch name. Returns None if detached HEAD or error."""
     try:
+        # First try rev-parse (works for repos with commits)
         result = subprocess.run(
             [GIT_EXECUTABLE, "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True,
@@ -31,7 +32,22 @@ def get_current_branch() -> str | None:
         )
         if result.returncode == 0:
             branch = result.stdout.strip()
-            return None if branch == "HEAD" else branch
+            if branch != "HEAD":
+                return branch
+
+        # Fallback: try symbolic-ref for orphan branches (no commits yet)
+        result = subprocess.run(
+            [GIT_EXECUTABLE, "symbolic-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if result.returncode == 0:
+            ref = result.stdout.strip()
+            # Extract branch name from refs/heads/branch-name
+            if ref.startswith("refs/heads/"):
+                return ref[len("refs/heads/") :]
+
         return None
     except Exception:
         return None

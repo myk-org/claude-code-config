@@ -315,6 +315,86 @@ class TestGetCurrentBranch:
         result = git_protection.get_current_branch()
         assert result == "main"
 
+    @patch("subprocess.run")
+    def test_orphan_branch_fallback_to_symbolic_ref(self, mock_run: Any) -> None:
+        """Orphan branch (no commits yet) should use symbolic-ref fallback."""
+
+        def side_effect(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                # rev-parse fails on orphan branch (no commits)
+                return MagicMock(returncode=128, stdout="", stderr="fatal: ambiguous argument 'HEAD'")
+            if "symbolic-ref" in cmd:
+                # symbolic-ref succeeds and returns the ref
+                return MagicMock(returncode=0, stdout="refs/heads/main\n", stderr="")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        mock_run.side_effect = side_effect
+        result = git_protection.get_current_branch()
+        assert result == "main"
+
+    @patch("subprocess.run")
+    def test_orphan_branch_with_feature_branch(self, mock_run: Any) -> None:
+        """Orphan branch on feature branch should extract branch name correctly."""
+
+        def side_effect(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                return MagicMock(returncode=128, stdout="", stderr="fatal: ambiguous argument 'HEAD'")
+            if "symbolic-ref" in cmd:
+                return MagicMock(returncode=0, stdout="refs/heads/feature/my-new-feature\n", stderr="")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        mock_run.side_effect = side_effect
+        result = git_protection.get_current_branch()
+        assert result == "feature/my-new-feature"
+
+    @patch("subprocess.run")
+    def test_detached_head_returns_none_when_symbolic_ref_fails(self, mock_run: Any) -> None:
+        """True detached HEAD (not orphan) should return None when both methods fail."""
+
+        def side_effect(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                # Returns HEAD for detached state
+                return MagicMock(returncode=0, stdout="HEAD\n", stderr="")
+            if "symbolic-ref" in cmd:
+                # symbolic-ref fails on detached HEAD
+                return MagicMock(returncode=128, stdout="", stderr="fatal: ref HEAD is not a symbolic ref")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        mock_run.side_effect = side_effect
+        result = git_protection.get_current_branch()
+        assert result is None
+
+    @patch("subprocess.run")
+    def test_both_methods_fail_returns_none(self, mock_run: Any) -> None:
+        """Both rev-parse and symbolic-ref failing should return None."""
+
+        def side_effect(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            if "rev-parse" in cmd:
+                return MagicMock(returncode=128, stdout="", stderr="fatal: error")
+            if "symbolic-ref" in cmd:
+                return MagicMock(returncode=128, stdout="", stderr="fatal: not a symbolic ref")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        mock_run.side_effect = side_effect
+        result = git_protection.get_current_branch()
+        assert result is None
+
+    @patch("subprocess.run")
+    def test_symbolic_ref_without_refs_heads_prefix(self, mock_run: Any) -> None:
+        """symbolic-ref output without refs/heads/ prefix should return None."""
+
+        def side_effect(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            if "rev-parse" in cmd and "--abbrev-ref" in cmd:
+                return MagicMock(returncode=128, stdout="", stderr="fatal: error")
+            if "symbolic-ref" in cmd:
+                # Unexpected output format
+                return MagicMock(returncode=0, stdout="unexpected/format\n", stderr="")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        mock_run.side_effect = side_effect
+        result = git_protection.get_current_branch()
+        assert result is None
+
 
 class TestGetMainBranch:
     """Tests for get_main_branch() with mocked subprocess."""
