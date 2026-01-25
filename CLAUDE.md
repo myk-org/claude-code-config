@@ -155,7 +155,7 @@ claude-code-config/
 
 **Claude Code provides task tracking tools for complex workflows.**
 
-**Tasks persist to disk** at `~/.claude/tasks/<session-uuid>/` and can be resumed across sessions.
+**Tasks persist locally to disk** at `~/.claude/tasks/<session-uuid>/` (a Claude session UUID folder) and can be resumed across sessions on the same machine/profile.
 
 **Available tools:**
 
