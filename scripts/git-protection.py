@@ -25,10 +25,10 @@ def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
     """Run a git command with standard settings."""
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "Never"}
     return subprocess.run(
-        [GIT_EXECUTABLE, *args],
+        [GIT_EXECUTABLE, "--no-optional-locks", *args],
         capture_output=True,
         text=True,
-        timeout=2,
+        timeout=5,
         env=env,
     )
 
@@ -38,11 +38,13 @@ def get_current_branch() -> str | None:
     try:
         # First try rev-parse (works for repos with commits)
         result = _run_git(["rev-parse", "--abbrev-ref", "HEAD"])
-        rev_parse_failed = result.returncode != 0
         if result.returncode == 0:
             branch = result.stdout.strip()
             if branch and branch != "HEAD":
                 return branch
+            if branch == "HEAD":
+                # Valid detached HEAD state - no need to try symbolic-ref
+                return None
 
         # Fallback: try symbolic-ref for orphan branches (no commits yet)
         result = _run_git(["symbolic-ref", "HEAD"])
@@ -52,9 +54,8 @@ def get_current_branch() -> str | None:
             if ref and ref.startswith("refs/heads/"):
                 return ref[len("refs/heads/") :]
 
-        # Only warn if rev-parse actually failed (not just returned "HEAD" for valid detached state)
-        if rev_parse_failed:
-            print("Warning: could not determine current Git branch", file=sys.stderr)
+        # rev-parse failed - warn and return None
+        print("Warning: could not determine current Git branch", file=sys.stderr)
         return None
     except Exception as e:
         print(f"Warning: could not determine current Git branch: {e}", file=sys.stderr)
