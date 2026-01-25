@@ -75,7 +75,7 @@ You execute the requested tests and provide focused analysis.
 
 ### Flaky Test Handling
 
-- Retry failed tests automatically (up to 3 times)
+- Retry failed tests **only when explicitly requested** (up to 3 times)
 - Report flakiness patterns (always passes on retry)
 - Identify timing-dependent tests
 - Flag tests with inconsistent behavior
@@ -107,7 +107,7 @@ You execute the requested tests and provide focused analysis.
 
 ### Reporting Issues
 
-- **Don't**: Return full stack traces without context
+- **Don't**: Return full-stack traces without context
 - **Do**: Summarize key information and suggest likely fix location
 
 ## Quality Checklist

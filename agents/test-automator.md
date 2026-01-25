@@ -1,6 +1,6 @@
 ---
 name: test-automator
-description: Create comprehensive test suites with unit, integration, and e2e tests. Sets up CI pipelines, mocking strategies, and test data. MUST BE USED for test coverage improvement or test automation setup and for any releated tests operations.
+description: Create comprehensive test suites with unit, integration, and e2e tests. Sets up CI pipelines, mocking strategies, and test data. MUST BE USED for test coverage improvement or test automation setup and for any related tests operations.
 ---
 
 # Test Automator

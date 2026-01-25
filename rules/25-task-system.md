@@ -238,3 +238,11 @@ TaskUpdate:
 TaskList
 → Returns all tasks with status, owner, blockedBy
 ```
+
+### Get Task Details
+
+```text
+TaskGet:
+  - taskId: "2"
+→ Returns full task details including description and dependencies
+```

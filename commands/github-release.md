@@ -26,17 +26,17 @@ skipConfirmation: true
 
 - `/github-release` - Normal release (determines version from commits)
 - `/github-release --dry-run` - Preview without creating release
-- `/github-release --prerelease` - Create a pre-release
+- `/github-release --prerelease` - Create a prerelease
 - `/github-release --draft` - Create a draft release
-- `/github-release --dry-run --prerelease` - Preview a pre-release
-- `/github-release --prerelease --draft` - Create a draft pre-release
+- `/github-release --dry-run --prerelease` - Preview a prerelease
+- `/github-release --prerelease --draft` - Create a draft prerelease
 
 ### Options
 
 | Option         | Description                                                                        |
 | -------------- | ---------------------------------------------------------------------------------- |
 | `--dry-run`    | Preview the release without creating it. Skips user approval and release creation. |
-| `--prerelease` | Mark the release as a pre-release (beta).                                          |
+| `--prerelease` | Mark the release as a prerelease (beta).                                          |
 | `--draft`      | Create a draft release (not published until manually released).                    |
 
 ---
@@ -394,7 +394,7 @@ Do NOT create any release without user confirmation.
 - `major` - Override to MAJOR version bump
 - `minor` - Override to MINOR version bump
 - `patch` - Override to PATCH version bump
-- `prerelease` - Toggle pre-release flag
+- `prerelease` - Toggle prerelease flag
 - `draft` - Toggle draft flag
 - `no` or `n` - Cancel release
 
@@ -418,7 +418,7 @@ Your choice:
 | `major`, `MAJOR` | Recalculate version with MAJOR bump, show updated preview, ask again                                               |
 | `minor`, `MINOR` | Recalculate version with MINOR bump, show updated preview, ask again                                               |
 | `patch`, `PATCH` | Recalculate version with PATCH bump, show updated preview, ask again                                               |
-| `prerelease`     | Toggle pre-release flag, show updated preview, ask again                                                           |
+| `prerelease`     | Toggle prerelease flag, show updated preview, ask again                                                           |
 | `draft`          | Toggle draft flag, show updated preview, ask again                                                                 |
 | `no`, `n`, `N`   | Cancel workflow, show "Release cancelled." and stop                                                                |
 | Other            | Show "Invalid input. Please enter 'yes', 'no', 'major', 'minor', 'patch', 'prerelease', or 'draft'." and ask again |
@@ -501,7 +501,7 @@ Parameters:
 - `owner/repo`: Repository in owner/repo format (e.g., myorg/myrepo)
 - `tag`: Tag/version to create (e.g., v1.3.0)
 - Changelog file path
-- `--prerelease`: Optional flag to mark as pre-release
+- `--prerelease`: Optional flag to mark as prerelease
 - `--draft`: Optional flag to mark as draft
 
 Note: The script uses the tag as the release title automatically.
@@ -730,7 +730,7 @@ When create-release script returns "tag already exists" error:
 When `--prerelease` flag is set:
 
 - Version format remains standard: `v1.2.3`
-- GitHub release is marked as pre-release
+- GitHub release is marked as prerelease
 - Show "Pre-release: yes" in preview
 
 ---

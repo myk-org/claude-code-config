@@ -179,7 +179,7 @@ Found XX comments (Human: X, Qodo: X, CodeRabbit: X)
 ```text
 TaskCreate: "Collect user decisions on review comments"
   - activeForm: "Collecting decisions"
-  - Status: in_progress
+  - status: in_progress
 ```
 
 **CRITICAL: This is the COLLECTION phase. Do NOT execute, implement, or process ANY comments yet. Only ask questions and create tasks.**
@@ -321,7 +321,7 @@ For each approved comment, create a task:
 ```text
 TaskCreate: "[File: path, Line: N] Brief description from body"
   - activeForm: "Implementing [brief]"
-  - Status: pending
+  - status: pending
 ```
 
 Set all execution tasks to `blockedBy` the Phase 1 collection task.

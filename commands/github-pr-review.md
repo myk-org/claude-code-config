@@ -106,7 +106,7 @@ GET_CLAUDE_MD_SCRIPT=~/.claude/commands/scripts/github-pr-review/get-claude-md.s
 Run the diff script with the provided arguments:
 
 ```bash
-$GET_DIFF_SCRIPT {ARGUMENTS}
+$GET_DIFF_SCRIPT "{ARGUMENTS}"
 ```
 
 Arguments to pass: `{ARGUMENTS}`
@@ -126,7 +126,7 @@ Store the complete JSON output.
 Run the script to fetch CLAUDE.md (uses same args as Step 1):
 
 ```bash
-CLAUDE_CONTENT=$($GET_CLAUDE_MD_SCRIPT {ARGUMENTS})
+CLAUDE_CONTENT=$($GET_CLAUDE_MD_SCRIPT "{ARGUMENTS}")
 ```
 
 The script checks local files first, then upstream GitHub. Returns empty if not found.
@@ -608,7 +608,7 @@ Run the post script:
 
 ```bash
 POST_SCRIPT=~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh
-$POST_SCRIPT "{owner_repo}" "{pr_number}" "{head_sha}" /tmp/claude/pr-review-comments.json
+$POST_SCRIPT "{owner}/{repo}" "{pr_number}" "{head_sha}" /tmp/claude/pr-review-comments.json
 ```
 
 #### Result Format

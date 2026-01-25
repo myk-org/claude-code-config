@@ -21,7 +21,7 @@ skipConfirmation: true
 Compare current branch against the specified branch:
 
 ```bash
-git diff $ARGUMENTS
+git diff "$ARGUMENTS"
 ```
 
 **If no argument provided (`$ARGUMENTS` is empty):**
