@@ -85,6 +85,12 @@ When invoked:
 
 Return an empty findings array if no actionable issues are found.
 
+```json
+{
+  "findings": []
+}
+```
+
 Provide feedback organized by priority:
 
 - Critical issues (must fix)
