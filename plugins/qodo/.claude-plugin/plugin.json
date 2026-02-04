@@ -1,0 +1,11 @@
+{
+  "name": "qodo",
+  "version": "1.0.0",
+  "description": "Qodo AI code review integration for Claude Code",
+  "author": {
+    "name": "myk-org"
+  },
+  "repository": "https://github.com/myk-org/claude-code-config",
+  "license": "MIT",
+  "keywords": ["code-review", "qodo", "pr-agent", "security", "quality"]
+}

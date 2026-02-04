@@ -414,6 +414,17 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+## Plugins
+
+This repository also serves as a Claude Code plugin marketplace. See [plugins/README.md](./plugins/README.md) for available plugins and installation instructions.
+
+**Quick install:**
+
+```bash
+/plugin marketplace add myk-org/claude-code-config
+/plugin install qodo@myk-org
+```
+
 ## License
 
 MIT

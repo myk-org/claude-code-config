@@ -199,6 +199,27 @@ The `review_db.py` module provides query access to the reviews SQLite database a
 
 **Command:** `/ask-review-db` - Query the database for review analytics
 
+### 8. Plugin Marketplace
+
+This repository also serves as a Claude Code plugin marketplace. Users can install plugins from this repo.
+
+**Installation:**
+
+```bash
+/plugin marketplace add myk-org/claude-code-config
+/plugin install qodo@myk-org
+```
+
+**Available Plugins:**
+
+| Plugin | Description | Skills |
+|--------|-------------|--------|
+| `qodo` | Qodo AI code review | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
+
+**Plugin Location:** `plugins/` directory
+
+**Marketplace Manifest:** `.claude-plugin/marketplace.json`
+
 ---
 
 ## Key Agents

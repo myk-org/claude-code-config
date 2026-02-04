@@ -103,3 +103,29 @@
 
 # Claude data directory (SQLite databases)
 .claude/data/
+
+# plugins/
+!plugins/
+!plugins/qodo/
+!plugins/README.md
+!plugins/qodo/.claude-plugin/
+!plugins/qodo/.claude-plugin/plugin.json
+!plugins/qodo/skills/
+!plugins/qodo/skills/review/
+!plugins/qodo/skills/review/SKILL.md
+!plugins/qodo/skills/describe/
+!plugins/qodo/skills/describe/SKILL.md
+!plugins/qodo/skills/improve/
+!plugins/qodo/skills/improve/SKILL.md
+!plugins/qodo/skills/ask/
+!plugins/qodo/skills/ask/SKILL.md
+!plugins/qodo/commands/
+!plugins/qodo/commands/review.md
+!plugins/qodo/commands/describe.md
+!plugins/qodo/commands/improve.md
+!plugins/qodo/commands/ask.md
+!plugins/qodo/README.md
+
+# .claude-plugin/ (marketplace)
+!.claude-plugin/
+!.claude-plugin/marketplace.json
