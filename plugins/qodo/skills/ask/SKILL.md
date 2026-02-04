@@ -10,7 +10,7 @@ Ask questions about a pull request and get AI-powered answers using Qodo PR-Agen
 ## Usage
 
 ```bash
-/qodo-ask "<question>" [PR_URL]
+/qodo:ask "<question>" [PR_URL]
 ```
 
 ## Arguments
@@ -72,16 +72,16 @@ The following environment variables must be set:
 
 ```bash
 # Ask about current branch's PR
-/qodo-ask "What are the main changes in this PR?"
+/qodo:ask "What are the main changes in this PR?"
 
 # Ask about testing
-/qodo-ask "Are there any untested code paths?"
+/qodo:ask "Are there any untested code paths?"
 
 # Ask about specific functionality
-/qodo-ask "How does the new authentication flow work?"
+/qodo:ask "How does the new authentication flow work?"
 
 # Ask about specific PR
-/qodo-ask "What security implications does this have?" https://github.com/myk-org/my-repo/pull/42
+/qodo:ask "What security implications does this have?" https://github.com/myk-org/my-repo/pull/42
 ```
 
 ## Common Questions

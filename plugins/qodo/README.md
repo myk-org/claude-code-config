@@ -61,46 +61,46 @@ Clone the repository and symlink the plugin:
 
 ```bash
 git clone https://github.com/myk-org/claude-code-config.git
-ln -s /path/to/claude-code-config/plugins/qodo-review ~/.claude/plugins/qodo-review
+ln -s /path/to/claude-code-config/plugins/qodo ~/.claude/plugins/qodo
 ```
 
 ## Available Skills
 
-### /qodo-review
+### /qodo:review
 
-Run comprehensive code review on a pull request.
+Review local uncommitted code changes.
 
 ```bash
-# Review current branch's PR
-/qodo-review
+# Review all uncommitted changes
+/qodo:review
 
-# Review specific PR
-/qodo-review https://github.com/owner/repo/pull/123
+# Compare against a specific branch
+/qodo:review --base origin/main
 
-# Review with security focus
-/qodo-review --focus "security"
+# Review only staged changes
+/qodo:review --staged
 
-# Review with performance focus
-/qodo-review https://github.com/owner/repo/pull/123 --focus "performance"
+# Focus on specific area
+/qodo:review --focus security
 ```
 
 **Features:**
 
-- Security vulnerability detection
-- Test coverage analysis
-- Code quality assessment
-- Best practice recommendations
+- Reviews local uncommitted changes
+- Supports comparing against any branch
+- Can review only staged changes
+- Focus areas: security, performance, tests
 
-### /qodo-describe
+### /qodo:describe
 
 Generate AI-powered PR description.
 
 ```bash
 # Describe current branch's PR
-/qodo-describe
+/qodo:describe
 
 # Describe specific PR
-/qodo-describe https://github.com/owner/repo/pull/123
+/qodo:describe https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
@@ -110,16 +110,16 @@ Generate AI-powered PR description.
 - File-by-file walkthrough
 - Key changes highlighting
 
-### /qodo-improve
+### /qodo:improve
 
 Get actionable code improvement suggestions.
 
 ```bash
 # Get improvements for current PR
-/qodo-improve
+/qodo:improve
 
 # Get improvements for specific PR
-/qodo-improve https://github.com/owner/repo/pull/123
+/qodo:improve https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
@@ -129,19 +129,19 @@ Get actionable code improvement suggestions.
 - Refactoring recommendations
 - Best practice enforcement
 
-### /qodo-ask
+### /qodo:ask
 
 Ask questions about a pull request.
 
 ```bash
 # Ask about current PR
-/qodo-ask "What are the main changes?"
+/qodo:ask "What are the main changes?"
 
 # Ask security questions
-/qodo-ask "Are there any security concerns?"
+/qodo:ask "Are there any security concerns?"
 
 # Ask about specific PR
-/qodo-ask "What tests should be added?" https://github.com/owner/repo/pull/123
+/qodo:ask "What tests should be added?" https://github.com/owner/repo/pull/123
 ```
 
 **Common questions:**
@@ -192,10 +192,12 @@ export GITHUB_TOKEN="ghp_xxxxxxxxxxxx"
 
 ### "No PR found for current branch"
 
-Either:
+For `/qodo:describe`, `/qodo:improve`, and `/qodo:ask`:
 
 1. Push your branch and create a PR first
-2. Provide the PR URL directly: `/qodo-review https://github.com/...`
+2. Provide the PR URL directly: `/qodo:describe https://github.com/...`
+
+Note: `/qodo:review` works with local changes and does not require a PR.
 
 ### "API key not configured"
 

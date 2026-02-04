@@ -207,14 +207,14 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 
 ```bash
 /plugin marketplace add myk-org/claude-code-config
-/plugin install qodo-review@myk-org
+/plugin install qodo@myk-org
 ```
 
 **Available Plugins:**
 
 | Plugin | Description | Skills |
 |--------|-------------|--------|
-| `qodo-review` | Qodo AI code review | `/qodo-review:review`, `/qodo-review:describe`, `/qodo-review:improve`, `/qodo-review:ask` |
+| `qodo` | Qodo AI code review | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
 
 **Plugin Location:** `plugins/` directory
 

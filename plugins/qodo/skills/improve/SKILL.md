@@ -1,16 +1,16 @@
 ---
-name: describe
-description: Generate AI-powered pull request description using Qodo PR-Agent
+name: improve
+description: Get AI-powered code improvement suggestions using Qodo PR-Agent
 ---
 
-# Qodo Describe Skill
+# Qodo Improve Skill
 
-Automatically generate a comprehensive pull request description using Qodo PR-Agent.
+Get actionable code improvement suggestions for a pull request using Qodo PR-Agent.
 
 ## Usage
 
 ```bash
-/qodo-describe [PR_URL]
+/qodo:improve [PR_URL]
 ```
 
 ## Arguments
@@ -31,22 +31,23 @@ gh pr view --json url --jq '.url'
 
 If no PR is found, inform the user they need to create a PR first or provide a URL.
 
-### Step 2: Run Qodo Describe
+### Step 2: Run Qodo Improve
 
-Execute the pr-agent describe command:
+Execute the pr-agent improve command:
 
 ```bash
-python -m pr_agent.cli --pr_url="<PR_URL>" /describe
+python -m pr_agent.cli --pr_url="<PR_URL>" /improve
 ```
 
 ### Step 3: Present Results
 
-Display the generated description, which typically includes:
+Display the improvement suggestions, which typically include:
 
-- Summary of changes
-- Type of change (feature, fix, refactor, etc.)
-- Walkthrough of modified files
-- Key changes highlighted
+- Code quality improvements
+- Performance optimizations
+- Best practice recommendations
+- Refactoring suggestions
+- Each suggestion includes the file, line number, and proposed change
 
 ## Environment Requirements
 
@@ -64,15 +65,15 @@ The following environment variables must be set:
 ## Examples
 
 ```bash
-# Describe current branch's PR
-/qodo-describe
+# Get improvements for current branch's PR
+/qodo:improve
 
-# Describe specific PR
-/qodo-describe https://github.com/myk-org/my-repo/pull/42
+# Get improvements for specific PR
+/qodo:improve https://github.com/myk-org/my-repo/pull/42
 ```
 
 ## Notes
 
-- The generated description will be posted as a comment on the PR
-- The PR body itself is not modified (only a comment is added)
-- To update the PR body, manually copy the relevant sections from the comment
+- Suggestions are posted as inline comments on the PR
+- Each suggestion is actionable with specific code changes
+- Focus is on improvements, not bugs (use `/qodo:review` for bug detection)

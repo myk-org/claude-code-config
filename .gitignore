@@ -106,19 +106,19 @@
 
 # plugins/
 !plugins/
-!plugins/qodo-review/
-!plugins/qodo-review/.claude-plugin/
-!plugins/qodo-review/.claude-plugin/plugin.json
-!plugins/qodo-review/skills/
-!plugins/qodo-review/skills/review/
-!plugins/qodo-review/skills/review/SKILL.md
-!plugins/qodo-review/skills/describe/
-!plugins/qodo-review/skills/describe/SKILL.md
-!plugins/qodo-review/skills/improve/
-!plugins/qodo-review/skills/improve/SKILL.md
-!plugins/qodo-review/skills/ask/
-!plugins/qodo-review/skills/ask/SKILL.md
-!plugins/qodo-review/README.md
+!plugins/qodo/
+!plugins/qodo/.claude-plugin/
+!plugins/qodo/.claude-plugin/plugin.json
+!plugins/qodo/skills/
+!plugins/qodo/skills/review/
+!plugins/qodo/skills/review/SKILL.md
+!plugins/qodo/skills/describe/
+!plugins/qodo/skills/describe/SKILL.md
+!plugins/qodo/skills/improve/
+!plugins/qodo/skills/improve/SKILL.md
+!plugins/qodo/skills/ask/
+!plugins/qodo/skills/ask/SKILL.md
+!plugins/qodo/README.md
 
 # .claude-plugin/ (marketplace)
 !.claude-plugin/

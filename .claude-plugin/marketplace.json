@@ -5,8 +5,8 @@
   },
   "plugins": [
     {
-      "name": "qodo-review",
-      "source": "./plugins/qodo-review",
+      "name": "qodo",
+      "source": "./plugins/qodo",
       "description": "Qodo AI code review integration",
       "version": "1.0.0"
     }
