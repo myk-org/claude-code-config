@@ -4,9 +4,7 @@ This directory contains Claude Code plugins that can be installed via the plugin
 
 ## Available Plugins
 
-| Plugin | Description | Skills |
-|--------|-------------|--------|
-| [qodo](./qodo/) | Qodo AI code review integration | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
+- **[qodo](./qodo/README.md)** - Qodo AI code review integration
 
 ## Installation
 
@@ -22,9 +20,18 @@ This directory contains Claude Code plugins that can be installed via the plugin
 
 ### Local Development
 
+To test plugins during development:
+
 ```bash
-# Test a plugin during development
+# Clone the repository
+git clone https://github.com/myk-org/claude-code-config.git
+cd claude-code-config
+
+# Start Claude with the plugin loaded
 claude --plugin-dir ./plugins/qodo
+
+# Test the plugin commands
+/qodo:review
 ```
 
 ## Creating New Plugins
@@ -38,7 +45,9 @@ plugins/
 └── my-plugin/
     ├── .claude-plugin/
     │   └── plugin.json       # Plugin manifest
-    ├── skills/               # Skill definitions
+    ├── commands/             # Slash command definitions
+    │   └── my-command.md
+    ├── skills/               # Skill implementations
     │   └── my-skill/
     │       └── SKILL.md
     └── README.md             # Plugin documentation

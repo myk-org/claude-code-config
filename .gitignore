@@ -119,6 +119,11 @@
 !plugins/qodo/skills/improve/SKILL.md
 !plugins/qodo/skills/ask/
 !plugins/qodo/skills/ask/SKILL.md
+!plugins/qodo/commands/
+!plugins/qodo/commands/review.md
+!plugins/qodo/commands/describe.md
+!plugins/qodo/commands/improve.md
+!plugins/qodo/commands/ask.md
 !plugins/qodo/README.md
 
 # .claude-plugin/ (marketplace)

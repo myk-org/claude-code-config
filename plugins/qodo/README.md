@@ -1,6 +1,6 @@
 # Qodo Review Plugin for Claude Code
 
-AI-powered code review integration using [Qodo PR-Agent](https://github.com/Codium-ai/pr-agent).
+AI-powered code review integration using [Qodo](https://qodo.ai).
 
 ## Overview
 
@@ -11,47 +11,10 @@ All skills support **dual mode**:
 
 ## Prerequisites
 
-### Option 1: pip installation (recommended)
+Install the Qodo CLI:
 
 ```bash
-pip install pr-agent
-```
-
-### Option 2: Docker
-
-```bash
-docker pull codiumai/pr-agent:latest
-```
-
-Note: When using Docker, you'll need to modify the commands to use:
-
-```bash
-docker run -e GITHUB_TOKEN -e OPENAI_KEY codiumai/pr-agent:latest --pr_url="<PR_URL>" /review
-```
-
-## Environment Variables
-
-Set the following environment variables before using the plugin:
-
-### Required
-
-```bash
-# GitHub authentication
-export GITHUB_TOKEN="ghp_xxxxxxxxxxxx"
-# OR
-export GITHUB_USER_TOKEN="ghp_xxxxxxxxxxxx"
-
-# AI Provider (choose one)
-export OPENAI_KEY="sk-xxxxxxxxxxxx"
-# OR
-export ANTHROPIC_KEY="sk-ant-xxxxxxxxxxxx"
-```
-
-### Optional
-
-```bash
-# Custom configuration file
-export PR_AGENT_CONFIG="/path/to/.pr_agent.toml"
+npm install -g @qodo/command
 ```
 
 ## Installation
@@ -60,15 +23,6 @@ export PR_AGENT_CONFIG="/path/to/.pr_agent.toml"
 
 ```bash
 /plugin marketplace add myk-org/claude-code-config
-```
-
-### Manual Installation
-
-Clone the repository and symlink the plugin:
-
-```bash
-git clone https://github.com/myk-org/claude-code-config.git
-ln -s /path/to/claude-code-config/plugins/qodo ~/.claude/plugins/qodo
 ```
 
 ## Available Skills
@@ -83,6 +37,7 @@ Review code changes for bugs, security issues, and code quality.
 /qodo:review --base origin/main    # Compare against specific branch
 /qodo:review --staged              # Review only staged changes
 /qodo:review --focus security      # Focus on specific area
+/qodo:review --model claude-4-opus # Use a specific model
 
 # PR mode - review a pull request
 /qodo:review 123                              # Review PR #123
@@ -107,6 +62,7 @@ Generate a comprehensive description of code changes.
 # Local mode (default) - describe uncommitted changes
 /qodo:describe
 /qodo:describe --base origin/main
+/qodo:describe --model gpt-4       # Use a specific model
 
 # PR mode - generate description for a pull request
 /qodo:describe 123
@@ -130,6 +86,7 @@ Get actionable code improvement suggestions.
 # Local mode (default) - improve uncommitted changes
 /qodo:improve
 /qodo:improve --base origin/main
+/qodo:improve --model claude-4-opus # Use a specific model
 
 # PR mode - suggest improvements for a pull request
 /qodo:improve 123
@@ -154,6 +111,7 @@ Ask questions about code changes and get AI-powered answers.
 # Local mode (default) - ask about uncommitted changes
 /qodo:ask "What are the main changes?"
 /qodo:ask "Are there any security concerns?" --base main
+/qodo:ask "Explain this code" --model gpt-4  # Use a specific model
 
 # PR mode - ask about a pull request
 /qodo:ask "What does this PR do?" 123
@@ -169,42 +127,37 @@ Ask questions about code changes and get AI-powered answers.
 - "Are there any security concerns?"
 - "What's the impact on performance?"
 
-## Configuration
+## Model Selection
 
-Create a `.pr_agent.toml` file in your repository root for custom configuration:
+List available models:
 
-```toml
-[pr_reviewer]
-require_tests_review = true
-require_security_review = true
-require_focused_review = true
-
-[pr_description]
-publish_labels = true
-publish_description_as_comment = false
-
-[pr_code_suggestions]
-num_code_suggestions = 4
+```bash
+qodo models
 ```
 
-See [PR-Agent Configuration](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) for all options.
+Use a specific model:
+
+```bash
+/qodo:review --model claude-4.5-sonnet
+/qodo:describe 123 --model gpt-4
+```
 
 ## Troubleshooting
 
-### "pr-agent not found"
+### "qodo not found"
 
-Install pr-agent:
+Install the Qodo CLI:
 
 ```bash
-pip install pr-agent
+npm install -g @qodo/command
 ```
 
-### "GITHUB_TOKEN not set"
+### Authentication issues
 
-Set your GitHub token:
+Login to Qodo:
 
 ```bash
-export GITHUB_TOKEN="ghp_xxxxxxxxxxxx"
+qodo login
 ```
 
 ### "No changes found"
@@ -223,16 +176,6 @@ When using PR mode, provide the PR number or URL directly:
 ```bash
 /qodo:review 123
 /qodo:describe https://github.com/owner/repo/pull/123
-```
-
-### "API key not configured"
-
-Set your AI provider key:
-
-```bash
-export OPENAI_KEY="sk-xxxxxxxxxxxx"
-# or
-export ANTHROPIC_KEY="sk-ant-xxxxxxxxxxxx"
 ```
 
 ## License
