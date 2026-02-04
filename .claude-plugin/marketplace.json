@@ -1,0 +1,14 @@
+{
+  "name": "myk-org",
+  "owner": {
+    "name": "myk-org"
+  },
+  "plugins": [
+    {
+      "name": "qodo-review",
+      "source": "./plugins/qodo-review",
+      "description": "Qodo AI code review integration",
+      "version": "1.0.0"
+    }
+  ]
+}
