@@ -2,6 +2,13 @@
 
 AI-powered code review integration using [Qodo PR-Agent](https://github.com/Codium-ai/pr-agent).
 
+## Overview
+
+All skills support **dual mode**:
+
+- **Local mode** (default): Operate on uncommitted changes in your working directory
+- **PR mode**: Operate on a pull request when you provide a PR number or URL
+
 ## Prerequisites
 
 ### Option 1: pip installation (recommended)
@@ -68,80 +75,90 @@ ln -s /path/to/claude-code-config/plugins/qodo ~/.claude/plugins/qodo
 
 ### /qodo:review
 
-Review local uncommitted code changes.
+Review code changes for bugs, security issues, and code quality.
 
 ```bash
-# Review all uncommitted changes
+# Local mode (default) - review uncommitted changes
 /qodo:review
+/qodo:review --base origin/main    # Compare against specific branch
+/qodo:review --staged              # Review only staged changes
+/qodo:review --focus security      # Focus on specific area
 
-# Compare against a specific branch
-/qodo:review --base origin/main
-
-# Review only staged changes
-/qodo:review --staged
-
-# Focus on specific area
-/qodo:review --focus security
+# PR mode - review a pull request
+/qodo:review 123                              # Review PR #123
+/qodo:review https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
 
-- Reviews local uncommitted changes
-- Supports comparing against any branch
-- Can review only staged changes
-- Focus areas: security, performance, tests
+- Security vulnerabilities detection
+- Bug and edge case identification
+- Code quality analysis
+- Performance concerns
+- Test coverage gaps
+
+**PR mode behavior:** After reviewing, asks if you want to post findings as inline comments on the PR.
 
 ### /qodo:describe
 
-Generate AI-powered PR description.
+Generate a comprehensive description of code changes.
 
 ```bash
-# Describe current branch's PR
+# Local mode (default) - describe uncommitted changes
 /qodo:describe
+/qodo:describe --base origin/main
 
-# Describe specific PR
+# PR mode - generate description for a pull request
+/qodo:describe 123
 /qodo:describe https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
 
 - Automatic summary generation
-- Change type classification
+- Change type classification (feature, fix, refactor)
 - File-by-file walkthrough
 - Key changes highlighting
+
+**PR mode behavior:** After generating, asks if you want to update the PR description with the generated content.
 
 ### /qodo:improve
 
 Get actionable code improvement suggestions.
 
 ```bash
-# Get improvements for current PR
+# Local mode (default) - improve uncommitted changes
 /qodo:improve
+/qodo:improve --base origin/main
 
-# Get improvements for specific PR
+# PR mode - suggest improvements for a pull request
+/qodo:improve 123
 /qodo:improve https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
 
-- Inline code suggestions
+- Code simplifications
+- Better patterns and idioms
 - Performance optimizations
-- Refactoring recommendations
-- Best practice enforcement
+- Readability improvements
+- Error handling enhancements
+
+**PR mode behavior:** After suggestions, asks which improvements you want to apply to local files.
 
 ### /qodo:ask
 
-Ask questions about a pull request.
+Ask questions about code changes and get AI-powered answers.
 
 ```bash
-# Ask about current PR
+# Local mode (default) - ask about uncommitted changes
 /qodo:ask "What are the main changes?"
+/qodo:ask "Are there any security concerns?" --base main
 
-# Ask security questions
-/qodo:ask "Are there any security concerns?"
-
-# Ask about specific PR
-/qodo:ask "What tests should be added?" https://github.com/owner/repo/pull/123
+# PR mode - ask about a pull request
+/qodo:ask "What does this PR do?" 123
+/qodo:ask "Are there untested code paths?" 123
+/qodo:ask "Explain the caching strategy" https://github.com/owner/repo/pull/123
 ```
 
 **Common questions:**
@@ -190,14 +207,23 @@ Set your GitHub token:
 export GITHUB_TOKEN="ghp_xxxxxxxxxxxx"
 ```
 
+### "No changes found"
+
+For local mode, ensure you have uncommitted changes:
+
+```bash
+git status
+git diff HEAD
+```
+
 ### "No PR found for current branch"
 
-For `/qodo:describe`, `/qodo:improve`, and `/qodo:ask`:
+When using PR mode, provide the PR number or URL directly:
 
-1. Push your branch and create a PR first
-2. Provide the PR URL directly: `/qodo:describe https://github.com/...`
-
-Note: `/qodo:review` works with local changes and does not require a PR.
+```bash
+/qodo:review 123
+/qodo:describe https://github.com/owner/repo/pull/123
+```
 
 ### "API key not configured"
 

@@ -1,94 +1,66 @@
 ---
 name: ask
-description: Ask questions about a pull request using Qodo PR-Agent
+description: Ask questions about code changes - local or pull request
 ---
 
-# Qodo Ask Skill
+# Qodo Ask
 
-Ask questions about a pull request and get AI-powered answers using Qodo PR-Agent.
+Ask questions about code changes and get AI-powered answers. Works with local changes or pull requests.
 
 ## Usage
 
 ```bash
-/qodo:ask "<question>" [PR_URL]
+/qodo:ask "What does this change do?"                    # Ask about local changes
+/qodo:ask "What does this change do?" --base main        # Compare against main
+/qodo:ask "Are there security issues?" 123               # Ask about PR #123
+/qodo:ask "Explain the auth flow" https://github.com/... # Ask about PR by URL
 ```
+
+## Workflow
+
+### Mode Detection
+
+1. Parse `$ARGUMENTS` to detect mode:
+   - If contains PR number or URL -> **PR mode**
+   - Otherwise -> **Local mode**
+
+### Local Mode
+
+1. Get diff: `git diff HEAD` (or `--base <branch>`)
+2. Analyze the question in context of the diff
+3. Provide detailed answer based on the changes
+
+### PR Mode
+
+1. Resolve PR URL from number if needed
+2. Get PR context: diff, description, comments
+3. Run pr-agent ask:
+
+   ```bash
+   python -m pr_agent.cli --pr_url=<url> /ask "<question>"
+   ```
+
+   Or analyze directly if pr-agent unavailable.
+
+4. Provide detailed answer
 
 ## Arguments
 
-- `question` (required): The question to ask about the PR. Must be quoted.
-- `PR_URL` (optional): GitHub pull request URL. If not provided, detects from current branch.
-
-## Execution Steps
-
-### Step 1: Parse Question
-
-Extract the question from the arguments. The question should be enclosed in quotes.
-
-If no question is provided, prompt the user to provide one.
-
-### Step 2: Determine PR URL
-
-If a PR URL is provided as an argument, use it directly.
-
-Otherwise, detect the PR from the current branch:
-
-```bash
-gh pr view --json url --jq '.url'
-```
-
-If no PR is found, inform the user they need to create a PR first or provide a URL.
-
-### Step 3: Run Qodo Ask
-
-Execute the pr-agent ask command:
-
-```bash
-python -m pr_agent.cli --pr_url="<PR_URL>" /ask "<question>"
-```
-
-### Step 4: Present Results
-
-Display the answer to the user's question. The response will be based on:
-
-- The PR diff and changes
-- File context and history
-- Code relationships and dependencies
-
-## Environment Requirements
-
-The following environment variables must be set:
-
-- `GITHUB_TOKEN` or `GITHUB_USER_TOKEN` - GitHub access token
-- `OPENAI_KEY` or `ANTHROPIC_KEY` - AI provider API key
-
-## Error Handling
-
-- If pr-agent is not installed, suggest: `pip install pr-agent`
-- If environment variables are missing, list required variables
-- If PR URL is invalid, show expected format: `https://github.com/owner/repo/pull/123`
-- If question is missing, prompt user to provide one
+- `"<question>"`: The question to ask (required)
+- `<PR_NUMBER>`: PR number (e.g., `123`)
+- `<PR_URL>`: Full PR URL
+- `--base <branch>`: Branch to compare against (local mode)
 
 ## Examples
 
 ```bash
-# Ask about current branch's PR
-/qodo:ask "What are the main changes in this PR?"
+# Local
+/qodo:ask "What are the main changes?"
+/qodo:ask "Are there any security concerns?" --base main
+/qodo:ask "What files were modified?"
 
-# Ask about testing
-/qodo:ask "Are there any untested code paths?"
-
-# Ask about specific functionality
-/qodo:ask "How does the new authentication flow work?"
-
-# Ask about specific PR
-/qodo:ask "What security implications does this have?" https://github.com/myk-org/my-repo/pull/42
+# PR
+/qodo:ask "What does this PR do?" 42
+/qodo:ask "Are there untested code paths?" 42
+/qodo:ask "Explain the caching strategy" https://github.com/myk-org/repo/pull/42
 ```
-
-## Common Questions
-
-- "What are the main changes?"
-- "Are there any breaking changes?"
-- "What tests should be added?"
-- "Are there any security concerns?"
-- "What's the impact on performance?"
-- "Does this follow our coding standards?"

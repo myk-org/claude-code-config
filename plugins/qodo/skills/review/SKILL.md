@@ -1,112 +1,98 @@
 ---
 name: review
-description: Review local code changes for bugs, security issues, and code quality
+description: Review code changes - local uncommitted changes or a pull request
 ---
 
 # Qodo Code Review
 
-Review uncommitted code changes in the current repository.
+Review code changes for bugs, security issues, and code quality. Works with local changes or pull requests.
 
 ## Usage
 
 ```bash
-/qodo:review                    # Review all uncommitted changes
-/qodo:review --base main        # Compare against main branch
-/qodo:review --staged           # Review only staged changes
+/qodo:review                              # Review local uncommitted changes
+/qodo:review --base main                  # Compare local changes against main
+/qodo:review --staged                     # Review only staged changes
+/qodo:review 123                          # Review PR #123
+/qodo:review https://github.com/.../42    # Review PR by URL
 ```
 
 ## Workflow
 
-### Step 1: Get the Diff
+### Mode Detection
 
-Determine which diff to analyze based on arguments:
+1. Parse `$ARGUMENTS` to detect mode:
+   - If contains PR number (e.g., `123`) or URL -> **PR mode**
+   - Otherwise -> **Local mode**
 
-- **Default**: `git diff HEAD` (all uncommitted changes)
-- **With `--base <branch>`**: `git diff <branch>...HEAD`
-- **With `--staged`**: `git diff --cached`
+### Local Mode (no PR specified)
 
-```bash
-# Default - all uncommitted changes
-git diff HEAD
+1. Get diff based on arguments:
+   - Default: `git diff HEAD` (all uncommitted)
+   - `--base <branch>`: `git diff <branch>...HEAD`
+   - `--staged`: `git diff --cached`
 
-# Compare against specific branch
-git diff origin/main...HEAD
+2. Analyze the diff for:
+   - Security vulnerabilities
+   - Potential bugs and edge cases
+   - Code quality issues
+   - Performance concerns
+   - Test coverage gaps
 
-# Only staged changes
-git diff --cached
-```
+3. Present findings to user
 
-### Step 2: Analyze Changes
+### PR Mode (PR number or URL specified)
 
-If pr-agent is available, use it for AI-powered review:
+1. Resolve PR URL:
+   - If number: `gh pr view <number> --json url -q '.url'`
+   - If URL: use directly
 
-```bash
-# For local review without PR
-python -m pr_agent.cli --pr_url="" /review --config.publish_output=false
-```
+2. Get PR diff: `gh pr diff <number>`
 
-If pr-agent is not available, analyze the diff directly and provide:
+3. Run pr-agent review if available:
 
-- Security vulnerabilities
-- Potential bugs
-- Code quality issues
-- Performance concerns
-- Suggestions for improvement
+   ```bash
+   python -m pr_agent.cli --pr_url=<url> /review
+   ```
 
-### Step 3: Present Results
+   Or analyze diff directly if pr-agent unavailable.
 
-Display the review results to the user, highlighting:
+4. Present findings to user
 
-- Security issues (critical priority)
-- Potential bugs and logic errors
-- Code quality concerns
-- Performance optimizations
-- Suggested improvements
+5. **Ask user**: "Do you want to post these findings as review comments on the PR?"
+   - If YES: Post inline comments using GitHub API
+   - If NO: Done (findings shown locally only)
 
 ## Arguments
 
-- `--base <branch>`: Branch to compare against (default: current HEAD)
-- `--staged`: Only review staged changes
-- `--focus <area>`: Focus on specific area (security, performance, tests)
-
-Supported focus areas:
-
-- `security` - Focus on security vulnerabilities and best practices
-- `performance` - Focus on performance optimizations
-- `tests` - Focus on test coverage and test quality
-- `docs` - Focus on documentation completeness
-- Custom text is also accepted
-
-## Environment Requirements
-
-The following environment variables are required for pr-agent:
-
-- `GITHUB_TOKEN` or `GITHUB_USER_TOKEN` - GitHub access token
-- `OPENAI_KEY` or `ANTHROPIC_KEY` - AI provider API key
-
-If pr-agent is not available, Claude will analyze the diff directly.
-
-## Error Handling
-
-- If no changes are detected, inform the user there is nothing to review
-- If the specified base branch does not exist, suggest valid branch names
-- If pr-agent is not installed, proceed with direct Claude analysis
+- `<PR_NUMBER>`: PR number to review (e.g., `123`)
+- `<PR_URL>`: Full PR URL
+- `--base <branch>`: Branch to compare against (local mode)
+- `--staged`: Only staged changes (local mode)
+- `--focus <area>`: Focus area (security, performance, tests)
 
 ## Examples
 
 ```bash
-# Review all local changes
+# Local review
 /qodo:review
-
-# Review changes compared to main
 /qodo:review --base origin/main
-
-# Review only staged changes
 /qodo:review --staged
 
-# Focus on security issues
-/qodo:review --focus security
+# PR review
+/qodo:review 42
+/qodo:review https://github.com/myk-org/repo/pull/42
+/qodo:review 42 --focus security
+```
 
-# Combine options
-/qodo:review --base main --focus performance
+## Posting Comments (PR mode only)
+
+After reviewing a PR, you'll be asked:
+
+> Found X issues. Do you want to post these as review comments on PR #N?
+
+If you confirm, comments are posted as inline review comments on the PR using:
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{number}/comments -f body="..." -f path="..." -f line=N
 ```

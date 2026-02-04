@@ -1,79 +1,70 @@
 ---
 name: improve
-description: Get AI-powered code improvement suggestions using Qodo PR-Agent
+description: Suggest code improvements for local changes or a pull request
 ---
 
-# Qodo Improve Skill
+# Qodo Improve
 
-Get actionable code improvement suggestions for a pull request using Qodo PR-Agent.
+Suggest actionable code improvements. Works with local changes or pull requests.
 
 ## Usage
 
 ```bash
-/qodo:improve [PR_URL]
+/qodo:improve                             # Improve local uncommitted changes
+/qodo:improve --base main                 # Improve changes compared to main
+/qodo:improve 123                         # Suggest improvements for PR #123
+/qodo:improve https://github.com/.../42   # Suggest improvements for PR by URL
 ```
+
+## Workflow
+
+### Mode Detection
+
+1. Parse `$ARGUMENTS` to detect mode:
+   - If contains PR number or URL -> **PR mode**
+   - Otherwise -> **Local mode**
+
+### Local Mode
+
+1. Get diff: `git diff HEAD` (or `--base <branch>`)
+2. Analyze and suggest:
+   - Code simplifications
+   - Better patterns or idioms
+   - Performance optimizations
+   - Readability improvements
+   - Error handling enhancements
+
+### PR Mode
+
+1. Resolve PR URL from number if needed
+2. Run pr-agent improve:
+
+   ```bash
+   python -m pr_agent.cli --pr_url=<url> /improve
+   ```
+
+   Or analyze diff directly if pr-agent unavailable.
+
+3. Present improvement suggestions
+
+4. **Ask user**: "Do you want to apply any of these improvements?"
+   - User can select which improvements to apply
+   - Apply selected changes to local files
 
 ## Arguments
 
-- `PR_URL` (optional): GitHub pull request URL. If not provided, detects from current branch.
-
-## Execution Steps
-
-### Step 1: Determine PR URL
-
-If a PR URL is provided as an argument, use it directly.
-
-Otherwise, detect the PR from the current branch:
-
-```bash
-gh pr view --json url --jq '.url'
-```
-
-If no PR is found, inform the user they need to create a PR first or provide a URL.
-
-### Step 2: Run Qodo Improve
-
-Execute the pr-agent improve command:
-
-```bash
-python -m pr_agent.cli --pr_url="<PR_URL>" /improve
-```
-
-### Step 3: Present Results
-
-Display the improvement suggestions, which typically include:
-
-- Code quality improvements
-- Performance optimizations
-- Best practice recommendations
-- Refactoring suggestions
-- Each suggestion includes the file, line number, and proposed change
-
-## Environment Requirements
-
-The following environment variables must be set:
-
-- `GITHUB_TOKEN` or `GITHUB_USER_TOKEN` - GitHub access token
-- `OPENAI_KEY` or `ANTHROPIC_KEY` - AI provider API key
-
-## Error Handling
-
-- If pr-agent is not installed, suggest: `pip install pr-agent`
-- If environment variables are missing, list required variables
-- If PR URL is invalid, show expected format: `https://github.com/owner/repo/pull/123`
+- `<PR_NUMBER>`: PR number (e.g., `123`)
+- `<PR_URL>`: Full PR URL
+- `--base <branch>`: Branch to compare against (local mode)
 
 ## Examples
 
 ```bash
-# Get improvements for current branch's PR
+# Local
 /qodo:improve
+/qodo:improve --base origin/main
 
-# Get improvements for specific PR
-/qodo:improve https://github.com/myk-org/my-repo/pull/42
+# PR
+/qodo:improve 42
+/qodo:improve https://github.com/myk-org/repo/pull/42
 ```
-
-## Notes
-
-- Suggestions are posted as inline comments on the PR
-- Each suggestion is actionable with specific code changes
-- Focus is on improvements, not bugs (use `/qodo:review` for bug detection)

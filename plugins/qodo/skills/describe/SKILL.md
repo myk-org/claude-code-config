@@ -1,78 +1,69 @@
 ---
 name: describe
-description: Generate AI-powered pull request description using Qodo PR-Agent
+description: Generate a description for code changes - local or pull request
 ---
 
-# Qodo Describe Skill
+# Qodo Describe
 
-Automatically generate a comprehensive pull request description using Qodo PR-Agent.
+Generate a comprehensive description of code changes. Works with local changes or pull requests.
 
 ## Usage
 
 ```bash
-/qodo:describe [PR_URL]
+/qodo:describe                            # Describe local uncommitted changes
+/qodo:describe --base main                # Describe changes compared to main
+/qodo:describe 123                        # Generate description for PR #123
+/qodo:describe https://github.com/.../42  # Generate description for PR by URL
 ```
+
+## Workflow
+
+### Mode Detection
+
+1. Parse `$ARGUMENTS` to detect mode:
+   - If contains PR number or URL -> **PR mode**
+   - Otherwise -> **Local mode**
+
+### Local Mode
+
+1. Get diff: `git diff HEAD` (or `--base <branch>`)
+2. Analyze changes and generate:
+   - Summary of what changed
+   - Type of change (feature, fix, refactor, etc.)
+   - Key files modified
+   - Impact description
+
+### PR Mode
+
+1. Resolve PR URL from number if needed
+2. Run pr-agent describe:
+
+   ```bash
+   python -m pr_agent.cli --pr_url=<url> /describe
+   ```
+
+   Or analyze diff directly if pr-agent unavailable.
+
+3. Present generated description
+
+4. **Ask user**: "Do you want to update the PR description with this?"
+   - If YES: Update PR via `gh pr edit <number> --body "..."`
+   - If NO: Just show the description
 
 ## Arguments
 
-- `PR_URL` (optional): GitHub pull request URL. If not provided, detects from current branch.
-
-## Execution Steps
-
-### Step 1: Determine PR URL
-
-If a PR URL is provided as an argument, use it directly.
-
-Otherwise, detect the PR from the current branch:
-
-```bash
-gh pr view --json url --jq '.url'
-```
-
-If no PR is found, inform the user they need to create a PR first or provide a URL.
-
-### Step 2: Run Qodo Describe
-
-Execute the pr-agent describe command:
-
-```bash
-python -m pr_agent.cli --pr_url="<PR_URL>" /describe
-```
-
-### Step 3: Present Results
-
-Display the generated description, which typically includes:
-
-- Summary of changes
-- Type of change (feature, fix, refactor, etc.)
-- Walkthrough of modified files
-- Key changes highlighted
-
-## Environment Requirements
-
-The following environment variables must be set:
-
-- `GITHUB_TOKEN` or `GITHUB_USER_TOKEN` - GitHub access token
-- `OPENAI_KEY` or `ANTHROPIC_KEY` - AI provider API key
-
-## Error Handling
-
-- If pr-agent is not installed, suggest: `pip install pr-agent`
-- If environment variables are missing, list required variables
-- If PR URL is invalid, show expected format: `https://github.com/owner/repo/pull/123`
+- `<PR_NUMBER>`: PR number (e.g., `123`)
+- `<PR_URL>`: Full PR URL
+- `--base <branch>`: Branch to compare against (local mode)
 
 ## Examples
 
 ```bash
-# Describe current branch's PR
+# Local
 /qodo:describe
+/qodo:describe --base origin/main
 
-# Describe specific PR
-/qodo:describe https://github.com/myk-org/my-repo/pull/42
+# PR
+/qodo:describe 42
+/qodo:describe https://github.com/myk-org/repo/pull/42
 ```
-
-## Notes
-
-- The generated description will be posted as a comment on the PR
-- The PR body itself is not modified (only a comment is added)
-- To update the PR body, manually copy the relevant sections from the comment

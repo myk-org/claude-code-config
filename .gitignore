@@ -107,6 +107,7 @@
 # plugins/
 !plugins/
 !plugins/qodo/
+!plugins/README.md
 !plugins/qodo/.claude-plugin/
 !plugins/qodo/.claude-plugin/plugin.json
 !plugins/qodo/skills/
