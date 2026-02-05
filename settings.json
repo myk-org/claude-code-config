@@ -101,8 +101,9 @@
     "pyright-lsp@claude-plugins-official": true,
     "jdtls-lsp@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
-    "qodo@myk-org": true,
+    "github@claude-plugins-official": true,
     "github@myk-org": true,
+    "qodo@myk-org": true,
     "review@myk-org": true
   },
   "alwaysThinkingEnabled": true,
