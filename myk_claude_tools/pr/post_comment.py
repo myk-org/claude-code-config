@@ -47,7 +47,8 @@ class Comment:
     @property
     def severity(self) -> str:
         """Extract severity from comment body."""
-        match = re.match(r"^### \[(CRITICAL|WARNING|SUGGESTION)\]", self.body)
+        body = self.body.lstrip()
+        match = re.match(r"^### \[(CRITICAL|WARNING|SUGGESTION)\]", body)
         if match:
             return match.group(1)
         return "SUGGESTION"
@@ -55,7 +56,7 @@ class Comment:
     @property
     def title(self) -> str:
         """Extract title from comment body."""
-        first_line = self.body.split("\n", 1)[0]
+        first_line = self.body.lstrip().split("\n", 1)[0]
         # Remove severity marker if present
         title = re.sub(r"^### \[(CRITICAL|WARNING|SUGGESTION)\]\s*", "", first_line)
         # Remove leading ### if still present
@@ -96,6 +97,18 @@ def validate_pr_number(pr_number: str) -> bool:
         True if numeric.
     """
     return bool(re.match(r"^\d+$", pr_number))
+
+
+def validate_commit_sha(sha: str) -> bool:
+    """Validate commit SHA is a 40-character hex string.
+
+    Args:
+        sha: Commit SHA string.
+
+    Returns:
+        True if valid 40-character hex string.
+    """
+    return bool(re.match(r"^[0-9a-fA-F]{40}$", sha))
 
 
 def _parse_line(item: dict[str, Any], index: int) -> int:

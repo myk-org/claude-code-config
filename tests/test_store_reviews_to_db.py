@@ -1,4 +1,4 @@
-"""Comprehensive unit tests for store-reviews-to-db.py script.
+"""Comprehensive unit tests for reviews store module.
 
 This test suite covers:
 - Database creation and schema validation
@@ -10,37 +10,18 @@ This test suite covers:
 - Commit SHA detection
 """
 
-import importlib.util
 import json
 import os
 import sqlite3
 import stat
 import subprocess
-import sys
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Add scripts directory to path for importing module
-SCRIPTS_DIR = Path(__file__).parent.parent / "commands" / "scripts" / "general"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-
-def _load_module() -> ModuleType:
-    """Load the store-reviews-to-db module."""
-    spec = importlib.util.spec_from_file_location("store_reviews_to_db", SCRIPTS_DIR / "store-reviews-to-db.py")
-    if spec is None or spec.loader is None:
-        raise ImportError("Could not load store-reviews-to-db module")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-store_reviews = _load_module()
-
+from myk_claude_tools.reviews import store as store_reviews
 
 # =============================================================================
 # Tests for get_project_root()
@@ -671,8 +652,8 @@ class TestStoreReviews:
 # =============================================================================
 
 
-class TestMain:
-    """Tests for main() CLI entry point."""
+class TestRun:
+    """Tests for run() CLI entry point."""
 
     @patch.object(store_reviews, "store_reviews")
     def test_calls_store_reviews(self, mock_store: Any, tmp_path: Path) -> None:
@@ -680,8 +661,7 @@ class TestMain:
         json_path = tmp_path / "reviews.json"
         json_path.write_text("{}")
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            store_reviews.main()
+        store_reviews.run(str(json_path))
 
         mock_store.assert_called_once()
         call_arg = mock_store.call_args[0][0]
@@ -691,20 +671,10 @@ class TestMain:
         """Should exit if file does not exist."""
         json_path = tmp_path / "nonexistent.json"
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                store_reviews.main()
+        with pytest.raises(SystemExit) as excinfo:
+            store_reviews.run(str(json_path))
 
         assert excinfo.value.code == 1
-
-    def test_shows_help_with_no_args(self) -> None:
-        """Should show help with no arguments."""
-        with patch("sys.argv", ["script"]):
-            with pytest.raises(SystemExit) as excinfo:
-                store_reviews.main()
-
-        # argparse exits with 2 for missing required arguments
-        assert excinfo.value.code == 2
 
 
 # =============================================================================

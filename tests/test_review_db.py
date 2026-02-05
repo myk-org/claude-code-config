@@ -2,19 +2,15 @@
 
 import json
 import sqlite3
-import subprocess
-import sys
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
-# Add scripts directory to path for import
-SCRIPTS_DIR = Path(__file__).parent.parent / "commands" / "scripts" / "general"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-from review_db import ReviewDB, _body_similarity  # noqa: E402
+from myk_claude_tools.db.commands import db
+from myk_claude_tools.db.query import ReviewDB, _body_similarity
 
 # Schema for test database (same as production)
 SCHEMA = """
@@ -504,26 +500,15 @@ class TestReviewDB:
 
 
 class TestReviewDBCLI:
-    """Tests for CLI interface."""
+    """Tests for CLI interface using click's CliRunner."""
 
     def test_cli_stats_by_source(self, temp_db: Path) -> None:
         """Test CLI stats command with --by-source."""
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "stats",
-                "--by-source",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
-        )
+        runner = CliRunner()
+        result = runner.invoke(db, ["stats", "--by-source", "--json", "--db-path", str(temp_db)])
 
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.exit_code == 0
+        data = json.loads(result.output)
         assert isinstance(data, list)
         assert len(data) >= 1
         # Verify structure
@@ -533,22 +518,11 @@ class TestReviewDBCLI:
 
     def test_cli_stats_by_reviewer(self, temp_db: Path) -> None:
         """Test CLI stats command with --by-reviewer."""
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "stats",
-                "--by-reviewer",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
-        )
+        runner = CliRunner()
+        result = runner.invoke(db, ["stats", "--by-reviewer", "--json", "--db-path", str(temp_db)])
 
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.exit_code == 0
+        data = json.loads(result.output)
         assert isinstance(data, list)
         assert len(data) >= 1
         # Verify structure
@@ -557,83 +531,42 @@ class TestReviewDBCLI:
 
     def test_cli_query(self, temp_db: Path) -> None:
         """Test CLI query command."""
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "query",
-                "SELECT COUNT(*) as count FROM comments",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
+        runner = CliRunner()
+        result = runner.invoke(
+            db, ["query", "SELECT COUNT(*) as count FROM comments", "--json", "--db-path", str(temp_db)]
         )
 
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.exit_code == 0
+        data = json.loads(result.output)
         assert data[0]["count"] == 4
 
     def test_cli_query_rejects_non_select(self, temp_db: Path) -> None:
         """Test that CLI rejects non-SELECT queries."""
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "query",
-                "DELETE FROM comments",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
-        )
+        runner = CliRunner()
+        result = runner.invoke(db, ["query", "DELETE FROM comments", "--json", "--db-path", str(temp_db)])
 
-        assert result.returncode != 0
-        assert "Only SELECT/CTE queries are allowed" in result.stderr
+        assert result.exit_code != 0
+        assert "Only SELECT/CTE queries are allowed" in result.output
 
     def test_cli_query_rejects_multi_statement(self, temp_db: Path) -> None:
         """Test that CLI rejects multi-statement queries."""
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "query",
-                "SELECT * FROM comments; DELETE FROM comments",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
+        runner = CliRunner()
+        result = runner.invoke(
+            db, ["query", "SELECT * FROM comments; DELETE FROM comments", "--json", "--db-path", str(temp_db)]
         )
 
-        assert result.returncode != 0
-        assert "Multiple SQL statements" in result.stderr
+        assert result.exit_code != 0
+        assert "Multiple SQL statements" in result.output
 
     def test_cli_dismissed(self, temp_db: Path) -> None:
         """Test CLI dismissed command."""
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "dismissed",
-                "--owner",
-                "test-org",
-                "--repo",
-                "test-repo",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
+        runner = CliRunner()
+        result = runner.invoke(
+            db, ["dismissed", "--owner", "test-org", "--repo", "test-repo", "--json", "--db-path", str(temp_db)]
         )
 
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.exit_code == 0
+        data = json.loads(result.output)
         assert isinstance(data, list)
         assert len(data) == 2  # not_addressed + skipped
         statuses = {item["status"] for item in data}
@@ -667,23 +600,11 @@ class TestReviewDBCLI:
         conn.commit()
         conn.close()
 
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "patterns",
-                "--min",
-                "2",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
-        )
+        runner = CliRunner()
+        result = runner.invoke(db, ["patterns", "--min", "2", "--json", "--db-path", str(temp_db)])
 
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.exit_code == 0
+        data = json.loads(result.output)
         assert isinstance(data, list)
         # Should find the pattern we created
         pattern_paths = {item["path"] for item in data}
@@ -693,26 +614,15 @@ class TestReviewDBCLI:
         """Test CLI find-similar command."""
         input_json = json.dumps({"path": "path/to/file.py", "body": "Add skip option"})
 
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "find-similar",
-                "--owner",
-                "test-org",
-                "--repo",
-                "test-repo",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
+        runner = CliRunner()
+        result = runner.invoke(
+            db,
+            ["find-similar", "--owner", "test-org", "--repo", "test-repo", "--json", "--db-path", str(temp_db)],
             input=input_json,
         )
 
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.exit_code == 0
+        data = json.loads(result.output)
         # Should find a similar comment
         assert data is not None
         assert "skip" in data["body"].lower()
@@ -721,47 +631,25 @@ class TestReviewDBCLI:
         """Test CLI find-similar command when no match exists."""
         input_json = json.dumps({"path": "nonexistent/path.py", "body": "Unrelated comment"})
 
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "find-similar",
-                "--owner",
-                "test-org",
-                "--repo",
-                "test-repo",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
+        runner = CliRunner()
+        result = runner.invoke(
+            db,
+            ["find-similar", "--owner", "test-org", "--repo", "test-repo", "--json", "--db-path", str(temp_db)],
             input=input_json,
         )
 
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.exit_code == 0
+        data = json.loads(result.output)
         assert data is None
 
     def test_cli_find_similar_invalid_json(self, temp_db: Path) -> None:
         """Test CLI find-similar command with invalid JSON input."""
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPTS_DIR / "review_db.py"),
-                "--db-path",
-                str(temp_db),
-                "find-similar",
-                "--owner",
-                "test-org",
-                "--repo",
-                "test-repo",
-                "--json",
-            ],
-            capture_output=True,
-            text=True,
+        runner = CliRunner()
+        result = runner.invoke(
+            db,
+            ["find-similar", "--owner", "test-org", "--repo", "test-repo", "--json", "--db-path", str(temp_db)],
             input="not valid json",
         )
 
-        assert result.returncode != 0
-        assert "JSON" in result.stderr
+        assert result.exit_code != 0
+        assert "JSON" in result.output

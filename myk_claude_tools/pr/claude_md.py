@@ -13,8 +13,6 @@ Output: CLAUDE.md content (or empty if not found)
 
 from __future__ import annotations
 
-import base64
-import binascii
 import re
 import shutil
 import subprocess
@@ -86,24 +84,18 @@ def fetch_from_github(owner: str, repo: str, file_path: str) -> str | None:
                 "gh",
                 "api",
                 f"/repos/{owner}/{repo}/contents/{file_path}",
-                "--jq",
-                ".content",
+                "-H",
+                "Accept: application/vnd.github.raw",
             ],
             capture_output=True,
             text=True,
             check=True,
             timeout=60,
         )
-        content_base64 = result.stdout.strip()
-        if not content_base64:
-            return None
-        # Decode base64 content
-        return base64.b64decode(content_base64).decode("utf-8")
+        return result.stdout if result.stdout else None
     except (
         subprocess.CalledProcessError,
         FileNotFoundError,
-        binascii.Error,
-        UnicodeDecodeError,
         subprocess.TimeoutExpired,
     ):
         return None
@@ -137,13 +129,13 @@ def run(args: list[str]) -> None:
         # Check local ./CLAUDE.md
         local_claude_md = Path("./CLAUDE.md")
         if local_claude_md.is_file():
-            print(local_claude_md.read_text())
+            print(local_claude_md.read_text(encoding="utf-8"))
             return
 
         # Check local ./.claude/CLAUDE.md
         local_claude_dir_md = Path("./.claude/CLAUDE.md")
         if local_claude_dir_md.is_file():
-            print(local_claude_dir_md.read_text())
+            print(local_claude_dir_md.read_text(encoding="utf-8"))
             return
 
     # Fetch upstream CLAUDE.md

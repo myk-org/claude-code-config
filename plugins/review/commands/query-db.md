@@ -1,7 +1,7 @@
 ---
 description: Query the reviews database for analytics and insights
-argument-hint: [stats|patterns|dismissed|query] [OPTIONS]
-allowed-tools: Bash(myk-claude-tools *), Bash(uv *)
+argument-hint: [stats|patterns|dismissed|query|find-similar] [OPTIONS]
+allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*)
 ---
 
 # Review Database Query Command
@@ -34,6 +34,7 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 /review:query-db patterns --min 2         # Find duplicate patterns
 /review:query-db dismissed --owner X --repo Y
 /review:query-db query "SELECT * FROM comments WHERE status='skipped' LIMIT 10"
+/review:query-db find-similar < comments.json   # Find similar dismissed comments
 ```
 
 ## Available Queries
@@ -77,6 +78,18 @@ Run a custom SELECT query:
 ```bash
 myk-claude-tools db query "SELECT * FROM comments WHERE status = 'skipped' ORDER BY id DESC LIMIT 10"
 ```
+
+### Find Similar Comments
+
+Find comments similar to previously dismissed ones. Accepts JSON input via stdin:
+
+```bash
+echo '[{"body": "Consider adding error handling", "path": "src/main.py"}]' | myk-claude-tools db find-similar
+```
+
+Input format: JSON array of objects with `body` (required) and optionally `path` fields.
+
+Returns matches with similarity scores to help identify recurring patterns that were previously dismissed.
 
 ## Database Schema
 

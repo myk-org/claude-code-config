@@ -25,7 +25,7 @@ Review uncommitted changes or changes compared to a specified branch.
 Compare current branch against the specified branch:
 
 ```bash
-git diff "$ARGUMENTS"..HEAD
+git diff "$ARGUMENTS"...HEAD
 ```
 
 **If no argument provided:**

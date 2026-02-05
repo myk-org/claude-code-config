@@ -23,11 +23,6 @@
       "Skill(qodo:describe)",
       "Skill(qodo:improve)",
       "Skill(qodo:ask)",
-      "Skill(github:pr-review)",
-      "Skill(github:release)",
-      "Skill(github:review-handler)",
-      "Skill(review:local)",
-      "Skill(review:query-db)",
       "Bash(myk-claude-tools:*)"
     ]
   },
@@ -124,7 +119,6 @@
     "Bash(git -C:*)",
     "Bash(prek:*)",
     "Grep",
-    "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
     "Bash(~/.claude/scripts/session-start-check.sh:*)",
     "Bash(~/.claude/scripts/my-notifier.sh:*)",
     "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
@@ -134,11 +128,6 @@
     "Skill(qodo:describe)",
     "Skill(qodo:improve)",
     "Skill(qodo:ask)",
-    "Skill(github:pr-review)",
-    "Skill(github:release)",
-    "Skill(github:review-handler)",
-    "Skill(review:local)",
-    "Skill(review:query-db)",
     "Bash(myk-claude-tools:*)"
   ],
   "feedbackSurveyState": {

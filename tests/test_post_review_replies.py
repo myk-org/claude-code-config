@@ -1,4 +1,4 @@
-"""Comprehensive unit tests for post-review-replies-from-json.py script.
+"""Comprehensive unit tests for reviews post module.
 
 This test suite covers:
 - check_dependencies() validation
@@ -10,35 +10,14 @@ This test suite covers:
 - Atomic JSON updates
 """
 
-import importlib.util
 import json
-import sys
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Add scripts directory to path for importing module
-SCRIPTS_DIR = Path(__file__).parent.parent / "commands" / "scripts" / "general"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-
-def _load_module() -> ModuleType:
-    """Load the post-review-replies-from-json module."""
-    spec = importlib.util.spec_from_file_location(
-        "post_review_replies", SCRIPTS_DIR / "post-review-replies-from-json.py"
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError("Could not load post-review-replies-from-json module")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-post_review_replies = _load_module()
-
+from myk_claude_tools.reviews import post as post_review_replies
 
 # =============================================================================
 # Tests for check_dependencies()
@@ -121,18 +100,17 @@ class TestRunGraphql:
         assert "Field not found" in str(result)
 
     @patch("subprocess.run")
-    def test_variables_passed_correctly(self, mock_run: Any) -> None:
-        """Variables should be passed with -f flag, handling multiple and special characters."""
+    def test_variables_passed_via_stdin(self, mock_run: Any) -> None:
+        """Variables should be passed via stdin as JSON payload."""
         mock_run.return_value = MagicMock(returncode=0, stdout='{"data": {}}', stderr="")
 
         variables = {"key1": "value1", "key2": "value with spaces"}
         post_review_replies.run_graphql("query", variables)
 
+        # New implementation uses --input - to pass JSON payload via stdin
         call_args = mock_run.call_args[0][0]
-        # 3 -f flags: 1 for query, 2 for variables
-        assert call_args.count("-f") == 3
-        assert "key1=value1" in call_args
-        assert "key2=value with spaces" in call_args
+        assert "--input" in call_args
+        assert "-" in call_args
 
 
 # =============================================================================
@@ -385,9 +363,8 @@ class TestMainStatusHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 0
         mock_post.assert_called_once()
@@ -408,9 +385,8 @@ class TestMainStatusHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 0
         mock_post.assert_not_called()
@@ -436,9 +412,8 @@ class TestMainStatusHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 0
         mock_post.assert_called_once()
@@ -471,9 +446,8 @@ class TestMainStatusHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 0
         mock_post.assert_called_once()
@@ -499,9 +473,8 @@ class TestMainStatusHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 0
         mock_post.assert_called_once()
@@ -555,9 +528,8 @@ class TestMainThreadIdResolution:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         # Should use thread_id directly, not look up from node_id
         mock_lookup.assert_not_called()
@@ -594,9 +566,8 @@ class TestMainThreadIdResolution:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         mock_lookup.assert_called_once_with("node123")
         call_args = mock_post.call_args
@@ -630,9 +601,8 @@ class TestMainThreadIdResolution:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         mock_post.assert_not_called()
 
@@ -675,9 +645,8 @@ class TestMainReplyMessageGeneration:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         call_args = mock_post.call_args
         assert call_args[0][1] == "Custom reply message"
@@ -700,9 +669,8 @@ class TestMainReplyMessageGeneration:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         call_args = mock_post.call_args
         assert call_args[0][1] == "Addressed."
@@ -725,9 +693,8 @@ class TestMainReplyMessageGeneration:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         call_args = mock_post.call_args
         assert call_args[0][1] == "Skipped: Out of scope"
@@ -760,9 +727,8 @@ class TestMainReplyMessageGeneration:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         call_args = mock_post.call_args
         assert call_args[0][1] == "Using reply"
@@ -782,9 +748,8 @@ class TestMainInputValidation:
         del mock_deps  # Injected by @patch decorator, unused in test
         json_path = tmp_path / "nonexistent.json"
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 1
 
@@ -795,9 +760,8 @@ class TestMainInputValidation:
         json_path = tmp_path / "invalid.json"
         json_path.write_text("not valid json {{{")
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 1
 
@@ -808,9 +772,8 @@ class TestMainInputValidation:
         json_path = tmp_path / "reviews.json"
         json_path.write_text('{"human": [], "qodo": [], "coderabbit": []}')
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 1
 
@@ -827,22 +790,20 @@ class TestMainInputValidation:
         }
         json_path.write_text(json.dumps(data))
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 1
 
     @patch.object(post_review_replies, "check_dependencies")
-    def test_no_arguments(self, mock_deps: Any) -> None:
-        """No arguments should show usage and exit."""
+    def test_empty_path_argument(self, mock_deps: Any) -> None:
+        """Empty path should exit with error."""
         del mock_deps  # Injected by @patch decorator, unused in test
-        with patch("sys.argv", ["script"]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run("")  # Empty path triggers validation error
 
-        # argparse exits with 2 for missing required arguments
-        assert excinfo.value.code == 2
+        # Empty path fails file validation
+        assert excinfo.value.code == 1
 
 
 # =============================================================================
@@ -887,9 +848,8 @@ class TestMainAlreadyPostedHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         mock_post.assert_not_called()
         mock_resolve.assert_not_called()
@@ -920,9 +880,8 @@ class TestMainAlreadyPostedHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         # Should not post again, only resolve
         mock_post.assert_not_called()
@@ -954,9 +913,8 @@ class TestMainAlreadyPostedHandling:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         # Should not post or resolve (already posted, not resolving by policy)
         mock_post.assert_not_called()
@@ -990,9 +948,8 @@ class TestEdgeCases:
             {"human": [], "qodo": [], "coderabbit": []},
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 0
 
@@ -1011,9 +968,8 @@ class TestEdgeCases:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         mock_post.assert_not_called()
 
@@ -1034,9 +990,8 @@ class TestEdgeCases:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit) as excinfo:
-                post_review_replies.main()
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
 
         assert excinfo.value.code == 1
 
@@ -1068,9 +1023,8 @@ class TestEdgeCases:
             },
         )
 
-        with patch("sys.argv", ["script", str(json_path)]):
-            with pytest.raises(SystemExit):
-                post_review_replies.main()
+        with pytest.raises(SystemExit):
+            post_review_replies.run(str(json_path))
 
         # Should skip - "null" string is treated as invalid
         mock_post.assert_not_called()

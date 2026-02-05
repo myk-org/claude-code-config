@@ -59,14 +59,17 @@ Display proposed version, changelog preview, and ask for confirmation:
 
 ### Phase 4: Create Release
 
-Create temp directory, write changelog to temp file, and create release:
+Create temp directory with cleanup, write changelog to temp file, and create release:
 
 ```bash
-mkdir -p /tmp/claude
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
 ```
 
+Write the changelog to `$tmp_dir/release-changelog.md`, then create the release:
+
 ```bash
-myk-claude-tools release create {owner}/{repo} {tag} /tmp/claude/release-changelog.md [--prerelease] [--draft]
+myk-claude-tools release create {owner}/{repo} {tag} "$tmp_dir/release-changelog.md" [--prerelease] [--draft]
 ```
 
 ### Phase 5: Summary

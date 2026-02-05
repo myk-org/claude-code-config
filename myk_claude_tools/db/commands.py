@@ -33,6 +33,10 @@ def db_stats(by_source: bool, by_reviewer: bool, output_json: bool, db_path: str
         # JSON output
         myk-claude-tools db stats --by-source --json
     """
+    if by_source and by_reviewer:
+        click.echo("Error: choose only one of --by-source or --by-reviewer", err=True)
+        sys.exit(1)
+
     db_obj = ReviewDB(db_path=Path(db_path) if db_path else None)
 
     # If neither flag is set, default to by-source behavior

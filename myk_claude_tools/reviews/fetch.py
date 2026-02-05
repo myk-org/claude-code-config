@@ -106,6 +106,9 @@ def get_pr_info() -> tuple[str, str, str]:
             print_stderr("Error: Could not get current branch")
             sys.exit(1)
         current_branch = result.stdout.strip()
+        if current_branch == "HEAD":
+            print_stderr("Error: Detached HEAD; cannot infer PR from branch. Check out a branch with an open PR.")
+            sys.exit(1)
     except subprocess.TimeoutExpired:
         print_stderr("Error: git command timed out")
         sys.exit(1)
@@ -581,13 +584,11 @@ def run(review_url: str = "") -> int:
         # Ensure output directory exists
         tmp_base = Path(os.environ.get("TMPDIR") or tempfile.gettempdir())
         out_dir = tmp_base / "claude"
-        if not out_dir.exists():
-            out_dir.mkdir(parents=True, mode=0o700)
-        else:
-            try:
-                out_dir.chmod(0o700)
-            except OSError:
-                pass
+        out_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        try:
+            out_dir.chmod(0o700)
+        except OSError:
+            pass
 
         json_path = out_dir / f"pr-{pr_number}-reviews.json"
 

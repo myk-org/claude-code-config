@@ -1,7 +1,7 @@
 ---
 description: Review a GitHub PR and post inline comments on selected findings
 argument-hint: [PR_NUMBER|PR_URL]
-allowed-tools: Bash(myk-claude-tools *), Bash(uv *), Bash(git *), Bash(gh *), AskUserQuestion, Task
+allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task
 ---
 
 # GitHub PR Review Command
@@ -48,17 +48,32 @@ If `$ARGUMENTS` is empty:
 1. Detect PR from current branch:
 
    ```bash
-   gh pr view --json number,headRepository,headRefOid
+   gh pr view --json number,headRefOid
    ```
 
-1. Extract and store:
+2. Get base repository context (where PR targets):
 
-   - `pr_number` from the JSON response
-   - `owner` from `headRepository.owner.login`
-   - `repo` from `headRepository.name`
+   The base repository (where the PR is opened) is determined by the current working directory context.
+   When you run `gh pr view` from a cloned repository, it operates in that repository's context.
+
+   To get `owner` and `repo`:
+
+   ```bash
+   gh repo view --json owner,name
+   ```
+
+   This returns the base repository information regardless of whether the PR comes from a fork.
+
+   **Note:** `baseRepository` is NOT available in `gh pr view --json`. For fork PRs, `headRepository` would incorrectly point to the fork, not the target repository.
+
+3. Extract and store:
+
+   - `pr_number` from the PR JSON response
+   - `owner` from `gh repo view` → `owner.login`
+   - `repo` from `gh repo view` → `name`
    - `head_sha` from `headRefOid`
 
-1. Use `{pr_number}` for subsequent CLI commands
+4. Use `{pr_number}` for subsequent CLI commands
 
 If `$ARGUMENTS` contains a PR number or URL, use it directly.
 

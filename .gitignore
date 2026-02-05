@@ -83,25 +83,7 @@
 
 # plugins/
 !plugins/
-!plugins/qodo/
 !plugins/README.md
-!plugins/qodo/.claude-plugin/
-!plugins/qodo/.claude-plugin/plugin.json
-!plugins/qodo/skills/
-!plugins/qodo/skills/review/
-!plugins/qodo/skills/review/SKILL.md
-!plugins/qodo/skills/describe/
-!plugins/qodo/skills/describe/SKILL.md
-!plugins/qodo/skills/improve/
-!plugins/qodo/skills/improve/SKILL.md
-!plugins/qodo/skills/ask/
-!plugins/qodo/skills/ask/SKILL.md
-!plugins/qodo/commands/
-!plugins/qodo/commands/review.md
-!plugins/qodo/commands/describe.md
-!plugins/qodo/commands/improve.md
-!plugins/qodo/commands/ask.md
-!plugins/qodo/README.md
 
 # plugins/github/
 !plugins/github/
@@ -112,6 +94,26 @@
 !plugins/github/commands/release.md
 !plugins/github/commands/review-handler.md
 !plugins/github/README.md
+
+# plugins/qodo/
+!plugins/qodo/
+!plugins/qodo/.claude-plugin/
+!plugins/qodo/.claude-plugin/plugin.json
+!plugins/qodo/skills/
+!plugins/qodo/skills/ask/
+!plugins/qodo/skills/ask/SKILL.md
+!plugins/qodo/skills/describe/
+!plugins/qodo/skills/describe/SKILL.md
+!plugins/qodo/skills/improve/
+!plugins/qodo/skills/improve/SKILL.md
+!plugins/qodo/skills/review/
+!plugins/qodo/skills/review/SKILL.md
+!plugins/qodo/commands/
+!plugins/qodo/commands/ask.md
+!plugins/qodo/commands/describe.md
+!plugins/qodo/commands/improve.md
+!plugins/qodo/commands/review.md
+!plugins/qodo/README.md
 
 # plugins/review/
 !plugins/review/
@@ -130,25 +132,25 @@
 !myk_claude_tools/
 !myk_claude_tools/__init__.py
 !myk_claude_tools/cli.py
+!myk_claude_tools/db/
+!myk_claude_tools/db/__init__.py
+!myk_claude_tools/db/commands.py
+!myk_claude_tools/db/query.py
 !myk_claude_tools/pr/
 !myk_claude_tools/pr/__init__.py
+!myk_claude_tools/pr/claude_md.py
 !myk_claude_tools/pr/commands.py
 !myk_claude_tools/pr/common.py
 !myk_claude_tools/pr/diff.py
-!myk_claude_tools/pr/claude_md.py
 !myk_claude_tools/pr/post_comment.py
 !myk_claude_tools/release/
 !myk_claude_tools/release/__init__.py
 !myk_claude_tools/release/commands.py
-!myk_claude_tools/release/info.py
 !myk_claude_tools/release/create.py
+!myk_claude_tools/release/info.py
 !myk_claude_tools/reviews/
 !myk_claude_tools/reviews/__init__.py
 !myk_claude_tools/reviews/commands.py
 !myk_claude_tools/reviews/fetch.py
 !myk_claude_tools/reviews/post.py
 !myk_claude_tools/reviews/store.py
-!myk_claude_tools/db/
-!myk_claude_tools/db/__init__.py
-!myk_claude_tools/db/commands.py
-!myk_claude_tools/db/query.py

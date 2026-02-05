@@ -258,7 +258,7 @@ def run(json_path: str) -> None:
     """
     check_dependencies()
 
-    json_path_obj = Path(json_path)
+    json_path_obj = Path(json_path).resolve()
 
     # Validate JSON file exists
     if not json_path_obj.is_file():
