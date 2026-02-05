@@ -20,10 +20,10 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 
 ## Usage
 
-- `/github:release` - Normal release
-- `/github:release --dry-run` - Preview without creating
-- `/github:release --prerelease` - Create prerelease
-- `/github:release --draft` - Create draft release
+- `/myk-github:release` - Normal release
+- `/myk-github:release --dry-run` - Preview without creating
+- `/myk-github:release --prerelease` - Create prerelease
+- `/myk-github:release --draft` - Create draft release
 
 ## Workflow
 

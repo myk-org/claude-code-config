@@ -49,11 +49,11 @@ Review code changes for bugs, security issues, and code quality. Works with loca
 ### Usage
 
 ```bash
-/qodo:review                              # Review local uncommitted changes
-/qodo:review --base main                  # Compare local changes against main
-/qodo:review --staged                     # Review only staged changes
-/qodo:review 123                          # Review PR #123
-/qodo:review https://github.com/.../42    # Review PR by URL
+/myk-qodo:review                              # Review local uncommitted changes
+/myk-qodo:review --base main                  # Compare local changes against main
+/myk-qodo:review --staged                     # Review only staged changes
+/myk-qodo:review 123                          # Review PR #123
+/myk-qodo:review https://github.com/.../42    # Review PR by URL
 ```
 
 ### Workflow
@@ -151,18 +151,18 @@ If posting, use GitHub API to add inline review comments.
 
 ```bash
 # Local review
-/qodo:review
-/qodo:review --base origin/main
-/qodo:review --staged
+/myk-qodo:review
+/myk-qodo:review --base origin/main
+/myk-qodo:review --staged
 
 # PR review
-/qodo:review 42
-/qodo:review https://github.com/myk-org/repo/pull/42
-/qodo:review 42 --focus security
+/myk-qodo:review 42
+/myk-qodo:review https://github.com/myk-org/repo/pull/42
+/myk-qodo:review 42 --focus security
 
 # With model selection
-/qodo:review --model claude-4-opus
-/qodo:review 42 --model gpt-4
+/myk-qodo:review --model claude-4-opus
+/myk-qodo:review 42 --model gpt-4
 ```
 
 ### Interactive Flow Example
@@ -170,7 +170,7 @@ If posting, use GitHub API to add inline review comments.
 A typical review session with the interactive workflow:
 
 ```text
-User: /qodo:review 42
+User: /myk-qodo:review 42
 
 Claude: Which AI model would you like to use for this review?
 

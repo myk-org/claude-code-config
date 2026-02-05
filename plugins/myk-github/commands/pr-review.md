@@ -35,9 +35,9 @@ If not found, prompt user: "myk-claude-tools is required. Install with: `uv tool
 
 ## Usage
 
-- `/github:pr-review` - Review PR from current branch (auto-detect)
-- `/github:pr-review 123` - Review PR #123 in current repo
-- `/github:pr-review https://github.com/owner/repo/pull/123` - Review from URL
+- `/myk-github:pr-review` - Review PR from current branch (auto-detect)
+- `/myk-github:pr-review 123` - Review PR #123 in current repo
+- `/myk-github:pr-review https://github.com/owner/repo/pull/123` - Review from URL
 
 ## Workflow
 

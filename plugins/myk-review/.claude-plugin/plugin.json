@@ -1,5 +1,5 @@
 {
-  "name": "review",
+  "name": "myk-review",
   "version": "1.0.0",
   "description": "Local code review and review database operations for Claude Code",
   "author": {

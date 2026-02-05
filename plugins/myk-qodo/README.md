@@ -1,4 +1,4 @@
-# Qodo Review Plugin for Claude Code
+# myk-qodo Review Plugin for Claude Code
 
 AI-powered code review integration using [Qodo](https://qodo.ai).
 
@@ -27,21 +27,21 @@ npm install -g @qodo/command
 
 ## Available Skills
 
-### /qodo:review
+### /myk-qodo:review
 
 Review code changes for bugs, security issues, and code quality.
 
 ```bash
 # Local mode (default) - review uncommitted changes
-/qodo:review
-/qodo:review --base origin/main    # Compare against specific branch
-/qodo:review --staged              # Review only staged changes
-/qodo:review --focus security      # Focus on specific area
-/qodo:review --model claude-4-opus # Use a specific model
+/myk-qodo:review
+/myk-qodo:review --base origin/main    # Compare against specific branch
+/myk-qodo:review --staged              # Review only staged changes
+/myk-qodo:review --focus security      # Focus on specific area
+/myk-qodo:review --model claude-4-opus # Use a specific model
 
 # PR mode - review a pull request
-/qodo:review 123                              # Review PR #123
-/qodo:review https://github.com/owner/repo/pull/123
+/myk-qodo:review 123                              # Review PR #123
+/myk-qodo:review https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
@@ -54,19 +54,19 @@ Review code changes for bugs, security issues, and code quality.
 
 **PR mode behavior:** After reviewing, asks if you want to post findings as inline comments on the PR.
 
-### /qodo:describe
+### /myk-qodo:describe
 
 Generate a comprehensive description of code changes.
 
 ```bash
 # Local mode (default) - describe uncommitted changes
-/qodo:describe
-/qodo:describe --base origin/main
-/qodo:describe --model gpt-4       # Use a specific model
+/myk-qodo:describe
+/myk-qodo:describe --base origin/main
+/myk-qodo:describe --model gpt-4       # Use a specific model
 
 # PR mode - generate description for a pull request
-/qodo:describe 123
-/qodo:describe https://github.com/owner/repo/pull/123
+/myk-qodo:describe 123
+/myk-qodo:describe https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
@@ -78,19 +78,19 @@ Generate a comprehensive description of code changes.
 
 **PR mode behavior:** After generating, asks if you want to update the PR description with the generated content.
 
-### /qodo:improve
+### /myk-qodo:improve
 
 Get actionable code improvement suggestions.
 
 ```bash
 # Local mode (default) - improve uncommitted changes
-/qodo:improve
-/qodo:improve --base origin/main
-/qodo:improve --model claude-4-opus # Use a specific model
+/myk-qodo:improve
+/myk-qodo:improve --base origin/main
+/myk-qodo:improve --model claude-4-opus # Use a specific model
 
 # PR mode - suggest improvements for a pull request
-/qodo:improve 123
-/qodo:improve https://github.com/owner/repo/pull/123
+/myk-qodo:improve 123
+/myk-qodo:improve https://github.com/owner/repo/pull/123
 ```
 
 **Features:**
@@ -103,20 +103,20 @@ Get actionable code improvement suggestions.
 
 **PR mode behavior:** After suggestions, asks which improvements you want to apply to local files.
 
-### /qodo:ask
+### /myk-qodo:ask
 
 Ask questions about code changes and get AI-powered answers.
 
 ```bash
 # Local mode (default) - ask about uncommitted changes
-/qodo:ask "What are the main changes?"
-/qodo:ask "Are there any security concerns?" --base main
-/qodo:ask "Explain this code" --model gpt-4  # Use a specific model
+/myk-qodo:ask "What are the main changes?"
+/myk-qodo:ask "Are there any security concerns?" --base main
+/myk-qodo:ask "Explain this code" --model gpt-4  # Use a specific model
 
 # PR mode - ask about a pull request
-/qodo:ask "What does this PR do?" 123
-/qodo:ask "Are there untested code paths?" 123
-/qodo:ask "Explain the caching strategy" https://github.com/owner/repo/pull/123
+/myk-qodo:ask "What does this PR do?" 123
+/myk-qodo:ask "Are there untested code paths?" 123
+/myk-qodo:ask "Explain the caching strategy" https://github.com/owner/repo/pull/123
 ```
 
 **Common questions:**
@@ -138,8 +138,8 @@ qodo models
 Use a specific model:
 
 ```bash
-/qodo:review --model claude-4.5-sonnet
-/qodo:describe 123 --model gpt-4
+/myk-qodo:review --model claude-4.5-sonnet
+/myk-qodo:describe 123 --model gpt-4
 ```
 
 ## Troubleshooting
@@ -174,8 +174,8 @@ git diff HEAD
 When using PR mode, provide the PR number or URL directly:
 
 ```bash
-/qodo:review 123
-/qodo:describe https://github.com/owner/repo/pull/123
+/myk-qodo:review 123
+/myk-qodo:describe https://github.com/owner/repo/pull/123
 ```
 
 ## License

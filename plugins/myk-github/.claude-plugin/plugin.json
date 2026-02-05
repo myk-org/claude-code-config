@@ -1,5 +1,5 @@
 {
-  "name": "github",
+  "name": "myk-github",
   "version": "1.0.0",
   "description": "GitHub operations for Claude Code - PR reviews, releases, and review handling",
   "author": {

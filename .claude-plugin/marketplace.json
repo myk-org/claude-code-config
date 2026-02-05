@@ -5,20 +5,20 @@
   },
   "plugins": [
     {
-      "name": "qodo",
-      "source": "./plugins/qodo",
+      "name": "myk-qodo",
+      "source": "./plugins/myk-qodo",
       "description": "Qodo AI code review integration",
       "version": "1.0.0"
     },
     {
-      "name": "github",
-      "source": "./plugins/github",
+      "name": "myk-github",
+      "source": "./plugins/myk-github",
       "description": "GitHub operations - PR reviews, releases, review handling",
       "version": "1.0.0"
     },
     {
-      "name": "review",
-      "source": "./plugins/review",
+      "name": "myk-review",
+      "source": "./plugins/myk-review",
       "description": "Local code review and review database operations",
       "version": "1.0.0"
     }

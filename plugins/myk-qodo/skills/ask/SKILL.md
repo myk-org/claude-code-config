@@ -1,6 +1,6 @@
 ---
-name: improve
-description: Suggest code improvements for local changes or a pull request
+name: ask
+description: Ask questions about code changes - local or pull request
 ---
 
 # STOP - MANDATORY INPUTS REQUIRED
@@ -19,13 +19,13 @@ If `--model` was NOT provided in `$ARGUMENTS`:
 
 DO NOT PROCEED until user selects a model.
 
-## 2. Diff Mode Selection (REQUIRED for local improve)
+## 2. Diff Mode Selection (REQUIRED for local ask)
 
 If NO PR number/URL was provided AND `--base` was NOT provided:
 
 **YOU MUST use AskUserQuestion tool NOW** to ask:
 
-- Question: "What changes would you like to improve?"
+- Question: "What changes would you like to ask about?"
 - Options:
   1. "All uncommitted changes (git diff HEAD)"
   2. "Compare against main branch"
@@ -37,22 +37,22 @@ DO NOT PROCEED until user selects a mode.
 
 ---
 
-## Qodo Improve
+## Qodo Ask
 
-Suggest actionable code improvements. Works with local changes or pull requests.
+Ask questions about code changes and get AI-powered answers. Works with local changes or pull requests.
 
 ### Usage
 
 ```bash
-/qodo:improve                             # Improve local uncommitted changes
-/qodo:improve --base main                 # Improve changes compared to main
-/qodo:improve 123                         # Suggest improvements for PR #123
-/qodo:improve https://github.com/.../42   # Suggest improvements for PR by URL
+/myk-qodo:ask "What does this change do?"                    # Ask about local changes
+/myk-qodo:ask "What does this change do?" --base main        # Compare against main
+/myk-qodo:ask "Are there security issues?" 123               # Ask about PR #123
+/myk-qodo:ask "Explain the auth flow" https://github.com/... # Ask about PR by URL
 ```
 
 ### Workflow
 
-#### Step 1: Execute Improve
+#### Step 1: Execute Ask
 
 Parse `$ARGUMENTS` to detect mode:
 
@@ -62,32 +62,26 @@ Parse `$ARGUMENTS` to detect mode:
 #### Step 2: Local Mode
 
 1. Get diff: `git diff HEAD` (or `--base <branch>`)
-2. Analyze and suggest:
-   - Code simplifications
-   - Better patterns or idioms
-   - Performance optimizations
-   - Readability improvements
-   - Error handling enhancements
+2. Analyze the question in context of the diff
+3. Provide detailed answer based on the changes
 
 #### Step 3: PR Mode
 
 1. Resolve PR URL from number if needed
-2. Run pr-agent improve:
+2. Get PR context: diff, description, comments
+3. Run pr-agent ask:
 
    ```bash
-   python -m pr_agent.cli --pr_url=<url> /improve --config.model=<selected_model>
+   python -m pr_agent.cli --pr_url=<url> /ask "<question>" --config.model=<selected_model>
    ```
 
-   Or analyze diff directly if pr-agent unavailable.
+   Or analyze directly if pr-agent unavailable.
 
-3. Present improvement suggestions
-
-4. **Ask user**: "Do you want to apply any of these improvements?"
-   - User can select which improvements to apply
-   - Apply selected changes to local files
+4. Provide detailed answer
 
 ### Arguments
 
+- `"<question>"`: The question to ask (required)
 - `<PR_NUMBER>`: PR number (e.g., `123`)
 - `<PR_URL>`: Full PR URL
 - `--base <branch>`: Branch to compare against (local mode)
@@ -97,14 +91,16 @@ Parse `$ARGUMENTS` to detect mode:
 
 ```bash
 # Local
-/qodo:improve
-/qodo:improve --base origin/main
+/myk-qodo:ask "What are the main changes?"
+/myk-qodo:ask "Are there any security concerns?" --base main
+/myk-qodo:ask "What files were modified?"
 
 # PR
-/qodo:improve 42
-/qodo:improve https://github.com/myk-org/repo/pull/42
+/myk-qodo:ask "What does this PR do?" 42
+/myk-qodo:ask "Are there untested code paths?" 42
+/myk-qodo:ask "Explain the caching strategy" https://github.com/myk-org/repo/pull/42
 
 # With model selection
-/qodo:improve --model claude-4-opus
-/qodo:improve 42 --model gpt-4
+/myk-qodo:ask "What are the main changes?" --model gpt-4
+/myk-qodo:ask "Explain this PR" 42 --model claude-4-opus
 ```

@@ -12,9 +12,9 @@ Review uncommitted changes or changes compared to a specified branch.
 
 ## Usage
 
-- `/review:local` - Review uncommitted changes (staged + unstaged)
-- `/review:local main` - Review changes compared to main branch
-- `/review:local feature/branch` - Review changes compared to specified branch
+- `/myk-review:local` - Review uncommitted changes (staged + unstaged)
+- `/myk-review:local main` - Review changes compared to main branch
+- `/myk-review:local feature/branch` - Review changes compared to specified branch
 
 ## Workflow
 

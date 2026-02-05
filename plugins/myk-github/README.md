@@ -1,4 +1,4 @@
-# GitHub Plugin for Claude Code
+# myk-github Plugin for Claude Code
 
 GitHub operations including PR reviews, releases, and review handling.
 
@@ -20,38 +20,38 @@ uv tool install git+https://github.com/myk-org/claude-code-config
 
 ```bash
 /plugin marketplace add myk-org/claude-code-config
-/plugin install github@myk-org
+/plugin install myk-github@myk-org
 ```
 
 ## Available Commands
 
-### /github:pr-review
+### /myk-github:pr-review
 
 Review a GitHub PR and post inline comments on selected findings.
 
 ```bash
-/github:pr-review                    # Review PR from current branch
-/github:pr-review 123                # Review PR #123
-/github:pr-review https://github.com/owner/repo/pull/123
+/myk-github:pr-review                    # Review PR from current branch
+/myk-github:pr-review 123                # Review PR #123
+/myk-github:pr-review https://github.com/owner/repo/pull/123
 ```
 
-### /github:release
+### /myk-github:release
 
 Create a GitHub release with automatic changelog generation.
 
 ```bash
-/github:release              # Normal release
-/github:release --dry-run    # Preview without creating
-/github:release --prerelease # Create prerelease
-/github:release --draft      # Create draft release
+/myk-github:release              # Normal release
+/myk-github:release --dry-run    # Preview without creating
+/myk-github:release --prerelease # Create prerelease
+/myk-github:release --draft      # Create draft release
 ```
 
-### /github:review-handler
+### /myk-github:review-handler
 
 Process ALL review sources (human, Qodo, CodeRabbit) from current PR.
 
 ```bash
-/github:review-handler
+/myk-github:review-handler
 ```
 
 ## License

@@ -33,13 +33,13 @@ The easiest way to use this repository's features is via plugins:
 
 ```bash
 # GitHub operations (PR reviews, releases, review handling)
-/plugin install github@myk-org
+/plugin install myk-github@myk-org
 
 # Local code review and database queries
-/plugin install review@myk-org
+/plugin install myk-review@myk-org
 
 # Qodo AI code review integration
-/plugin install qodo@myk-org
+/plugin install myk-qodo@myk-org
 ```
 
 ### 3. Install CLI (for github and review plugins)
@@ -58,15 +58,15 @@ uv tool install git+https://github.com/myk-org/claude-code-config
 
 | Plugin | Command | Description |
 |--------|---------|-------------|
-| github | `/github:pr-review` | Review PR and post inline comments |
-| github | `/github:release` | Create release with changelog |
-| github | `/github:review-handler` | Process all review sources |
-| review | `/review:local` | Review uncommitted changes |
-| review | `/review:query-db` | Query review database |
-| qodo | `/qodo:review` | AI-powered code review |
-| qodo | `/qodo:describe` | Generate PR descriptions |
-| qodo | `/qodo:improve` | Get improvement suggestions |
-| qodo | `/qodo:ask` | Ask questions about code |
+| myk-github | `/myk-github:pr-review` | Review PR and post inline comments |
+| myk-github | `/myk-github:release` | Create release with changelog |
+| myk-github | `/myk-github:review-handler` | Process all review sources |
+| myk-review | `/myk-review:local` | Review uncommitted changes |
+| myk-review | `/myk-review:query-db` | Query review database |
+| myk-qodo | `/myk-qodo:review` | AI-powered code review |
+| myk-qodo | `/myk-qodo:describe` | Generate PR descriptions |
+| myk-qodo | `/myk-qodo:improve` | Get improvement suggestions |
+| myk-qodo | `/myk-qodo:ask` | Ask questions about code |
 
 > **For full orchestrator pattern with agents and hooks**, see [Full Installation](#installation) below.
 
@@ -100,7 +100,7 @@ Your symlinks will automatically point to the updated files.
 
 ## What's Included
 
-- **3 plugins** with 9 commands (github, review, qodo)
+- **3 plugins** with 9 commands (myk-github, myk-review, myk-qodo)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
 - **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **1 skill** for context-aware automation
@@ -263,7 +263,7 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ```text
 ~/.claude/
 ├── agents/           # Specialist agent definitions
-├── plugins/          # Plugin definitions (github, review, qodo)
+├── plugins/          # Plugin definitions (myk-github, myk-review, myk-qodo)
 ├── skills/           # Skills (auto-invoked based on context)
 │   └── agent-browser/
 │       └── SKILL.md
@@ -320,9 +320,9 @@ This repository provides plugins for Claude Code with specialized workflows.
 
 | Plugin | Description | Commands |
 |--------|-------------|----------|
-| **github** | GitHub operations | `/github:pr-review`, `/github:release`, `/github:review-handler` |
-| **review** | Local review operations | `/review:local`, `/review:query-db` |
-| **qodo** | Qodo AI code review | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
+| **myk-github** | GitHub operations | `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
+| **myk-review** | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
+| **myk-qodo** | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
 
 ### Plugin Installation
 
@@ -331,9 +331,9 @@ This repository provides plugins for Claude Code with specialized workflows.
 /plugin marketplace add myk-org/claude-code-config
 
 # Install plugins
-/plugin install github@myk-org
-/plugin install review@myk-org
-/plugin install qodo@myk-org
+/plugin install myk-github@myk-org
+/plugin install myk-review@myk-org
+/plugin install myk-qodo@myk-org
 ```
 
 ### Prerequisites for github/review plugins

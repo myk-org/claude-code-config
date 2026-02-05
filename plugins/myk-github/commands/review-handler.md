@@ -28,8 +28,8 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 
 ## Usage
 
-- `/github:review-handler` - Process reviews from current PR
-- `/github:review-handler https://github.com/owner/repo/pull/123#pullrequestreview-456` - With specific review URL
+- `/myk-github:review-handler` - Process reviews from current PR
+- `/myk-github:review-handler https://github.com/owner/repo/pull/123#pullrequestreview-456` - With specific review URL
 
 ## Workflow
 

@@ -85,44 +85,44 @@
 !plugins/
 !plugins/README.md
 
-# plugins/github/
-!plugins/github/
-!plugins/github/.claude-plugin/
-!plugins/github/.claude-plugin/plugin.json
-!plugins/github/commands/
-!plugins/github/commands/pr-review.md
-!plugins/github/commands/release.md
-!plugins/github/commands/review-handler.md
-!plugins/github/README.md
+# plugins/myk-github/
+!plugins/myk-github/
+!plugins/myk-github/.claude-plugin/
+!plugins/myk-github/.claude-plugin/plugin.json
+!plugins/myk-github/commands/
+!plugins/myk-github/commands/pr-review.md
+!plugins/myk-github/commands/release.md
+!plugins/myk-github/commands/review-handler.md
+!plugins/myk-github/README.md
 
-# plugins/qodo/
-!plugins/qodo/
-!plugins/qodo/.claude-plugin/
-!plugins/qodo/.claude-plugin/plugin.json
-!plugins/qodo/skills/
-!plugins/qodo/skills/ask/
-!plugins/qodo/skills/ask/SKILL.md
-!plugins/qodo/skills/describe/
-!plugins/qodo/skills/describe/SKILL.md
-!plugins/qodo/skills/improve/
-!plugins/qodo/skills/improve/SKILL.md
-!plugins/qodo/skills/review/
-!plugins/qodo/skills/review/SKILL.md
-!plugins/qodo/commands/
-!plugins/qodo/commands/ask.md
-!plugins/qodo/commands/describe.md
-!plugins/qodo/commands/improve.md
-!plugins/qodo/commands/review.md
-!plugins/qodo/README.md
+# plugins/myk-qodo/
+!plugins/myk-qodo/
+!plugins/myk-qodo/.claude-plugin/
+!plugins/myk-qodo/.claude-plugin/plugin.json
+!plugins/myk-qodo/skills/
+!plugins/myk-qodo/skills/ask/
+!plugins/myk-qodo/skills/ask/SKILL.md
+!plugins/myk-qodo/skills/describe/
+!plugins/myk-qodo/skills/describe/SKILL.md
+!plugins/myk-qodo/skills/improve/
+!plugins/myk-qodo/skills/improve/SKILL.md
+!plugins/myk-qodo/skills/review/
+!plugins/myk-qodo/skills/review/SKILL.md
+!plugins/myk-qodo/commands/
+!plugins/myk-qodo/commands/ask.md
+!plugins/myk-qodo/commands/describe.md
+!plugins/myk-qodo/commands/improve.md
+!plugins/myk-qodo/commands/review.md
+!plugins/myk-qodo/README.md
 
-# plugins/review/
-!plugins/review/
-!plugins/review/.claude-plugin/
-!plugins/review/.claude-plugin/plugin.json
-!plugins/review/commands/
-!plugins/review/commands/local.md
-!plugins/review/commands/query-db.md
-!plugins/review/README.md
+# plugins/myk-review/
+!plugins/myk-review/
+!plugins/myk-review/.claude-plugin/
+!plugins/myk-review/.claude-plugin/plugin.json
+!plugins/myk-review/commands/
+!plugins/myk-review/commands/local.md
+!plugins/myk-review/commands/query-db.md
+!plugins/myk-review/README.md
 
 # .claude-plugin/ (marketplace)
 !.claude-plugin/

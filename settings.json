@@ -102,9 +102,9 @@
     "jdtls-lsp@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
     "github@claude-plugins-official": true,
-    "github@myk-org": true,
-    "qodo@myk-org": true,
-    "review@myk-org": true
+    "myk-github@myk-org": true,
+    "myk-qodo@myk-org": true,
+    "myk-review@myk-org": true
   },
   "alwaysThinkingEnabled": true,
   "_scriptsNote": "Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.",

@@ -29,12 +29,12 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 ## Usage
 
 ```bash
-/review:query-db stats --by-source        # Stats by source
-/review:query-db stats --by-reviewer      # Stats by reviewer
-/review:query-db patterns --min 2         # Find duplicate patterns
-/review:query-db dismissed --owner X --repo Y
-/review:query-db query "SELECT * FROM comments WHERE status='skipped' LIMIT 10"
-/review:query-db find-similar < comments.json   # Find similar dismissed comments
+/myk-review:query-db stats --by-source        # Stats by source
+/myk-review:query-db stats --by-reviewer      # Stats by reviewer
+/myk-review:query-db patterns --min 2         # Find duplicate patterns
+/myk-review:query-db dismissed --owner X --repo Y
+/myk-review:query-db query "SELECT * FROM comments WHERE status='skipped' LIMIT 10"
+/myk-review:query-db find-similar < comments.json   # Find similar dismissed comments
 ```
 
 ## Available Queries

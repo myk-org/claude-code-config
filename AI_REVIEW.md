@@ -46,17 +46,17 @@ claude-code-config/
 │   └── test-runner.md         # Test execution
 │
 ├── plugins/                   # Claude Code plugins (slash commands)
-│   ├── github/                # GitHub operations plugin
+│   ├── myk-github/            # GitHub operations plugin
 │   │   ├── .claude-plugin/plugin.json
-│   │   ├── commands/          # /github:pr-review, /github:release, /github:review-handler
+│   │   ├── commands/          # /myk-github:pr-review, /myk-github:release, /myk-github:review-handler
 │   │   └── README.md
-│   ├── review/                # Local review operations plugin
+│   ├── myk-review/            # Local review operations plugin
 │   │   ├── .claude-plugin/plugin.json
-│   │   ├── commands/          # /review:local, /review:query-db
+│   │   ├── commands/          # /myk-review:local, /myk-review:query-db
 │   │   └── README.md
-│   ├── qodo/                  # Qodo AI code review plugin
+│   ├── myk-qodo/              # Qodo AI code review plugin
 │   │   ├── .claude-plugin/plugin.json
-│   │   ├── commands/          # /qodo:review, /qodo:describe, /qodo:improve, /qodo:ask
+│   │   ├── commands/          # /myk-qodo:review, /myk-qodo:describe, /myk-qodo:improve, /myk-qodo:ask
 │   │   ├── skills/            # Skill implementations
 │   │   └── README.md
 │   └── README.md              # Plugin development guide
@@ -130,11 +130,11 @@ claude-code-config/
 
 **Slash commands are provided by plugins in the `plugins/` directory.**
 
-- Commands follow the format `/plugin-name:command` (e.g., `/github:pr-review`)
+- Commands follow the format `/plugin-name:command` (e.g., `/myk-github:pr-review`)
 - Slash commands execute DIRECTLY in orchestrator (not delegated)
 - ALL internal operations run in orchestrator context
 - Slash command prompt overrides general CLAUDE.md rules
-- Example: `/github:pr-review` runs scripts, posts comments directly
+- Example: `/myk-github:pr-review` runs scripts, posts comments directly
 
 ### 5. MCP Server Access
 
@@ -189,7 +189,7 @@ The review database provides query access to the reviews SQLite database at `.cl
 - **Auto-skip**: Previously dismissed comments are automatically skipped when fetching new reviews
 - **Analytics**: Query addressed rates, duplicate patterns, reviewer stats
 
-**Command:** `/review:query-db` - Query the database for review analytics (from the `review` plugin)
+**Command:** `/myk-review:query-db` - Query the database for review analytics (from the `myk-review` plugin)
 
 ### 8. Plugin Marketplace
 
@@ -199,16 +199,16 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 
 ```bash
 /plugin marketplace add myk-org/claude-code-config
-/plugin install qodo@myk-org
+/plugin install myk-qodo@myk-org
 ```
 
 **Available Plugins:**
 
 | Plugin | Description | Commands |
 |--------|-------------|----------|
-| `github` | GitHub operations | `/github:pr-review`, `/github:release`, `/github:review-handler` |
-| `review` | Local review operations | `/review:local`, `/review:query-db` |
-| `qodo` | Qodo AI code review | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
+| `myk-github` | GitHub operations | `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
+| `myk-review` | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
+| `myk-qodo` | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
 
 **Plugin Location:** `plugins/` directory
 
@@ -362,7 +362,7 @@ plugins/
     └── README.md             # Plugin documentation
 ```
 
-**Commands use the format:** `/plugin-name:command` (e.g., `/github:pr-review`)
+**Commands use the format:** `/plugin-name:command` (e.g., `/myk-github:pr-review`)
 
 **Prerequisites:** Some plugins require the `myk-claude-tools` CLI:
 
