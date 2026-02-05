@@ -142,13 +142,18 @@ def load_comments(json_source: str) -> list[Comment]:
             sys.exit(1)
         content = json_path.read_text()
 
-    # Sanitize JSON - remove any lines before the JSON array starts
+    # Sanitize JSON - try progressive parsing to find valid JSON start
     # This handles cases where text gets prepended by hooks/shell
     lines = content.split("\n")
     for i, line in enumerate(lines):
         if line.strip().startswith("["):
-            content = "\n".join(lines[i:])
-            break
+            try:
+                candidate = "\n".join(lines[i:])
+                json.loads(candidate)  # Test if valid
+                content = candidate
+                break
+            except json.JSONDecodeError:
+                continue
 
     try:
         data = json.loads(content)
@@ -218,12 +223,17 @@ def generate_review_body(comments: list[Comment]) -> str:
     def add_section(title: str, emoji: str, items: list[tuple[str, int, str]]) -> None:
         if not items:
             return
+
+        def _cell(s: str) -> str:
+            s = " ".join(str(s).splitlines())
+            return s.replace("|", r"\|")
+
         lines.append(f"### {emoji} {title} ({len(items)})")
         lines.append("")
         lines.append("| File | Line | Issue |")
         lines.append("|------|------|-------|")
         for path, line, issue_title in items:
-            lines.append(f"| `{path}` | {line} | {issue_title} |")
+            lines.append(f"| `{_cell(path)}` | {line} | {_cell(issue_title)} |")
         lines.append("")
 
     add_section("Critical Issues", ":red_circle:", critical)
@@ -286,6 +296,7 @@ def post_review(
             capture_output=True,
             text=True,
             check=True,
+            timeout=120,
         )
 
         posted = [{"path": c.path, "line": c.line} for c in comments]
@@ -301,6 +312,13 @@ def post_review(
             comment_count=len(comments),
             failed=[{"path": c.path, "line": c.line} for c in comments],
             error=e.stderr,
+        )
+    except subprocess.TimeoutExpired:
+        return ReviewResult(
+            status="failed",
+            comment_count=len(comments),
+            failed=[{"path": c.path, "line": c.line} for c in comments],
+            error="GitHub API request timed out after 120 seconds",
         )
 
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -61,8 +62,7 @@ def _check_dependencies() -> list[str]:
     """Check for required dependencies."""
     missing = []
     for cmd in ["gh"]:
-        code, _, _ = _run_command(["which", cmd])
-        if code != 0:
+        if shutil.which(cmd) is None:
             missing.append(cmd)
     return missing
 

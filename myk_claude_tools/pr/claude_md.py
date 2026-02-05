@@ -52,9 +52,10 @@ def is_current_repo(target_repo: str) -> bool:
             capture_output=True,
             text=True,
             check=True,
+            timeout=5,
         )
         current_remote = result.stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
         return False
 
     # Extract owner/repo from remote URL (supports both HTTPS and SSH)
@@ -91,13 +92,20 @@ def fetch_from_github(owner: str, repo: str, file_path: str) -> str | None:
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,
         )
         content_base64 = result.stdout.strip()
         if not content_base64:
             return None
         # Decode base64 content
         return base64.b64decode(content_base64).decode("utf-8")
-    except (subprocess.CalledProcessError, FileNotFoundError, binascii.Error, UnicodeDecodeError):
+    except (
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+        binascii.Error,
+        UnicodeDecodeError,
+        subprocess.TimeoutExpired,
+    ):
         return None
 
 

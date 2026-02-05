@@ -51,8 +51,21 @@ def fetch_pr_metadata(pr_info: PRInfo) -> dict[str, Any]:
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,
         )
         return json.loads(result.stdout)
+    except FileNotFoundError:
+        print(
+            "Error: GitHub CLI (gh) not found. Install gh to fetch PR metadata.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except subprocess.TimeoutExpired:
+        print(
+            f"Error: Timed out fetching PR metadata for {pr_info.repo_full_name}#{pr_info.pr_number}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     except subprocess.CalledProcessError as e:
         print(
             f"Error: Failed to fetch PR metadata for {pr_info.repo_full_name}#{pr_info.pr_number}",
@@ -87,8 +100,21 @@ def fetch_pr_diff(pr_info: PRInfo) -> str:
             capture_output=True,
             text=True,
             check=True,
+            timeout=120,
         )
         return result.stdout
+    except FileNotFoundError:
+        print(
+            "Error: GitHub CLI (gh) not found. Install gh to fetch PR diff.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except subprocess.TimeoutExpired:
+        print(
+            f"Error: Timed out fetching PR diff for {pr_info.repo_full_name}#{pr_info.pr_number}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     except subprocess.CalledProcessError as e:
         print(
             f"Error: Failed to fetch PR diff for {pr_info.repo_full_name}#{pr_info.pr_number}",
@@ -124,6 +150,7 @@ def fetch_pr_files(pr_info: PRInfo) -> list[dict[str, Any]]:
             capture_output=True,
             text=True,
             check=True,
+            timeout=120,
         )
         files_data = json.loads(result.stdout)
         # Extract relevant fields
@@ -137,6 +164,18 @@ def fetch_pr_files(pr_info: PRInfo) -> list[dict[str, Any]]:
             }
             for f in files_data
         ]
+    except FileNotFoundError:
+        print(
+            "Error: GitHub CLI (gh) not found. Install gh to fetch PR files.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except subprocess.TimeoutExpired:
+        print(
+            f"Error: Timed out fetching PR files for {pr_info.repo_full_name}#{pr_info.pr_number}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     except subprocess.CalledProcessError as e:
         print(
             f"Error: Failed to fetch PR files for {pr_info.repo_full_name}#{pr_info.pr_number}",

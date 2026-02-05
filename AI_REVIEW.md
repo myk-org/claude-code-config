@@ -82,7 +82,6 @@ claude-code-config/
 ├── scripts/                   # Hook scripts (Python/Bash)
 │   ├── git-protection.py      # Protects main branch, merged branches
 │   ├── my-notifier.sh         # Custom notifications
-│   ├── reply-to-pr-review.sh  # Reply to PR reviews
 │   ├── rule-enforcer.py       # Blocks orchestrator from using Edit/Write/Bash
 │   ├── rule-injector.py       # Auto-loads rules from rules/
 │   └── session-start-check.sh # SessionStart hook for tool validation

@@ -34,28 +34,6 @@
 !agents/test-automator.md
 !agents/test-runner.md
 
-# commands/
-!commands/
-!commands/ask-review-db.md
-!commands/code-review.md
-!commands/github-pr-review.md
-!commands/github-release.md
-!commands/github-review-handler.md
-!commands/scripts/
-!commands/scripts/general/
-!commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py
-!commands/scripts/general/get-pr-info.sh
-!commands/scripts/general/post-review-replies-from-json.py
-!commands/scripts/general/review_db.py
-!commands/scripts/general/store-reviews-to-db.py
-!commands/scripts/github-pr-review/
-!commands/scripts/github-pr-review/get-claude-md.sh
-!commands/scripts/github-pr-review/get-pr-diff.sh
-!commands/scripts/github-pr-review/post-pr-inline-comment.sh
-!commands/scripts/github-release/
-!commands/scripts/github-release/create-github-release.sh
-!commands/scripts/github-release/get-release-info.sh
-
 # skills/
 !skills/
 !skills/agent-browser/
@@ -77,7 +55,6 @@
 !scripts/
 !scripts/git-protection.py
 !scripts/my-notifier.sh
-!scripts/reply-to-pr-review.sh
 !scripts/rule-enforcer.py
 !scripts/rule-injector.py
 !scripts/session-start-check.sh

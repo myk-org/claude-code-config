@@ -12,6 +12,14 @@ Reviews a GitHub PR and posts inline review comments on selected findings.
 
 Before starting, verify the tools are available:
 
+### Step 0: Check uv
+
+```bash
+uv --version
+```
+
+If not found, install from <https://docs.astral.sh/uv/getting-started/installation/>
+
 ### Step 1: Check myk-claude-tools
 
 ```bash

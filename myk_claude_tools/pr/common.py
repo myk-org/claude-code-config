@@ -87,6 +87,7 @@ def parse_args(args: list[str], command_name: str, docstring: str | None = None)
                     capture_output=True,
                     text=True,
                     check=True,
+                    timeout=30,
                 )
                 repo_full_name = result.stdout.strip()
                 if not repo_full_name:
@@ -100,6 +101,12 @@ def parse_args(args: list[str], command_name: str, docstring: str | None = None)
             except (subprocess.CalledProcessError, ValueError):
                 print(
                     "Error: Could not determine repository. Run from a git repo or provide full URL.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            except subprocess.TimeoutExpired:
+                print(
+                    "Error: Timed out detecting repository. Provide full URL.",
                     file=sys.stderr,
                 )
                 sys.exit(1)

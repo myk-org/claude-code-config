@@ -72,57 +72,7 @@ uv tool install git+https://github.com/myk-org/claude-code-config
 
 ## Installation
 
-### Option 1: Clone directly to ~/.claude
-
-> **⚠️ If `~/.claude` already exists**, back it up first! See [backup instructions](#backup-existing-config) below.
-
-```bash
-git clone https://github.com/myk-org/claude-code-config ~/.claude
-```
-
-**See also:**
-
-- [Backup Existing Config](#backup-existing-config) - If you have an existing ~/.claude
-- [GNU Stow Integration](#integration-with-dotfiles-gnu-stow) - For dotfiles users
-
-### Option 2: Clone as a regular git repo
-
-Clone to any location (e.g., `~/git/`), then set up ~/.claude using one of these methods:
-
-```bash
-git clone https://github.com/myk-org/claude-code-config ~/git/claude-code-config
-```
-
-**Then choose how to use it:**
-
-- [Symlink Approach](#symlink-approach) - Symlink components to ~/.claude
-- [Copy Approach](#copy-approach) - Copy files to ~/.claude
-
----
-
-#### Backup Existing Config
-
-If you have an existing `~/.claude` directory:
-
-```bash
-# Backup existing config
-mv ~/.claude ~/.claude.backup
-
-# Clone the repo
-git clone https://github.com/myk-org/claude-code-config ~/.claude
-
-# Copy your private files back (examples - adjust to your setup)
-# Private agents:
-cp ~/.claude.backup/agents/my-private-agent.md ~/.claude/agents/
-# Any other private files you have...
-
-# Remove backup after verifying everything works
-rm -rf ~/.claude.backup
-```
-
-#### Symlink Approach
-
-Clone to a different location and symlink into your existing `~/.claude`:
+Clone to any location and symlink into `~/.claude`:
 
 ```bash
 # Clone to ~/git/ (or your preferred location)
@@ -133,7 +83,6 @@ mkdir -p ~/.claude
 
 # Symlink each component
 ln -sf ~/git/claude-code-config/agents ~/.claude/agents
-ln -sf ~/git/claude-code-config/commands ~/.claude/commands
 ln -sf ~/git/claude-code-config/rules ~/.claude/rules
 ln -sf ~/git/claude-code-config/scripts ~/.claude/scripts
 ln -sf ~/git/claude-code-config/skills ~/.claude/skills
@@ -141,105 +90,19 @@ ln -sf ~/git/claude-code-config/settings.json ~/.claude/settings.json
 ln -sf ~/git/claude-code-config/statusline.sh ~/.claude/statusline.sh
 ```
 
-#### Copy Approach
-
-Clone to a different location and copy files to your existing `~/.claude`:
+**Updating:**
 
 ```bash
-# Clone to a temp location
-git clone https://github.com/myk-org/claude-code-config /tmp/claude-code-config
-
-# Copy to ~/.claude (won't overwrite existing files)
-cp -rn /tmp/claude-code-config/* ~/.claude/
-
-# Or force overwrite (careful with private configs!)
-# cp -r /tmp/claude-code-config/* ~/.claude/
-
-# Clean up
-rm -rf /tmp/claude-code-config
+cd ~/git/claude-code-config && git pull
 ```
 
-**Updating with this approach:**
-
-```bash
-git clone https://github.com/myk-org/claude-code-config /tmp/claude-code-config
-cp -r /tmp/claude-code-config/agents ~/.claude/
-cp -r /tmp/claude-code-config/commands ~/.claude/
-cp -r /tmp/claude-code-config/rules ~/.claude/
-cp -r /tmp/claude-code-config/scripts ~/.claude/
-cp -r /tmp/claude-code-config/skills ~/.claude/
-# ... selectively copy what you need
-rm -rf /tmp/claude-code-config
-```
-
-## Integration with Dotfiles (GNU Stow)
-
-If you manage your dotfiles with GNU Stow, use this **clone + overlay** approach.
-
-### How It Works
-
-```text
-Step 1: git clone this repo directly to ~/.claude (base config)
-Step 2: stow your dotfiles (private .claude files overlay on top)
-```
-
-### Directory Structure
-
-**This repo (cloned directly to ~/.claude):**
-
-```text
-~/.claude/                    ← git clone destination
-├── agents/                   # Public agents (from this repo)
-├── commands/                 # Commands
-├── scripts/                  # Public scripts
-├── skills/                   # Skills
-├── settings.json             # Base settings
-└── statusline.sh
-```
-
-**Your dotfiles (private overlay via stow):**
-
-```text
-dotfiles/
-├── .zshrc
-├── .config/
-└── .claude/                  # Only YOUR private additions
-    ├── agents/               # Private agents
-    │   ├── my-private-agent.md
-    │   └── company-specific-agent.md
-    ├── scripts/              # Private scripts
-    │   └── my-helper.sh
-    └── commands/             # Private commands
-        └── my-workflow.md
-```
-
-### Setup
-
-> **Note:** If `~/.claude` already exists, see [Option 1](#option-1-clone-directly-to-claude) for backup instructions before cloning.
-
-```bash
-# 1. Clone this repo to ~/.claude
-git clone https://github.com/myk-org/claude-code-config ~/.claude
-
-# 2. Stow your dotfiles (overlays private files)
-cd ~/dotfiles && stow -t ~ .
-```
-
-### Updating
-
-```bash
-# Update base config:
-cd ~/.claude && git pull
-
-# Your private files from dotfiles remain untouched
-```
+Your symlinks will automatically point to the updated files.
 
 ## What's Included
 
 - **3 plugins** with 9 commands (github, review, qodo)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
 - **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
-- **4 slash commands** including PR review workflows
 - **1 skill** for context-aware automation
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
@@ -293,15 +156,6 @@ python-expert working with FastAPI
 python-expert uses current best practices
 ```
 
-## Slash Commands
-
-| Command | Description |
-| ------- | ----------- |
-| `/github-pr-review` | Review a GitHub PR and post inline comments. Posts as single review with summary. |
-| `/github-review-handler` | Process human reviewer comments from a PR. |
-| `/github-coderabbitai-review-handler` | Process CodeRabbit AI review comments. |
-| `/code-review` | Run code review on local changes. |
-
 ## Skills
 
 Skills are similar to slash commands but auto-invoke based on task context rather than requiring explicit invocation.
@@ -313,15 +167,6 @@ Skills are similar to slash commands but auto-invoke based on task context rathe
 ### agent-browser Installation
 
 See [agent-browser](https://github.com/vercel-labs/agent-browser) for installation instructions.
-
-### `/github-pr-review` Features
-
-- Auto-detect PR from current branch or accept PR number/URL
-- Reads project CLAUDE.md for review rules
-- Deep code review (security, bugs, error handling, performance)
-- User selection - choose which findings to post
-- Single review thread with summary table
-- Inline comments with severity badges, suggestions, AI prompts
 
 ## MCP Server Access
 
@@ -418,7 +263,7 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ```text
 ~/.claude/
 ├── agents/           # Specialist agent definitions
-├── commands/         # Slash commands
+├── plugins/          # Plugin definitions (github, review, qodo)
 ├── skills/           # Skills (auto-invoked based on context)
 │   └── agent-browser/
 │       └── SKILL.md

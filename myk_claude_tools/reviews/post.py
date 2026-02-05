@@ -65,12 +65,17 @@ def run_graphql(query: str, variables: dict[str, str]) -> tuple[bool, dict[str, 
 
     Returns (success, result) where result is parsed JSON on success or error string on failure.
     """
-    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
-    for key, value in variables.items():
-        cmd.extend(["-f", f"{key}={value}"])
+    payload = {"query": query, "variables": variables}
+    cmd = ["gh", "api", "graphql", "--input", "-"]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(
+            cmd,
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
     except subprocess.TimeoutExpired:
         return False, "GraphQL query timed out after 120 seconds"
 

@@ -6,6 +6,7 @@ This module replicates the logic from get-release-info.sh.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -131,8 +132,7 @@ def _check_dependencies() -> list[str]:
     """Check for required dependencies."""
     missing = []
     for cmd in ["gh", "git"]:
-        code, _ = _run_command(["which", cmd])
-        if code != 0:
+        if shutil.which(cmd) is None:
             missing.append(cmd)
     return missing
 
@@ -242,27 +242,28 @@ def _get_commits(last_tag: str | None, limit: int = 100) -> tuple[list[Commit], 
         commit_range = "HEAD"
         is_first_release = True
 
-    # Use ASCII Unit Separator (0x1F) as delimiter, same as shell script
-    format_str = "%H%x1F%h%x1F%s%x1F%an%x1F%ai"
+    # Use %x00 as record separator, %x1F as field separator
+    # Include body in the format string
+    format_str = "%H%x1F%h%x1F%s%x1F%an%x1F%ai%x1F%b%x00"
     code, output = _run_command(["git", "log", f"--format={format_str}", "-n", str(limit), commit_range])
 
     if code != 0 or not output:
         return [], is_first_release
 
     commits = []
-    for line in output.split("\n"):
-        if not line.strip():
+    # Split by record separator, filter empty
+    for record in output.split("\x00"):
+        if not record.strip():
             continue
 
-        parts = line.split("\x1f")
-        if len(parts) < 5:
+        parts = record.split("\x1f")
+        if len(parts) < 6:
             continue
 
         hash_full, short_hash, subject, author, date = parts[:5]
-
-        # Get commit body separately
-        _, body = _run_command(["git", "log", "-1", "--format=%b", hash_full])
-        # Clean up body: replace newlines with spaces, collapse multiple spaces
+        # Body is everything after the 5th field separator
+        body = parts[5] if len(parts) > 5 else ""
+        # Clean up body
         body = " ".join(body.split())
 
         commits.append(

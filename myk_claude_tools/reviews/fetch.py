@@ -184,16 +184,17 @@ def classify_priority(body: str | None) -> str:
 
 def run_gh_graphql(query: str, variables: dict[str, Any]) -> dict[str, Any] | None:
     """Run a GraphQL query via gh api graphql. Returns parsed JSON or None on error."""
-    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
-
-    for key, value in variables.items():
-        if isinstance(value, int):
-            cmd.extend(["-F", f"{key}={value}"])
-        else:
-            cmd.extend(["-f", f"{key}={value}"])
+    payload = {"query": query, "variables": variables}
+    cmd = ["gh", "api", "graphql", "--input", "-"]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(
+            cmd,
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
     except subprocess.TimeoutExpired:
         print_stderr("Error: GraphQL query timed out after 120 seconds")
         return None
@@ -211,7 +212,7 @@ def run_gh_graphql(query: str, variables: dict[str, Any]) -> dict[str, Any] | No
     return data
 
 
-def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
+def run_gh_api(endpoint: str, *, paginate: bool = False) -> Any | None:
     """Run a REST API call via gh api. Returns parsed JSON or None on error."""
     cmd = ["gh", "api"]
     if paginate:

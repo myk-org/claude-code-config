@@ -80,9 +80,37 @@ myk-claude-tools db query "SELECT * FROM comments WHERE status = 'skipped' ORDER
 
 ## Database Schema
 
-**reviews table:** id, pr_number, owner, repo, commit_sha, created_at
+**reviews table:**
 
-**comments table:** id, review_id, source, thread_id, node_id, comment_id, author, path, line, body, priority, status, reply, skip_reason, posted_at, resolved_at
+| Column | Type |
+|--------|------|
+| id | INTEGER PRIMARY KEY |
+| pr_number | INTEGER |
+| owner | TEXT |
+| repo | TEXT |
+| commit_sha | TEXT |
+| created_at | TEXT (ISO 8601) |
+
+**comments table:**
+
+| Column | Type |
+|--------|------|
+| id | INTEGER PRIMARY KEY |
+| review_id | INTEGER (FK -> reviews.id) |
+| source | TEXT (human/qodo/coderabbit) |
+| thread_id | TEXT |
+| node_id | TEXT |
+| comment_id | INTEGER |
+| author | TEXT |
+| path | TEXT |
+| line | INTEGER |
+| body | TEXT |
+| priority | TEXT (HIGH/MEDIUM/LOW) |
+| status | TEXT (pending/addressed/skipped/not_addressed) |
+| reply | TEXT |
+| skip_reason | TEXT |
+| posted_at | TEXT (ISO 8601) |
+| resolved_at | TEXT (ISO 8601) |
 
 ## Database Location and Constraints
 

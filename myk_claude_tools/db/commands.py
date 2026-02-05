@@ -12,7 +12,6 @@ from myk_claude_tools.db.query import ReviewDB, _format_table
 @click.group()
 def db() -> None:
     """Review database query commands."""
-    pass
 
 
 @db.command("stats")

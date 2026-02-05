@@ -45,28 +45,21 @@ claude-code-config/
 │   ├── test-automator.md      # Test suites, CI pipelines
 │   └── test-runner.md         # Test execution
 │
-├── commands/                  # Custom slash commands
-│   ├── ask-review-db.md       # Query review database for analytics
-│   ├── code-review.md         # Local code review
-│   ├── github-coderabbitai-review-handler.md  # AI review processor
-│   ├── github-pr-review.md    # PR review with inline comments
-│   ├── github-release.md      # GitHub release automation
-│   ├── github-review-handler.md  # Human review processor
-│   └── scripts/               # Helper scripts for commands
-│       ├── general/
-│       │   ├── get-pr-info.sh
-│       │   └── review_db.py      # Review database utility (query/analytics)
-│       ├── github-coderabbitai-review-handler/
-│       │   └── get-coderabbit-comments.sh
-│       ├── github-pr-review/
-│       │   ├── get-claude-md.sh
-│       │   ├── get-pr-diff.sh
-│       │   └── post-pr-inline-comment.sh
-│       ├── github-release/
-│       │   ├── create-github-release.sh
-│       │   └── get-release-info.sh
-│       └── github-review-handler/
-│           └── get-human-reviews.sh
+├── plugins/                   # Claude Code plugins (slash commands)
+│   ├── github/                # GitHub operations plugin
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── commands/          # /github:pr-review, /github:release, /github:review-handler
+│   │   └── README.md
+│   ├── review/                # Local review operations plugin
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── commands/          # /review:local, /review:query-db
+│   │   └── README.md
+│   ├── qodo/                  # Qodo AI code review plugin
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── commands/          # /qodo:review, /qodo:describe, /qodo:improve, /qodo:ask
+│   │   ├── skills/            # Skill implementations
+│   │   └── README.md
+│   └── README.md              # Plugin development guide
 │
 ├── rules/                     # Orchestrator rules (AUTO-LOADED)
 │   ├── 00-orchestrator-core.md      # Core delegation rules
@@ -82,7 +75,6 @@ claude-code-config/
 ├── scripts/                   # Hook scripts (Python/Bash)
 │   ├── git-protection.py      # Protects main branch, merged branches
 │   ├── my-notifier.sh         # Custom notifications
-│   ├── reply-to-pr-review.sh  # Reply to PR reviews
 │   ├── rule-enforcer.py       # Blocks orchestrator from using Edit/Write/Bash
 │   ├── rule-injector.py       # Auto-loads rules from rules/
 │   └── session-start-check.sh # SessionStart hook for tool validation
@@ -134,14 +126,15 @@ claude-code-config/
 - Checks if caller is orchestrator or agent
 - Rejects orchestrator violations with error message
 
-### 4. Slash Commands
+### 4. Slash Commands (Plugins)
 
-**Special execution rules:**
+**Slash commands are provided by plugins in the `plugins/` directory.**
 
+- Commands follow the format `/plugin-name:command` (e.g., `/github:pr-review`)
 - Slash commands execute DIRECTLY in orchestrator (not delegated)
 - ALL internal operations run in orchestrator context
 - Slash command prompt overrides general CLAUDE.md rules
-- Example: `/github-pr-review` runs scripts, posts comments directly
+- Example: `/github:pr-review` runs scripts, posts comments directly
 
 ### 5. MCP Server Access
 
@@ -189,15 +182,14 @@ claude-code-config/
 
 ### 7. Review Database
 
-The `review_db.py` module provides query access to the reviews SQLite database at `.claude/data/reviews.db`.
+The review database provides query access to the reviews SQLite database at `.claude/data/reviews.db`.
 
 **Key features:**
 
 - **Auto-skip**: Previously dismissed comments are automatically skipped when fetching new reviews
 - **Analytics**: Query addressed rates, duplicate patterns, reviewer stats
-- **CLI + Module**: Can be used via CLI (`uv run review_db.py ...`) or imported by Python scripts
 
-**Command:** `/ask-review-db` - Query the database for review analytics
+**Command:** `/review:query-db` - Query the database for review analytics (from the `review` plugin)
 
 ### 8. Plugin Marketplace
 
@@ -212,8 +204,10 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 
 **Available Plugins:**
 
-| Plugin | Description | Skills |
-|--------|-------------|--------|
+| Plugin | Description | Commands |
+|--------|-------------|----------|
+| `github` | GitHub operations | `/github:pr-review`, `/github:release`, `/github:review-handler` |
+| `review` | Local review operations | `/review:local`, `/review:query-db` |
 | `qodo` | Qodo AI code review | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
 
 **Plugin Location:** `plugins/` directory
@@ -304,19 +298,9 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
    - Add `!agents/my-new-expert.md` in alphabetical order
    - Required because `agents/` is gitignored by default with specific files whitelisted
 
-5. **Add scripts to settings.json** (REQUIRED if agent uses scripts):
+5. **Test the agent** - Ask Claude to delegate a task to it
 
-   - If your agent needs helper scripts, create them in `commands/scripts/<agent-name>/`
-   - Open `settings.json`
-   - Add the script to `allowedTools` array:
-     - For bash scripts: `"Bash(~/.claude/commands/scripts/<agent-name>/<script>.sh*)"`
-     - For Python scripts: `"Bash(uv run ~/.claude/commands/scripts/<agent-name>/<script>.py*)"`
-   - Add the script to `permissions.allow` array (same format with `:*` suffix)
-   - This allows the scripts to run without permission prompts
-
-6. **Test the agent** - Ask Claude to delegate a task to it
-
-7. **Update bug reporting rule** (REQUIRED):
+6. **Update bug reporting rule** (REQUIRED):
 
    - Open `rules/50-agent-bug-reporting.md`
    - Add the new agent to the "Scope - Agents Covered" list
@@ -345,56 +329,46 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
    - Open `rules/50-agent-bug-reporting.md`
    - Remove the agent from the "Scope - Agents Covered" list
 
-5. **Clean up scripts** (if applicable):
-
-   - Delete any scripts from `commands/scripts/<agent-name>/`
-   - Remove entries from `settings.json` → `allowedTools` and `permissions.allow`
-
 ### Modifying Orchestrator Rules
 
 1. **Edit files in `rules/`** directory
 2. **Rules are auto-loaded** on next prompt (via `rule-injector.py`)
 3. **Test changes** in a new conversation
 
-### Adding a Slash Command
+### Adding a Slash Command (Plugin)
 
-1. **Create command file** in `commands/`:
+**Slash commands are now defined as plugins.** See `plugins/README.md` for the complete guide.
 
-   ```bash
-   touch commands/my-command.md
-   ```
+**Quick overview:**
 
-2. **Define command structure**:
+1. Create plugin directory under `plugins/`
+2. Add plugin manifest (`.claude-plugin/plugin.json`)
+3. Add commands in `commands/` directory within the plugin
+4. Update `.claude-plugin/marketplace.json` at repo root
+5. Whitelist files in `.gitignore`
 
-   ```markdown
-   ---
-   name: my-command
-   description: What this command does
-   ---
+**Plugin structure:**
 
-   # My Command Implementation
+```text
+plugins/
+└── my-plugin/
+    ├── .claude-plugin/
+    │   └── plugin.json       # Plugin manifest
+    ├── commands/             # Slash command definitions
+    │   └── my-command.md
+    ├── skills/               # Skill implementations (optional)
+    │   └── my-skill/
+    │       └── SKILL.md
+    └── README.md             # Plugin documentation
+```
 
-   [Your command logic here]
-   ```
+**Commands use the format:** `/plugin-name:command` (e.g., `/github:pr-review`)
 
-3. **Whitelist in .gitignore** (REQUIRED):
+**Prerequisites:** Some plugins require the `myk-claude-tools` CLI:
 
-   - Open `.gitignore`
-   - Find the `# commands/` section
-   - Add `!commands/my-command.md` in alphabetical order
-   - Also whitelist any scripts: `!commands/scripts/my-command/*.sh`
-   - Required because `commands/` is gitignored by default with specific files whitelisted
-
-4. **Add scripts to settings.json** (REQUIRED if command uses scripts):
-
-   - Open `settings.json`
-   - Add the script to `allowedTools` array:
-     - For bash scripts: `"Bash(~/.claude/commands/scripts/<command>/<script>.sh*)"`
-     - For Python scripts: `"Bash(uv run ~/.claude/commands/scripts/<command>/<script>.py*)"`
-   - Add the script to `permissions.allow` array (same format with `:*` suffix)
-   - This allows the scripts to run without permission prompts
-
-5. **Command is available** as `/my-command` after creation
+```bash
+uv tool install myk-claude-tools
+```
 
 ### Testing Changes
 
@@ -442,44 +416,6 @@ uvx --with tox-uv tox -e py313
 pre-commit run --all-files
 ```
 
-### Script Permission Checklist
-
-When adding ANY new script that will be run during a command/skill/agent:
-
-1. ✅ Create the script in the appropriate `commands/scripts/<name>/` directory
-2. ✅ Whitelist in `.gitignore` (with `!` prefix)
-3. ✅ Add to `settings.json` → `allowedTools` array
-4. ✅ Add to `settings.json` → `permissions.allow` array
-5. ✅ Test that the script runs without permission prompts
-
-**Example for bash script:**
-
-```json
-// In settings.json:
-"allowedTools": [
-  "Bash(~/.claude/commands/scripts/my-command/my-script.sh*)"
-],
-"permissions": {
-  "allow": [
-    "Bash(~/.claude/commands/scripts/my-command/my-script.sh*):*"
-  ]
-}
-```
-
-**Example for Python script:**
-
-```json
-// In settings.json:
-"allowedTools": [
-  "Bash(uv run ~/.claude/commands/scripts/my-command/my-script.py*)"
-],
-"permissions": {
-  "allow": [
-    "Bash(uv run ~/.claude/commands/scripts/my-command/my-script.py*):*"
-  ]
-}
-```
-
 ---
 
 ## Important Notes
@@ -491,7 +427,7 @@ When adding ANY new script that will be run during a command/skill/agent:
 The following directories are completely gitignored, with only specific files tracked:
 
 - `agents/` - Each agent must be explicitly whitelisted
-- `commands/` - Each command and its scripts must be explicitly whitelisted
+- `plugins/` - Each plugin must be explicitly whitelisted
 - `rules/` - Each rule must be explicitly whitelisted
 - `scripts/` - Each script must be explicitly whitelisted
 
@@ -532,11 +468,11 @@ The following directories are completely gitignored, with only specific files tr
   "Write(/tmp/claude/**)",          // Only /tmp/claude/
   "Bash(mkdir -p /tmp/claude*)",    // Create temp dir
   "Bash(claude *)",                 // Agent delegation
-  "Bash(mcpl*)",                     // MCP server discovery
+  "Bash(mcpl*)",                    // MCP server discovery
+  "Bash(myk-claude-tools*)",        // Plugin CLI tools
   "Bash(sed -n *)",                 // Read-only sed
   "Bash(grep *)",                   // Search
-  "Grep",                           // Grep tool
-  // Slash command scripts...
+  "Grep"                            // Grep tool
 ]
 ```
 
@@ -647,9 +583,9 @@ Phase 4: language-expert           → Semantic (AI agent)
 Phase 5: general-purpose           → Semantic (AI agent)
 ```
 
-**Script location:** `commands/scripts/<command-name>/`
+**Script execution:** Plugins can use the `myk-claude-tools` CLI for deterministic operations.
 
-**When to create a script:**
+**When to use scripts/CLI tools:**
 
 1. File operations (find, list, filter)
 2. Hash/checksum calculations
@@ -682,8 +618,10 @@ Phase 5: general-purpose           → Semantic (AI agent)
 
 ### Slash Command Not Working
 
-- Verify file exists in `commands/`
-- Check file has correct frontmatter (name, description)
+- Verify plugin exists in `plugins/` directory
+- Check plugin manifest (`.claude-plugin/plugin.json`) is valid
+- Check command file has correct frontmatter (name, description)
+- Ensure plugin is installed: `/plugin install <plugin-name>@myk-org`
 - Restart Claude Code if recently added
 
 ---
@@ -693,4 +631,4 @@ Phase 5: general-purpose           → Semantic (AI agent)
 - **README.md** - Installation and setup instructions
 - **rules/** - Full orchestrator rule definitions
 - **agents/** - Individual agent implementations
-- **commands/** - Slash command implementations
+- **plugins/** - Slash command implementations (plugin-based)
