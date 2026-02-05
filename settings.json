@@ -33,7 +33,13 @@
       "Skill(qodo:review)",
       "Skill(qodo:describe)",
       "Skill(qodo:improve)",
-      "Skill(qodo:ask)"
+      "Skill(qodo:ask)",
+      "Skill(github:pr-review)",
+      "Skill(github:release)",
+      "Skill(github:review-handler)",
+      "Skill(review:local)",
+      "Skill(review:query-db)",
+      "Bash(myk-claude-tools:*)"
     ]
   },
   "hooks": {
@@ -110,7 +116,10 @@
   "enabledPlugins": {
     "pyright-lsp@claude-plugins-official": true,
     "jdtls-lsp@claude-plugins-official": true,
-    "lua-lsp@claude-plugins-official": true
+    "lua-lsp@claude-plugins-official": true,
+    "qodo@myk-org": true,
+    "github@myk-org": true,
+    "review@myk-org": true
   },
   "alwaysThinkingEnabled": true,
   "_scriptsNote": "Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.",
@@ -145,7 +154,13 @@
     "Skill(qodo:review)",
     "Skill(qodo:describe)",
     "Skill(qodo:improve)",
-    "Skill(qodo:ask)"
+    "Skill(qodo:ask)",
+    "Skill(github:pr-review)",
+    "Skill(github:release)",
+    "Skill(github:review-handler)",
+    "Skill(review:local)",
+    "Skill(review:query-db)",
+    "Bash(myk-claude-tools:*)"
   ],
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309

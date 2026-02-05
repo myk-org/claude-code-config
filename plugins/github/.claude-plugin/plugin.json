@@ -1,0 +1,11 @@
+{
+  "name": "github",
+  "version": "1.0.0",
+  "description": "GitHub operations for Claude Code - PR reviews, releases, and review handling",
+  "author": {
+    "name": "myk-org"
+  },
+  "repository": "https://github.com/myk-org/claude-code-config",
+  "license": "MIT",
+  "keywords": ["github", "pr-review", "release", "code-review"]
+}

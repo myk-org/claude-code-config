@@ -9,6 +9,18 @@
       "source": "./plugins/qodo",
       "description": "Qodo AI code review integration",
       "version": "1.0.0"
+    },
+    {
+      "name": "github",
+      "source": "./plugins/github",
+      "description": "GitHub operations - PR reviews, releases, review handling",
+      "version": "1.0.0"
+    },
+    {
+      "name": "review",
+      "source": "./plugins/review",
+      "description": "Local code review and review database operations",
+      "version": "1.0.0"
     }
   ]
 }

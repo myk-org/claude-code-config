@@ -4,7 +4,11 @@ This directory contains Claude Code plugins that can be installed via the plugin
 
 ## Available Plugins
 
-- **[qodo](./qodo/README.md)** - Qodo AI code review integration
+| Plugin | Description | Commands |
+|--------|-------------|----------|
+| **[github](./github/README.md)** | GitHub operations | `/github:pr-review`, `/github:release`, `/github:review-handler` |
+| **[review](./review/README.md)** | Local review operations | `/review:local`, `/review:query-db` |
+| **[qodo](./qodo/README.md)** | Qodo AI code review | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
 
 ## Installation
 
@@ -14,8 +18,18 @@ This directory contains Claude Code plugins that can be installed via the plugin
 # Add this repository as a marketplace
 /plugin marketplace add myk-org/claude-code-config
 
-# Install a plugin
-/plugin install qodo@myk-org
+# Install plugins
+/plugin install github@myk-org    # GitHub operations
+/plugin install review@myk-org    # Local review operations
+/plugin install qodo@myk-org      # Qodo AI code review
+```
+
+### Prerequisites for github/review plugins
+
+These plugins require the `myk-claude-tools` CLI:
+
+```bash
+uv tool install myk-claude-tools
 ```
 
 ### Local Development
@@ -27,11 +41,13 @@ To test plugins during development:
 git clone https://github.com/myk-org/claude-code-config.git
 cd claude-code-config
 
-# Start Claude with the plugin loaded
+# Start Claude with a plugin loaded (example: qodo)
 claude --plugin-dir ./plugins/qodo
 
 # Test the plugin commands
 /qodo:review
+/github:pr-review
+/review:local
 ```
 
 ## Creating New Plugins

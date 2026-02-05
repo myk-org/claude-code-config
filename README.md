@@ -19,6 +19,57 @@ This configuration leverages these features:
 
 > Note: `context: fork` was evaluated but not used due to compatibility issues with multi-phase workflows.
 
+## Quick Start (Plugins)
+
+The easiest way to use this repository's features is via plugins:
+
+### 1. Add the marketplace
+
+```bash
+/plugin marketplace add myk-org/claude-code-config
+```
+
+### 2. Install plugins
+
+```bash
+# GitHub operations (PR reviews, releases, review handling)
+/plugin install github@myk-org
+
+# Local code review and database queries
+/plugin install review@myk-org
+
+# Qodo AI code review integration
+/plugin install qodo@myk-org
+```
+
+### 3. Install CLI (for github and review plugins)
+
+```bash
+uv tool install myk-claude-tools
+```
+
+Or from this repository:
+
+```bash
+uv tool install git+https://github.com/myk-org/claude-code-config
+```
+
+### Available Plugin Commands
+
+| Plugin | Command | Description |
+|--------|---------|-------------|
+| github | `/github:pr-review` | Review PR and post inline comments |
+| github | `/github:release` | Create release with changelog |
+| github | `/github:review-handler` | Process all review sources |
+| review | `/review:local` | Review uncommitted changes |
+| review | `/review:query-db` | Query review database |
+| qodo | `/qodo:review` | AI-powered code review |
+| qodo | `/qodo:describe` | Generate PR descriptions |
+| qodo | `/qodo:improve` | Get improvement suggestions |
+| qodo | `/qodo:ask` | Ask questions about code |
+
+> **For full orchestrator pattern with agents and hooks**, see [Full Installation](#installation) below.
+
 ## Installation
 
 ### Option 1: Clone directly to ~/.claude
@@ -185,6 +236,8 @@ cd ~/.claude && git pull
 
 ## What's Included
 
+- **3 plugins** with 10 commands (github, review, qodo)
+- **CLI tool** (`myk-claude-tools`) for plugin operations
 - **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **4 slash commands** including PR review workflows
 - **1 skill** for context-aware automation
@@ -416,14 +469,43 @@ pre-commit run --all-files
 
 ## Plugins
 
-This repository also serves as a Claude Code plugin marketplace. See [plugins/README.md](./plugins/README.md) for available plugins and installation instructions.
+This repository provides plugins for Claude Code with specialized workflows.
 
-**Quick install:**
+### Available Plugins
+
+| Plugin | Description | Commands |
+|--------|-------------|----------|
+| **github** | GitHub operations | `/github:pr-review`, `/github:release`, `/github:review-handler` |
+| **review** | Local review operations | `/review:local`, `/review:query-db` |
+| **qodo** | Qodo AI code review | `/qodo:review`, `/qodo:describe`, `/qodo:improve`, `/qodo:ask` |
+
+### Plugin Installation
 
 ```bash
+# Add this repository as a marketplace
 /plugin marketplace add myk-org/claude-code-config
+
+# Install plugins
+/plugin install github@myk-org
+/plugin install review@myk-org
 /plugin install qodo@myk-org
 ```
+
+### Prerequisites for github/review plugins
+
+These plugins use the `myk-claude-tools` CLI:
+
+```bash
+uv tool install myk-claude-tools
+```
+
+Or install from this repository:
+
+```bash
+uv tool install git+https://github.com/myk-org/claude-code-config
+```
+
+See [plugins/README.md](./plugins/README.md) for detailed plugin documentation.
 
 ## License
 

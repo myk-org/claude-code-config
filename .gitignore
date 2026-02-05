@@ -126,6 +126,52 @@
 !plugins/qodo/commands/ask.md
 !plugins/qodo/README.md
 
+# plugins/github/
+!plugins/github/
+!plugins/github/.claude-plugin/
+!plugins/github/.claude-plugin/plugin.json
+!plugins/github/commands/
+!plugins/github/commands/pr-review.md
+!plugins/github/commands/release.md
+!plugins/github/commands/review-handler.md
+!plugins/github/README.md
+
+# plugins/review/
+!plugins/review/
+!plugins/review/.claude-plugin/
+!plugins/review/.claude-plugin/plugin.json
+!plugins/review/commands/
+!plugins/review/commands/local.md
+!plugins/review/commands/query-db.md
+!plugins/review/README.md
+
 # .claude-plugin/ (marketplace)
 !.claude-plugin/
 !.claude-plugin/marketplace.json
+
+# myk_claude_tools/ package
+!myk_claude_tools/
+!myk_claude_tools/__init__.py
+!myk_claude_tools/cli.py
+!myk_claude_tools/pr/
+!myk_claude_tools/pr/__init__.py
+!myk_claude_tools/pr/commands.py
+!myk_claude_tools/pr/common.py
+!myk_claude_tools/pr/diff.py
+!myk_claude_tools/pr/claude_md.py
+!myk_claude_tools/pr/post_comment.py
+!myk_claude_tools/release/
+!myk_claude_tools/release/__init__.py
+!myk_claude_tools/release/commands.py
+!myk_claude_tools/release/info.py
+!myk_claude_tools/release/create.py
+!myk_claude_tools/reviews/
+!myk_claude_tools/reviews/__init__.py
+!myk_claude_tools/reviews/commands.py
+!myk_claude_tools/reviews/fetch.py
+!myk_claude_tools/reviews/post.py
+!myk_claude_tools/reviews/store.py
+!myk_claude_tools/db/
+!myk_claude_tools/db/__init__.py
+!myk_claude_tools/db/commands.py
+!myk_claude_tools/db/query.py
