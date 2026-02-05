@@ -1,7 +1,7 @@
 ---
 description: Review uncommitted changes or changes compared to a branch
 argument-hint: [BRANCH]
-allowed-tools: Bash(git *), Task, AskUserQuestion
+allowed-tools: Bash(git:*), Task, AskUserQuestion
 ---
 
 # Local Code Review Command

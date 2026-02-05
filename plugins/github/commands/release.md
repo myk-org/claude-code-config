@@ -2,7 +2,7 @@
 name: release
 description: Create a GitHub release with automatic changelog generation
 argument-hint: [--dry-run] [--prerelease] [--draft]
-allowed-tools: Bash(myk-claude-tools *), Bash(uv *), Bash(git *), Bash(gh *), AskUserQuestion
+allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion
 ---
 
 # GitHub Release Command

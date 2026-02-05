@@ -467,11 +467,11 @@ The following directories are completely gitignored, with only specific files tr
   "Edit(/tmp/claude/**)",           // Only /tmp/claude/
   "Write(/tmp/claude/**)",          // Only /tmp/claude/
   "Bash(mkdir -p /tmp/claude*)",    // Create temp dir
-  "Bash(claude *)",                 // Agent delegation
-  "Bash(mcpl*)",                    // MCP server discovery
-  "Bash(myk-claude-tools*)",        // Plugin CLI tools
-  "Bash(sed -n *)",                 // Read-only sed
-  "Bash(grep *)",                   // Search
+  "Bash(claude:*)",                 // Agent delegation
+  "Bash(mcpl:*)",                   // MCP server discovery
+  "Bash(myk-claude-tools:*)",       // Plugin CLI tools
+  "Bash(sed -n:*)",                 // Read-only sed
+  "Bash(grep:*)",                   // Search
   "Grep"                            // Grep tool
 ]
 ```

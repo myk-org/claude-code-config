@@ -1,7 +1,7 @@
 ---
 description: Review code changes for bugs, security issues, and quality
 argument-hint: [PR_NUMBER|PR_URL] [--base <branch>] [--staged] [--focus <area>] [--model <name>]
-allowed-tools: Bash(qodo *), AskUserQuestion
+allowed-tools: Bash(qodo:*), AskUserQuestion
 ---
 
 # Review Command Flow
