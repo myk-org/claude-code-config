@@ -59,7 +59,10 @@ def parse_args(args: list[str], command_name: str, docstring: str | None = None)
             sys.exit(0)
 
         # Check if it's a GitHub URL
-        url_match = re.search(r"github\.com/([^/]+)/([^/]+)/pull/(\d+)", input_arg)
+        url_match = re.search(
+            r"^(?:https?://)?github\.com/([^/]+)/([^/]+)/pull/(\d+)(?:/.*)?$",
+            input_arg,
+        )
         if url_match:
             owner = url_match.group(1)
             repo = url_match.group(2)
@@ -88,6 +91,12 @@ def parse_args(args: list[str], command_name: str, docstring: str | None = None)
                 repo_full_name = result.stdout.strip()
                 if not repo_full_name:
                     raise ValueError("Empty repo name")
+            except FileNotFoundError:
+                print(
+                    "Error: GitHub CLI (gh) not found. Install gh or pass owner/repo explicitly.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
             except (subprocess.CalledProcessError, ValueError):
                 print(
                     "Error: Could not determine repository. Run from a git repo or provide full URL.",

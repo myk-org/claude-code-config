@@ -98,6 +98,29 @@ def validate_pr_number(pr_number: str) -> bool:
     return bool(re.match(r"^\d+$", pr_number))
 
 
+def _parse_line(item: dict[str, Any], index: int) -> int:
+    """Parse line value from comment item.
+
+    Args:
+        item: Comment dictionary with 'line' field.
+        index: Index of the comment in the input array (for error messages).
+
+    Returns:
+        The line number as an integer.
+
+    Raises:
+        SystemExit: If line value cannot be converted to int.
+    """
+    try:
+        return int(item["line"])
+    except (TypeError, ValueError):
+        print(
+            f"Error: Comment at index {index} has non-numeric 'line' value: {item['line']!r}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
 def load_comments(json_source: str) -> list[Comment]:
     """Load comments from JSON file or stdin.
 
@@ -153,7 +176,7 @@ def load_comments(json_source: str) -> list[Comment]:
         comments.append(
             Comment(
                 path=item["path"],
-                line=int(item["line"]),
+                line=_parse_line(item, i),
                 body=item["body"],
             )
         )

@@ -48,6 +48,10 @@ output-format = "grouped"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "PLC0415", "ARG", "RUF059"]
 
+[tool.ruff.lint.per-file-ignores]
+# CLI command modules use lazy imports for faster startup
+"myk_claude_tools/*/commands.py" = ["PLC0415"]
+
 [tool.ruff.format]
 exclude = [".git", ".venv", ".mypy_cache", ".tox", "__pycache__"]
 

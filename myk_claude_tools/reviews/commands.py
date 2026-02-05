@@ -8,7 +8,6 @@ import click
 @click.group()
 def reviews() -> None:
     """Review handling commands."""
-    pass
 
 
 @reviews.command("fetch")
@@ -24,7 +23,7 @@ def reviews_fetch(review_url: str) -> None:
     REVIEW_URL: Optional specific review URL for context
     (e.g., #pullrequestreview-XXX or #discussion_rXXX)
     """
-    from myk_claude_tools.reviews.fetch import run  # noqa: PLC0415
+    from myk_claude_tools.reviews.fetch import run
 
     exit_code = run(review_url)
     sys.exit(exit_code)
@@ -42,7 +41,7 @@ def reviews_post(json_path: str) -> None:
 
     JSON_PATH: Path to JSON file with review data
     """
-    from myk_claude_tools.reviews.post import run  # noqa: PLC0415
+    from myk_claude_tools.reviews.post import run
 
     run(json_path)
 
@@ -60,6 +59,6 @@ def reviews_store(json_path: str) -> None:
 
     JSON_PATH: Path to the completed review JSON file
     """
-    from myk_claude_tools.reviews.store import run  # noqa: PLC0415
+    from myk_claude_tools.reviews.store import run
 
     run(json_path)

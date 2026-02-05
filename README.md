@@ -236,7 +236,7 @@ cd ~/.claude && git pull
 
 ## What's Included
 
-- **3 plugins** with 10 commands (github, review, qodo)
+- **3 plugins** with 9 commands (github, review, qodo)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
 - **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **4 slash commands** including PR review workflows

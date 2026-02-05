@@ -6,7 +6,6 @@ import click
 @click.group()
 def pr() -> None:
     """PR review and management commands."""
-    pass
 
 
 @pr.command("diff")
@@ -19,7 +18,7 @@ def pr_diff(args: tuple[str, ...]) -> None:
         pr diff https://github.com/owner/repo/pull/123
         pr diff <pr_number>
     """
-    from myk_claude_tools.pr.diff import run  # noqa: PLC0415
+    from myk_claude_tools.pr.diff import run
 
     run(list(args))
 
@@ -34,7 +33,7 @@ def pr_claude_md(args: tuple[str, ...]) -> None:
         pr claude-md https://github.com/owner/repo/pull/123
         pr claude-md <pr_number>
     """
-    from myk_claude_tools.pr.claude_md import run  # noqa: PLC0415
+    from myk_claude_tools.pr.claude_md import run
 
     run(list(args))
 
@@ -56,6 +55,6 @@ def pr_post_comment(owner_repo: str, pr_number: str, commit_sha: str, json_file:
     JSON format:
         [{"path": "file.py", "line": 42, "body": "Comment text"}]
     """
-    from myk_claude_tools.pr.post_comment import run  # noqa: PLC0415
+    from myk_claude_tools.pr.post_comment import run
 
     run(owner_repo, pr_number, commit_sha, json_file)

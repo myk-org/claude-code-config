@@ -41,13 +41,13 @@ To test plugins during development:
 git clone https://github.com/myk-org/claude-code-config.git
 cd claude-code-config
 
-# Start Claude with a plugin loaded (example: qodo)
-claude --plugin-dir ./plugins/qodo
+# Start Claude with a plugin loaded (example: github)
+claude --plugin-dir ./plugins/github
 
 # Test the plugin commands
-/qodo:review
 /github:pr-review
 /review:local
+/qodo:review
 ```
 
 ## Creating New Plugins

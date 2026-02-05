@@ -33,9 +33,38 @@ If not found, prompt user: "myk-claude-tools is required. Install with: `uv tool
 
 ## Workflow
 
+### Phase 0: PR Detection (when no arguments provided)
+
+If `$ARGUMENTS` is empty:
+
+1. Detect PR from current branch:
+
+   ```bash
+   gh pr view --json number,headRepository,headRefOid
+   ```
+
+1. Extract and store:
+
+   - `pr_number` from the JSON response
+   - `owner` from `headRepository.owner.login`
+   - `repo` from `headRepository.name`
+   - `head_sha` from `headRefOid`
+
+1. Use `{pr_number}` for subsequent CLI commands
+
+If `$ARGUMENTS` contains a PR number or URL, use it directly.
+
 ### Phase 1a: Data Fetching
 
-Run the diff script to get PR data:
+Run the diff command to get PR data:
+
+If PR was auto-detected (no arguments):
+
+```bash
+myk-claude-tools pr diff {pr_number}
+```
+
+Otherwise:
 
 ```bash
 myk-claude-tools pr diff $ARGUMENTS
@@ -45,13 +74,30 @@ Store the JSON output containing metadata, diff, and files.
 
 ### Phase 1b: Fetch CLAUDE.md
 
+Run the claude-md command to get project rules:
+
+If PR was auto-detected (no arguments):
+
+```bash
+myk-claude-tools pr claude-md {pr_number}
+```
+
+Otherwise:
+
 ```bash
 myk-claude-tools pr claude-md $ARGUMENTS
 ```
 
+Store the output as `claude_md_content`.
+
 ### Phase 2: Code Analysis
 
-Delegate to `code-reviewer` agent with the diff and CLAUDE.md content. The agent should return JSON with findings.
+Delegate to `code-reviewer` agent with:
+
+- The diff content from Phase 1a
+- The CLAUDE.md content from Phase 1b (or "No CLAUDE.md found" if empty)
+
+The agent should analyze for security, bugs, error handling, performance issues and return JSON with findings.
 
 ### Phase 3: User Selection
 
@@ -63,7 +109,13 @@ Present findings to user grouped by severity (CRITICAL, WARNING, SUGGESTION). As
 
 ### Phase 4: Post Comments
 
-If user selected findings, write JSON to temp file and post:
+If user selected findings, create temp directory and write JSON to temp file:
+
+```bash
+mkdir -p /tmp/claude
+```
+
+Use the `owner`, `repo`, `pr_number`, and `head_sha` from Phase 0 or Phase 1a metadata:
 
 ```bash
 myk-claude-tools pr post-comment {owner}/{repo} {pr_number} {head_sha} /tmp/claude/pr-review-comments.json

@@ -40,7 +40,7 @@ class ReleaseResult:
         }
 
 
-def _run_command(cmd: list[str]) -> tuple[int, str, str]:
+def _run_command(cmd: list[str], timeout: int = 60) -> tuple[int, str, str]:
     """Run a command and return exit code, stdout, and stderr."""
     try:
         result = subprocess.run(
@@ -48,10 +48,13 @@ def _run_command(cmd: list[str]) -> tuple[int, str, str]:
             capture_output=True,
             text=True,
             check=False,
+            timeout=timeout,
         )
         return result.returncode, result.stdout.strip(), result.stderr.strip()
     except FileNotFoundError:
         return 1, "", f"Command not found: {cmd[0]}"
+    except subprocess.TimeoutExpired:
+        return 1, "", f"Command timed out after {timeout} seconds"
 
 
 def _check_dependencies() -> list[str]:
@@ -157,8 +160,8 @@ def create_release(
     if draft:
         cmd.append("--draft")
 
-    # Execute gh release create
-    exit_code, stdout, stderr = _run_command(cmd)
+    # Execute gh release create (use longer timeout for release creation)
+    exit_code, stdout, stderr = _run_command(cmd, timeout=300)
 
     if exit_code != 0:
         error_msg = stderr if stderr else stdout

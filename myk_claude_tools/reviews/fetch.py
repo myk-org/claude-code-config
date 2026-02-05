@@ -82,9 +82,10 @@ def _load_review_db() -> tuple[type | None, Any | None]:
 
 def check_dependencies() -> None:
     """Check required dependencies."""
-    if shutil.which("gh") is None:
-        print_stderr("Error: 'gh' is required but not installed.")
-        sys.exit(1)
+    for cmd in ("gh", "git"):
+        if shutil.which(cmd) is None:
+            print_stderr(f"Error: '{cmd}' is required but not installed.")
+            sys.exit(1)
 
 
 def get_pr_info() -> tuple[str, str, str]:
@@ -224,6 +225,8 @@ def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
         return None
 
     if result.returncode != 0:
+        if result.stderr:
+            print_stderr(f"Warning: API call to {endpoint} failed: {result.stderr.strip()}")
         return None
 
     try:
@@ -551,6 +554,7 @@ def merge_threads(all_threads: list[dict[str, Any]], specific_threads: list[dict
             merged.append(thread)
         elif key not in existing_keys:
             merged.append(thread)
+            existing_keys.add(key)
 
     return merged
 
@@ -574,8 +578,8 @@ def run(review_url: str = "") -> int:
         print_stderr(f"Repository: {owner}/{repo}, PR: {pr_number}")
 
         # Ensure output directory exists
-        tmp_base = os.environ.get("TMPDIR", "/tmp")
-        out_dir = Path(tmp_base.rstrip("/")) / "claude"
+        tmp_base = Path(os.environ.get("TMPDIR") or tempfile.gettempdir())
+        out_dir = tmp_base / "claude"
         if not out_dir.exists():
             out_dir.mkdir(parents=True, mode=0o700)
         else:

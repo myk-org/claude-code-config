@@ -10,6 +10,14 @@ Query the reviews database for analytics and insights about PR review history.
 
 ## Prerequisites Check (MANDATORY)
 
+### Step 0: Check uv
+
+```bash
+uv --version
+```
+
+If not found, install from <https://docs.astral.sh/uv/getting-started/installation/>
+
 ### Step 1: Check myk-claude-tools
 
 ```bash
@@ -75,6 +83,16 @@ myk-claude-tools db query "SELECT * FROM comments WHERE status = 'skipped' ORDER
 **reviews table:** id, pr_number, owner, repo, commit_sha, created_at
 
 **comments table:** id, review_id, source, thread_id, node_id, comment_id, author, path, line, body, priority, status, reply, skip_reason, posted_at, resolved_at
+
+## Database Location and Constraints
+
+The reviews database is located at `<project-root>/.claude/data/reviews.db`.
+
+**Query Constraints:**
+
+- Only SELECT statements and CTEs (Common Table Expressions) are allowed
+- INSERT, UPDATE, DELETE, DROP, and other modifying statements are blocked
+- This ensures the database remains read-only for analytics queries
 
 ## Workflow
 

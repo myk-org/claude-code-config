@@ -109,7 +109,7 @@ class ReleaseInfo:
         }
 
 
-def _run_command(cmd: list[str], capture_stderr: bool = False) -> tuple[int, str]:
+def _run_command(cmd: list[str], capture_stderr: bool = False, timeout: int = 60) -> tuple[int, str]:
     """Run a command and return exit code and output."""
     try:
         result = subprocess.run(
@@ -117,12 +117,13 @@ def _run_command(cmd: list[str], capture_stderr: bool = False) -> tuple[int, str
             capture_output=True,
             text=True,
             check=False,
+            timeout=timeout,
         )
         output = result.stdout.strip()
         if capture_stderr and result.returncode != 0:
             output = result.stderr.strip()
         return result.returncode, output
-    except FileNotFoundError:
+    except (FileNotFoundError, subprocess.TimeoutExpired):
         return 1, ""
 
 

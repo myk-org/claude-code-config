@@ -88,8 +88,8 @@ def ensure_database_directory(db_path: Path) -> None:
         # Ensure existing directory has correct permissions
         try:
             db_dir.chmod(0o700)
-        except OSError:
-            pass
+        except OSError as exc:
+            print(f"Debug: could not chmod {db_dir}: {exc}", file=sys.stderr)
 
 
 def create_tables(conn: sqlite3.Connection) -> None:

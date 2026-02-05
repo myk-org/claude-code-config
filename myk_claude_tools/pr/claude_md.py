@@ -16,7 +16,9 @@ from __future__ import annotations
 import base64
 import binascii
 import re
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from myk_claude_tools.pr.common import PRInfo
@@ -52,7 +54,7 @@ def is_current_repo(target_repo: str) -> bool:
             check=True,
         )
         current_remote = result.stdout.strip()
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return False
 
     # Extract owner/repo from remote URL (supports both HTTPS and SSH)
@@ -95,7 +97,7 @@ def fetch_from_github(owner: str, repo: str, file_path: str) -> str | None:
             return None
         # Decode base64 content
         return base64.b64decode(content_base64).decode("utf-8")
-    except (subprocess.CalledProcessError, binascii.Error, UnicodeDecodeError):
+    except (subprocess.CalledProcessError, FileNotFoundError, binascii.Error, UnicodeDecodeError):
         return None
 
 
@@ -112,6 +114,14 @@ def run(args: list[str]) -> None:
     Args:
         args: Command line arguments.
     """
+    # Check gh is available before proceeding
+    if shutil.which("gh") is None:
+        print(
+            "Error: GitHub CLI (gh) not found. Install gh to fetch CLAUDE.md.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     pr_info = parse_args(args)
 
     # Check if current git repo matches target

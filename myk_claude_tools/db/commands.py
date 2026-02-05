@@ -168,6 +168,11 @@ def db_find_similar(owner: str, repo: str, threshold: float, output_json: bool, 
         echo '{"path": "foo.py", "body": "Add error handling..."}' | \\
             myk-claude-tools db find-similar --owner myk-org --repo claude-code-config --json
     """
+    # Validate threshold range
+    if threshold < 0.0 or threshold > 1.0:
+        click.echo("Error: --threshold must be between 0.0 and 1.0", err=True)
+        sys.exit(1)
+
     # Read JSON from stdin
     try:
         input_data = json.load(sys.stdin)

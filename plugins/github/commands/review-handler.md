@@ -10,6 +10,14 @@ Unified handler that processes ALL review sources from the current branch's GitH
 
 ## Prerequisites Check (MANDATORY)
 
+### Step 0: Check uv
+
+```bash
+uv --version
+```
+
+If not found, install from <https://docs.astral.sh/uv/getting-started/installation/>
+
 ### Step 1: Check myk-claude-tools
 
 ```bash
@@ -27,11 +35,26 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 
 ### Phase 1: Fetch Reviews
 
+The `reviews fetch` command auto-detects the PR from the current branch.
+
+If a specific review URL is provided in `$ARGUMENTS`:
+
 ```bash
-myk-claude-tools reviews fetch [REVIEW_URL]
+myk-claude-tools reviews fetch $ARGUMENTS
 ```
 
-Returns JSON with categorized comments (human, qodo, coderabbit).
+Otherwise (auto-detect from current branch):
+
+```bash
+myk-claude-tools reviews fetch
+```
+
+Returns JSON with:
+
+- `metadata`: owner, repo, pr_number, json_path
+- `human`: Human review threads
+- `qodo`: Qodo AI review threads
+- `coderabbit`: CodeRabbit AI review threads
 
 ### Phase 2: User Decision Collection
 

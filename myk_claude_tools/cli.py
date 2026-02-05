@@ -12,7 +12,6 @@ from myk_claude_tools.reviews import commands as reviews_commands
 @click.version_option()
 def cli() -> None:
     """CLI utilities for Claude Code plugins."""
-    pass
 
 
 cli.add_command(pr_commands.pr, name="pr")
