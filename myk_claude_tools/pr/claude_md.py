@@ -114,14 +114,6 @@ def run(args: list[str]) -> None:
     Args:
         args: Command line arguments.
     """
-    # Check gh is available before proceeding
-    if shutil.which("gh") is None:
-        print(
-            "Error: GitHub CLI (gh) not found. Install gh to fetch CLAUDE.md.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
     pr_info = parse_args(args)
 
     # Check if current git repo matches target
@@ -137,6 +129,14 @@ def run(args: list[str]) -> None:
         if local_claude_dir_md.is_file():
             print(local_claude_dir_md.read_text(encoding="utf-8"))
             return
+
+    # Check gh is available before fetching from GitHub
+    if shutil.which("gh") is None:
+        print(
+            "Error: GitHub CLI (gh) not found. Install gh to fetch CLAUDE.md.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     # Fetch upstream CLAUDE.md
     content = fetch_from_github(pr_info.owner, pr_info.repo, "CLAUDE.md")

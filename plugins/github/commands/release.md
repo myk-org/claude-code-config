@@ -1,4 +1,5 @@
 ---
+name: release
 description: Create a GitHub release with automatic changelog generation
 argument-hint: [--dry-run] [--prerelease] [--draft]
 allowed-tools: Bash(myk-claude-tools *), Bash(uv *), Bash(git *), Bash(gh *), AskUserQuestion
@@ -62,14 +63,19 @@ Display proposed version, changelog preview, and ask for confirmation:
 Create temp directory with cleanup, write changelog to temp file, and create release:
 
 ```bash
-tmp_dir="$(mktemp -d)"
-trap 'rm -rf "$tmp_dir"' EXIT
+mkdir -p /tmp/claude
+trap 'rm -f /tmp/claude/release-changelog.md' EXIT
 ```
 
-Write the changelog to `$tmp_dir/release-changelog.md`, then create the release:
+Write the changelog content (generated from Phase 2 analysis) to the file, then create the release:
 
 ```bash
-myk-claude-tools release create {owner}/{repo} {tag} "$tmp_dir/release-changelog.md" [--prerelease] [--draft]
+# Write changelog content to file (use heredoc or echo)
+cat > /tmp/claude/release-changelog.md << 'EOF'
+<changelog content from Phase 2>
+EOF
+
+myk-claude-tools release create {owner}/{repo} {tag} /tmp/claude/release-changelog.md [--prerelease] [--draft]
 ```
 
 ### Phase 5: Summary

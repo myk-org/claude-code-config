@@ -587,8 +587,8 @@ def run(review_url: str = "") -> int:
         out_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         try:
             out_dir.chmod(0o700)
-        except OSError:
-            pass
+        except OSError as e:
+            print_stderr(f"Warning: unable to set permissions on {out_dir}: {e}")
 
         json_path = out_dir / f"pr-{pr_number}-reviews.json"
 
