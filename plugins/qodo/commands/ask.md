@@ -1,7 +1,7 @@
 ---
 description: Ask questions about code changes or pull request
 argument-hint: "<question>" [PR_NUMBER|PR_URL] [--base <branch>] [--model <name>]
-allowed-tools: Bash(qodo *), AskUserQuestion
+allowed-tools: Bash(qodo:*), AskUserQuestion
 ---
 
 # Ask Command Flow

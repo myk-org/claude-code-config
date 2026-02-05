@@ -1,29 +1,13 @@
-#!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
-"""
-Unified script to fetch ALL unresolved review threads from a PR
-and categorize them by source (human, qodo, coderabbit).
+"""Fetch unresolved review threads from a PR.
 
-Usage: uv run get-all-github-unresolved-reviews-for-pr.py [review_url]
+This module fetches ALL unresolved review threads from the current branch's PR
+and categorizes them by source (human, qodo, coderabbit).
 
-Arguments:
-    review_url  Optional: specific review URL for context
-                (e.g., #pullrequestreview-XXX or #discussion_rXXX)
-
-Output: JSON with metadata and categorized comments
-
-Dependencies: gh CLI, get-pr-info.sh (in same directory)
+Output: JSON with metadata and categorized comments saved to /tmp/claude/pr-<number>-reviews.json
 """
 
 from __future__ import annotations
 
-import argparse
-
-# Import ReviewDB from same directory without mutating sys.path
-import importlib.util
 import json
 import os
 import re
@@ -33,56 +17,6 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any
-
-_REVIEW_DB_PATH = Path(__file__).with_name("review_db.py")
-
-_REVIEW_DB_CACHE: tuple[type | None, Any | None] | None = None
-
-
-def _load_review_db() -> tuple[type | None, Any | None]:
-    """Lazily load ReviewDB and similarity function, returning (None, None) if unavailable."""
-    global _REVIEW_DB_CACHE
-    if _REVIEW_DB_CACHE is not None:
-        return _REVIEW_DB_CACHE
-
-    try:
-        if not _REVIEW_DB_PATH.exists():
-            _REVIEW_DB_CACHE = (None, None)
-            return _REVIEW_DB_CACHE
-
-        spec = importlib.util.spec_from_file_location("review_db", _REVIEW_DB_PATH)
-        if spec is None or spec.loader is None:
-            _REVIEW_DB_CACHE = (None, None)
-            return _REVIEW_DB_CACHE
-
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        _REVIEW_DB_CACHE = (getattr(module, "ReviewDB", None), getattr(module, "_body_similarity", None))
-        return _REVIEW_DB_CACHE
-    except Exception as e:
-        print_stderr(f"Warning: review_db integration disabled: {e}")
-        _REVIEW_DB_CACHE = (None, None)
-        return _REVIEW_DB_CACHE
-
-
-def _fallback_body_similarity(body1: str, body2: str) -> float:
-    """Calculate word overlap ratio between two bodies using Jaccard similarity."""
-    tokens1 = set(re.findall(r"[a-z0-9]+", body1.lower()))
-    tokens2 = set(re.findall(r"[a-z0-9]+", body2.lower()))
-    if not tokens1 or not tokens2:
-        return 0.0
-
-    # Guard against huge bodies (e.g., pasted logs)
-    # Sort before truncating for deterministic behavior
-    if len(tokens1) > 2000:
-        tokens1 = set(sorted(tokens1)[:2000])
-    if len(tokens2) > 2000:
-        tokens2 = set(sorted(tokens2)[:2000])
-
-    intersection = tokens1 & tokens2
-    union = tokens1 | tokens2
-    return len(intersection) / len(union)
-
 
 # Known AI reviewer usernames
 QODO_USERS = ["qodo-code-review", "qodo-code-review[bot]"]
@@ -117,43 +51,107 @@ def print_stderr(msg: str) -> None:
     print(msg, file=sys.stderr)
 
 
-def show_usage() -> None:
-    """Show usage information and exit."""
-    print_stderr("Usage: get-all-github-unresolved-reviews-for-pr.py [review_url]")
-    print_stderr("")
-    print_stderr("Fetches ALL unresolved review threads from the current PR")
-    print_stderr("and categorizes them by source (human, qodo, coderabbit).")
-    print_stderr("")
-    print_stderr("Arguments:")
-    print_stderr("  review_url  Optional: specific review URL for context")
-    print_stderr("")
-    print_stderr("Output:")
-    print_stderr("  JSON with metadata and categorized comments")
-    print_stderr("  Also saves to /tmp/claude/pr-<number>-reviews.json")
-    print_stderr("")
-    print_stderr("Examples:")
-    print_stderr("  get-all-github-unresolved-reviews-for-pr.py")
-    print_stderr(
-        "  get-all-github-unresolved-reviews-for-pr.py https://github.com/org/repo/pull/123#pullrequestreview-456"
-    )
-    sys.exit(1)
+def _fallback_body_similarity(body1: str, body2: str) -> float:
+    """Calculate word overlap ratio between two bodies using Jaccard similarity."""
+    tokens1 = set(re.findall(r"[a-z0-9]+", body1.lower()))
+    tokens2 = set(re.findall(r"[a-z0-9]+", body2.lower()))
+    if not tokens1 or not tokens2:
+        return 0.0
+
+    # Guard against huge bodies (e.g., pasted logs)
+    # Sort before truncating for deterministic behavior
+    if len(tokens1) > 2000:
+        tokens1 = set(sorted(tokens1)[:2000])
+    if len(tokens2) > 2000:
+        tokens2 = set(sorted(tokens2)[:2000])
+
+    intersection = tokens1 & tokens2
+    union = tokens1 | tokens2
+    return len(intersection) / len(union)
 
 
-def check_dependencies() -> Path:
-    """Check required dependencies and return path to PR info script."""
-    # Check for gh using shutil.which (consistent with post-review-replies-from-json.py)
-    if shutil.which("gh") is None:
-        print_stderr("Error: 'gh' is required but not installed.")
+def _load_review_db() -> tuple[type | None, Any | None]:
+    """Try to load ReviewDB from db module."""
+    try:
+        from myk_claude_tools.db.query import ReviewDB, _body_similarity  # noqa: PLC0415
+
+        return ReviewDB, _body_similarity
+    except ImportError:
+        return None, None
+
+
+def check_dependencies() -> None:
+    """Check required dependencies."""
+    for cmd in ("gh", "git"):
+        if shutil.which(cmd) is None:
+            print_stderr(f"Error: '{cmd}' is required but not installed.")
+            sys.exit(1)
+
+
+def get_pr_info() -> tuple[str, str, str]:
+    """Get PR info using gh CLI.
+
+    Returns:
+        Tuple of (owner, repo, pr_number)
+    """
+    # Get current branch
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            print_stderr("Error: Could not get current branch")
+            sys.exit(1)
+        current_branch = result.stdout.strip()
+        if current_branch == "HEAD":
+            print_stderr("Error: Detached HEAD; cannot infer PR from branch. Check out a branch with an open PR.")
+            sys.exit(1)
+    except subprocess.TimeoutExpired:
+        print_stderr("Error: git command timed out")
         sys.exit(1)
 
-    # Check for PR info script
-    script_dir = Path(__file__).parent.resolve()
-    pr_info_script = script_dir / "get-pr-info.sh"
-    if not pr_info_script.exists():
-        print_stderr(f"Error: PR info script not found: {pr_info_script}")
+    # Get PR number for current branch
+    try:
+        result = subprocess.run(
+            ["gh", "pr", "view", current_branch, "--json", "number", "--jq", ".number"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0 or not result.stdout.strip():
+            print_stderr(f"Error: No PR found for branch '{current_branch}'")
+            sys.exit(1)
+        pr_number = result.stdout.strip()
+    except subprocess.TimeoutExpired:
+        print_stderr("Error: gh pr view timed out")
         sys.exit(1)
 
-    return pr_info_script
+    # Get repository full name
+    try:
+        result = subprocess.run(
+            ["gh", "repo", "view", "--json", "owner,name", "-q", '.owner.login + "/" + .name'],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0 or not result.stdout.strip():
+            print_stderr("Error: Could not get repository information")
+            sys.exit(1)
+        repo_full_name = result.stdout.strip()
+    except subprocess.TimeoutExpired:
+        print_stderr("Error: gh repo view timed out")
+        sys.exit(1)
+
+    owner_repo = repo_full_name.split("/")
+    if len(owner_repo) != 2:
+        print_stderr(f"Error: Could not parse owner/repo from: '{repo_full_name}'")
+        sys.exit(1)
+
+    owner, repo = owner_repo
+    return owner, repo, pr_number
 
 
 def detect_source(author: str | None) -> str:
@@ -189,16 +187,17 @@ def classify_priority(body: str | None) -> str:
 
 def run_gh_graphql(query: str, variables: dict[str, Any]) -> dict[str, Any] | None:
     """Run a GraphQL query via gh api graphql. Returns parsed JSON or None on error."""
-    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
-
-    for key, value in variables.items():
-        if isinstance(value, int):
-            cmd.extend(["-F", f"{key}={value}"])
-        else:
-            cmd.extend(["-f", f"{key}={value}"])
+    payload = {"query": query, "variables": variables}
+    cmd = ["gh", "api", "graphql", "--input", "-"]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(
+            cmd,
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
     except subprocess.TimeoutExpired:
         print_stderr("Error: GraphQL query timed out after 120 seconds")
         return None
@@ -216,7 +215,7 @@ def run_gh_graphql(query: str, variables: dict[str, Any]) -> dict[str, Any] | No
     return data
 
 
-def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
+def run_gh_api(endpoint: str, *, paginate: bool = False) -> Any | None:
     """Run a REST API call via gh api. Returns parsed JSON or None on error."""
     cmd = ["gh", "api"]
     if paginate:
@@ -230,6 +229,8 @@ def run_gh_api(endpoint: str, paginate: bool = False) -> Any | None:
         return None
 
     if result.returncode != 0:
+        if result.stderr:
+            print_stderr(f"Warning: API call to {endpoint} failed: {result.stderr.strip()}")
         return None
 
     try:
@@ -557,84 +558,37 @@ def merge_threads(all_threads: list[dict[str, Any]], specific_threads: list[dict
             merged.append(thread)
         elif key not in existing_keys:
             merged.append(thread)
+            existing_keys.add(key)
 
     return merged
 
 
-def main() -> int:
-    """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Fetch all unresolved review threads from a PR",
-        add_help=True,
-    )
-    parser.add_argument(
-        "review_url",
-        nargs="?",
-        default="",
-        help="Optional: specific review URL for context",
-    )
-    args = parser.parse_args()
+def run(review_url: str = "") -> int:
+    """Main entry point.
 
+    Args:
+        review_url: Optional specific review URL for context.
+
+    Returns:
+        Exit code (0 for success, 1 for error).
+    """
     try:
-        pr_info_script = check_dependencies()
-
-        review_url = args.review_url
+        check_dependencies()
 
         # Get PR info
         print_stderr("Getting PR information...")
-        try:
-            result = subprocess.run(
-                [str(pr_info_script)],
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-        except subprocess.TimeoutExpired:
-            print_stderr("Error: PR info script timed out after 120 seconds")
-            return 1
-
-        if result.returncode != 0:
-            print_stderr(f"Error: Failed to get PR information: {result.stderr.strip()}")
-            return 1
-
-        pr_info = result.stdout.strip()
-        parts = pr_info.split()
-
-        if len(parts) < 2:
-            print_stderr(f"Error: Invalid PR info output: '{pr_info}'")
-            print_stderr("Expected format: 'owner/repo pr_number'")
-            return 1
-
-        repo_full_name = parts[0]
-        pr_number = parts[1]
-
-        if not pr_number.isdigit():
-            print_stderr(f"Error: PR number must be numeric, got: '{pr_number}'")
-            return 1
-
-        owner_repo = repo_full_name.split("/")
-        if len(owner_repo) != 2:
-            print_stderr(f"Error: Could not parse owner/repo from: '{repo_full_name}'")
-            return 1
-
-        owner, repo = owner_repo
-
-        if not owner or not repo:
-            print_stderr(f"Error: Could not parse owner/repo from: '{repo_full_name}'")
-            return 1
+        owner, repo, pr_number = get_pr_info()
 
         print_stderr(f"Repository: {owner}/{repo}, PR: {pr_number}")
 
         # Ensure output directory exists
-        tmp_base = os.environ.get("TMPDIR", "/tmp")
-        out_dir = Path(tmp_base.rstrip("/")) / "claude"
-        if not out_dir.exists():
-            out_dir.mkdir(parents=True, mode=0o700)
-        else:
-            try:
-                out_dir.chmod(0o700)
-            except OSError:
-                pass
+        tmp_base = Path(os.environ.get("TMPDIR") or tempfile.gettempdir())
+        out_dir = tmp_base / "claude"
+        out_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        try:
+            out_dir.chmod(0o700)
+        except OSError as e:
+            print_stderr(f"Warning: unable to set permissions on {out_dir}: {e}")
 
         json_path = out_dir / f"pr-{pr_number}-reviews.json"
 
@@ -732,7 +686,3 @@ def main() -> int:
 
     finally:
         cleanup()
-
-
-if __name__ == "__main__":
-    sys.exit(main())

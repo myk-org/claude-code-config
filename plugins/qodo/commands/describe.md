@@ -1,7 +1,7 @@
 ---
 description: Generate description for code changes or pull request
 argument-hint: [PR_NUMBER|PR_URL] [--base <branch>] [--model <name>]
-allowed-tools: Bash(qodo *), AskUserQuestion
+allowed-tools: Bash(qodo:*), AskUserQuestion
 ---
 
 # Describe Command Flow

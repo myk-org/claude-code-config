@@ -1,31 +1,16 @@
-#!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
 """Query interface for the reviews SQLite database.
 
-This module provides both a Python API (ReviewDB class) for importing into other scripts
-and a CLI interface for AI/bash usage.
+This module provides the ReviewDB class for querying review comments stored in SQLite.
+It can auto-detect the database path from the git root or accept an explicit path.
 
 Database location: <git-root>/.claude/data/reviews.db
 
 Usage as module:
-    from review_db import ReviewDB
+    from myk_claude_tools.db.query import ReviewDB
     db = ReviewDB()
     dismissed = db.get_dismissed_comments("myk-org", "claude-code-config")
-
-Usage as CLI:
-    uv run review_db.py dismissed --owner myk-org --repo claude-code-config [--json]
-    uv run review_db.py find-similar --owner myk-org --repo claude-code-config --json < input.json
-    uv run review_db.py stats --by-source [--json]
-    uv run review_db.py stats --by-reviewer [--json]
-    uv run review_db.py patterns [--min 2] [--json]
-    uv run review_db.py query "SELECT * FROM comments WHERE status = 'skipped'" [--json]
 """
 
-import argparse
-import json
 import re
 import sqlite3
 import subprocess
@@ -83,6 +68,50 @@ def _body_similarity(body1: str, body2: str) -> float:
     intersection = tokens1 & tokens2
     union = tokens1 | tokens2
     return len(intersection) / len(union)
+
+
+def _format_table(data: list[dict[str, Any]], columns: list[str] | None = None) -> str:
+    """Format data as a human-readable table.
+
+    Args:
+        data: List of dicts to format.
+        columns: Column order. If None, uses keys from first row.
+
+    Returns:
+        Formatted table string.
+    """
+    if not data:
+        return "(no results)"
+
+    if columns is None:
+        columns = list(data[0].keys())
+
+    # Calculate column widths
+    widths = {col: len(col) for col in columns}
+    for row in data:
+        for col in columns:
+            val = str(row.get(col, ""))
+            # Truncate long values for display
+            if len(val) > 60:
+                val = val[:57] + "..."
+            widths[col] = max(widths[col], len(val))
+
+    # Build header
+    header = " | ".join(col.ljust(widths[col]) for col in columns)
+    separator = "-+-".join("-" * widths[col] for col in columns)
+
+    # Build rows
+    rows = []
+    for row in data:
+        values = []
+        for col in columns:
+            val = str(row.get(col, ""))
+            if len(val) > 60:
+                val = val[:57] + "..."
+            values.append(val.ljust(widths[col]))
+        rows.append(" | ".join(values))
+
+    return "\n".join([header, separator, *rows])
 
 
 class ReviewDB:
@@ -554,261 +583,3 @@ class ReviewDB:
             return []
         finally:
             conn.close()
-
-
-def _format_table(data: list[dict[str, Any]], columns: list[str] | None = None) -> str:
-    """Format data as a human-readable table.
-
-    Args:
-        data: List of dicts to format.
-        columns: Column order. If None, uses keys from first row.
-
-    Returns:
-        Formatted table string.
-    """
-    if not data:
-        return "(no results)"
-
-    if columns is None:
-        columns = list(data[0].keys())
-
-    # Calculate column widths
-    widths = {col: len(col) for col in columns}
-    for row in data:
-        for col in columns:
-            val = str(row.get(col, ""))
-            # Truncate long values for display
-            if len(val) > 60:
-                val = val[:57] + "..."
-            widths[col] = max(widths[col], len(val))
-
-    # Build header
-    header = " | ".join(col.ljust(widths[col]) for col in columns)
-    separator = "-+-".join("-" * widths[col] for col in columns)
-
-    # Build rows
-    rows = []
-    for row in data:
-        values = []
-        for col in columns:
-            val = str(row.get(col, ""))
-            if len(val) > 60:
-                val = val[:57] + "..."
-            values.append(val.ljust(widths[col]))
-        rows.append(" | ".join(values))
-
-    return "\n".join([header, separator, *rows])
-
-
-def _cmd_dismissed(args: argparse.Namespace) -> None:
-    """Handle 'dismissed' subcommand."""
-    db_path = Path(args.db_path) if args.db_path else None
-    db = ReviewDB(db_path=db_path)
-    results = db.get_dismissed_comments(args.owner, args.repo)
-
-    if args.json:
-        print(json.dumps(results, indent=2))
-    else:
-        print(_format_table(results, ["path", "line", "status", "reply", "author"]))
-
-
-def _cmd_find_similar(args: argparse.Namespace) -> None:
-    """Handle 'find-similar' subcommand."""
-    # Read JSON from stdin
-    try:
-        input_data = json.load(sys.stdin)
-    except json.JSONDecodeError as e:
-        log(f"Error: Invalid JSON input: {e}")
-        sys.exit(1)
-
-    path = input_data.get("path", "")
-    body = input_data.get("body", "")
-
-    if not path or not body:
-        log("Error: JSON must contain 'path' and 'body' fields")
-        sys.exit(1)
-
-    db_path = Path(args.db_path) if args.db_path else None
-    db = ReviewDB(db_path=db_path)
-    result = db.find_similar_comment(args.owner, args.repo, path, body, threshold=args.threshold)
-
-    if args.json:
-        print(json.dumps(result, indent=2))
-    else:
-        if result:
-            print(f"Found similar comment (similarity: {result['similarity']:.2f}):")
-            print(f"  Path: {result['path']}:{result['line']}")
-            print(f"  Status: {result['status']}")
-            print(f"  Reason: {result['reply']}")
-            print(f"  Original body: {result['body'][:100]}...")
-        else:
-            print("No similar comment found")
-
-
-def _cmd_stats(args: argparse.Namespace) -> None:
-    """Handle 'stats' subcommand."""
-    db_path = Path(args.db_path) if args.db_path else None
-    db = ReviewDB(db_path=db_path)
-
-    # Safely check flags with defaults (both default to False when not specified)
-    by_source = getattr(args, "by_source", False)
-    by_reviewer = getattr(args, "by_reviewer", False)
-
-    # If neither flag is set, default to by-source behavior
-    if not by_source and not by_reviewer:
-        by_source = True
-
-    if by_reviewer:
-        results = db.get_reviewer_stats()
-        if args.json:
-            print(json.dumps(results, indent=2))
-        else:
-            print(_format_table(results, ["author", "total", "addressed", "not_addressed", "skipped"]))
-    elif by_source:
-        results = db.get_stats_by_source()
-        if args.json:
-            print(json.dumps(results, indent=2))
-        else:
-            columns = ["source", "total", "addressed", "not_addressed", "skipped", "addressed_rate"]
-            print(_format_table(results, columns))
-
-
-def _cmd_patterns(args: argparse.Namespace) -> None:
-    """Handle 'patterns' subcommand."""
-    db_path = Path(args.db_path) if args.db_path else None
-    db = ReviewDB(db_path=db_path)
-    results = db.get_duplicate_patterns(min_occurrences=args.min)
-
-    if args.json:
-        print(json.dumps(results, indent=2))
-    else:
-        print(_format_table(results, ["path", "occurrences", "reason", "body_sample"]))
-
-
-def _cmd_query(args: argparse.Namespace) -> None:
-    """Handle 'query' subcommand."""
-    db_path = Path(args.db_path) if args.db_path else None
-    db = ReviewDB(db_path=db_path)
-
-    try:
-        results = db.query(args.sql)
-    except ValueError as e:
-        log(f"Error: {e}")
-        sys.exit(1)
-
-    if args.json:
-        print(json.dumps(results, indent=2))
-    else:
-        print(_format_table(results))
-
-
-def main() -> None:
-    """Entry point for CLI."""
-    parser = argparse.ArgumentParser(
-        description="Query interface for the reviews SQLite database.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Get dismissed comments for auto-skip
-  uv run review_db.py dismissed --owner myk-org --repo claude-code-config
-
-  # Find similar comment (JSON from stdin)
-  echo '{"path": "foo.py", "body": "Add error handling..."}' | \\
-      uv run review_db.py find-similar --owner myk-org --repo claude-code-config --json
-
-  # Stats by source
-  uv run review_db.py stats --by-source --json
-
-  # Duplicate patterns
-  uv run review_db.py patterns --min 2
-
-  # Raw query
-  uv run review_db.py query "SELECT * FROM comments WHERE status = 'skipped'"
-
-  # Use custom database path (for testing)
-  uv run review_db.py stats --by-source --db-path /path/to/reviews.db
-""",
-    )
-
-    # Global option for database path (useful for testing)
-    parser.add_argument(
-        "--db-path",
-        help="Path to database file (default: auto-detect from git root)",
-    )
-
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    # dismissed subcommand
-    dismissed_parser = subparsers.add_parser(
-        "dismissed",
-        help="Get all not_addressed/skipped comments for a repo",
-    )
-    dismissed_parser.add_argument("--owner", required=True, help="Repository owner (org or user)")
-    dismissed_parser.add_argument("--repo", required=True, help="Repository name")
-    dismissed_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    dismissed_parser.set_defaults(func=_cmd_dismissed)
-
-    # find-similar subcommand
-    similar_parser = subparsers.add_parser(
-        "find-similar",
-        help="Find a previously dismissed comment matching path/body (reads JSON from stdin)",
-    )
-    similar_parser.add_argument("--owner", required=True, help="Repository owner (org or user)")
-    similar_parser.add_argument("--repo", required=True, help="Repository name")
-    similar_parser.add_argument(
-        "--threshold",
-        type=float,
-        default=0.6,
-        help="Minimum similarity threshold (0.0-1.0, default: 0.6)",
-    )
-    similar_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    similar_parser.set_defaults(func=_cmd_find_similar)
-
-    # stats subcommand
-    stats_parser = subparsers.add_parser(
-        "stats",
-        help="Get statistics (by source or by reviewer)",
-    )
-    stats_group = stats_parser.add_mutually_exclusive_group()
-    stats_group.add_argument(
-        "--by-source",
-        action="store_true",
-        help="Group by source (human/qodo/coderabbit)",
-    )
-    stats_group.add_argument(
-        "--by-reviewer",
-        action="store_true",
-        help="Group by reviewer author",
-    )
-    stats_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    stats_parser.set_defaults(func=_cmd_stats)
-
-    # patterns subcommand
-    patterns_parser = subparsers.add_parser(
-        "patterns",
-        help="Find recurring dismissed patterns",
-    )
-    patterns_parser.add_argument(
-        "--min",
-        type=int,
-        default=2,
-        help="Minimum occurrences to report (default: 2)",
-    )
-    patterns_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    patterns_parser.set_defaults(func=_cmd_patterns)
-
-    # query subcommand
-    query_parser = subparsers.add_parser(
-        "query",
-        help="Run a raw SELECT query (SELECT only for safety)",
-    )
-    query_parser.add_argument("sql", help="SQL SELECT statement to execute")
-    query_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    query_parser.set_defaults(func=_cmd_query)
-
-    args = parser.parse_args()
-    args.func(args)
-
-
-if __name__ == "__main__":
-    main()

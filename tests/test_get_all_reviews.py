@@ -1,4 +1,4 @@
-"""Comprehensive unit tests for get-all-github-unresolved-reviews-for-pr.py script.
+"""Comprehensive unit tests for reviews fetch module.
 
 This test suite covers:
 - detect_source() author classification
@@ -10,36 +10,15 @@ This test suite covers:
 - process_and_categorize() thread enrichment
 """
 
-import importlib.util
 import re
 import subprocess
-import sys
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Add scripts directory to path for importing module
-SCRIPTS_DIR = Path(__file__).parent.parent / "commands" / "scripts" / "general"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-
-def _load_module() -> ModuleType:
-    """Load the get-all-github-unresolved-reviews-for-pr module."""
-    spec = importlib.util.spec_from_file_location(
-        "get_all_reviews", SCRIPTS_DIR / "get-all-github-unresolved-reviews-for-pr.py"
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError("Could not load get-all-github-unresolved-reviews-for-pr module")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-get_all_reviews = _load_module()
-
+from myk_claude_tools.reviews import fetch as get_all_reviews
 
 # =============================================================================
 # Tests for detect_source() - Author Classification
@@ -245,27 +224,14 @@ class TestCheckDependencies:
             get_all_reviews.check_dependencies()
 
         assert excinfo.value.code == 1
-        mock_which.assert_called_once_with("gh")
-
-    @patch("shutil.which")
-    def test_pr_info_script_missing(self, mock_which: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Missing PR info script should exit with error."""
-        mock_which.return_value = "/usr/bin/gh"
-
-        monkeypatch.setattr(get_all_reviews, "__file__", str(tmp_path / "fake-script.py"))
-        with pytest.raises(SystemExit) as excinfo:
-            get_all_reviews.check_dependencies()
-        assert excinfo.value.code == 1
 
     @patch("shutil.which")
     def test_all_dependencies_available(self, mock_which: Any) -> None:
-        """All dependencies available should return PR info script path."""
+        """All dependencies available should not raise."""
         mock_which.return_value = "/usr/bin/gh"
 
-        result = get_all_reviews.check_dependencies()
-
-        assert result.name == "get-pr-info.sh"
-        assert result.exists()
+        # Should not raise
+        get_all_reviews.check_dependencies()
 
 
 # =============================================================================
@@ -304,26 +270,16 @@ class TestRunGhGraphql:
         assert result is None
 
     @patch("subprocess.run")
-    def test_string_variable(self, mock_run: Any) -> None:
-        """String variable should use -f flag."""
+    def test_variables_passed_via_stdin(self, mock_run: Any) -> None:
+        """Variables should be passed via stdin as JSON payload."""
         mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
 
-        get_all_reviews.run_gh_graphql("query", {"name": "value"})
+        get_all_reviews.run_gh_graphql("query", {"name": "value", "count": 42})
 
+        # New implementation uses --input - to pass JSON payload via stdin
         call_args = mock_run.call_args[0][0]
-        assert "-f" in call_args
-        assert "name=value" in call_args
-
-    @patch("subprocess.run")
-    def test_int_variable(self, mock_run: Any) -> None:
-        """Integer variable should use -F flag."""
-        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
-
-        get_all_reviews.run_gh_graphql("query", {"count": 42})
-
-        call_args = mock_run.call_args[0][0]
-        assert "-F" in call_args
-        assert "count=42" in call_args
+        assert "--input" in call_args
+        assert "-" in call_args
 
     @patch("subprocess.run")
     def test_timeout_returns_none(self, mock_run: Any) -> None:

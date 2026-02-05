@@ -1,16 +1,7 @@
-#!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
-"""
-Post replies and resolve review threads from a JSON file.
+"""Post replies and resolve review threads from a JSON file.
 
-Usage: uv run post-review-replies-from-json.py <json_path>
-
-Input:
-  $1 - Path to JSON file with review data (created by get-all-github-unresolved-reviews-for-pr.sh
-       and processed by an AI handler to add status/reply fields)
+This module posts replies and resolves review threads based on the JSON file
+created by the fetch module and processed by an AI handler to add status/reply fields.
 
 Expected JSON structure:
   {
@@ -41,15 +32,10 @@ Resolution behavior by source:
   - qodo/coderabbit: Always resolve threads after replying
   - human: Only resolve if status is "addressed"; skipped/not_addressed
           threads are not resolved to allow reviewer follow-up
-
-Output:
-  - Updates JSON file with posted_at timestamp for each successful post
-  - Summary to stderr
 """
 
 from __future__ import annotations
 
-import argparse
 import json
 import os
 import shutil
@@ -75,17 +61,21 @@ def check_dependencies() -> None:
 
 
 def run_graphql(query: str, variables: dict[str, str]) -> tuple[bool, dict[str, Any] | str]:
-    """
-    Run a GraphQL query via gh api graphql.
+    """Run a GraphQL query via gh api graphql.
 
     Returns (success, result) where result is parsed JSON on success or error string on failure.
     """
-    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
-    for key, value in variables.items():
-        cmd.extend(["-f", f"{key}={value}"])
+    payload = {"query": query, "variables": variables}
+    cmd = ["gh", "api", "graphql", "--input", "-"]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(
+            cmd,
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
     except subprocess.TimeoutExpired:
         return False, "GraphQL query timed out after 120 seconds"
 
@@ -112,8 +102,7 @@ def run_graphql(query: str, variables: dict[str, str]) -> tuple[bool, dict[str, 
 
 
 def post_thread_reply(thread_id: str, body: str) -> bool:
-    """
-    Post a reply to a review thread using GraphQL.
+    """Post a reply to a review thread using GraphQL.
 
     Returns True on success, False on failure.
     """
@@ -141,8 +130,7 @@ def post_thread_reply(thread_id: str, body: str) -> bool:
 
 
 def resolve_thread(thread_id: str) -> bool:
-    """
-    Resolve a review thread using GraphQL.
+    """Resolve a review thread using GraphQL.
 
     Returns True on success, False on failure.
     """
@@ -166,8 +154,7 @@ def resolve_thread(thread_id: str) -> bool:
 
 
 def lookup_thread_id_from_node_id(node_id: str) -> str | None:
-    """
-    Look up thread_id from a review comment node_id via GraphQL.
+    """Look up thread_id from a review comment node_id via GraphQL.
 
     Returns thread_id on success, None on failure.
     """
@@ -263,32 +250,24 @@ def apply_updates_to_json(json_path: Path, updates: list[dict[str, Any]]) -> Non
         sys.exit(1)
 
 
-def main() -> None:
-    """Main entry point."""
+def run(json_path: str) -> None:
+    """Main entry point.
+
+    Args:
+        json_path: Path to JSON file with review data.
+    """
     check_dependencies()
 
-    # Parse arguments
-    parser = argparse.ArgumentParser(
-        description="Post replies and resolve review threads from a JSON file",
-        add_help=True,
-    )
-    parser.add_argument(
-        "json_path",
-        type=Path,
-        help="Path to JSON file with review data",
-    )
-    args = parser.parse_args()
-
-    json_path = args.json_path
+    json_path_obj = Path(json_path).resolve()
 
     # Validate JSON file exists
-    if not json_path.is_file():
+    if not json_path_obj.is_file():
         eprint(f"Error: JSON file not found: {json_path}")
         sys.exit(1)
 
     # Validate JSON is readable and well-formed
     try:
-        with open(json_path, encoding="utf-8") as f:
+        with open(json_path_obj, encoding="utf-8") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError):
         eprint(f"Error: Invalid JSON file: {json_path}")
@@ -458,7 +437,7 @@ def main() -> None:
                 eprint(f"Replied to {category}[{i}] ({path}) (not resolved)")
 
     # Apply all JSON updates atomically
-    apply_updates_to_json(json_path, updates)
+    apply_updates_to_json(json_path_obj, updates)
 
     # Print summary
     total_resolved = addressed_count + skipped_count
@@ -488,7 +467,3 @@ def main() -> None:
         sys.exit(1)
 
     sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()

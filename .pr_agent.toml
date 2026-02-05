@@ -46,9 +46,9 @@ enable_help_text = true
 extra_instructions = "Focus on Bash script quality (shellcheck, quoting, error handling), Python hook correctness, and Markdown clarity. Follow AI_REVIEW.md orchestrator pattern guidelines."
 focus_only_on_problems = false
 suggestions_score_threshold = 5
-commitable_code_suggestions = true
-apply_suggestions_checkbox = true
-enable_chat_in_code_suggestions = true
+#commitable_code_suggestions = true
+#apply_suggestions_checkbox = true
+#enable_chat_in_code_suggestions = true
 
 [ignore]
 glob = []

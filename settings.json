@@ -13,27 +13,17 @@
       "Bash(mcpl:*)",
       "Bash(git -C:*)",
       "Bash(prek:*)",
-      "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
       "Bash(~/.claude/scripts/session-start-check.sh:*)",
       "Bash(~/.claude/scripts/my-notifier.sh:*)",
       "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
       "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
       "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
-      "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh:*)",
-      "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh:*)",
-      "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh:*)",
-      "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
-      "Bash(uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py:*)",
-      "Bash(uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py:*)",
-      "Bash(uv run ~/.claude/commands/scripts/general/review_db.py:*)",
-      "Bash(uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py:*)",
-      "Bash(~/.claude/commands/scripts/github-release/get-release-info.sh:*)",
-      "Bash(~/.claude/commands/scripts/github-release/create-github-release.sh:*)",
       "Grep",
       "Skill(qodo:review)",
       "Skill(qodo:describe)",
       "Skill(qodo:improve)",
-      "Skill(qodo:ask)"
+      "Skill(qodo:ask)",
+      "Bash(myk-claude-tools:*)"
     ]
   },
   "hooks": {
@@ -110,7 +100,10 @@
   "enabledPlugins": {
     "pyright-lsp@claude-plugins-official": true,
     "jdtls-lsp@claude-plugins-official": true,
-    "lua-lsp@claude-plugins-official": true
+    "lua-lsp@claude-plugins-official": true,
+    "qodo@myk-org": true,
+    "github@myk-org": true,
+    "review@myk-org": true
   },
   "alwaysThinkingEnabled": true,
   "_scriptsNote": "Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.",
@@ -126,26 +119,16 @@
     "Bash(git -C:*)",
     "Bash(prek:*)",
     "Grep",
-    "Bash(~/.claude/scripts/reply-to-pr-review.sh:*)",
     "Bash(~/.claude/scripts/session-start-check.sh:*)",
     "Bash(~/.claude/scripts/my-notifier.sh:*)",
     "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
     "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
     "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
-    "Bash(~/.claude/commands/scripts/github-pr-review/get-claude-md.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-pr-review/get-pr-diff.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-pr-review/post-pr-inline-comment.sh:*)",
-    "Bash(~/.claude/commands/scripts/general/get-pr-info.sh:*)",
-    "Bash(uv run ~/.claude/commands/scripts/general/get-all-github-unresolved-reviews-for-pr.py:*)",
-    "Bash(uv run ~/.claude/commands/scripts/general/post-review-replies-from-json.py:*)",
-    "Bash(uv run ~/.claude/commands/scripts/general/review_db.py:*)",
-    "Bash(uv run ~/.claude/commands/scripts/general/store-reviews-to-db.py:*)",
-    "Bash(~/.claude/commands/scripts/github-release/get-release-info.sh:*)",
-    "Bash(~/.claude/commands/scripts/github-release/create-github-release.sh:*)",
     "Skill(qodo:review)",
     "Skill(qodo:describe)",
     "Skill(qodo:improve)",
-    "Skill(qodo:ask)"
+    "Skill(qodo:ask)",
+    "Bash(myk-claude-tools:*)"
   ],
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309

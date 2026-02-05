@@ -1,20 +1,11 @@
-#!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
 """Store completed review JSON to SQLite database for analytics.
 
-This script runs AFTER the review flow completes. It reads the completed JSON file
+This module runs AFTER the review flow completes. It reads the completed JSON file
 (with all posted_at/resolved_at data) and stores it in SQLite for analytics.
-
-Usage:
-    uv run store-reviews-to-db.py <json_path>
 
 The database is stored at: <project-root>/.claude/data/reviews.db
 """
 
-import argparse
 import json
 import sqlite3
 import subprocess
@@ -97,8 +88,8 @@ def ensure_database_directory(db_path: Path) -> None:
         # Ensure existing directory has correct permissions
         try:
             db_dir.chmod(0o700)
-        except OSError:
-            pass
+        except OSError as exc:
+            print(f"Debug: could not chmod {db_dir}: {exc}", file=sys.stderr)
 
 
 def create_tables(conn: sqlite3.Connection) -> None:
@@ -180,7 +171,7 @@ def insert_comment(conn: sqlite3.Connection, review_id: int, source: str, commen
 
 
 def store_reviews(json_path: Path) -> None:
-    """Main function to store reviews from JSON to SQLite."""
+    """Store reviews from JSON to SQLite."""
     # Read JSON file
     log(f"Reading JSON file: {json_path}")
     try:
@@ -264,24 +255,16 @@ def store_reviews(json_path: Path) -> None:
         log(f"Warning: Could not delete JSON file: {e}")
 
 
-def main() -> None:
-    """Entry point."""
-    parser = argparse.ArgumentParser(description="Store completed review JSON to SQLite database for analytics.")
-    parser.add_argument(
-        "json_path",
-        type=Path,
-        help="Path to the completed review JSON file",
-    )
-    args = parser.parse_args()
+def run(json_path: str) -> None:
+    """Main entry point.
 
-    json_path = args.json_path.resolve()
+    Args:
+        json_path: Path to the completed review JSON file.
+    """
+    json_path_obj = Path(json_path).resolve()
 
-    if not json_path.exists():
+    if not json_path_obj.exists():
         log(f"Error: JSON file does not exist: {json_path}")
         sys.exit(1)
 
-    store_reviews(json_path)
-
-
-if __name__ == "__main__":
-    main()
+    store_reviews(json_path_obj)
