@@ -79,7 +79,27 @@ Run tests with coverage. Fix failures before proceeding.
 
 ### Phase 6: Post Replies
 
-Update JSON with status and replies:
+Update each JSON entry with `status` and `reply` fields before posting.
+
+**Valid status values:**
+
+| Status | Behavior |
+|--------|----------|
+| `addressed` | Post reply, resolve thread |
+| `not_addressed` | Post reply (human: leave unresolved; AI: resolve) |
+| `skipped` | Post reply with skip reason (human: leave unresolved; AI: resolve) |
+| `pending` | Skip (not processed yet) |
+| `failed` | Retry posting |
+
+**Mapping from user decisions (Phase 2):**
+
+- User said **yes** and code was changed → `addressed`
+- User said **yes** but change was not implemented → `not_addressed`
+- User said **no** → `skipped` (include the user's skip reason in `reply`)
+- User said **all** → same as **yes** for each remaining comment
+- User said **skip \<source\>** → `skipped` for all remaining from that source
+
+Post replies to GitHub:
 
 ```bash
 myk-claude-tools reviews post {json_path}
