@@ -1056,6 +1056,6 @@ class TestEdgeCases:
         captured = capsys.readouterr()
         assert "ACTION REQUIRED" in captured.out
         assert "myk-claude-tools reviews post" in captured.out
-        assert str(json_path) in captured.out
+        assert str(Path(json_path).resolve()) in captured.out
         assert "Failed:" in captured.err
         assert "Failed:" not in captured.out
