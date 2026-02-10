@@ -105,6 +105,9 @@ Post replies to GitHub:
 myk-claude-tools reviews post {json_path}
 ```
 
+If the command exits with a non-zero code, some threads failed to post.
+Re-run the same command to retry — only unposted entries are retried. Repeat until all succeed.
+
 Store to database:
 
 ```bash

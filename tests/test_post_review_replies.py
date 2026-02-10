@@ -1028,3 +1028,34 @@ class TestEdgeCases:
 
         # Should skip - "null" string is treated as invalid
         mock_post.assert_not_called()
+
+    @patch.object(post_review_replies, "resolve_thread")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_failed_post_prints_retry_instruction_to_stdout(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Failed posts should print retry instruction to stdout."""
+        del mock_deps, mock_resolve  # Injected by @patch decorator, unused in test
+        mock_post.return_value = False
+
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [{"thread_id": "t1", "status": "addressed", "reply": "Fixed", "path": "file.py"}],
+                "qodo": [],
+                "coderabbit": [],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 1
+
+        captured = capsys.readouterr()
+        assert "ACTION REQUIRED" in captured.out
+        assert "myk-claude-tools reviews post" in captured.out
+        assert str(json_path) in captured.out
+        assert "Failed:" in captured.err
+        assert "Failed:" not in captured.out
