@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -464,6 +465,13 @@ def run(json_path: str) -> None:
 
     if failed_count > 0:
         eprint(f"Failed: {failed_count} threads")
+        # Print actionable retry instruction to stdout for AI callers
+        print(
+            f"\nACTION REQUIRED: {failed_count} thread(s) failed to post."
+            f" Re-run the command to retry failed entries:"
+            f"\n  myk-claude-tools reviews post {shlex.quote(str(json_path_obj))}",
+            flush=True,
+        )
         sys.exit(1)
 
     sys.exit(0)

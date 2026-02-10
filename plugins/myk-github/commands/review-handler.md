@@ -105,6 +105,10 @@ Post replies to GitHub:
 myk-claude-tools reviews post {json_path}
 ```
 
+If the command exits with a non-zero code, some threads failed to post.
+The command prints an ACTION REQUIRED message with the exact retry command.
+Re-run it to retry — only unposted entries are retried. Repeat until all succeed.
+
 Store to database:
 
 ```bash
