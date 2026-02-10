@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -468,7 +469,7 @@ def run(json_path: str) -> None:
         print(
             f"\nACTION REQUIRED: {failed_count} thread(s) failed to post."
             f" Re-run the command to retry failed entries:"
-            f"\n  myk-claude-tools reviews post {json_path_obj}"
+            f"\n  myk-claude-tools reviews post {shlex.quote(str(json_path_obj))}"
         )
         sys.exit(1)
 
