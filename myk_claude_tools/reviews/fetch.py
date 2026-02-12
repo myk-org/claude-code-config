@@ -195,6 +195,8 @@ def get_pr_info(pr_url: str = "") -> tuple[str, str, str]:
             if result.returncode == 0 and result.stdout.strip():
                 pr_number = result.stdout.strip()
                 matched_repo = target_repo
+                if target_repo:
+                    print_stderr(f"Found PR #{pr_number} on upstream ({target_repo})")
                 break
         except subprocess.TimeoutExpired:
             continue
