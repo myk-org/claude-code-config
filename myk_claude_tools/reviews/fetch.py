@@ -154,6 +154,7 @@ def get_pr_info(pr_url: str = "") -> tuple[str, str, str]:
         parsed = parse_pr_url(pr_url)
         if parsed:
             return parsed
+        print_stderr(f"Warning: '{pr_url}' did not match a GitHub PR URL pattern, falling back to branch detection")
 
     # Get current branch
     try:
@@ -211,7 +212,8 @@ def get_pr_info(pr_url: str = "") -> tuple[str, str, str]:
         parts = matched_repo.split("/")
         if len(parts) == 2:
             return parts[0], parts[1], pr_number
-        print_stderr(f"Warning: Unexpected repo format from upstream: '{matched_repo}'")
+        print_stderr(f"Error: Unexpected repo format from upstream: '{matched_repo}'")
+        sys.exit(1)
 
     # Fall back to gh repo view for the default repo
     try:
