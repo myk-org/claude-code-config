@@ -918,3 +918,170 @@ class TestEdgeCases:
         result = get_all_reviews.fetch_unresolved_threads("owner", "repo", "1")
 
         assert result[0]["author"] is None
+
+
+# =============================================================================
+# Tests for parse_pr_url()
+# =============================================================================
+
+
+class TestParsePrUrl:
+    """Tests for parse_pr_url()."""
+
+    def test_valid_https_url(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/owner/repo/pull/42") == ("owner", "repo", "42")
+
+    def test_valid_http_url(self) -> None:
+        assert get_all_reviews.parse_pr_url("http://github.com/owner/repo/pull/1") == ("owner", "repo", "1")
+
+    def test_url_with_review_fragment(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/owner/repo/pull/42#pullrequestreview-123") == (
+            "owner",
+            "repo",
+            "42",
+        )
+
+    def test_url_with_discussion_fragment(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/owner/repo/pull/42#discussion_r456") == (
+            "owner",
+            "repo",
+            "42",
+        )
+
+    def test_url_with_issuecomment_fragment(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/owner/repo/pull/42#issuecomment-789") == (
+            "owner",
+            "repo",
+            "42",
+        )
+
+    def test_invalid_url_returns_none(self) -> None:
+        assert get_all_reviews.parse_pr_url("not-a-url") is None
+
+    def test_non_github_url_returns_none(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://gitlab.com/owner/repo/pull/1") is None
+
+    def test_empty_string_returns_none(self) -> None:
+        assert get_all_reviews.parse_pr_url("") is None
+
+    def test_github_issue_url_returns_none(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/owner/repo/issues/42") is None
+
+    def test_owner_with_hyphens_and_dots(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/my-org.name/my-repo.name/pull/99") == (
+            "my-org.name",
+            "my-repo.name",
+            "99",
+        )
+
+    def test_path_traversal_rejected(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/../../evil/pull/1") is None
+
+
+# =============================================================================
+# Tests for _get_upstream_repo()
+# =============================================================================
+
+
+class TestGetUpstreamRepo:
+    """Tests for _get_upstream_repo()."""
+
+    @patch("subprocess.run")
+    def test_ssh_shorthand_url(self, mock_run: Any) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="git@github.com:upstream-org/repo.git\n")
+        assert get_all_reviews._get_upstream_repo() == "upstream-org/repo"
+
+    @patch("subprocess.run")
+    def test_ssh_shorthand_url_no_git_suffix(self, mock_run: Any) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="git@github.com:upstream-org/repo\n")
+        assert get_all_reviews._get_upstream_repo() == "upstream-org/repo"
+
+    @patch("subprocess.run")
+    def test_ssh_url_format(self, mock_run: Any) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="ssh://git@github.com/upstream-org/repo.git\n")
+        assert get_all_reviews._get_upstream_repo() == "upstream-org/repo"
+
+    @patch("subprocess.run")
+    def test_https_url(self, mock_run: Any) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="https://github.com/upstream-org/repo.git\n")
+        assert get_all_reviews._get_upstream_repo() == "upstream-org/repo"
+
+    @patch("subprocess.run")
+    def test_https_url_no_git_suffix(self, mock_run: Any) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="https://github.com/upstream-org/repo\n")
+        assert get_all_reviews._get_upstream_repo() == "upstream-org/repo"
+
+    @patch("subprocess.run")
+    def test_no_upstream_remote(self, mock_run: Any) -> None:
+        mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="fatal: No such remote 'upstream'")
+        assert get_all_reviews._get_upstream_repo() is None
+
+    @patch("subprocess.run")
+    def test_timeout(self, mock_run: Any) -> None:
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd=["git"], timeout=10)
+        assert get_all_reviews._get_upstream_repo() is None
+
+    @patch("subprocess.run")
+    def test_unparseable_url(self, mock_run: Any) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="file:///some/local/path\n")
+        assert get_all_reviews._get_upstream_repo() is None
+
+
+# =============================================================================
+# Tests for get_pr_info() with pr_url parameter
+# =============================================================================
+
+
+class TestGetPrInfoWithUrl:
+    """Tests for get_pr_info() with pr_url parameter."""
+
+    def test_pr_url_returns_parsed_info(self) -> None:
+        result = get_all_reviews.get_pr_info(pr_url="https://github.com/RedHatQE/mtv-api-tests/pull/293")
+        assert result == ("RedHatQE", "mtv-api-tests", "293")
+
+    def test_pr_url_with_fragment_returns_parsed_info(self) -> None:
+        result = get_all_reviews.get_pr_info(pr_url="https://github.com/owner/repo/pull/42#pullrequestreview-123")
+        assert result == ("owner", "repo", "42")
+
+    @patch.object(get_all_reviews, "_get_upstream_repo", return_value=None)
+    @patch("subprocess.run")
+    def test_invalid_url_falls_back_to_branch_detection(self, mock_run: Any, _mock_upstream: Any) -> None:
+        """When an invalid URL is passed, get_pr_info should fall back to branch detection."""
+        mock_run.side_effect = [
+            # git rev-parse --abbrev-ref HEAD
+            MagicMock(returncode=0, stdout="my-branch\n"),
+            # gh pr view my-branch --json number --jq .number (origin)
+            MagicMock(returncode=0, stdout="42\n"),
+            # gh repo view --json owner,name
+            MagicMock(returncode=0, stdout="owner/repo\n"),
+        ]
+        result = get_all_reviews.get_pr_info(pr_url="not-a-url")
+        assert result == ("owner", "repo", "42")
+
+    @patch.object(get_all_reviews, "_get_upstream_repo", return_value="upstream-org/upstream-repo")
+    @patch("subprocess.run")
+    def test_falls_back_to_upstream_when_origin_fails(self, mock_run: Any, _mock_upstream: Any) -> None:
+        """When origin has no PR, should try upstream remote."""
+        mock_run.side_effect = [
+            # git rev-parse --abbrev-ref HEAD
+            MagicMock(returncode=0, stdout="my-branch\n"),
+            # gh pr view my-branch --json number --jq .number (origin - fails)
+            MagicMock(returncode=1, stdout="", stderr="no pull requests found"),
+            # gh pr view my-branch --json number --jq .number -R upstream-org/upstream-repo (succeeds)
+            MagicMock(returncode=0, stdout="99\n"),
+        ]
+        result = get_all_reviews.get_pr_info()
+        assert result == ("upstream-org", "upstream-repo", "99")
+
+    @patch.object(get_all_reviews, "_get_upstream_repo", return_value=None)
+    @patch("subprocess.run")
+    def test_exits_when_no_pr_found_anywhere(self, mock_run: Any, _mock_upstream: Any) -> None:
+        """When no PR found on origin and no upstream, should sys.exit."""
+        mock_run.side_effect = [
+            # git rev-parse --abbrev-ref HEAD
+            MagicMock(returncode=0, stdout="my-branch\n"),
+            # gh pr view my-branch (origin - fails)
+            MagicMock(returncode=1, stdout="", stderr="no pull requests found"),
+        ]
+        with pytest.raises(SystemExit):
+            get_all_reviews.get_pr_info()

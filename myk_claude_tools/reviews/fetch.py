@@ -88,12 +88,73 @@ def check_dependencies() -> None:
             sys.exit(1)
 
 
-def get_pr_info() -> tuple[str, str, str]:
+def parse_pr_url(url: str) -> tuple[str, str, str] | None:
+    """Parse a GitHub PR URL into (owner, repo, pr_number).
+
+    Supports formats:
+        https://github.com/OWNER/REPO/pull/NUMBER
+        https://github.com/OWNER/REPO/pull/NUMBER#pullrequestreview-XXX
+        https://github.com/OWNER/REPO/pull/NUMBER#discussion_rXXX
+
+    Returns:
+        Tuple of (owner, repo, pr_number) or None if URL doesn't match.
+    """
+    match = re.match(r"https?://github\.com/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)/pull/(\d+)", url)
+    if match:
+        return match.group(1), match.group(2), match.group(3)
+    return None
+
+
+def _get_upstream_repo() -> str | None:
+    """Get upstream remote's owner/repo if configured.
+
+    Returns:
+        Repository in 'owner/repo' format, or None.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "remote", "get-url", "upstream"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            return None
+
+        url = result.stdout.strip()
+        # Match SSH: git@github.com:owner/repo.git
+        match = re.match(r"git@github\.com:([^/]+/[^/]+?)(?:\.git)?$", url)
+        if match:
+            return match.group(1)
+        # Match SSH URL: ssh://git@github.com/owner/repo.git
+        match = re.match(r"ssh://git@github\.com/([^/]+/[^/]+?)(?:\.git)?$", url)
+        if match:
+            return match.group(1)
+        # Match HTTPS: https://github.com/owner/repo.git
+        match = re.match(r"https?://github\.com/([^/]+/[^/]+?)(?:\.git)?$", url)
+        if match:
+            return match.group(1)
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+    return None
+
+
+def get_pr_info(pr_url: str = "") -> tuple[str, str, str]:
     """Get PR info using gh CLI.
+
+    Args:
+        pr_url: Optional PR URL or string that may contain a GitHub PR URL.
+            If a valid PR URL is found, owner/repo/number are extracted directly.
 
     Returns:
         Tuple of (owner, repo, pr_number)
     """
+    # Try to extract PR info from URL first
+    if pr_url:
+        parsed = parse_pr_url(pr_url)
+        if parsed:
+            return parsed
+
     # Get current branch
     try:
         result = subprocess.run(
@@ -113,23 +174,46 @@ def get_pr_info() -> tuple[str, str, str]:
         print_stderr("Error: git command timed out")
         sys.exit(1)
 
-    # Get PR number for current branch
-    try:
-        result = subprocess.run(
-            ["gh", "pr", "view", current_branch, "--json", "number", "--jq", ".number"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode != 0 or not result.stdout.strip():
-            print_stderr(f"Error: No PR found for branch '{current_branch}'")
-            sys.exit(1)
-        pr_number = result.stdout.strip()
-    except subprocess.TimeoutExpired:
-        print_stderr("Error: gh pr view timed out")
+    # Try to find PR for current branch
+    # First try default repo (origin), then upstream if available
+    repos_to_try: list[str | None] = [None]  # None = default (origin)
+    upstream_repo = _get_upstream_repo()
+    if upstream_repo:
+        repos_to_try.append(upstream_repo)
+
+    pr_number: str | None = None
+    matched_repo: str | None = None
+
+    for target_repo in repos_to_try:
+        cmd = ["gh", "pr", "view", current_branch, "--json", "number", "--jq", ".number"]
+        if target_repo:
+            cmd.extend(["-R", target_repo])
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if result.returncode == 0 and result.stdout.strip():
+                pr_number = result.stdout.strip()
+                matched_repo = target_repo
+                break
+        except subprocess.TimeoutExpired:
+            continue
+
+    if pr_number is None:
+        tried = "origin"
+        if upstream_repo:
+            tried += f" and upstream ({upstream_repo})"
+        print_stderr(f"Error: No PR found for branch '{current_branch}' on {tried}")
         sys.exit(1)
 
-    # Get repository full name
+    # Get repository info
+    if matched_repo:
+        # We already know the repo from the -R flag
+        parts = matched_repo.split("/")
+        if len(parts) == 2:
+            return parts[0], parts[1], pr_number
+        print_stderr(f"Warning: Unexpected repo format from upstream: '{matched_repo}'")
+
+    # Fall back to gh repo view for the default repo
     try:
         result = subprocess.run(
             ["gh", "repo", "view", "--json", "owner,name", "-q", '.owner.login + "/" + .name'],
@@ -577,7 +661,7 @@ def run(review_url: str = "") -> int:
 
         # Get PR info
         print_stderr("Getting PR information...")
-        owner, repo, pr_number = get_pr_info()
+        owner, repo, pr_number = get_pr_info(pr_url=review_url)
 
         print_stderr(f"Repository: {owner}/{repo}, PR: {pr_number}")
 
