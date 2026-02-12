@@ -99,7 +99,7 @@ def parse_pr_url(url: str) -> tuple[str, str, str] | None:
     Returns:
         Tuple of (owner, repo, pr_number) or None if URL doesn't match.
     """
-    match = re.match(r"https?://github\.com/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)/pull/(\d+)", url)
+    match = re.match(r"https?://github\.com/([A-Za-z0-9][A-Za-z0-9._-]*)/([A-Za-z0-9][A-Za-z0-9._-]*)/pull/(\d+)", url)
     if match:
         return match.group(1), match.group(2), match.group(3)
     return None

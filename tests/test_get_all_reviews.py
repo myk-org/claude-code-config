@@ -976,6 +976,13 @@ class TestParsePrUrl:
 
     def test_path_traversal_rejected(self) -> None:
         assert get_all_reviews.parse_pr_url("https://github.com/../../evil/pull/1") is None
+        assert get_all_reviews.parse_pr_url("https://github.com/../my-repo/pull/1") is None
+        assert get_all_reviews.parse_pr_url("https://github.com/./repo/pull/1") is None
+
+    def test_owner_must_start_with_alphanumeric(self) -> None:
+        assert get_all_reviews.parse_pr_url("https://github.com/-owner/repo/pull/1") is None
+        assert get_all_reviews.parse_pr_url("https://github.com/.owner/repo/pull/1") is None
+        assert get_all_reviews.parse_pr_url("https://github.com/_owner/repo/pull/1") is None
 
 
 # =============================================================================
