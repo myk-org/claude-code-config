@@ -1300,3 +1300,39 @@ class TestIssueCommentHandling:
         assert excinfo.value.code == 0
         # No thread replies or resolutions should happen
         mock_post.assert_not_called()
+
+    @patch.object(post_review_replies, "post_issue_comment")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_issue_comment_batch_post_failure_exits_with_error(
+        self, mock_deps: Any, mock_post: Any, mock_ic_post: Any, tmp_path: Path
+    ) -> None:
+        """Failed batch post should increment fail count and exit with error."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        mock_ic_post.return_value = False
+
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [
+                    {
+                        "thread_id": None,
+                        "type": "issue_comment_suggestion",
+                        "issue_comment_id": 100,
+                        "suggestion_index": 0,
+                        "status": "addressed",
+                        "reply": "Fixed",
+                        "path": "file.py",
+                    },
+                ],
+                "coderabbit": [],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 1
+        mock_post.assert_not_called()
+        mock_ic_post.assert_called_once()

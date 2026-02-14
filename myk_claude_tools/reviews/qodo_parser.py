@@ -88,7 +88,7 @@ _IMPORTANCE_RE = re.compile(
 )
 
 _IMPACT_RE = re.compile(
-    r"<td\s+align=center>\s*(?P<impact>\w+)\s*(?:\n|</td>)",
+    r"<td\s+align=center>\s*(?P<impact>[\w]+(?:[- ]\w+)*)\s*(?:\n|</td>)",
 )
 
 
@@ -283,7 +283,7 @@ _REVIEW_TITLE_RE = re.compile(
 )
 
 _REVIEW_DESC_RE = re.compile(
-    r"</a>\s*\n?\s*(?P<desc>.+)",
+    r"</a>\s*\n?\s*(?P<desc>.+?)$",
     re.DOTALL,
 )
 
@@ -365,6 +365,8 @@ def parse_review_comment(body: str) -> list[dict[str, Any]]:
         results.append({
             "title": title,
             "category": None,
+            # /review focus areas link to diff anchors (SHA-based URLs like #diff-HASH_RSTART-REND)
+            # rather than named file paths, so path extraction is intentionally omitted.
             "path": None,
             "line": None,
             "end_line": None,

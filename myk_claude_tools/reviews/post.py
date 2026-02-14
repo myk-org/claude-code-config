@@ -212,9 +212,9 @@ def build_issue_comment_reply(
         path = path.replace("`", "'")
         status = s.get("status", "pending")
         reply = s.get("reply", "") or ""
-        # Escape pipes in reply for markdown table
-        reply = reply.replace("|", "\\|").replace("\n", " ")
-        # Truncate long replies in table
+        # Escape markdown-breaking characters in reply for table
+        reply = reply.replace("|", "\\|").replace("\n", " ").replace("`", "'")
+        # Truncate long replies in table (after escaping to avoid breaking escape sequences)
         if len(reply) > 100:
             reply = reply[:97] + "..."
         lines.append(f"| {i} | `{path}` | {status} | {reply} |")
@@ -414,6 +414,7 @@ def run(json_path: str) -> None:
                     try:
                         ic_id = int(raw_ic_id)
                     except (TypeError, ValueError):
+                        eprint(f"Warning: Skipping {category}[{i}] ({path}): invalid issue_comment_id: {raw_ic_id!r}")
                         continue
                     issue_comment_groups.setdefault(ic_id, []).append((category, i, thread_data))
                 continue
