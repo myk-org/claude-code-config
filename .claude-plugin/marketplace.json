@@ -21,6 +21,12 @@
       "source": "./plugins/myk-review",
       "description": "Local code review and review database operations",
       "version": "1.0.0"
+    },
+    {
+      "name": "myk-cursor",
+      "source": "./plugins/myk-cursor",
+      "description": "Run one-shot prompts via Cursor agent CLI",
+      "version": "1.0.0"
     }
   ]
 }

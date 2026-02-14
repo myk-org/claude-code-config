@@ -1,0 +1,9 @@
+{
+  "name": "myk-cursor",
+  "version": "1.0.0",
+  "description": "Run one-shot prompts via Cursor agent CLI from Claude Code",
+  "author": { "name": "myk-org" },
+  "repository": "https://github.com/myk-org/claude-code-config",
+  "license": "MIT",
+  "keywords": ["cursor", "agent", "multi-model", "code-review"]
+}
