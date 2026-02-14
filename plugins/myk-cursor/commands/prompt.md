@@ -45,8 +45,10 @@ benefit from additional context that you already have from the current session.
 
 **When to enrich:**
 
+- First verify the current directory is a Git repository
+  (`git rev-parse --is-inside-work-tree`). If not, skip all git-based enrichment.
 - The prompt references "the changes", "my changes", "the diff", or similar
-  → Run `git diff --stat` to assess size. If under ~200 lines, append the full
+  → Run `git diff | wc -l` to count actual diff lines. If under ~200 lines, append the full
     `git diff` output. Otherwise, append only the `--stat` summary and note
     that the full diff was too large to include.
 - The prompt references "this file" or "the file" without specifying a path
@@ -61,7 +63,7 @@ benefit from additional context that you already have from the current session.
 Prepend context to the user's original prompt. Format:
 
 ```text
-[Context: repository=<repo>, branch=<branch>, working_dir=<path>]
+[Context: repository=<repo>, branch=<branch>]
 [Additional context if applicable: git diff output, file paths, etc.]
 
 Original prompt: <user's prompt>

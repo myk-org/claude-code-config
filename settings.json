@@ -105,7 +105,8 @@
     "github@claude-plugins-official": true,
     "myk-github@myk-org": true,
     "myk-qodo@myk-org": true,
-    "myk-review@myk-org": true
+    "myk-review@myk-org": true,
+    "myk-cursor@myk-org": true
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,

@@ -319,8 +319,8 @@ pre-commit run --all-files
 ## Contributing
 
 When adding or modifying plugins, agents, or features, ensure all markdown documentation files
-in the repository are updated to reflect the changes. See [`CLAUDE.md`](./CLAUDE.md) for
-the full list of files that must stay in sync.
+in the repository are updated to reflect the changes. In particular, [`CLAUDE.md`](./CLAUDE.md)
+and [`AI_REVIEW.md`](./AI_REVIEW.md) must stay in sync.
 
 ## Plugins
 

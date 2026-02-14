@@ -5,12 +5,12 @@
 # Core config files
 !.coderabbit.yaml
 !.gitignore
+!.markdownlint.yaml
 !LICENSE
 !AI_REVIEW.md
 !README.md
 !settings.json
 !statusline.sh
-!.markdownlint.yaml
 
 # agents/
 !agents/
