@@ -5,11 +5,12 @@
 # Core config files
 !.coderabbit.yaml
 !.gitignore
+!.markdownlint.yaml
+!LICENSE
 !AI_REVIEW.md
 !README.md
 !settings.json
 !statusline.sh
-!.markdownlint.yaml
 
 # agents/
 !agents/
@@ -86,6 +87,14 @@
 !plugins/
 !plugins/README.md
 
+# plugins/myk-cursor/
+!plugins/myk-cursor/
+!plugins/myk-cursor/.claude-plugin/
+!plugins/myk-cursor/.claude-plugin/plugin.json
+!plugins/myk-cursor/commands/
+!plugins/myk-cursor/commands/prompt.md
+!plugins/myk-cursor/README.md
+
 # plugins/myk-github/
 !plugins/myk-github/
 !plugins/myk-github/.claude-plugin/
@@ -124,14 +133,6 @@
 !plugins/myk-review/commands/local.md
 !plugins/myk-review/commands/query-db.md
 !plugins/myk-review/README.md
-
-# plugins/myk-cursor/
-!plugins/myk-cursor/
-!plugins/myk-cursor/.claude-plugin/
-!plugins/myk-cursor/.claude-plugin/plugin.json
-!plugins/myk-cursor/commands/
-!plugins/myk-cursor/commands/prompt.md
-!plugins/myk-cursor/README.md
 
 # .claude-plugin/ (marketplace)
 !.claude-plugin/

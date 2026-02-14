@@ -250,7 +250,7 @@ User: "Add a new feature to handle user auth"
 
 ## Orchestrator Pattern Details
 
-The `CLAUDE.md` file defines an orchestrator pattern where:
+The [`CLAUDE.md`](./CLAUDE.md) file defines an orchestrator pattern where:
 
 1. The main Claude instance acts as a **manager/orchestrator**
 2. It delegates tasks to **specialist agents** based on the domain
@@ -275,7 +275,6 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ├── scripts/          # Helper scripts for hooks
 │   ├── git-protection.py         # Protects main branch, merged branches
 │   ├── my-notifier.sh            # Custom notifications
-│   ├── reply-to-pr-review.sh     # Reply to PR reviews
 │   ├── rule-enforcer.py          # Blocks orchestrator from using Edit/Write/Bash
 │   ├── rule-injector.py          # Auto-loads rules from rules/
 │   └── session-start-check.sh    # Validates required tools at session start
@@ -284,7 +283,8 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ├── statusline.sh     # Status line script
 ├── tox.toml          # Test configuration
 ├── pyproject.toml    # Python project config (ruff, mypy)
-└── .pre-commit-config.yaml  # Pre-commit hooks
+├── .pre-commit-config.yaml  # Pre-commit hooks
+└── LICENSE           # MIT License
 ```
 
 ## Development
@@ -316,31 +316,16 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+## Contributing
+
+When adding or modifying plugins, agents, or features, ensure all markdown documentation files
+in the repository are updated to reflect the changes. In particular, [`CLAUDE.md`](./CLAUDE.md)
+and [`AI_REVIEW.md`](./AI_REVIEW.md) must stay in sync.
+
 ## Plugins
 
-This repository provides plugins for Claude Code with specialized workflows.
-
-### Available Plugins
-
-| Plugin | Description | Commands |
-|--------|-------------|----------|
-| **myk-github** | GitHub operations | `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
-| **myk-review** | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
-| **myk-qodo** | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
-| **myk-cursor** | Cursor agent CLI integration | `/myk-cursor:prompt` |
-
-### Plugin Installation
-
-```bash
-# Add this repository as a marketplace
-/plugin marketplace add myk-org/claude-code-config
-
-# Install plugins
-/plugin install myk-github@myk-org
-/plugin install myk-review@myk-org
-/plugin install myk-qodo@myk-org
-/plugin install myk-cursor@myk-org
-```
+See [Quick Start (Plugins)](#quick-start-plugins) above for installation and available commands,
+or [plugins/README.md](./plugins/README.md) for detailed documentation.
 
 ### Prerequisites for github/review plugins
 
@@ -355,8 +340,6 @@ Or install from this repository:
 ```bash
 uv tool install git+https://github.com/myk-org/claude-code-config
 ```
-
-See [plugins/README.md](./plugins/README.md) for detailed plugin documentation.
 
 ## License
 

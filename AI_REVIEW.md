@@ -59,7 +59,7 @@ claude-code-config/
 │   │   ├── commands/          # /myk-qodo:review, /myk-qodo:describe, /myk-qodo:improve, /myk-qodo:ask
 │   │   ├── skills/            # Skill implementations
 │   │   └── README.md
-│   ├── myk-cursor/             # Cursor agent CLI plugin
+│   ├── myk-cursor/            # Cursor agent CLI plugin
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── commands/          # /myk-cursor:prompt
 │   │   └── README.md
@@ -94,7 +94,8 @@ claude-code-config/
 ├── .pre-commit-config.yaml    # Pre-commit hooks
 ├── .flake8                    # Flake8 configuration
 ├── README.md                  # Installation and setup guide
-└── AI_REVIEW.md               # This file - AI review tool context
+├── AI_REVIEW.md               # This file - AI review tool context
+└── LICENSE                    # MIT License
 ```
 
 ---
