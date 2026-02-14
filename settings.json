@@ -108,6 +108,7 @@
     "myk-review@myk-org": true
   },
   "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
   "_scriptsNote": "Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.",
   "allowedTools": [
     "Edit(/tmp/claude/**)",
