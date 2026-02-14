@@ -125,6 +125,14 @@
 !plugins/myk-review/commands/query-db.md
 !plugins/myk-review/README.md
 
+# plugins/myk-cursor/
+!plugins/myk-cursor/
+!plugins/myk-cursor/.claude-plugin/
+!plugins/myk-cursor/.claude-plugin/plugin.json
+!plugins/myk-cursor/commands/
+!plugins/myk-cursor/commands/prompt.md
+!plugins/myk-cursor/README.md
+
 # .claude-plugin/ (marketplace)
 !.claude-plugin/
 !.claude-plugin/marketplace.json

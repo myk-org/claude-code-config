@@ -9,6 +9,7 @@ This directory contains Claude Code plugins that can be installed via the plugin
 | **[myk-github](./myk-github/README.md)** | GitHub operations | `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
 | **[myk-review](./myk-review/README.md)** | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
 | **[myk-qodo](./myk-qodo/README.md)** | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
+| **[myk-cursor](./myk-cursor/README.md)** | Cursor agent CLI integration | `/myk-cursor:prompt` |
 
 ## Installation
 
@@ -22,6 +23,7 @@ This directory contains Claude Code plugins that can be installed via the plugin
 /plugin install myk-github@myk-org    # GitHub operations
 /plugin install myk-review@myk-org    # Local review operations
 /plugin install myk-qodo@myk-org      # Qodo AI code review
+/plugin install myk-cursor@myk-org    # Cursor agent CLI
 ```
 
 ### Prerequisites for github/review plugins

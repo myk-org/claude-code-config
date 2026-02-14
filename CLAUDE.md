@@ -59,6 +59,10 @@ claude-code-config/
 │   │   ├── commands/          # /myk-qodo:review, /myk-qodo:describe, /myk-qodo:improve, /myk-qodo:ask
 │   │   ├── skills/            # Skill implementations
 │   │   └── README.md
+│   ├── myk-cursor/             # Cursor agent CLI plugin
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── commands/          # /myk-cursor:prompt
+│   │   └── README.md
 │   └── README.md              # Plugin development guide
 │
 ├── rules/                     # Orchestrator rules (AUTO-LOADED)
@@ -209,6 +213,7 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 | `myk-github` | GitHub operations | `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
 | `myk-review` | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
 | `myk-qodo` | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
+| `myk-cursor` | Cursor agent CLI integration | `/myk-cursor:prompt` |
 
 **Plugin Location:** `plugins/` directory
 

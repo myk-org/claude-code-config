@@ -63,6 +63,12 @@ When invoked:
 - If CLAUDE.md says "never do X" - finding X is CRITICAL
 - If CLAUDE.md says "always do Y" - missing Y is CRITICAL
 
+**Documentation Completeness (WARNING Priority):**
+
+- When changes add, remove, or rename plugins, agents, commands, or features, verify that all relevant markdown files in the repository are updated to reflect those changes
+- This includes README files, project documentation, and any markdown file that references the changed components
+- Missing documentation updates are WARNING severity
+
 ## CRITICAL: Findings Must Be Actionable
 
 **ONLY include findings that require action.** Never include positive confirmations.

@@ -40,6 +40,9 @@ The easiest way to use this repository's features is via plugins:
 
 # Qodo AI code review integration
 /plugin install myk-qodo@myk-org
+
+# Cursor agent CLI integration
+/plugin install myk-cursor@myk-org
 ```
 
 ### 3. Install CLI (for github and review plugins)
@@ -67,6 +70,7 @@ uv tool install git+https://github.com/myk-org/claude-code-config
 | myk-qodo | `/myk-qodo:describe` | Generate PR descriptions |
 | myk-qodo | `/myk-qodo:improve` | Get improvement suggestions |
 | myk-qodo | `/myk-qodo:ask` | Ask questions about code |
+| myk-cursor | `/myk-cursor:prompt` | Run one-shot prompts via Cursor agent CLI |
 
 > **For full orchestrator pattern with agents and hooks**, see [Full Installation](#installation) below.
 
@@ -100,7 +104,7 @@ Your symlinks will automatically point to the updated files.
 
 ## What's Included
 
-- **3 plugins** with 9 commands (myk-github, myk-review, myk-qodo)
+- **4 plugins** with 10 commands (myk-github, myk-review, myk-qodo, myk-cursor)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
 - **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **1 skill** for context-aware automation
@@ -263,7 +267,7 @@ The `CLAUDE.md` file defines an orchestrator pattern where:
 ```text
 ~/.claude/
 ├── agents/           # Specialist agent definitions
-├── plugins/          # Plugin definitions (myk-github, myk-review, myk-qodo)
+├── plugins/          # Plugin definitions (myk-github, myk-review, myk-qodo, myk-cursor)
 ├── skills/           # Skills (auto-invoked based on context)
 │   └── agent-browser/
 │       └── SKILL.md
@@ -323,6 +327,7 @@ This repository provides plugins for Claude Code with specialized workflows.
 | **myk-github** | GitHub operations | `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
 | **myk-review** | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
 | **myk-qodo** | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
+| **myk-cursor** | Cursor agent CLI integration | `/myk-cursor:prompt` |
 
 ### Plugin Installation
 
@@ -334,6 +339,7 @@ This repository provides plugins for Claude Code with specialized workflows.
 /plugin install myk-github@myk-org
 /plugin install myk-review@myk-org
 /plugin install myk-qodo@myk-org
+/plugin install myk-cursor@myk-org
 ```
 
 ### Prerequisites for github/review plugins
