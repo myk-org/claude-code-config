@@ -526,6 +526,72 @@ def fetch_review_comments(owner: str, repo: str, pr_number: str, review_id: str)
     ]
 
 
+def fetch_qodo_issue_comments(owner: str, repo: str, pr_number: str) -> list[dict[str, Any]]:
+    """Fetch Qodo issue comments and parse individual suggestions.
+
+    Qodo's /improve and /review workflows post suggestions as PR issue comments
+    (not review threads). This function fetches those comments, parses them,
+    and returns each suggestion as a separate thread-like item.
+
+    Returns:
+        List of thread-like dicts, one per parsed suggestion.
+    """
+    from myk_claude_tools.reviews.qodo_parser import parse_qodo_comment  # noqa: PLC0415
+
+    endpoint = f"/repos/{owner}/{repo}/issues/{pr_number}/comments"
+    comments = run_gh_api(endpoint, paginate=True)
+
+    if comments is None:
+        print_stderr("Warning: Could not fetch issue comments")
+        return []
+
+    if not isinstance(comments, list):
+        print_stderr("Warning: Unexpected issue comments response shape (expected list)")
+        return []
+
+    results: list[dict[str, Any]] = []
+    for comment in comments:
+        author = comment.get("user", {}).get("login") if comment.get("user") else None
+        if author not in QODO_USERS:
+            continue
+
+        body = comment.get("body", "")
+        suggestions = parse_qodo_comment(body)
+        if not suggestions:
+            continue
+
+        comment_id = comment.get("id")
+        if comment_id is None:
+            continue
+
+        try:
+            comment_id = int(comment_id)
+        except (TypeError, ValueError):
+            continue
+
+        node_id = comment.get("node_id")
+
+        for idx, suggestion in enumerate(suggestions):
+            thread_item: dict[str, Any] = {
+                "thread_id": None,
+                "node_id": node_id,
+                "comment_id": comment_id,
+                "author": author,
+                "path": suggestion.get("path"),
+                "line": suggestion.get("line"),
+                "end_line": suggestion.get("end_line"),
+                "body": suggestion.get("body", ""),
+                "replies": [],
+                "type": "issue_comment_suggestion",
+                "issue_comment_id": comment_id,
+                "suggestion_index": idx,
+                "qodo_type": suggestion.get("qodo_type"),
+            }
+            results.append(thread_item)
+
+    return results
+
+
 def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str) -> dict[str, list[dict[str, Any]]]:
     """Process threads: add source and priority, categorize, and auto-skip previously dismissed."""
     human: list[dict[str, Any]] = []
@@ -612,6 +678,13 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
 
 def get_thread_key(thread: dict[str, Any]) -> str | None:
     """Generate a unique key for deduplication."""
+    # Issue comment suggestions use composite key (multiple suggestions per comment)
+    if thread.get("type") == "issue_comment_suggestion":
+        issue_comment_id = thread.get("issue_comment_id")
+        suggestion_index = thread.get("suggestion_index")
+        if issue_comment_id is not None and suggestion_index is not None:
+            return f"ic:{issue_comment_id}:{suggestion_index}"
+
     thread_id = thread.get("thread_id")
     if thread_id:
         return f"t:{thread_id}"
@@ -685,6 +758,13 @@ def run(review_url: str = "") -> int:
         all_threads = fetch_unresolved_threads(owner, repo, pr_number)
         print_stderr(f"Found {len(all_threads)} unresolved thread(s)")
 
+        # Fetch Qodo issue comments (suggestions posted as issue comments, not review threads)
+        print_stderr("Fetching Qodo issue comments...")
+        qodo_issue_threads = fetch_qodo_issue_comments(owner, repo, pr_number)
+        if qodo_issue_threads:
+            print_stderr(f"Found {len(qodo_issue_threads)} Qodo issue comment suggestion(s)")
+            all_threads = merge_threads(all_threads, qodo_issue_threads)
+
         # If review URL provided, also fetch specific thread(s)
         specific_threads: list[dict[str, Any]] = []
         if review_url:
@@ -705,7 +785,9 @@ def run(review_url: str = "") -> int:
 
             # Match issuecomment-NNN
             elif re.search(r"issuecomment-(\d+)", review_url):
-                print_stderr("Note: Issue comments (#issuecomment-*) are not review threads, skipping specific fetch")
+                print_stderr(
+                    "Note: Qodo issue comments are auto-fetched; specific issuecomment URL is informational only"
+                )
 
             # Match raw numeric review ID
             elif review_url.isdigit():

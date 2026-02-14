@@ -1059,3 +1059,280 @@ class TestEdgeCases:
         assert str(Path(json_path).resolve()) in captured.out
         assert "Failed:" in captured.err
         assert "Failed:" not in captured.out
+
+
+# =============================================================================
+# Tests for post_issue_comment()
+# =============================================================================
+
+
+class TestPostIssueComment:
+    """Tests for post_issue_comment()."""
+
+    @patch("subprocess.run")
+    def test_successful_post(self, mock_run: Any) -> None:
+        """Successful post should return True."""
+        mock_run.return_value = MagicMock(returncode=0, stdout='{"id": 123}', stderr="")
+
+        result = post_review_replies.post_issue_comment("owner", "repo", 42, "Test body")
+
+        assert result is True
+        call_args = mock_run.call_args[0][0]
+        assert "/repos/owner/repo/issues/42/comments" in call_args[2]
+        assert "--input" in call_args
+        assert "-" in call_args
+        assert "--method" in call_args
+        assert "POST" in call_args
+        # Body should be passed via stdin as JSON
+        call_kwargs = mock_run.call_args[1]
+        payload = json.loads(call_kwargs["input"])
+        assert payload["body"] == "Test body"
+
+    @patch("subprocess.run")
+    def test_failed_post(self, mock_run: Any) -> None:
+        """Failed post should return False."""
+        mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="auth error")
+
+        result = post_review_replies.post_issue_comment("owner", "repo", 42, "Test body")
+
+        assert result is False
+
+    @patch("subprocess.run")
+    def test_truncates_long_body(self, mock_run: Any) -> None:
+        """Long body should be truncated."""
+        mock_run.return_value = MagicMock(returncode=0, stdout='{"id": 123}', stderr="")
+
+        long_body = "x" * 70000
+        post_review_replies.post_issue_comment("owner", "repo", 42, long_body)
+
+        # Body should be passed via stdin as JSON with truncated content
+        call_kwargs = mock_run.call_args[1]
+        payload = json.loads(call_kwargs["input"])
+        body = payload["body"]
+        assert len(body) <= 60000 + len("\n...[truncated]")
+        assert body.endswith("...[truncated]")
+
+
+# =============================================================================
+# Tests for build_issue_comment_reply()
+# =============================================================================
+
+
+class TestBuildIssueCommentReply:
+    """Tests for build_issue_comment_reply()."""
+
+    def test_formats_markdown_table(self) -> None:
+        """Should format suggestions as markdown table."""
+        suggestions = [
+            {"path": "file.py", "status": "addressed", "reply": "Fixed the issue", "suggestion_index": 0},
+            {"path": "other.py", "status": "skipped", "reply": "Not applicable", "suggestion_index": 1},
+        ]
+
+        result = post_review_replies.build_issue_comment_reply(
+            suggestions, "https://github.com/o/r/pull/1#issuecomment-100"
+        )
+
+        assert "| 1 | `file.py` | addressed | Fixed the issue |" in result
+        assert "| 2 | `other.py` | skipped | Not applicable |" in result
+        assert "[Qodo suggestions]" in result
+
+    def test_handles_missing_path(self) -> None:
+        """Missing path should show dash."""
+        suggestions = [{"path": None, "status": "addressed", "reply": "Done"}]
+
+        result = post_review_replies.build_issue_comment_reply(suggestions, "https://example.com")
+
+        assert "| 1 | `\u2014` | addressed | Done |" in result
+
+    def test_escapes_pipes_in_reply(self) -> None:
+        """Pipes in reply should be escaped for markdown."""
+        suggestions = [{"path": "f.py", "status": "addressed", "reply": "a | b | c"}]
+
+        result = post_review_replies.build_issue_comment_reply(suggestions, "https://example.com")
+
+        assert "a \\| b \\| c" in result
+
+    def test_truncates_long_replies(self) -> None:
+        """Long replies should be truncated in table."""
+        long_reply = "x" * 200
+        suggestions = [{"path": "f.py", "status": "addressed", "reply": long_reply}]
+
+        result = post_review_replies.build_issue_comment_reply(suggestions, "https://example.com")
+
+        # Should be truncated with ...
+        assert "..." in result
+        # Should not contain the full 200-char reply
+        assert long_reply not in result
+
+
+# =============================================================================
+# Tests for issue comment handling in run()
+# =============================================================================
+
+
+class TestIssueCommentHandling:
+    """Tests for issue comment suggestion handling in run()."""
+
+    def _create_test_json(self, tmp_path: Path, threads: dict[str, list[dict[str, Any]]]) -> Path:
+        """Helper to create test JSON file."""
+        json_path = tmp_path / "reviews.json"
+        data = {
+            "metadata": {"owner": "test-owner", "repo": "test-repo", "pr_number": 123},
+            **threads,
+        }
+        json_path.write_text(json.dumps(data))
+        return json_path
+
+    @patch.object(post_review_replies, "post_issue_comment")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_issue_comment_suggestions_batch_posted(
+        self, mock_deps: Any, mock_post: Any, mock_ic_post: Any, tmp_path: Path
+    ) -> None:
+        """Issue comment suggestions should be batch-posted per comment."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        mock_ic_post.return_value = True
+
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [
+                    {
+                        "thread_id": None,
+                        "type": "issue_comment_suggestion",
+                        "issue_comment_id": 100,
+                        "suggestion_index": 0,
+                        "status": "addressed",
+                        "reply": "Fixed",
+                        "path": "file.py",
+                    },
+                    {
+                        "thread_id": None,
+                        "type": "issue_comment_suggestion",
+                        "issue_comment_id": 100,
+                        "suggestion_index": 1,
+                        "status": "skipped",
+                        "skip_reason": "Not needed",
+                        "reply": "Skipped: Not needed",
+                        "path": "other.py",
+                    },
+                ],
+                "coderabbit": [],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        # Should NOT use thread reply (thread_id is None, type is issue_comment_suggestion)
+        mock_post.assert_not_called()
+        # Should batch-post one issue comment for all suggestions from same comment
+        mock_ic_post.assert_called_once()
+
+    @patch.object(post_review_replies, "post_issue_comment")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_pending_issue_comment_suggestions_skipped(
+        self, mock_deps: Any, mock_post: Any, mock_ic_post: Any, tmp_path: Path
+    ) -> None:
+        """Pending issue comment suggestions should not trigger batch posting."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [
+                    {
+                        "thread_id": None,
+                        "type": "issue_comment_suggestion",
+                        "issue_comment_id": 100,
+                        "suggestion_index": 0,
+                        "status": "pending",
+                        "path": "file.py",
+                    },
+                ],
+                "coderabbit": [],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        mock_post.assert_not_called()
+        mock_ic_post.assert_not_called()
+
+    @patch.object(post_review_replies, "post_issue_comment")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_issue_comment_no_resolution(
+        self, mock_deps: Any, mock_post: Any, mock_ic_post: Any, tmp_path: Path
+    ) -> None:
+        """Issue comment suggestions should never trigger thread resolution."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        mock_ic_post.return_value = True
+
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [
+                    {
+                        "thread_id": None,
+                        "type": "issue_comment_suggestion",
+                        "issue_comment_id": 200,
+                        "suggestion_index": 0,
+                        "status": "addressed",
+                        "reply": "Done",
+                        "path": "file.py",
+                    },
+                ],
+                "coderabbit": [],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        # No thread replies or resolutions should happen
+        mock_post.assert_not_called()
+
+    @patch.object(post_review_replies, "post_issue_comment")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_issue_comment_batch_post_failure_exits_with_error(
+        self, mock_deps: Any, mock_post: Any, mock_ic_post: Any, tmp_path: Path
+    ) -> None:
+        """Failed batch post should increment fail count and exit with error."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        mock_ic_post.return_value = False
+
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [
+                    {
+                        "thread_id": None,
+                        "type": "issue_comment_suggestion",
+                        "issue_comment_id": 100,
+                        "suggestion_index": 0,
+                        "status": "addressed",
+                        "reply": "Fixed",
+                        "path": "file.py",
+                    },
+                ],
+                "coderabbit": [],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 1
+        mock_post.assert_not_called()
+        mock_ic_post.assert_called_once()

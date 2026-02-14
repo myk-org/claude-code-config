@@ -65,6 +65,7 @@
 !tests/test_git_protection.py
 !tests/test_get_all_reviews.py
 !tests/test_post_review_replies.py
+!tests/test_qodo_parser.py
 !tests/test_review_db.py
 !tests/test_rule_enforcer.py
 !tests/test_store_reviews_to_db.py
@@ -153,4 +154,5 @@
 !myk_claude_tools/reviews/commands.py
 !myk_claude_tools/reviews/fetch.py
 !myk_claude_tools/reviews/post.py
+!myk_claude_tools/reviews/qodo_parser.py
 !myk_claude_tools/reviews/store.py

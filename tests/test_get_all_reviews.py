@@ -747,6 +747,18 @@ class TestGetThreadKey:
         thread = {"thread_id": "", "node_id": "", "comment_id": 789}
         assert get_all_reviews.get_thread_key(thread) == "c:789"
 
+    def test_issue_comment_suggestion_key(self) -> None:
+        """Issue comment suggestion should use composite key."""
+        thread = {
+            "type": "issue_comment_suggestion",
+            "issue_comment_id": 100,
+            "suggestion_index": 2,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 100,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "ic:100:2"
+
 
 class TestMergeThreads:
     """Tests for merge_threads() deduplication."""
@@ -1092,3 +1104,127 @@ class TestGetPrInfoWithUrl:
         ]
         with pytest.raises(SystemExit):
             get_all_reviews.get_pr_info()
+
+
+# =============================================================================
+# Tests for fetch_qodo_issue_comments()
+# =============================================================================
+
+
+class TestFetchQodoIssueComments:
+    """Tests for fetch_qodo_issue_comments()."""
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_filters_by_qodo_author(self, mock_api: Any) -> None:
+        """Only Qodo comments should be processed."""
+        mock_api.return_value = [
+            {"id": 1, "node_id": "n1", "user": {"login": "random-user"}, "body": "Not qodo"},
+            {
+                "id": 2,
+                "node_id": "n2",
+                "user": {"login": "qodo-code-review[bot]"},
+                "body": "## PR Code Suggestions\n...",
+            },
+        ]
+
+        with patch("myk_claude_tools.reviews.qodo_parser.parse_qodo_comment", return_value=[]) as mock_parse:
+            result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        # parse_qodo_comment should only be called for Qodo comments
+        mock_parse.assert_called_once()
+        assert result == []
+
+    @patch("myk_claude_tools.reviews.qodo_parser.parse_qodo_comment")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_maps_suggestions_to_threads(self, mock_api: Any, mock_parse: Any) -> None:
+        """Each parsed suggestion should become a separate thread item."""
+        mock_api.return_value = [
+            {"id": 100, "node_id": "IC_abc", "user": {"login": "qodo-code-review[bot]"}, "body": "test body"},
+        ]
+        mock_parse.return_value = [
+            {
+                "title": "Fix A",
+                "path": "file.py",
+                "line": 10,
+                "end_line": 20,
+                "body": "Fix body",
+                "qodo_type": "improve",
+            },
+            {
+                "title": "Fix B",
+                "path": "other.py",
+                "line": 5,
+                "end_line": None,
+                "body": "Other body",
+                "qodo_type": "improve",
+            },
+        ]
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert len(result) == 2
+        assert result[0]["type"] == "issue_comment_suggestion"
+        assert result[0]["issue_comment_id"] == 100
+        assert result[0]["suggestion_index"] == 0
+        assert result[0]["path"] == "file.py"
+        assert result[0]["thread_id"] is None
+        assert result[1]["suggestion_index"] == 1
+        assert result[1]["path"] == "other.py"
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_api_failure(self, mock_api: Any) -> None:
+        """API failure should return empty list."""
+        mock_api.return_value = None
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_no_qodo_comments(self, mock_api: Any) -> None:
+        """No Qodo comments should return empty list."""
+        mock_api.return_value = [
+            {"id": 1, "node_id": "n1", "user": {"login": "human-reviewer"}, "body": "LGTM"},
+        ]
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_empty_comments(self, mock_api: Any) -> None:
+        """Empty comments list should return empty list."""
+        mock_api.return_value = []
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_non_list_response(self, mock_api: Any) -> None:
+        """Non-list API response should return empty list."""
+        mock_api.return_value = {"error": "unexpected"}
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch("myk_claude_tools.reviews.qodo_parser.parse_qodo_comment")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_skips_comments_without_id(self, mock_api: Any, mock_parse: Any) -> None:
+        """Comments without an ID should be skipped."""
+        mock_api.return_value = [
+            {
+                "id": None,
+                "node_id": "n1",
+                "user": {"login": "qodo-code-review[bot]"},
+                "body": "## PR Code Suggestions",
+            },
+        ]
+        mock_parse.return_value = [
+            {"title": "Test", "path": "f.py", "line": 1, "end_line": 2, "body": "test", "qodo_type": "improve"}
+        ]
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert result == []

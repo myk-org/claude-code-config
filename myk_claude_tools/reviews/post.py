@@ -154,6 +154,74 @@ def resolve_thread(thread_id: str) -> bool:
     return True
 
 
+def post_issue_comment(owner: str, repo: str, pr_number: int | str, body: str) -> bool:
+    """Post a new issue comment on a PR.
+
+    Used for replying to Qodo issue comment suggestions, which cannot be
+    replied to as review threads.
+
+    Returns True on success, False on failure.
+    """
+    # Truncate body if too long
+    max_len = 60000
+    if len(body) > max_len:
+        body = body[:max_len] + "\n...[truncated]"
+
+    endpoint = f"/repos/{owner}/{repo}/issues/{pr_number}/comments"
+    cmd = ["gh", "api", endpoint, "--method", "POST", "--input", "-"]
+    payload = json.dumps({"body": body})
+
+    try:
+        result = subprocess.run(cmd, input=payload, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        eprint("Error: Issue comment post timed out after 120 seconds")
+        return False
+
+    if result.returncode != 0:
+        stderr = result.stderr or ""
+        eprint(f"Error posting issue comment: {stderr.strip()}")
+        return False
+
+    return True
+
+
+def build_issue_comment_reply(
+    suggestions: list[dict[str, Any]],
+    original_comment_url: str,
+) -> str:
+    """Build a markdown reply summarizing decisions for Qodo issue comment suggestions.
+
+    Groups all suggestions from one Qodo comment and formats them as a table
+    with status and reply for each.
+
+    Args:
+        suggestions: List of thread dicts with status/reply populated.
+        original_comment_url: URL to the original Qodo comment.
+
+    Returns:
+        Markdown-formatted reply body.
+    """
+    lines: list[str] = []
+    lines.append(f"### Review of [Qodo suggestions]({original_comment_url})\n")
+    lines.append("| # | Path | Status | Reply |")
+    lines.append("|---|------|--------|-------|")
+
+    for s in suggestions:
+        i = s.get("suggestion_index", 0) + 1  # 1-indexed for display
+        path = s.get("path") or "\u2014"
+        path = path.replace("`", "'")
+        status = s.get("status", "pending")
+        reply = s.get("reply", "") or ""
+        # Escape markdown-breaking characters in reply for table
+        reply = reply.replace("|", "\\|").replace("\n", " ").replace("`", "'")
+        # Truncate long replies in table (after escaping to avoid breaking escape sequences)
+        if len(reply) > 100:
+            reply = reply[:97] + "..."
+        lines.append(f"| {i} | `{path}` | {status} | {reply} |")
+
+    return "\n".join(lines)
+
+
 def lookup_thread_id_from_node_id(node_id: str) -> str | None:
     """Look up thread_id from a review comment node_id via GraphQL.
 
@@ -307,6 +375,9 @@ def run(json_path: str) -> None:
     replied_not_resolved_count = 0
     already_posted_count = 0
 
+    # Track issue comment suggestions for batch posting
+    issue_comment_groups: dict[int, list[tuple[str, int, dict[str, Any]]]] = {}
+
     # Track updates for atomic application
     updates: list[dict[str, Any]] = []
 
@@ -330,6 +401,23 @@ def run(json_path: str) -> None:
             posted_at = thread_data.get("posted_at", "") or ""
             resolved_at = thread_data.get("resolved_at", "") or ""
             path = thread_data.get("path", "unknown") or "unknown"
+
+            # Issue comment suggestions are handled via batch posting, not thread resolution
+            if thread_data.get("type") == "issue_comment_suggestion":
+                # Skip if already posted
+                if thread_data.get("posted_at"):
+                    already_posted_count += 1
+                    eprint(f"Skipping {category}[{i}] ({path}): issue comment suggestion already posted")
+                    continue
+                raw_ic_id = thread_data.get("issue_comment_id")
+                if raw_ic_id is not None:
+                    try:
+                        ic_id = int(raw_ic_id)
+                    except (TypeError, ValueError):
+                        eprint(f"Warning: Skipping {category}[{i}] ({path}): invalid issue_comment_id: {raw_ic_id!r}")
+                        continue
+                    issue_comment_groups.setdefault(ic_id, []).append((category, i, thread_data))
+                continue
 
             # Determine if we should resolve this thread (MUST be before resolve_only_retry check)
             should_resolve = True
@@ -436,6 +524,39 @@ def run(json_path: str) -> None:
                     updates.append({"cat": category, "idx": i, "field": "posted_at", "ts": posted_at_timestamp})
                 replied_not_resolved_count += 1
                 eprint(f"Replied to {category}[{i}] ({path}) (not resolved)")
+
+    # Batch-post replies for issue comment suggestions
+    ic_posted_count = 0
+    ic_skipped_count = 0
+    if issue_comment_groups:
+        eprint(f"\nProcessing {len(issue_comment_groups)} Qodo issue comment(s) with suggestions...")
+        for ic_id, entries in issue_comment_groups.items():
+            # Check if any suggestions have actionable status
+            actionable: list[tuple[str, int, dict[str, Any]]] = []
+            for entry in entries:
+                if entry[2].get("status") not in ("pending", None):
+                    actionable.append(entry)
+            if not actionable:
+                ic_skipped_count += len(entries)
+                continue
+
+            # Build comment URL from metadata
+            comment_url = f"https://github.com/{owner}/{repo}/pull/{pr_number}#issuecomment-{ic_id}"
+
+            reply_body = build_issue_comment_reply([entry[2] for entry in actionable], comment_url)
+            if post_issue_comment(owner, repo, pr_number, reply_body):
+                ic_posted_count += len(actionable)
+                ts = get_utc_timestamp()
+                for entry in actionable:
+                    updates.append({"cat": entry[0], "idx": entry[1], "field": "posted_at", "ts": ts})
+                eprint(f"Posted summary reply for issue comment {ic_id} ({len(actionable)} suggestions)")
+            else:
+                failed_count += len(actionable)
+                eprint(f"Failed to post summary reply for issue comment {ic_id}")
+
+    # Report issue comment stats in summary
+    if ic_posted_count > 0 or ic_skipped_count > 0:
+        eprint(f"  Issue comment suggestions: {ic_posted_count} replied, {ic_skipped_count} pending")
 
     # Apply all JSON updates atomically
     apply_updates_to_json(json_path_obj, updates)
