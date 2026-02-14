@@ -173,6 +173,40 @@ class TestParseQodoComment:
         body = "## Some Other Section\n\nNot a Qodo comment."
         assert parse_qodo_comment(body) == []
 
+    def test_review_body_containing_improve_marker_in_code_block(self) -> None:
+        """A /review body that quotes the improve marker in a code block.
+
+        When a review comment's focus area contains a code block showing
+        parser source code with the literal string '## PR Code Suggestions',
+        the dispatcher should still route to the review parser (not improve)
+        because the body starts with '## PR Reviewer Guide'.
+        """
+        body = """\
+## PR Reviewer Guide 🔍
+
+<table>
+<tr><td>⚡&nbsp;<strong>Recommended focus areas for review</strong><br><br>
+
+<details><summary><a href='https://example.com'><strong>Dispatch Bug</strong></a>
+
+Description of the issue.
+</summary>
+
+```python
+if "## PR Code Suggestions" in body:
+    return parse_improve_comment(body)
+```
+
+</details>
+
+</td></tr>
+</table>
+"""
+        results = parse_qodo_comment(body)
+        assert len(results) == 1
+        assert results[0]["qodo_type"] == "review"
+        assert results[0]["title"] == "Dispatch Bug"
+
 
 # =============================================================================
 # Tests for parse_improve_comment() - /improve Parsing
@@ -393,6 +427,220 @@ ___
         assert len(results) == 1
         assert results[0]["importance"] is None
 
+    def test_noise_row_from_code_block_containing_tr_is_skipped(self) -> None:
+        """A <tr> inside a code block should not create a false suggestion row.
+
+        When a code example contains the literal text '<tr>', the regex split
+        creates a fragment that has <details><summary> (from the importance
+        metadata) but no ___ description marker.  This row must be skipped.
+        """
+        html = """\
+## PR Code Suggestions ✨
+
+<table><thead><tr><td><strong>Category</strong></td><td align=left>\
+<strong>Suggestion</strong></td><td align=center><strong>Impact</strong>\
+</td></tr><tbody><tr><td rowspan=1>High-level</td>
+<td>
+
+<details><summary>Use a dedicated parser</summary>
+
+___
+
+**Replace regex parsing with a library.**
+
+
+<details>
+<summary>
+<a href="https://github.com/example/pull/1/files#diffR17-R332">\
+src/parser.py [17-332]</a>
+</summary>
+
+```python
+rows = re.split(r"<tr>", body)
+for row in rows:
+    pass
+```
+</details>
+
+
+<details><summary>Suggestion importance[1-10]: 8</summary>
+
+__
+
+Why: Regex parsing is fragile.
+
+</details></details></td><td align=center>Medium
+
+</td></tr></tbody></table>
+"""
+        results = parse_improve_comment(html)
+        # Should get exactly 1 suggestion, not 2 (no noise from code block <tr>)
+        assert len(results) == 1
+        assert results[0]["title"] == "Use a dedicated parser"
+
+    def test_noise_row_importance_only_is_skipped(self) -> None:
+        """A row fragment with only importance metadata should not be parsed."""
+        html = """\
+## PR Code Suggestions ✨
+
+<table><tbody><tr>some code with <tr> in it
+
+<details><summary>Suggestion importance[1-10]: 8</summary>
+
+__
+
+Why: Some reason.
+
+</details></details></td><td align=center>Medium
+
+</td></tr></tbody></table>
+"""
+        results = parse_improve_comment(html)
+        # No ___ marker means this is not a real suggestion
+        assert len(results) == 0
+
+    def test_path_extracted_from_anchor_tag(self) -> None:
+        """Path should be extracted from <a> tag when markdown link is absent."""
+        html = """\
+## PR Code Suggestions ✨
+
+<table><tbody><tr><td rowspan=1>Enhancement</td>
+<td>
+
+<details><summary>Improve parsing</summary>
+
+___
+
+**Use a better approach.**
+
+<details>
+<summary>
+<a href="https://github.com/example/pull/1/files#diffR17-R50">\
+src/utils/parser.py [17-50]</a>
+</summary>
+
+```python
+# example code
+```
+</details>
+
+<details><summary>Suggestion importance[1-10]: 7</summary>
+
+__
+
+Why: Explanation.
+
+</details></details></td><td align=center>Medium
+
+</td></tr></tbody></table>
+"""
+        results = parse_improve_comment(html)
+        assert len(results) == 1
+        assert results[0]["path"] == "src/utils/parser.py"
+        assert results[0]["line"] == 17
+        assert results[0]["end_line"] == 50
+
+    def test_path_anchor_tag_single_line(self) -> None:
+        """Path from <a> tag with single line number should be extracted."""
+        html = """\
+## PR Code Suggestions ✨
+
+<table><tbody><tr><td rowspan=1>Bug</td>
+<td>
+
+<details><summary>Fix null check</summary>
+
+___
+
+**Add null check.**
+
+<details>
+<summary>
+<a href="https://github.com/example/pull/1/files#diffR42">\
+src/handler.py [42]</a>
+</summary>
+
+```python
+if value is None:
+    return
+```
+</details>
+
+<details><summary>Suggestion importance[1-10]: 5</summary>
+
+</details></details></td><td align=center>Low
+
+</td></tr></tbody></table>
+"""
+        results = parse_improve_comment(html)
+        assert len(results) == 1
+        assert results[0]["path"] == "src/handler.py"
+        assert results[0]["line"] == 42
+        assert results[0]["end_line"] is None
+
+    def test_path_anchor_tag_no_lines(self) -> None:
+        """Path from <a> tag without line numbers should extract path only."""
+        html = """\
+## PR Code Suggestions ✨
+
+<table><tbody><tr><td rowspan=1>Enhancement</td>
+<td>
+
+<details><summary>Refactor module</summary>
+
+___
+
+**Split into smaller functions.**
+
+<details>
+<summary>
+<a href="https://github.com/example/pull/1/files#diff-abc">src/big_module.py</a>
+</summary>
+
+```python
+pass
+```
+</details>
+
+<details><summary>Suggestion importance[1-10]: 4</summary>
+
+</details></details></td><td align=center>Low
+
+</td></tr></tbody></table>
+"""
+        results = parse_improve_comment(html)
+        assert len(results) == 1
+        assert results[0]["path"] == "src/big_module.py"
+        assert results[0]["line"] is None
+        assert results[0]["end_line"] is None
+
+    def test_anchor_tag_non_path_text_ignored(self) -> None:
+        """<a> tag text without path-like content should not be used as path."""
+        html = """\
+## PR Code Suggestions ✨
+
+<table><tbody><tr><td rowspan=1>Enhancement</td>
+<td>
+
+<details><summary>Add feature</summary>
+
+___
+
+**Some description.**
+
+See <a href="https://example.com">click here</a> for more info.
+
+<details><summary>Suggestion importance[1-10]: 3</summary>
+
+</details></details></td><td align=center>Low
+
+</td></tr></tbody></table>
+"""
+        results = parse_improve_comment(html)
+        assert len(results) == 1
+        # "click here" has no dot or slash, should not be used as a path
+        assert results[0]["path"] is None
+
 
 # =============================================================================
 # Tests for parse_review_comment() - /review Parsing
@@ -481,6 +729,61 @@ class TestParseReviewComment:
         """Second focus area code block should contain flush=True."""
         results = parse_review_comment(REVIEW_HTML)
         assert "flush=True" in results[1]["body"]
+
+    def test_tool_usage_guide_is_excluded(self) -> None:
+        """The 'Tool usage guide' boilerplate should not be parsed as a focus area."""
+        html = """\
+## PR Reviewer Guide 🔍
+
+<table>
+<tr><td>⚡&nbsp;<strong>Recommended focus areas for review</strong><br><br>
+
+<details><summary><a href='https://example.com'><strong>Real Focus Area</strong></a>
+
+Some real description here.
+</summary>
+
+```python
+print("real code")
+```
+
+</details>
+
+</td></tr>
+</table>
+<hr>
+
+<details> <summary><strong>Tool usage guide:</strong></summary><hr>
+
+**Overview:**
+The `review` tool scans the PR code changes.
+
+- When commenting, use the following template:
+```
+/review --pr_reviewer.some_config1=...
+```
+- With a configuration file:
+```
+[pr_reviewer]
+some_config1=...
+```
+
+See the review usage page for a comprehensive guide.
+
+</details>
+"""
+        results = parse_review_comment(html)
+        assert len(results) == 1
+        assert results[0]["title"] == "Real Focus Area"
+        # Verify the tool usage guide title is not in any result
+        titles = [r["title"] for r in results]
+        assert all("Tool usage guide" not in t for t in titles)
+
+    def test_review_without_tool_guide_still_works(self) -> None:
+        """Review body without tool usage guide should parse normally."""
+        # The existing REVIEW_HTML fixture has no tool usage guide
+        results = parse_review_comment(REVIEW_HTML)
+        assert len(results) == 2
 
 
 # =============================================================================

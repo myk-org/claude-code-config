@@ -26,11 +26,16 @@ def parse_qodo_comment(body: str) -> list[dict[str, Any]]:
     if not body:
         return []
 
+    # Check the body start (first non-blank line) to determine format.
+    # We cannot simply use `"marker" in body` because review comments may
+    # contain code blocks that include the improve marker as literal text
+    # (e.g. showing the parser's own source code).
+    stripped = body.lstrip()
+    if stripped.startswith("## PR Reviewer Guide"):
+        return parse_review_comment(body)
+
     if "## PR Code Suggestions" in body:
         return parse_improve_comment(body)
-
-    if "## PR Reviewer Guide" in body:
-        return parse_review_comment(body)
 
     return []
 
@@ -61,6 +66,12 @@ _IMPROVE_PATH_RE = re.compile(
 
 _IMPROVE_PATH_NO_LINES_RE = re.compile(
     r"\[(?P<path>[^\]\[]+?)\]\((?P<url>[^)]+)\)",
+)
+
+# Fallback: path inside an <a> tag (e.g. Qodo "Examples" sections)
+# Matches: <a href="...">path/to/file.py [10-20]</a>
+_IMPROVE_PATH_ANCHOR_RE = re.compile(
+    r'<a\s+href="[^"]*">(?P<text>[^<]+)</a>',
 )
 
 _IMPROVE_DIFF_RE = re.compile(
@@ -142,6 +153,14 @@ def parse_improve_comment(body: str) -> list[dict[str, Any]]:
         if _APPLIED_SUGGESTION_RE.search(row):
             continue
 
+        # Skip rows without the ___ description marker.
+        # Every genuine Qodo suggestion has a "___" separator before the
+        # description.  Rows that lack it are fragments created by false
+        # <tr> splits inside code blocks (e.g. code examples that contain
+        # the literal text "<tr>").
+        if "___" not in row:
+            continue
+
         # --- Category ---
         category: str | None = None
         cat_match = _CATEGORY_RE.search(row)
@@ -181,6 +200,17 @@ def parse_improve_comment(body: str) -> list[dict[str, Any]]:
             path_match_no_lines = _IMPROVE_PATH_NO_LINES_RE.search(row)
             if path_match_no_lines:
                 path = path_match_no_lines.group("path").strip()
+
+        # Fallback: try extracting path from <a> tag (e.g. Qodo "Examples"
+        # sections where the link uses HTML anchor format instead of Markdown)
+        if not path:
+            anchor_match = _IMPROVE_PATH_ANCHOR_RE.search(row)
+            if anchor_match:
+                anchor_text = anchor_match.group("text").strip()
+                # Only accept if it looks like a file path (contains a dot
+                # or slash) to avoid matching random anchor text.
+                if "/" in anchor_text or "." in anchor_text:
+                    path, start_line, end_line = _extract_path_from_link_text(anchor_text)
 
         # --- Diff ---
         diff: str | None = None
@@ -273,8 +303,15 @@ def parse_review_comment(body: str) -> list[dict[str, Any]]:
     if not focus_match:
         return []
 
-    # Extract from the focus-area marker to end of body
+    # Extract from the focus-area marker, stopping before boilerplate
+    # sections like the "Tool usage guide" that Qodo appends.
     focus_section = body[focus_match.start() :]
+
+    # Truncate at the tool usage guide to avoid parsing it as a focus area
+    tool_guide_marker = "Tool usage guide"
+    tool_guide_idx = focus_section.find(tool_guide_marker)
+    if tool_guide_idx != -1:
+        focus_section = focus_section[:tool_guide_idx]
 
     results: list[dict[str, Any]] = []
 
