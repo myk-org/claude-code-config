@@ -44,21 +44,44 @@ Execute the Cursor agent CLI with JSON output:
 **With model specified:**
 
 ```bash
-agent --print --trust --output-format json --model <model> '<escaped_prompt>'
+agent --print --output-format json --model <model> '<escaped_prompt>'
 ```
 
 **Without model (uses Cursor default):**
 
 ```bash
-agent --print --trust --output-format json '<escaped_prompt>'
+agent --print --output-format json '<escaped_prompt>'
 ```
 
 **Shell safety:** Single-quote the prompt to prevent shell expansion. Replace any single quotes in the prompt with `'\''` before interpolation.
 
 **Timeout:** Set the Bash tool timeout to 300000ms (5 minutes) to prevent the command from hanging indefinitely.
 
-**Warning:** The `--trust` flag grants Cursor full read/write access to the current workspace without a confirmation prompt.
-This is required for file-aware prompts to work.
+If the command fails, check Step 3b for trust errors before falling through to Step 4 error handling.
+
+### Step 3b: Handle Trust Errors
+
+If the command exits with a non-zero code and the error output contains trust-related phrases
+(e.g., "workspace trust", "not trusted", "trust the workspace"):
+
+1. Ask the user via AskUserQuestion:
+   "Cursor needs workspace trust to access project files.
+   Re-run with `--trust` flag? This grants full read/write workspace access."
+2. If user confirms, re-run the same command with `--trust` added:
+
+**With model specified:**
+
+```bash
+agent --print --trust --output-format json --model <model> '<escaped_prompt>'
+```
+
+**Without model:**
+
+```bash
+agent --print --trust --output-format json '<escaped_prompt>'
+```
+
+If user declines, display the original error and abort.
 
 ### Step 4: Parse and Display Result
 
