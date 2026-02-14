@@ -65,9 +65,9 @@
 !tests/test_git_protection.py
 !tests/test_get_all_reviews.py
 !tests/test_post_review_replies.py
+!tests/test_qodo_parser.py
 !tests/test_review_db.py
 !tests/test_rule_enforcer.py
-!tests/test_qodo_parser.py
 !tests/test_store_reviews_to_db.py
 
 # Config files

@@ -1199,3 +1199,32 @@ class TestFetchQodoIssueComments:
         result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
 
         assert result == []
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_non_list_response(self, mock_api: Any) -> None:
+        """Non-list API response should return empty list."""
+        mock_api.return_value = {"error": "unexpected"}
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch("myk_claude_tools.reviews.qodo_parser.parse_qodo_comment")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_skips_comments_without_id(self, mock_api: Any, mock_parse: Any) -> None:
+        """Comments without an ID should be skipped."""
+        mock_api.return_value = [
+            {
+                "id": None,
+                "node_id": "n1",
+                "user": {"login": "qodo-code-review[bot]"},
+                "body": "## PR Code Suggestions",
+            },
+        ]
+        mock_parse.return_value = [
+            {"title": "Test", "path": "f.py", "line": 1, "end_line": 2, "body": "test", "qodo_type": "improve"}
+        ]
+
+        result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
+
+        assert result == []

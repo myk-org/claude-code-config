@@ -545,6 +545,10 @@ def fetch_qodo_issue_comments(owner: str, repo: str, pr_number: str) -> list[dic
         print_stderr("Warning: Could not fetch issue comments")
         return []
 
+    if not isinstance(comments, list):
+        print_stderr("Warning: Unexpected issue comments response shape (expected list)")
+        return []
+
     results: list[dict[str, Any]] = []
     for comment in comments:
         author = comment.get("user", {}).get("login") if comment.get("user") else None
@@ -557,6 +561,14 @@ def fetch_qodo_issue_comments(owner: str, repo: str, pr_number: str) -> list[dic
             continue
 
         comment_id = comment.get("id")
+        if comment_id is None:
+            continue
+
+        try:
+            comment_id = int(comment_id)
+        except (TypeError, ValueError):
+            continue
+
         node_id = comment.get("node_id")
 
         for idx, suggestion in enumerate(suggestions):

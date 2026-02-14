@@ -46,6 +46,10 @@ def parse_qodo_comment(body: str) -> list[dict[str, Any]]:
 
 _APPLIED_SUGGESTION_RE = re.compile(r"<summary>\s*✅\s*")
 
+# Qodo's HTML sometimes renders category cells with the rowspan attribute
+# appearing as content text (e.g., "<td><br>rowspan=1><br>Enhancement</td>")
+# rather than as a proper HTML attribute. The (?:rowspan=\d+\s*>)? group
+# handles this malformed variant so the category text is extracted correctly.
 _CATEGORY_RE = re.compile(
     r"<td[^>]*>(?:\s*<br>)?\s*(?:rowspan=\d+\s*>)?(?:\s*<br>)?\s*([^<]+?)\s*</td>",
 )
@@ -278,6 +282,11 @@ _REVIEW_TITLE_RE = re.compile(
     r"<strong>(?P<title>[^<]+)</strong>",
 )
 
+_REVIEW_DESC_RE = re.compile(
+    r"</a>\s*\n?\s*(?P<desc>.+)",
+    re.DOTALL,
+)
+
 _REVIEW_CODE_BLOCK_RE = re.compile(
     r"```\w*\s*\n(?P<code>.+?)```",
     re.DOTALL,
@@ -332,7 +341,7 @@ def parse_review_comment(body: str) -> list[dict[str, Any]]:
         # --- Description ---
         # Text after </a> and before </summary> (within summary block)
         desc: str | None = None
-        desc_match = re.search(r"</a>\s*\n?\s*(?P<desc>.+)", summary, re.DOTALL)
+        desc_match = _REVIEW_DESC_RE.search(summary)
         if desc_match:
             raw_desc = desc_match.group("desc").strip()
             # Clean HTML tags

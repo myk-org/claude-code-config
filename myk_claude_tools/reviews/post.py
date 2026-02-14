@@ -168,10 +168,11 @@ def post_issue_comment(owner: str, repo: str, pr_number: int | str, body: str) -
         body = body[:max_len] + "\n...[truncated]"
 
     endpoint = f"/repos/{owner}/{repo}/issues/{pr_number}/comments"
-    cmd = ["gh", "api", endpoint, "-f", f"body={body}", "--method", "POST"]
+    cmd = ["gh", "api", endpoint, "--method", "POST", "--input", "-"]
+    payload = json.dumps({"body": body})
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(cmd, input=payload, capture_output=True, text=True, timeout=120)
     except subprocess.TimeoutExpired:
         eprint("Error: Issue comment post timed out after 120 seconds")
         return False
@@ -375,7 +376,7 @@ def run(json_path: str) -> None:
     already_posted_count = 0
 
     # Track issue comment suggestions for batch posting
-    issue_comment_groups: dict[int, list[dict[str, Any]]] = {}
+    issue_comment_groups: dict[int, list[tuple[str, int, dict[str, Any]]]] = {}
 
     # Track updates for atomic application
     updates: list[dict[str, Any]] = []
@@ -408,12 +409,13 @@ def run(json_path: str) -> None:
                     already_posted_count += 1
                     eprint(f"Skipping {category}[{i}] ({path}): issue comment suggestion already posted")
                     continue
-                ic_id = thread_data.get("issue_comment_id")
-                if ic_id is not None:
-                    # Store category and index for JSON updates
-                    thread_data["_cat"] = category
-                    thread_data["_idx"] = i
-                    issue_comment_groups.setdefault(ic_id, []).append(thread_data)
+                raw_ic_id = thread_data.get("issue_comment_id")
+                if raw_ic_id is not None:
+                    try:
+                        ic_id = int(raw_ic_id)
+                    except (TypeError, ValueError):
+                        continue
+                    issue_comment_groups.setdefault(ic_id, []).append((category, i, thread_data))
                 continue
 
             # Determine if we should resolve this thread (MUST be before resolve_only_retry check)
@@ -527,25 +529,25 @@ def run(json_path: str) -> None:
     ic_skipped_count = 0
     if issue_comment_groups:
         eprint(f"\nProcessing {len(issue_comment_groups)} Qodo issue comment(s) with suggestions...")
-        for ic_id, suggestions in issue_comment_groups.items():
+        for ic_id, entries in issue_comment_groups.items():
             # Check if any suggestions have actionable status
-            actionable = [s for s in suggestions if s.get("status") not in ("pending", None)]
+            actionable: list[tuple[str, int, dict[str, Any]]] = []
+            for entry in entries:
+                if entry[2].get("status") not in ("pending", None):
+                    actionable.append(entry)
             if not actionable:
-                ic_skipped_count += len(suggestions)
+                ic_skipped_count += len(entries)
                 continue
 
             # Build comment URL from metadata
             comment_url = f"https://github.com/{owner}/{repo}/pull/{pr_number}#issuecomment-{ic_id}"
 
-            reply_body = build_issue_comment_reply(actionable, comment_url)
+            reply_body = build_issue_comment_reply([entry[2] for entry in actionable], comment_url)
             if post_issue_comment(owner, repo, pr_number, reply_body):
                 ic_posted_count += len(actionable)
                 ts = get_utc_timestamp()
-                for s in actionable:
-                    cat = s.get("_cat")
-                    idx = s.get("_idx")
-                    if cat is not None and idx is not None:
-                        updates.append({"cat": cat, "idx": idx, "field": "posted_at", "ts": ts})
+                for entry in actionable:
+                    updates.append({"cat": entry[0], "idx": entry[1], "field": "posted_at", "ts": ts})
                 eprint(f"Posted summary reply for issue comment {ic_id} ({len(actionable)} suggestions)")
             else:
                 failed_count += len(actionable)

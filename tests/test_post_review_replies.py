@@ -1079,8 +1079,14 @@ class TestPostIssueComment:
         assert result is True
         call_args = mock_run.call_args[0][0]
         assert "/repos/owner/repo/issues/42/comments" in call_args[2]
+        assert "--input" in call_args
+        assert "-" in call_args
         assert "--method" in call_args
         assert "POST" in call_args
+        # Body should be passed via stdin as JSON
+        call_kwargs = mock_run.call_args[1]
+        payload = json.loads(call_kwargs["input"])
+        assert payload["body"] == "Test body"
 
     @patch("subprocess.run")
     def test_failed_post(self, mock_run: Any) -> None:
@@ -1099,16 +1105,12 @@ class TestPostIssueComment:
         long_body = "x" * 70000
         post_review_replies.post_issue_comment("owner", "repo", 42, long_body)
 
-        call_args = mock_run.call_args[0][0]
-        # Find the body argument
-        body_arg = None
-        for arg in call_args:
-            if isinstance(arg, str) and arg.startswith("body="):
-                body_arg = arg
-                break
-        assert body_arg is not None
-        # Body should be truncated (body= prefix + max_len + truncation suffix)
-        assert len(body_arg) <= 5 + 60000 + len("\n...[truncated]")
+        # Body should be passed via stdin as JSON with truncated content
+        call_kwargs = mock_run.call_args[1]
+        payload = json.loads(call_kwargs["input"])
+        body = payload["body"]
+        assert len(body) <= 60000 + len("\n...[truncated]")
+        assert body.endswith("...[truncated]")
 
 
 # =============================================================================
