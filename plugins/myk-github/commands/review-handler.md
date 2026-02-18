@@ -122,6 +122,16 @@ If the command exits with a non-zero code, some threads failed to post.
 The command prints an ACTION REQUIRED message with the exact retry command.
 Re-run it to retry — only unposted entries are retried. Repeat until all succeed.
 
+**Output verification (MANDATORY):**
+
+After `reviews post` completes successfully, check the output:
+
+- `Processed N threads` — N should equal the number of entries with status `addressed`, `not_addressed`, `skipped`, or `failed` (everything except `pending`)
+- If `Processed 0 threads`, the status values in the JSON are wrong — fix them to use valid values from the table above and re-run before proceeding
+- If output shows `Warning: Unknown status`, fix those entries — e.g., `"done"` or `"completed"` are not valid, use `"addressed"` instead
+
+Do NOT proceed to `reviews store` until `reviews post` shows the expected thread count.
+
 Store to database:
 
 ```bash
