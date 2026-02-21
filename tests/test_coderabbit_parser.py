@@ -334,6 +334,29 @@ class TestParseOutsideDiffComments:
         result = parse_outside_diff_comments(body)
         assert result == []
 
+    def test_outside_section_without_count(self) -> None:
+        """Should parse even if the count is missing from the summary."""
+        body = (
+            "> <details>\n"
+            "> <summary>\u26a0\ufe0f Outside diff range comments</summary><blockquote>\n"
+            ">\n"
+            "> <details>\n"
+            "> <summary>src/main.py</summary><blockquote>\n"
+            ">\n"
+            "> `10-20`: _\u26a0\ufe0f Potential issue_ | _\U0001f7e0 Major_\n"
+            ">\n"
+            "> **Title**\n"
+            ">\n"
+            "> Body.\n"
+            ">\n"
+            "> </blockquote></details>\n"
+            ">\n"
+            "> </blockquote></details>\n"
+        )
+        result = parse_outside_diff_comments(body)
+        assert len(result) == 1
+        assert result[0]["path"] == "src/main.py"
+
 
 class TestStripBlockquotePrefix:
     """Tests for _strip_blockquote_prefix helper."""

@@ -1486,6 +1486,41 @@ class TestOutsideDiffCommentHandling:
     @patch.object(post_review_replies, "resolve_thread")
     @patch.object(post_review_replies, "post_thread_reply")
     @patch.object(post_review_replies, "check_dependencies")
+    def test_outside_diff_failed_status_warning(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Failed status on outside-diff comment should trigger unknown status warning."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [],
+                "coderabbit": [
+                    {
+                        "thread_id": None,
+                        "type": "outside_diff_comment",
+                        "status": "failed",
+                        "reply": "Retry needed",
+                        "path": "src/main.py",
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        mock_post.assert_not_called()
+        mock_resolve.assert_not_called()
+
+        captured = capsys.readouterr()
+        assert "unknown status" in captured.err.lower()
+
+    @patch.object(post_review_replies, "resolve_thread")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
     def test_outside_diff_not_counted_as_no_thread_id(
         self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:

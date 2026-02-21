@@ -604,7 +604,7 @@ def fetch_coderabbit_outside_diff_comments(owner: str, repo: str, pr_number: str
     """
     from myk_claude_tools.reviews.coderabbit_parser import parse_outside_diff_comments  # noqa: PLC0415
 
-    endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+    endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews?per_page=100"
     reviews = run_gh_api(endpoint, paginate=True)
 
     if reviews is None:
@@ -617,11 +617,14 @@ def fetch_coderabbit_outside_diff_comments(owner: str, repo: str, pr_number: str
 
     results: list[dict[str, Any]] = []
     for review in reviews:
-        author = review.get("user", {}).get("login") if review.get("user") else None
+        author = review.get("user", {}).get("login")
         if author not in CODERABBIT_USERS:
             continue
 
         body = review.get("body", "")
+        if not body:
+            continue
+
         parsed_comments = parse_outside_diff_comments(body)
         if not parsed_comments:
             continue

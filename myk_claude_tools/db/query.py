@@ -164,12 +164,14 @@ class ReviewDB:
 
         try:
             conn = sqlite3.connect(str(self.db_path))
-            cursor = conn.execute("PRAGMA table_info(comments)")
-            columns = {row[1] for row in cursor.fetchall()}
-            if "type" not in columns:
-                conn.execute("ALTER TABLE comments ADD COLUMN type TEXT DEFAULT NULL")
-                conn.commit()
-            conn.close()
+            try:
+                cursor = conn.execute("PRAGMA table_info(comments)")
+                columns = {row[1] for row in cursor.fetchall()}
+                if "type" not in columns:
+                    conn.execute("ALTER TABLE comments ADD COLUMN type TEXT DEFAULT NULL")
+                    conn.commit()
+            finally:
+                conn.close()
         except sqlite3.Error as e:
             log(f"Schema migration warning: {e}")
 
@@ -220,7 +222,7 @@ class ReviewDB:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT c.path, c.line, c.body, c.status, c.reply, c.skip_reason, c.author
+                SELECT c.path, c.line, c.body, c.status, c.reply, c.skip_reason, c.author, c.type
                 FROM comments c
                 JOIN reviews r ON c.review_id = r.id
                 WHERE r.owner = ? AND r.repo = ?
@@ -241,6 +243,7 @@ class ReviewDB:
                     "status": row["status"],
                     "reply": row["reply"] or row["skip_reason"],
                     "author": row["author"],
+                    "type": row["type"],
                 })
             return results
         except sqlite3.Error as e:

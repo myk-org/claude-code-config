@@ -20,12 +20,12 @@ from typing import Any
 
 # Matches the start of the outer "Outside diff range comments" section.
 _OUTSIDE_SECTION_START_RE = re.compile(
-    r"<summary>\s*\S*\s*Outside diff range comments?\s*\(\d+\)\s*</summary>\s*<blockquote>",
+    r"<summary>\s*\S*\s*Outside diff range comments?\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
 )
 
 # Matches the start of a file-level <details> block with path and count.
 _FILE_SUMMARY_RE = re.compile(
-    r"<details>\s*\n?\s*<summary>\s*(?P<path>.+?)\s*\(\d+\)\s*</summary>\s*<blockquote>",
+    r"<details>\s*\n?\s*<summary>\s*(?P<path>.+?)\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
 )
 
 # Matches the backtick line-range pattern at the start of a comment.
@@ -54,17 +54,16 @@ _AI_PROMPT_RE = re.compile(
 
 
 def _strip_blockquote_prefix(text: str) -> str:
-    """Strip the ``> `` prefix from each line of a blockquoted section.
+    """Strip the ``>`` prefix from each line of a blockquoted section.
 
     Handles varying whitespace between ``>`` and the content.
     """
     lines: list[str] = []
     for line in text.splitlines():
         stripped = line.lstrip()
-        if stripped.startswith("> "):
-            lines.append(stripped[2:])
-        elif stripped == ">":
-            lines.append("")
+        if stripped.startswith(">"):
+            # Remove ">" and any whitespace after it
+            lines.append(stripped[1:].lstrip())
         else:
             lines.append(line)
     return "\n".join(lines)
