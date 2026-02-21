@@ -522,6 +522,52 @@ class TestReviewDB:
             with pytest.raises(ValueError, match=r"SQL keyword|Multiple SQL statements"):
                 db.query(query)
 
+    def test_migration_on_read_path(self, tmp_path: Path) -> None:
+        """ReviewDB should migrate old databases missing the type column."""
+        db_path = tmp_path / "old.db"
+        conn = sqlite3.connect(db_path)
+        # Create old schema WITHOUT the type column
+        conn.executescript("""
+            CREATE TABLE reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner TEXT NOT NULL,
+                repo TEXT NOT NULL,
+                pr_number INTEGER NOT NULL,
+                reviewed_at TEXT NOT NULL
+            );
+            CREATE TABLE comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                review_id INTEGER NOT NULL,
+                source TEXT,
+                thread_id TEXT,
+                node_id TEXT,
+                comment_id INTEGER,
+                author TEXT,
+                path TEXT,
+                line INTEGER,
+                body TEXT,
+                priority TEXT,
+                status TEXT,
+                reply TEXT,
+                skip_reason TEXT,
+                posted_at TEXT,
+                resolved_at TEXT,
+                FOREIGN KEY (review_id) REFERENCES reviews(id)
+            );
+            INSERT INTO reviews (owner, repo, pr_number, reviewed_at)
+                VALUES ('org', 'repo', 1, '2024-01-01');
+            INSERT INTO comments (review_id, source, path, body, status)
+                VALUES (1, 'coderabbit', 'file.py', 'old comment', 'skipped');
+        """)
+        conn.commit()
+        conn.close()
+
+        # ReviewDB should open successfully and run get_dismissed_comments without error
+        review_db = ReviewDB(db_path=db_path)
+        dismissed = review_db.get_dismissed_comments("org", "repo")
+        assert len(dismissed) == 1
+        assert dismissed[0]["path"] == "file.py"
+
 
 class TestReviewDBCLI:
     """Tests for CLI interface using click's CliRunner."""

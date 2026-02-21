@@ -150,6 +150,29 @@ class ReviewDB:
         else:
             self.db_path = db_path
 
+        self._migrate_schema()
+
+    def _migrate_schema(self) -> None:
+        """Apply forward-compatible schema migrations to existing databases.
+
+        Opens a read-write connection to add any missing columns introduced
+        after the initial schema.  This is safe to call on every init because
+        each migration is guarded by an existence check.
+        """
+        if not self.db_path.exists():
+            return
+
+        try:
+            conn = sqlite3.connect(str(self.db_path))
+            cursor = conn.execute("PRAGMA table_info(comments)")
+            columns = {row[1] for row in cursor.fetchall()}
+            if "type" not in columns:
+                conn.execute("ALTER TABLE comments ADD COLUMN type TEXT DEFAULT NULL")
+                conn.commit()
+            conn.close()
+        except sqlite3.Error as e:
+            log(f"Schema migration warning: {e}")
+
     def _connect(self) -> sqlite3.Connection:
         """Create a database connection with row factory for dict results."""
         db_path = self.db_path.resolve()
