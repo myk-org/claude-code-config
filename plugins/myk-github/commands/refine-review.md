@@ -1,5 +1,4 @@
 ---
-name: refine-review
 description: Refine pending PR review comments with AI before submitting
 argument-hint: <PR_URL>
 allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), AskUserQuestion, Edit(/tmp/claude/**), Write(/tmp/claude/**)
