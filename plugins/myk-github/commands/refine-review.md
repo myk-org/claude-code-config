@@ -96,12 +96,16 @@ If "Pick specific": ask user to enter comma-separated numbers. Validate that num
 
 If "Custom text": user provides comment number followed by their custom text. The custom text replaces the refined version for that comment.
 
+After applying custom text, re-display the affected comment(s) showing the custom text for user confirmation before proceeding to Phase 5.
+
 ### Phase 5: Update JSON
 
 Update the JSON file at `json_path`:
 
 - For each accepted refinement: set `refined_body` to the refined text and `status` to `"accepted"`
 - For comments kept as original: leave `refined_body` as null and `status` as `"pending"`
+
+**Important:** Only modify `refined_body` and `status` fields on each comment. Do NOT modify the `diff`, `metadata`, or other fields — metadata is updated separately in Phase 6.
 
 ### Phase 6: Submit Decision
 

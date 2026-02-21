@@ -197,6 +197,13 @@ def run(pr_url: str) -> int:
         return 1
 
     owner, repo, pr_number = parsed
+
+    try:
+        pr_number_int = int(pr_number)
+    except (TypeError, ValueError):
+        print_stderr(f"Error: Invalid PR number: {pr_number!r}")
+        return 1
+
     print_stderr(f"Repository: {owner}/{repo}, PR: {pr_number}")
 
     # Get authenticated user
@@ -255,13 +262,6 @@ def run(pr_url: str) -> int:
     safe_repo = f"{owner}-{repo}".replace("/", "-")
     json_path = out_dir / f"pr-{safe_repo}-{pr_number}-pending-review.json"
 
-    # Validate pr_number is a valid integer before building output
-    try:
-        pr_number_int = int(pr_number)
-    except (TypeError, ValueError):
-        print_stderr(f"Error: Invalid PR number: {pr_number!r}")
-        return 1
-
     # Build final output
     final_output: dict[str, Any] = {
         "metadata": {
@@ -286,9 +286,10 @@ def run(pr_url: str) -> int:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(final_output, f, indent=2)
         os.replace(tmp_json_path, json_path)
-    except Exception:
+    except Exception as e:
         Path(tmp_json_path).unlink(missing_ok=True)
-        raise
+        print_stderr(f"Error: Failed to write JSON file: {e}")
+        return 1
 
     print_stderr(f"Saved to: {json_path}")
 
