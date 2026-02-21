@@ -592,6 +592,73 @@ def fetch_qodo_issue_comments(owner: str, repo: str, pr_number: str) -> list[dic
     return results
 
 
+def fetch_coderabbit_outside_diff_comments(owner: str, repo: str, pr_number: str) -> list[dict[str, Any]]:
+    """Fetch CodeRabbit 'outside diff range' comments from review bodies.
+
+    CodeRabbit embeds some comments in the review body text (not as inline threads)
+    when they reference code outside the PR diff range. This function fetches
+    all CodeRabbit reviews and parses their bodies for these comments.
+
+    Returns:
+        List of thread-like dicts, one per parsed comment.
+    """
+    from myk_claude_tools.reviews.coderabbit_parser import parse_outside_diff_comments  # noqa: PLC0415
+
+    endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+    reviews = run_gh_api(endpoint, paginate=True)
+
+    if reviews is None:
+        print_stderr("Warning: Could not fetch PR reviews")
+        return []
+
+    if not isinstance(reviews, list):
+        print_stderr("Warning: Unexpected PR reviews response shape (expected list)")
+        return []
+
+    results: list[dict[str, Any]] = []
+    for review in reviews:
+        author = review.get("user", {}).get("login") if review.get("user") else None
+        if author not in CODERABBIT_USERS:
+            continue
+
+        body = review.get("body", "")
+        parsed_comments = parse_outside_diff_comments(body)
+        if not parsed_comments:
+            continue
+
+        review_id = review.get("id")
+        if review_id is None:
+            continue
+
+        try:
+            review_id = int(review_id)
+        except (TypeError, ValueError):
+            continue
+
+        node_id = review.get("node_id")
+
+        for idx, comment in enumerate(parsed_comments):
+            thread_item: dict[str, Any] = {
+                "thread_id": None,
+                "node_id": node_id,
+                "comment_id": review_id,
+                "author": author,
+                "path": comment["path"],
+                "line": comment["line"],
+                "end_line": comment.get("end_line"),
+                "body": comment["body"],
+                "category": comment.get("category", ""),
+                "severity": comment.get("severity", ""),
+                "replies": [],
+                "type": "outside_diff_comment",
+                "review_id": review_id,
+                "suggestion_index": idx,
+            }
+            results.append(thread_item)
+
+    return results
+
+
 def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str) -> dict[str, list[dict[str, Any]]]:
     """Process threads: add source and priority, categorize, and auto-skip previously dismissed."""
     human: list[dict[str, Any]] = []
@@ -685,6 +752,13 @@ def get_thread_key(thread: dict[str, Any]) -> str | None:
         if issue_comment_id is not None and suggestion_index is not None:
             return f"ic:{issue_comment_id}:{suggestion_index}"
 
+    # Outside diff comments use review_id + suggestion_index as composite key
+    if thread.get("type") == "outside_diff_comment":
+        review_id = thread.get("review_id")
+        suggestion_index = thread.get("suggestion_index")
+        if review_id is not None and suggestion_index is not None:
+            return f"odc:{review_id}:{suggestion_index}"
+
     thread_id = thread.get("thread_id")
     if thread_id:
         return f"t:{thread_id}"
@@ -764,6 +838,13 @@ def run(review_url: str = "") -> int:
         if qodo_issue_threads:
             print_stderr(f"Found {len(qodo_issue_threads)} Qodo issue comment suggestion(s)")
             all_threads = merge_threads(all_threads, qodo_issue_threads)
+
+        # Fetch CodeRabbit outside-diff-range comments from review bodies
+        print_stderr("Fetching CodeRabbit outside-diff-range comments...")
+        outside_diff_threads = fetch_coderabbit_outside_diff_comments(owner, repo, pr_number)
+        if outside_diff_threads:
+            print_stderr(f"Found {len(outside_diff_threads)} outside-diff-range comment(s)")
+            all_threads = merge_threads(all_threads, outside_diff_threads)
 
         # If review URL provided, also fetch specific thread(s)
         specific_threads: list[dict[str, Any]] = []
