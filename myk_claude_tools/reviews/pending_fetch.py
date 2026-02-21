@@ -37,6 +37,7 @@ def get_authenticated_user() -> str | None:
             ["gh", "api", "user", "--jq", ".login"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=30,
         )
     except subprocess.TimeoutExpired:
@@ -68,6 +69,7 @@ def fetch_pr_diff(owner: str, repo: str, pr_number: str) -> str | None:
             ["gh", "pr", "diff", pr_number, "-R", f"{owner}/{repo}"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=120,
         )
     except subprocess.TimeoutExpired:
@@ -281,7 +283,7 @@ def run(pr_url: str) -> int:
     )
 
     try:
-        with os.fdopen(fd, "w") as f:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(final_output, f, indent=2)
         os.replace(tmp_json_path, json_path)
     except Exception:

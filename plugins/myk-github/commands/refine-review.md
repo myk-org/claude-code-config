@@ -126,13 +126,13 @@ Update the JSON metadata:
 If user chose to submit (Phase 6), run with `--submit` flag:
 
 ```bash
-myk-claude-tools reviews pending-update <json_path> --submit
+myk-claude-tools reviews pending-update "<json_path>" --submit
 ```
 
 If user chose "Don't submit yet", run without `--submit`:
 
 ```bash
-myk-claude-tools reviews pending-update <json_path>
+myk-claude-tools reviews pending-update "<json_path>"
 ```
 
 This updates accepted comment bodies on GitHub and submits the review when `--submit` is provided.
