@@ -1228,3 +1228,245 @@ class TestFetchQodoIssueComments:
         result = get_all_reviews.fetch_qodo_issue_comments("owner", "repo", "1")
 
         assert result == []
+
+
+# =============================================================================
+# Tests for fetch_coderabbit_outside_diff_comments()
+# =============================================================================
+
+
+class TestFetchCoderabbitOutsideDiffComments:
+    """Tests for fetch_coderabbit_outside_diff_comments()."""
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_filters_by_coderabbit_author(self, mock_api: Any, mock_parse: Any) -> None:
+        """Only CodeRabbit reviews should be processed."""
+        mock_api.return_value = [
+            {"id": 1, "node_id": "n1", "user": {"login": "random-user"}, "body": "Not coderabbit"},
+            {
+                "id": 2,
+                "node_id": "n2",
+                "user": {"login": "coderabbitai[bot]"},
+                "body": "review body with outside diff",
+            },
+        ]
+        mock_parse.return_value = []
+
+        get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        # parse_outside_diff_comments should only be called for CodeRabbit reviews
+        mock_parse.assert_called_once_with("review body with outside diff")
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_maps_parsed_comments_to_threads(self, mock_api: Any, mock_parse: Any) -> None:
+        """Each parsed comment should become a separate thread-like dict."""
+        mock_api.return_value = [
+            {
+                "id": 200,
+                "node_id": "PRR_abc",
+                "user": {"login": "coderabbitai[bot]"},
+                "body": "review body",
+            },
+        ]
+        mock_parse.return_value = [
+            {
+                "path": "src/main.py",
+                "line": 100,
+                "end_line": 110,
+                "body": "Resource leak",
+                "category": "Potential issue",
+                "severity": "Major",
+            },
+            {
+                "path": "src/utils.py",
+                "line": 42,
+                "end_line": None,
+                "body": "Unused import",
+                "category": "Nitpick",
+                "severity": "Trivial",
+            },
+        ]
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert len(result) == 2
+
+        assert result[0]["type"] == "outside_diff_comment"
+        assert result[0]["review_id"] == 200
+        assert result[0]["suggestion_index"] == 0
+        assert result[0]["path"] == "src/main.py"
+        assert result[0]["line"] == 100
+        assert result[0]["end_line"] == 110
+        assert result[0]["body"] == "Resource leak"
+        assert result[0]["category"] == "Potential issue"
+        assert result[0]["severity"] == "Major"
+        assert result[0]["thread_id"] is None
+        assert result[0]["node_id"] == "PRR_abc"
+        assert result[0]["comment_id"] == 200
+        assert result[0]["author"] == "coderabbitai[bot]"
+        assert result[0]["replies"] == []
+
+        assert result[1]["suggestion_index"] == 1
+        assert result[1]["path"] == "src/utils.py"
+        assert result[1]["line"] == 42
+        assert result[1]["end_line"] is None
+        assert result[1]["category"] == "Nitpick"
+        assert result[1]["severity"] == "Trivial"
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_api_failure(self, mock_api: Any) -> None:
+        """API failure should return empty list."""
+        mock_api.return_value = None
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_no_coderabbit_reviews(self, mock_api: Any) -> None:
+        """No CodeRabbit reviews should return empty list."""
+        mock_api.return_value = [
+            {"id": 1, "node_id": "n1", "user": {"login": "human-reviewer"}, "body": "LGTM"},
+        ]
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_empty_reviews_list(self, mock_api: Any) -> None:
+        """Empty reviews list should return empty list."""
+        mock_api.return_value = []
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_non_list_response(self, mock_api: Any) -> None:
+        """Non-list API response should return empty list."""
+        mock_api.return_value = {"error": "unexpected"}
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_handles_reviews_with_no_outside_diff_comments(self, mock_api: Any, mock_parse: Any) -> None:
+        """Reviews with no parseable outside-diff comments should yield nothing."""
+        mock_api.return_value = [
+            {
+                "id": 300,
+                "node_id": "n3",
+                "user": {"login": "coderabbitai[bot]"},
+                "body": "Clean review with no outside diff comments",
+            },
+        ]
+        mock_parse.return_value = []
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_skips_reviews_without_id(self, mock_api: Any, mock_parse: Any) -> None:
+        """Reviews without an ID should be skipped."""
+        mock_api.return_value = [
+            {
+                "id": None,
+                "node_id": "n1",
+                "user": {"login": "coderabbitai[bot]"},
+                "body": "review body",
+            },
+        ]
+        mock_parse.return_value = [
+            {"path": "f.py", "line": 1, "end_line": 2, "body": "test", "category": "Bug", "severity": "Major"}
+        ]
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert result == []
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_accepts_coderabbitai_user_without_bot_suffix(self, mock_api: Any, mock_parse: Any) -> None:
+        """The 'coderabbitai' username (without [bot]) should also be accepted."""
+        mock_api.return_value = [
+            {
+                "id": 400,
+                "node_id": "n4",
+                "user": {"login": "coderabbitai"},
+                "body": "review body",
+            },
+        ]
+        mock_parse.return_value = [
+            {"path": "f.py", "line": 10, "end_line": 20, "body": "issue", "category": "Bug", "severity": "Major"}
+        ]
+
+        result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
+
+        assert len(result) == 1
+        assert result[0]["author"] == "coderabbitai"
+
+
+# =============================================================================
+# Tests for get_thread_key() with outside_diff_comment type
+# =============================================================================
+
+
+class TestGetThreadKeyOutsideDiffComment:
+    """Tests for get_thread_key() with the outside_diff_comment type."""
+
+    def test_outside_diff_comment_key(self) -> None:
+        """Outside diff comment should use composite odc: key."""
+        thread = {
+            "type": "outside_diff_comment",
+            "review_id": 200,
+            "suggestion_index": 3,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 200,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "odc:200:3"
+
+    def test_outside_diff_comment_missing_review_id(self) -> None:
+        """Missing review_id should fall through to other key strategies."""
+        thread = {
+            "type": "outside_diff_comment",
+            "review_id": None,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 200,
+        }
+        # Falls through to node_id
+        assert get_all_reviews.get_thread_key(thread) == "n:n1"
+
+    def test_outside_diff_comment_missing_suggestion_index(self) -> None:
+        """Missing suggestion_index should fall through to other key strategies."""
+        thread = {
+            "type": "outside_diff_comment",
+            "review_id": 200,
+            "suggestion_index": None,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 200,
+        }
+        # Falls through to node_id
+        assert get_all_reviews.get_thread_key(thread) == "n:n1"
+
+    def test_outside_diff_comment_zero_index(self) -> None:
+        """suggestion_index of 0 should be valid (not treated as falsy)."""
+        thread = {
+            "type": "outside_diff_comment",
+            "review_id": 100,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 100,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "odc:100:0"

@@ -150,6 +150,31 @@ class ReviewDB:
         else:
             self.db_path = db_path
 
+        self._migrate_schema()
+
+    def _migrate_schema(self) -> None:
+        """Apply forward-compatible schema migrations to existing databases.
+
+        Opens a read-write connection to add any missing columns introduced
+        after the initial schema.  This is safe to call on every init because
+        each migration is guarded by an existence check.
+        """
+        if not self.db_path.exists():
+            return
+
+        try:
+            conn = sqlite3.connect(str(self.db_path))
+            try:
+                cursor = conn.execute("PRAGMA table_info(comments)")
+                columns = {row[1] for row in cursor.fetchall()}
+                if "type" not in columns:
+                    conn.execute("ALTER TABLE comments ADD COLUMN type TEXT DEFAULT NULL")
+                    conn.commit()
+            finally:
+                conn.close()
+        except sqlite3.Error as e:
+            log(f"Schema migration warning: {e}")
+
     def _connect(self) -> sqlite3.Connection:
         """Create a database connection with row factory for dict results."""
         db_path = self.db_path.resolve()
@@ -163,10 +188,16 @@ class ReviewDB:
         return conn
 
     def get_dismissed_comments(self, owner: str, repo: str) -> list[dict[str, Any]]:
-        """Get all not_addressed or skipped comments for a repository.
+        """Get dismissed comments for a repository, constrained by type for safety.
 
-        Retrieves comments that were dismissed (not addressed or skipped) during
-        review processing. Useful for identifying recurring patterns or auto-skip logic.
+        Retrieves comments that were dismissed during review processing:
+        - ``not_addressed`` and ``skipped`` comments are always included (any type).
+        - ``addressed`` comments are only included when their type is
+          ``outside_diff_comment``.  Outside-diff comments have no GitHub thread
+          to resolve, so the database is the only mechanism to auto-skip them on
+          subsequent fetches.  Normal inline thread comments rely on GitHub's
+          ``isResolved`` filter in the GraphQL query, so including them here
+          could incorrectly auto-skip a similar new finding in a different PR.
 
         Args:
             owner: GitHub repository owner (org or user).
@@ -191,11 +222,14 @@ class ReviewDB:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT c.path, c.line, c.body, c.status, c.reply, c.skip_reason, c.author
+                SELECT c.path, c.line, c.body, c.status, c.reply, c.skip_reason, c.author, c.type
                 FROM comments c
                 JOIN reviews r ON c.review_id = r.id
                 WHERE r.owner = ? AND r.repo = ?
-                  AND c.status IN ('not_addressed', 'skipped')
+                  AND (
+                      c.status IN ('not_addressed', 'skipped')
+                      OR (c.status = 'addressed' AND c.type = 'outside_diff_comment')
+                  )
                 ORDER BY c.path, c.line
                 """,
                 (owner, repo),
@@ -209,6 +243,7 @@ class ReviewDB:
                     "status": row["status"],
                     "reply": row["reply"] or row["skip_reason"],
                     "author": row["author"],
+                    "type": row["type"],
                 })
             return results
         except sqlite3.Error as e:

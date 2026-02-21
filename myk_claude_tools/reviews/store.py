@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS comments (
     reply TEXT,
     skip_reason TEXT,
     posted_at TEXT,
-    resolved_at TEXT
+    resolved_at TEXT,
+    type TEXT DEFAULT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_comments_review_id ON comments(review_id);
@@ -93,8 +94,14 @@ def ensure_database_directory(db_path: Path) -> None:
 
 
 def create_tables(conn: sqlite3.Connection) -> None:
-    """Create tables if they don't exist."""
+    """Create tables if they don't exist, and apply schema migrations."""
     conn.executescript(SCHEMA)
+
+    # Migration: add 'type' column to existing databases that lack it
+    cursor = conn.execute("PRAGMA table_info(comments)")
+    columns = {row[1] for row in cursor.fetchall()}
+    if "type" not in columns:
+        conn.execute("ALTER TABLE comments ADD COLUMN type TEXT DEFAULT NULL")
 
 
 def get_current_commit_sha(cwd: Path | None = None) -> str:
@@ -147,8 +154,8 @@ def insert_comment(conn: sqlite3.Connection, review_id: int, source: str, commen
         INSERT INTO comments (
             review_id, source, thread_id, node_id, comment_id, author,
             path, line, body, priority, status, reply, skip_reason,
-            posted_at, resolved_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            posted_at, resolved_at, type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             review_id,
@@ -166,6 +173,7 @@ def insert_comment(conn: sqlite3.Connection, review_id: int, source: str, commen
             comment.get("skip_reason"),
             comment.get("posted_at"),
             comment.get("resolved_at"),
+            comment.get("type"),
         ),
     )
 

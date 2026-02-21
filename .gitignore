@@ -63,6 +63,7 @@
 # tests/
 !tests/
 !tests/__init__.py
+!tests/test_coderabbit_parser.py
 !tests/test_git_protection.py
 !tests/test_get_all_reviews.py
 !tests/test_post_review_replies.py
@@ -163,5 +164,6 @@
 !myk_claude_tools/reviews/commands.py
 !myk_claude_tools/reviews/fetch.py
 !myk_claude_tools/reviews/post.py
+!myk_claude_tools/reviews/coderabbit_parser.py
 !myk_claude_tools/reviews/qodo_parser.py
 !myk_claude_tools/reviews/store.py

@@ -79,20 +79,31 @@ Original prompt: <user's prompt>
 understand and respond to the prompt. Do not dump entire files or
 excessive diff output.
 
+### Step 2c: Session Continuation
+
+Check the current conversation history for any previous `agent --print` commands that completed successfully (returned valid JSON with `is_error: false`).
+
+- **If a previous successful `agent` call exists**: Add `--continue` to the command.
+  This resumes the last Cursor session, preserving context from earlier interactions
+  (diffs already read, files already analyzed, etc.).
+- **If no previous `agent` call exists**: Run without `--continue` (fresh session).
+
 ### Step 3: Run Prompt
 
-Execute the Cursor agent CLI with JSON output:
+Execute the Cursor agent CLI with JSON output. Add `--continue` after `--print` when a previous successful `agent` call exists in this conversation (see Step 2c).
 
-**With model specified:**
-
-```bash
-agent --print --output-format json --model <model> '<escaped_prompt>'
-```
-
-**Without model (uses Cursor default):**
+**First call (no prior session):**
 
 ```bash
 agent --print --output-format json '<escaped_prompt>'
+agent --print --output-format json --model <model> '<escaped_prompt>'
+```
+
+**Subsequent calls (with --continue):**
+
+```bash
+agent --print --continue --output-format json '<escaped_prompt>'
+agent --print --continue --output-format json --model <model> '<escaped_prompt>'
 ```
 
 **Shell safety:** Single-quote the prompt to prevent shell expansion. Replace any single quotes in the prompt with `'\''` before interpolation.
@@ -109,18 +120,20 @@ If the command exits with a non-zero code and the error output contains trust-re
 1. Ask the user via AskUserQuestion:
    "Cursor needs workspace trust to access project files.
    Re-run with `--trust` flag? This grants full read/write workspace access."
-2. If user confirms, re-run the same command with `--trust` added:
+2. If user confirms, re-run the same command with `--trust` added. Include `--continue` when applicable (see Step 2c):
 
-**With model specified:**
-
-```bash
-agent --print --trust --output-format json --model <model> '<escaped_prompt>'
-```
-
-**Without model:**
+**First call (no prior session):**
 
 ```bash
 agent --print --trust --output-format json '<escaped_prompt>'
+agent --print --trust --output-format json --model <model> '<escaped_prompt>'
+```
+
+**Subsequent calls (with --continue):**
+
+```bash
+agent --print --continue --trust --output-format json '<escaped_prompt>'
+agent --print --continue --trust --output-format json --model <model> '<escaped_prompt>'
 ```
 
 If user declines, display the original error and abort.
