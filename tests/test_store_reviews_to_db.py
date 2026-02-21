@@ -175,6 +175,56 @@ class TestCreateTables:
 
         conn.close()
 
+    def test_migration_adds_type_column(self, tmp_path: Path) -> None:
+        """Should add type column to existing database without it."""
+        db_path = tmp_path / "test.db"
+        conn = sqlite3.connect(str(db_path))
+
+        # Create old schema without type column
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pr_number INTEGER NOT NULL,
+                owner TEXT NOT NULL,
+                repo TEXT NOT NULL,
+                commit_sha TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                review_id INTEGER NOT NULL REFERENCES reviews(id),
+                source TEXT NOT NULL,
+                thread_id TEXT,
+                node_id TEXT,
+                comment_id INTEGER,
+                author TEXT,
+                path TEXT,
+                line INTEGER,
+                body TEXT,
+                priority TEXT,
+                status TEXT,
+                reply TEXT,
+                skip_reason TEXT,
+                posted_at TEXT,
+                resolved_at TEXT
+            );
+        """)
+
+        # Verify type column does not exist yet
+        cursor = conn.execute("PRAGMA table_info(comments)")
+        columns = {row[1] for row in cursor.fetchall()}
+        assert "type" not in columns
+
+        # Run create_tables which should migrate
+        store_reviews.create_tables(conn)
+
+        # Verify type column now exists
+        cursor = conn.execute("PRAGMA table_info(comments)")
+        columns = {row[1] for row in cursor.fetchall()}
+        assert "type" in columns
+
+        conn.close()
+
     def test_reviews_table_schema(self, tmp_path: Path) -> None:
         """Should have correct reviews table schema."""
         db_path = tmp_path / "test.db"
@@ -220,6 +270,7 @@ class TestCreateTables:
             "skip_reason",
             "posted_at",
             "resolved_at",
+            "type",
         ]
         for col in expected_columns:
             assert col in columns
@@ -407,6 +458,27 @@ class TestInsertComment:
         assert row[1] is None
         conn.close()
 
+    def test_stores_type_field(self, tmp_path: Path) -> None:
+        """Should store type field when present in comment data."""
+        db_path = tmp_path / "test.db"
+        conn = sqlite3.connect(str(db_path))
+        store_reviews.create_tables(conn)
+
+        review_id = store_reviews.insert_review(conn, "owner", "repo", 123, "abc1234567")
+
+        store_reviews.insert_comment(
+            conn, review_id, "qodo", {"body": "outside diff comment", "type": "outside_diff_comment"}
+        )
+        store_reviews.insert_comment(conn, review_id, "human", {"body": "inline comment", "type": None})
+        store_reviews.insert_comment(conn, review_id, "coderabbit", {"body": "no type field"})
+
+        cursor = conn.execute("SELECT body, type FROM comments WHERE review_id = ? ORDER BY id", (review_id,))
+        rows = cursor.fetchall()
+        assert rows[0] == ("outside diff comment", "outside_diff_comment")
+        assert rows[1] == ("inline comment", None)
+        assert rows[2] == ("no type field", None)
+        conn.close()
+
     def test_stores_all_sources(self, tmp_path: Path) -> None:
         """Should store comments from all sources."""
         db_path = tmp_path / "test.db"
@@ -588,7 +660,7 @@ class TestStoreReviews:
 
     @patch.object(store_reviews, "get_project_root")
     def test_stores_all_comment_fields(self, mock_root: Any, tmp_path: Path) -> None:
-        """Should store all comment fields correctly."""
+        """Should store all comment fields correctly including type."""
         mock_root.return_value = tmp_path
 
         data = {
@@ -612,6 +684,7 @@ class TestStoreReviews:
                     "skip_reason": None,
                     "posted_at": "2024-01-15T10:00:00Z",
                     "resolved_at": "2024-01-15T10:05:00Z",
+                    "type": "outside_diff_comment",
                 }
             ],
             "qodo": [],
@@ -626,7 +699,7 @@ class TestStoreReviews:
         cursor = conn.execute(
             """
             SELECT thread_id, node_id, comment_id, author, path, line,
-                   body, priority, status, reply, posted_at, resolved_at
+                   body, priority, status, reply, posted_at, resolved_at, type
             FROM comments
             """
         )
@@ -644,6 +717,42 @@ class TestStoreReviews:
         assert row[9] == "Fixed in commit abc123"
         assert row[10] == "2024-01-15T10:00:00Z"
         assert row[11] == "2024-01-15T10:05:00Z"
+        assert row[12] == "outside_diff_comment"
+        conn.close()
+
+    @patch.object(store_reviews, "get_project_root")
+    def test_stores_type_field_from_json(self, mock_root: Any, tmp_path: Path) -> None:
+        """Should store type field from JSON data when present."""
+        mock_root.return_value = tmp_path
+
+        data = {
+            "metadata": {
+                "owner": "org",
+                "repo": "repo",
+                "pr_number": 1,
+            },
+            "human": [
+                {"body": "inline comment", "type": None},
+            ],
+            "qodo": [
+                {"body": "outside diff comment", "type": "outside_diff_comment"},
+            ],
+            "coderabbit": [
+                {"body": "no type key"},
+            ],
+        }
+        json_path = self._create_test_json(tmp_path, data)
+
+        store_reviews.store_reviews(json_path)
+
+        db_path = tmp_path / ".claude" / "data" / "reviews.db"
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.execute("SELECT body, type FROM comments ORDER BY id")
+        rows = cursor.fetchall()
+
+        assert rows[0] == ("inline comment", None)
+        assert rows[1] == ("outside diff comment", "outside_diff_comment")
+        assert rows[2] == ("no type key", None)
         conn.close()
 
 

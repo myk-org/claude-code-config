@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS comments (
     reply TEXT,
     skip_reason TEXT,
     posted_at TEXT,
-    resolved_at TEXT
+    resolved_at TEXT,
+    type TEXT DEFAULT NULL
 );
 """
 
@@ -61,7 +62,7 @@ def temp_db() -> Generator[Path, None, None]:
     review_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
     # Insert test comments
-    # Format: (review_id, source, path, line, body, priority, status, reply, author)
+    # Format: (review_id, source, path, line, body, priority, status, reply, author, type)
     test_comments = [
         (
             review_id,
@@ -73,6 +74,7 @@ def temp_db() -> Generator[Path, None, None]:
             "addressed",
             "Done",
             "qodo-code-review",
+            "outside_diff_comment",
         ),
         (
             review_id,
@@ -84,6 +86,7 @@ def temp_db() -> Generator[Path, None, None]:
             "not_addressed",
             "Not addressed: User declined",
             "qodo-code-review",
+            None,
         ),
         (
             review_id,
@@ -95,6 +98,7 @@ def temp_db() -> Generator[Path, None, None]:
             "skipped",
             None,
             "coderabbitai",
+            None,
         ),
         (
             review_id,
@@ -106,6 +110,7 @@ def temp_db() -> Generator[Path, None, None]:
             "addressed",
             "Done",
             "reviewer1",
+            None,
         ),
     ]
 
@@ -119,12 +124,13 @@ def temp_db() -> Generator[Path, None, None]:
         status,
         reply,
         author,
+        comment_type,
     ) in test_comments:
         conn.execute(
             """INSERT INTO comments
-               (review_id, source, path, line, body, priority, status, reply, author)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (rev_id, source, path, line, body, priority, status, reply, author),
+               (review_id, source, path, line, body, priority, status, reply, author, type)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (rev_id, source, path, line, body, priority, status, reply, author, comment_type),
         )
 
     conn.commit()
@@ -198,17 +204,31 @@ class TestReviewDB:
         assert db.db_path == temp_db
 
     def test_get_dismissed_comments(self, temp_db: Path) -> None:
-        """Test getting dismissed comments."""
+        """Test getting dismissed comments with type-constrained addressed filter."""
         db = ReviewDB(db_path=temp_db)
         dismissed = db.get_dismissed_comments("test-org", "test-repo")
 
-        assert len(dismissed) == 4  # 2 addressed + 1 not_addressed + 1 skipped
+        # 1 addressed (outside_diff_comment only) + 1 not_addressed + 1 skipped = 3
+        assert len(dismissed) == 3
         statuses = {c["status"] for c in dismissed}
         assert statuses == {"addressed", "not_addressed", "skipped"}
 
-        # Verify addressed comments are included (important for outside-diff auto-skip)
+        # Only addressed comments with type='outside_diff_comment' are included
         addressed = [c for c in dismissed if c["status"] == "addressed"]
-        assert len(addressed) == 2
+        assert len(addressed) == 1
+        assert addressed[0]["body"] == "Add error handling"
+
+    def test_get_dismissed_comments_excludes_regular_addressed(self, temp_db: Path) -> None:
+        """Test that addressed comments without type='outside_diff_comment' are excluded."""
+        db = ReviewDB(db_path=temp_db)
+        dismissed = db.get_dismissed_comments("test-org", "test-repo")
+
+        # The "Fix typo" comment is addressed with type=NULL, so it should NOT appear
+        bodies = [c["body"] for c in dismissed]
+        assert "Fix typo" not in bodies
+
+        # The "Add error handling" comment is addressed with type='outside_diff_comment', so it SHOULD appear
+        assert "Add error handling" in bodies
 
     def test_get_dismissed_comments_empty_result(self, temp_db: Path) -> None:
         """Test getting dismissed comments when none exist."""
@@ -563,7 +583,7 @@ class TestReviewDBCLI:
         assert "Multiple SQL statements" in result.output
 
     def test_cli_dismissed(self, temp_db: Path) -> None:
-        """Test CLI dismissed command."""
+        """Test CLI dismissed command with type-constrained addressed filter."""
         runner = CliRunner()
         result = runner.invoke(
             db, ["dismissed", "--owner", "test-org", "--repo", "test-repo", "--json", "--db-path", str(temp_db)]
@@ -572,7 +592,7 @@ class TestReviewDBCLI:
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert isinstance(data, list)
-        assert len(data) == 4  # 2 addressed + 1 not_addressed + 1 skipped
+        assert len(data) == 3  # 1 addressed (outside_diff_comment) + 1 not_addressed + 1 skipped
         statuses = {item["status"] for item in data}
         assert statuses == {"addressed", "not_addressed", "skipped"}
 

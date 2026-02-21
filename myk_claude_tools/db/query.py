@@ -163,13 +163,16 @@ class ReviewDB:
         return conn
 
     def get_dismissed_comments(self, owner: str, repo: str) -> list[dict[str, Any]]:
-        """Get all addressed, not_addressed, or skipped comments for a repository.
+        """Get dismissed comments for a repository, constrained by type for safety.
 
-        Retrieves comments that were dismissed (addressed, not addressed, or skipped)
-        during review processing. Including 'addressed' ensures that outside-diff
-        comments (which have no GitHub thread to resolve) are auto-skipped on
-        subsequent fetches. For normal thread comments this is harmless because
-        resolved threads are already filtered out by the GraphQL fetch.
+        Retrieves comments that were dismissed during review processing:
+        - ``not_addressed`` and ``skipped`` comments are always included (any type).
+        - ``addressed`` comments are only included when their type is
+          ``outside_diff_comment``.  Outside-diff comments have no GitHub thread
+          to resolve, so the database is the only mechanism to auto-skip them on
+          subsequent fetches.  Normal inline thread comments rely on GitHub's
+          ``isResolved`` filter in the GraphQL query, so including them here
+          could incorrectly auto-skip a similar new finding in a different PR.
 
         Args:
             owner: GitHub repository owner (org or user).
@@ -198,7 +201,10 @@ class ReviewDB:
                 FROM comments c
                 JOIN reviews r ON c.review_id = r.id
                 WHERE r.owner = ? AND r.repo = ?
-                  AND c.status IN ('addressed', 'not_addressed', 'skipped')
+                  AND (
+                      c.status IN ('not_addressed', 'skipped')
+                      OR (c.status = 'addressed' AND c.type = 'outside_diff_comment')
+                  )
                 ORDER BY c.path, c.line
                 """,
                 (owner, repo),
