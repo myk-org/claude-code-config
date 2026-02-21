@@ -6,7 +6,7 @@ This directory contains Claude Code plugins that can be installed via the plugin
 
 | Plugin | Description | Commands |
 |--------|-------------|----------|
-| **[myk-github](./myk-github/README.md)** | GitHub operations | `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
+| **[myk-github](./myk-github/README.md)** | GitHub operations | `/myk-github:pr-review`, `/myk-github:refine-review`, `/myk-github:release`, `/myk-github:review-handler` |
 | **[myk-review](./myk-review/README.md)** | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
 | **[myk-qodo](./myk-qodo/README.md)** | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
 | **[myk-cursor](./myk-cursor/README.md)** | Cursor agent CLI integration | `/myk-cursor:prompt` |
@@ -69,6 +69,33 @@ plugins/
     │   └── my-skill/
     │       └── SKILL.md
     └── README.md             # Plugin documentation
+```
+
+### Command Frontmatter Rules
+
+**CRITICAL: Command `.md` files must NEVER include a `name` field in the YAML frontmatter.**
+
+The command name is derived from the filename automatically. Adding a `name:` field breaks command registration and the command will not appear in plugin listings.
+
+**Correct frontmatter:**
+
+```yaml
+---
+description: What this command does
+argument-hint: [ARGS]
+allowed-tools: Bash(tool:*), AskUserQuestion
+---
+```
+
+**Wrong frontmatter (DO NOT USE):**
+
+```yaml
+---
+name: my-command        # ← NEVER add this field
+description: What this command does
+argument-hint: [ARGS]
+allowed-tools: Bash(tool:*), AskUserQuestion
+---
 ```
 
 ### Adding a Plugin to This Repository

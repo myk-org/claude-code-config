@@ -368,6 +368,8 @@ plugins/
     └── README.md             # Plugin documentation
 ```
 
+**CRITICAL: Command frontmatter must NEVER include a `name` field.** The command name is derived from the filename. Adding `name:` breaks command registration.
+
 **Commands use the format:** `/plugin-name:command` (e.g., `/myk-github:pr-review`)
 
 **Prerequisites:** Some plugins require the `myk-claude-tools` CLI:
