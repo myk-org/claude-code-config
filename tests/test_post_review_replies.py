@@ -1336,3 +1336,189 @@ class TestIssueCommentHandling:
         assert excinfo.value.code == 1
         mock_post.assert_not_called()
         mock_ic_post.assert_called_once()
+
+
+# =============================================================================
+# Tests for outside_diff_comment handling in run()
+# =============================================================================
+
+
+class TestOutsideDiffCommentHandling:
+    """Tests for outside_diff_comment type handling in run()."""
+
+    def _create_test_json(self, tmp_path: Path, threads: dict[str, list[dict[str, Any]]]) -> Path:
+        """Helper to create test JSON file."""
+        json_path = tmp_path / "reviews.json"
+        data = {
+            "metadata": {"owner": "test-owner", "repo": "test-repo", "pr_number": "123"},
+            **threads,
+        }
+        json_path.write_text(json.dumps(data))
+        return json_path
+
+    @patch.object(post_review_replies, "resolve_thread")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_outside_diff_addressed_no_post(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+    ) -> None:
+        """Outside-diff comments with addressed status should not post or resolve."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [],
+                "coderabbit": [
+                    {
+                        "thread_id": None,
+                        "type": "outside_diff_comment",
+                        "status": "addressed",
+                        "reply": "Fixed",
+                        "path": "src/main.py",
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        mock_post.assert_not_called()
+        mock_resolve.assert_not_called()
+
+    @patch.object(post_review_replies, "resolve_thread")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_outside_diff_not_addressed_no_post(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+    ) -> None:
+        """Outside-diff comments with not_addressed status should not post or resolve."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [],
+                "coderabbit": [
+                    {
+                        "thread_id": None,
+                        "type": "outside_diff_comment",
+                        "status": "not_addressed",
+                        "reply": "Cannot fix",
+                        "path": "src/main.py",
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        mock_post.assert_not_called()
+        mock_resolve.assert_not_called()
+
+    @patch.object(post_review_replies, "resolve_thread")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_outside_diff_skipped_no_post(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+    ) -> None:
+        """Outside-diff comments with skipped status should not post or resolve."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [],
+                "coderabbit": [
+                    {
+                        "thread_id": None,
+                        "type": "outside_diff_comment",
+                        "status": "skipped",
+                        "skip_reason": "Out of scope",
+                        "path": "src/main.py",
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        mock_post.assert_not_called()
+        mock_resolve.assert_not_called()
+
+    @patch.object(post_review_replies, "resolve_thread")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_outside_diff_pending_skipped(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+    ) -> None:
+        """Outside-diff comments with pending status should be skipped."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [],
+                "coderabbit": [
+                    {
+                        "thread_id": None,
+                        "type": "outside_diff_comment",
+                        "status": "pending",
+                        "path": "src/main.py",
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        mock_post.assert_not_called()
+        mock_resolve.assert_not_called()
+
+    @patch.object(post_review_replies, "resolve_thread")
+    @patch.object(post_review_replies, "post_thread_reply")
+    @patch.object(post_review_replies, "check_dependencies")
+    def test_outside_diff_not_counted_as_no_thread_id(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Outside-diff comments should not appear in no_thread_id count."""
+        del mock_deps  # Injected by @patch decorator, unused in test
+        json_path = self._create_test_json(
+            tmp_path,
+            {
+                "human": [],
+                "qodo": [],
+                "coderabbit": [
+                    {
+                        "thread_id": None,
+                        "type": "outside_diff_comment",
+                        "status": "addressed",
+                        "reply": "Done",
+                        "path": "src/main.py",
+                    }
+                ],
+            },
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            post_review_replies.run(str(json_path))
+
+        assert excinfo.value.code == 0
+        mock_post.assert_not_called()
+        mock_resolve.assert_not_called()
+
+        captured = capsys.readouterr()
+        # Should NOT mention "no thread_id" or "no resolvable thread_id" in stderr
+        assert "no resolvable thread_id" not in captured.err.lower()
+        assert "no thread_id" not in captured.err.lower()
+        # Should mention outside-diff tracking
+        assert "outside-diff" in captured.err.lower()
+        assert "review database" in captured.err.lower()

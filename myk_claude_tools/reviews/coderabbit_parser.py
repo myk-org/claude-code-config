@@ -25,7 +25,7 @@ _OUTSIDE_SECTION_START_RE = re.compile(
 
 # Matches the start of a file-level <details> block with path and count.
 _FILE_SUMMARY_RE = re.compile(
-    r"<details>\s*\n?\s*<summary>\s*(?P<path>\S+)\s*\(\d+\)\s*</summary>\s*<blockquote>",
+    r"<details>\s*\n?\s*<summary>\s*(?P<path>.+?)\s*\(\d+\)\s*</summary>\s*<blockquote>",
 )
 
 # Matches the backtick line-range pattern at the start of a comment.

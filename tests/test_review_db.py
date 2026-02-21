@@ -202,9 +202,13 @@ class TestReviewDB:
         db = ReviewDB(db_path=temp_db)
         dismissed = db.get_dismissed_comments("test-org", "test-repo")
 
-        assert len(dismissed) == 2  # not_addressed + skipped
+        assert len(dismissed) == 4  # 2 addressed + 1 not_addressed + 1 skipped
         statuses = {c["status"] for c in dismissed}
-        assert statuses == {"not_addressed", "skipped"}
+        assert statuses == {"addressed", "not_addressed", "skipped"}
+
+        # Verify addressed comments are included (important for outside-diff auto-skip)
+        addressed = [c for c in dismissed if c["status"] == "addressed"]
+        assert len(addressed) == 2
 
     def test_get_dismissed_comments_empty_result(self, temp_db: Path) -> None:
         """Test getting dismissed comments when none exist."""
@@ -568,9 +572,9 @@ class TestReviewDBCLI:
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert isinstance(data, list)
-        assert len(data) == 2  # not_addressed + skipped
+        assert len(data) == 4  # 2 addressed + 1 not_addressed + 1 skipped
         statuses = {item["status"] for item in data}
-        assert statuses == {"not_addressed", "skipped"}
+        assert statuses == {"addressed", "not_addressed", "skipped"}
 
     def test_cli_patterns(self, temp_db: Path) -> None:
         """Test CLI patterns command."""

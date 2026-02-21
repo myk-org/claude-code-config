@@ -299,6 +299,29 @@ class TestParseOutsideDiffComments:
         required_keys = {"path", "line", "end_line", "body", "category", "severity"}
         assert required_keys.issubset(result[0].keys())
 
+    def test_file_path_with_spaces(self) -> None:
+        """Should handle file paths containing spaces."""
+        body = (
+            "> <details>\n"
+            "> <summary>\u26a0\ufe0f Outside diff range comments (1)</summary><blockquote>\n"
+            ">\n"
+            "> <details>\n"
+            "> <summary>docs/My File.md (1)</summary><blockquote>\n"
+            ">\n"
+            "> `10-20`: _\u26a0\ufe0f Potential issue_ | _\U0001f7e0 Major_\n"
+            ">\n"
+            "> **Title here**\n"
+            ">\n"
+            "> Body text.\n"
+            ">\n"
+            "> </blockquote></details>\n"
+            ">\n"
+            "> </blockquote></details>\n"
+        )
+        result = parse_outside_diff_comments(body)
+        assert len(result) == 1
+        assert result[0]["path"] == "docs/My File.md"
+
     def test_truncated_html_returns_empty(self) -> None:
         """Truncated HTML with unclosed tags should return empty list."""
         body = (
