@@ -1,4 +1,5 @@
 ---
+name: refine-review
 description: Refine pending PR review comments with AI before submitting
 argument-hint: <PR_URL>
 allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), AskUserQuestion
@@ -40,7 +41,9 @@ Parse `$ARGUMENTS` as the PR URL. If empty, abort with: "PR URL required. Usage:
 myk-claude-tools reviews pending-fetch <PR_URL>
 ```
 
-This returns JSON with:
+The command saves the review data to a JSON file and outputs the file path to stdout.
+
+The JSON file contains:
 
 - `metadata`: owner, repo, pr_number, review_id, username, json_path
 - `comments`: array of pending review comments with id, path, line, body, diff_hunk
@@ -48,7 +51,7 @@ This returns JSON with:
 
 If the command fails (exit code 1), display the error and abort.
 
-Save the `json_path` from metadata for later phases.
+Capture the output (json_path) for later phases.
 
 ### Phase 2: Refine Comments
 
@@ -59,7 +62,7 @@ For each comment in the JSON, use the PR diff context, file path, line number, a
 - Improve clarity and conciseness
 - Make comments more actionable (suggest specific fixes when possible)
 - Fix grammar and formatting
-- Add code suggestions in markdown code blocks where appropriate
+- Add code suggestions in Markdown code blocks where appropriate
 - Preserve the original intent and technical accuracy
 - Keep the tone professional and constructive
 
@@ -87,8 +90,11 @@ Options:
 - **Pick specific** - Enter comment numbers to accept (e.g., "1,3,5")
 - **Keep originals** - Skip refinement, go straight to submit step
 - **Cancel** - Abort without making any changes
+- **Custom text** - Type a custom replacement for specific comments (e.g., "2: my custom comment text")
 
 If "Pick specific": ask user to enter comma-separated numbers. Validate that numbers are within range (1 to N). Ignore duplicates. Re-prompt on invalid input.
+
+If "Custom text": user provides comment number followed by their custom text. The custom text replaces the refined version for that comment.
 
 ### Phase 5: Update JSON
 
@@ -117,11 +123,19 @@ Update the JSON metadata:
 
 ### Phase 7: Execute Updates
 
+If user chose to submit (Phase 6), run with `--submit` flag:
+
+```bash
+myk-claude-tools reviews pending-update <json_path> --submit
+```
+
+If user chose "Don't submit yet", run without `--submit`:
+
 ```bash
 myk-claude-tools reviews pending-update <json_path>
 ```
 
-This updates accepted comment bodies on GitHub and optionally submits the review.
+This updates accepted comment bodies on GitHub and submits the review when `--submit` is provided.
 
 If the command fails, display the error. If it reports a 404, inform the user their pending review may have been submitted or deleted externally.
 

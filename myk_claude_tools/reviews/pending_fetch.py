@@ -219,7 +219,11 @@ def run(pr_url: str) -> int:
         print_stderr("Error: Pending review has no ID")
         return 1
 
-    review_id = int(review_id)
+    try:
+        review_id = int(review_id)
+    except (TypeError, ValueError):
+        print_stderr(f"Error: Invalid review ID: {review_id!r}")
+        return 1
     print_stderr(f"Found pending review: {review_id}")
 
     # Fetch comments for the pending review
@@ -275,7 +279,7 @@ def run(pr_url: str) -> int:
 
     print_stderr(f"Saved to: {json_path}")
 
-    # Output to stdout
-    print(json.dumps(final_output, indent=2))
+    # Output file path to stdout (full data is already saved to file)
+    print(str(json_path))
 
     return 0

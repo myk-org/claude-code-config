@@ -64,7 +64,8 @@ def reviews_pending_fetch(pr_url: str) -> None:
 
 @reviews.command("pending-update")
 @click.argument("json_path")
-def reviews_pending_update(json_path: str) -> None:
+@click.option("--submit", is_flag=True, help="Submit the review after updating comments")
+def reviews_pending_update(json_path: str, submit: bool) -> None:
     """Update pending review comments and optionally submit.
 
     Reads a JSON file created by 'reviews pending-fetch' and refined by an AI,
@@ -74,7 +75,7 @@ def reviews_pending_update(json_path: str) -> None:
     """
     from myk_claude_tools.reviews.pending_update import run  # noqa: PLC0415
 
-    exit_code = run(json_path)
+    exit_code = run(json_path, submit=submit)
     sys.exit(exit_code)
 
 

@@ -143,13 +143,15 @@ def submit_review(
     return True
 
 
-def run(json_path: str) -> int:
+def run(json_path: str, *, submit: bool = False) -> int:
     """Main entry point.
 
     Reads the JSON file, updates accepted comments, and optionally submits the review.
 
     Args:
         json_path: Path to JSON file with pending review data.
+        submit: If True and submit_action is set in metadata, submit the review.
+            Both the JSON submit_action and this flag must be present for submission.
 
     Returns:
         Exit code (0 for success, 1 if any failures).
@@ -210,7 +212,7 @@ def run(json_path: str) -> int:
         # Only update comments that are accepted and have a refined body
         if refined_body is None or status != "accepted":
             skip_count += 1
-            has_body = "set" if refined_body else "null"
+            has_body = "set" if refined_body is not None else "null"
             print_stderr(f"Skipping comment [{i}] ({path}): status={status}, refined_body={has_body}")
             continue
 
@@ -241,9 +243,9 @@ def run(json_path: str) -> int:
             fail_count += 1
             print_stderr("  Failed to update")
 
-    # Optionally submit the review
+    # Optionally submit the review (requires both JSON submit_action AND --submit flag)
     submit_action = metadata.get("submit_action")
-    if submit_action:
+    if submit_action and submit:
         if submit_action not in VALID_SUBMIT_ACTIONS:
             print_stderr(
                 f"Error: Invalid submit_action '{submit_action}'. "
@@ -262,6 +264,8 @@ def run(json_path: str) -> int:
             else:
                 print_stderr("Failed to submit review")
                 fail_count += 1
+    elif submit_action and not submit:
+        print_stderr(f"Note: submit_action='{submit_action}' set but --submit flag not passed. Skipping submission.")
 
     # Print summary
     print_stderr("")
