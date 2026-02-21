@@ -184,6 +184,8 @@ def run(pr_url: str) -> int:
     Returns:
         Exit code (0 for success, 1 for error).
     """
+    # Uses check_dependencies from fetch.py which calls sys.exit(1) on failure.
+    # This is consistent with the fetch.py pattern.
     check_dependencies()
 
     # Parse PR URL
@@ -238,7 +240,8 @@ def run(pr_url: str) -> int:
         diff = ""
         print_stderr("Warning: Could not fetch diff, continuing without it")
 
-    # Ensure output directory exists
+    # Temp files in /tmp/claude/ follow the standard pattern used by all review commands.
+    # The directory has 0o700 permissions to restrict access on shared machines.
     tmp_base = Path(os.environ.get("TMPDIR") or tempfile.gettempdir())
     out_dir = tmp_base / "claude"
     out_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -247,14 +250,22 @@ def run(pr_url: str) -> int:
     except OSError as e:
         print_stderr(f"Warning: unable to set permissions on {out_dir}: {e}")
 
-    json_path = out_dir / f"pr-{pr_number}-pending-review.json"
+    safe_repo = f"{owner}-{repo}".replace("/", "-")
+    json_path = out_dir / f"pr-{safe_repo}-{pr_number}-pending-review.json"
+
+    # Validate pr_number is a valid integer before building output
+    try:
+        pr_number_int = int(pr_number)
+    except (TypeError, ValueError):
+        print_stderr(f"Error: Invalid PR number: {pr_number!r}")
+        return 1
 
     # Build final output
     final_output: dict[str, Any] = {
         "metadata": {
             "owner": owner,
             "repo": repo,
-            "pr_number": int(pr_number),
+            "pr_number": pr_number_int,
             "review_id": review_id,
             "username": username,
             "json_path": str(json_path),
@@ -265,7 +276,7 @@ def run(pr_url: str) -> int:
 
     # Save to file atomically
     fd, tmp_json_path = tempfile.mkstemp(
-        prefix=f"pr-{pr_number}-pending-review.json.",
+        prefix=f"pr-{safe_repo}-{pr_number}-pending-review.json.",
         dir=str(out_dir),
     )
 

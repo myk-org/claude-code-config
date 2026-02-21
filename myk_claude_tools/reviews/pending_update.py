@@ -84,6 +84,7 @@ def update_comment_body(
             capture_output=True,
             text=True,
             timeout=120,
+            encoding="utf-8",
         )
     except subprocess.TimeoutExpired:
         print_stderr(f"Error: Update comment {comment_id} timed out after 120 seconds")
@@ -130,6 +131,7 @@ def submit_review(
             capture_output=True,
             text=True,
             timeout=120,
+            encoding="utf-8",
         )
     except subprocess.TimeoutExpired:
         print_stderr(f"Error: Submit review {review_id} timed out after 120 seconds")
@@ -210,10 +212,16 @@ def run(json_path: str, *, submit: bool = False) -> int:
         path = comment.get("path", "unknown")
 
         # Only update comments that are accepted and have a refined body
-        if refined_body is None or status != "accepted":
+        if not refined_body or status != "accepted":
             skip_count += 1
-            has_body = "set" if refined_body is not None else "null"
+            has_body = "set" if refined_body else "null"
             print_stderr(f"Skipping comment [{i}] ({path}): status={status}, refined_body={has_body}")
+            continue
+
+        original_body = comment.get("body", "")
+        if refined_body.strip() == str(original_body).strip():
+            skip_count += 1
+            print_stderr(f"Skipping comment [{i}] ({path}): refined_body unchanged")
             continue
 
         if comment_id is None:
@@ -273,6 +281,6 @@ def run(json_path: str, *, submit: bool = False) -> int:
     print_stderr(f"Updated: {success_count} comment(s)")
     print_stderr(f"Skipped: {skip_count} comment(s)")
     if fail_count > 0:
-        print_stderr(f"Failed: {fail_count}")
+        print_stderr(f"Failed: {fail_count} comment(s)")
 
     return 1 if fail_count > 0 else 0

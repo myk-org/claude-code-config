@@ -2,7 +2,7 @@
 name: refine-review
 description: Refine pending PR review comments with AI before submitting
 argument-hint: <PR_URL>
-allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), AskUserQuestion
+allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), AskUserQuestion, Edit(/tmp/claude/**), Write(/tmp/claude/**)
 ---
 
 # Refine Pending Review Command
@@ -38,7 +38,7 @@ If not found, prompt user: "myk-claude-tools is required. Install with: `uv tool
 Parse `$ARGUMENTS` as the PR URL. If empty, abort with: "PR URL required. Usage: `/myk-github:refine-review https://github.com/owner/repo/pull/123`"
 
 ```bash
-myk-claude-tools reviews pending-fetch <PR_URL>
+myk-claude-tools reviews pending-fetch "<PR_URL>"
 ```
 
 The command saves the review data to a JSON file and outputs the file path to stdout.
