@@ -46,6 +46,38 @@ def reviews_post(json_path: str) -> None:
     run(json_path)
 
 
+@reviews.command("pending-fetch")
+@click.argument("pr_url")
+def reviews_pending_fetch(pr_url: str) -> None:
+    """Fetch pending review comments from a PR.
+
+    Fetches the authenticated user's PENDING review and its comments
+    from a GitHub PR. Saves output to /tmp/claude/pr-<number>-pending-review.json
+
+    PR_URL: GitHub PR URL (e.g., https://github.com/owner/repo/pull/123)
+    """
+    from myk_claude_tools.reviews.pending_fetch import run  # noqa: PLC0415
+
+    exit_code = run(pr_url)
+    sys.exit(exit_code)
+
+
+@reviews.command("pending-update")
+@click.argument("json_path")
+def reviews_pending_update(json_path: str) -> None:
+    """Update pending review comments and optionally submit.
+
+    Reads a JSON file created by 'reviews pending-fetch' and refined by an AI,
+    then updates accepted comment bodies and optionally submits the review.
+
+    JSON_PATH: Path to JSON file with pending review data
+    """
+    from myk_claude_tools.reviews.pending_update import run  # noqa: PLC0415
+
+    exit_code = run(json_path)
+    sys.exit(exit_code)
+
+
 @reviews.command("store")
 @click.argument("json_path")
 def reviews_store(json_path: str) -> None:

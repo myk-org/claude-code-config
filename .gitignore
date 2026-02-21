@@ -102,6 +102,7 @@
 !plugins/myk-github/.claude-plugin/plugin.json
 !plugins/myk-github/commands/
 !plugins/myk-github/commands/pr-review.md
+!plugins/myk-github/commands/refine-review.md
 !plugins/myk-github/commands/release.md
 !plugins/myk-github/commands/review-handler.md
 !plugins/myk-github/README.md
@@ -163,6 +164,8 @@
 !myk_claude_tools/reviews/__init__.py
 !myk_claude_tools/reviews/commands.py
 !myk_claude_tools/reviews/fetch.py
+!myk_claude_tools/reviews/pending_fetch.py
+!myk_claude_tools/reviews/pending_update.py
 !myk_claude_tools/reviews/post.py
 !myk_claude_tools/reviews/coderabbit_parser.py
 !myk_claude_tools/reviews/qodo_parser.py
