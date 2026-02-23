@@ -1,5 +1,4 @@
 ---
-name: prompt
 description: Run a one-shot prompt via Cursor agent CLI
 argument-hint: [--model <model>] <prompt>
 allowed-tools: Bash(agent:*), AskUserQuestion
