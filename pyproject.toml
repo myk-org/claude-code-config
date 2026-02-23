@@ -1,28 +1,24 @@
 [project]
 name = "myk-claude-tools"
-version = "0.1.0"
+version = "1.1.7"
 description = "CLI utilities for Claude Code plugins"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-authors = [
-    {name = "myk-org"}
-]
+authors = [{ name = "myk-org" }]
 keywords = ["claude", "cli", "github", "code-review"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
-dependencies = [
-    "click>=8.0.0",
-]
+dependencies = ["click>=8.0.0"]
 
 [project.scripts]
 myk-claude-tools = "myk_claude_tools.cli:main"
@@ -69,6 +65,4 @@ warn_unused_configs = true
 warn_redundant_casts = true
 
 [dependency-groups]
-tests = [
-    "pytest>=9.0.2",
-]
+tests = ["pytest>=9.0.2"]

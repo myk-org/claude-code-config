@@ -150,23 +150,26 @@ This configuration uses plugins from the [Anthropic official marketplace](https:
 Then install each plugin:
 
 ```text
+# --- Critical (required for code-review loop) ---
+/plugin install feature-dev@claude-plugins-official
+/plugin install pr-review-toolkit@claude-plugins-official
+/plugin install superpowers@claude-plugins-official
+
+# --- Optional enhancements ---
 /plugin install claude-code-setup@claude-plugins-official
 /plugin install claude-md-management@claude-plugins-official
 /plugin install code-review@claude-plugins-official
 /plugin install code-simplifier@claude-plugins-official
 /plugin install coderabbit@claude-plugins-official
 /plugin install commit-commands@claude-plugins-official
-/plugin install feature-dev@claude-plugins-official
 /plugin install frontend-design@claude-plugins-official
 /plugin install github@claude-plugins-official
 /plugin install gopls-lsp@claude-plugins-official
 /plugin install jdtls-lsp@claude-plugins-official
 /plugin install lua-lsp@claude-plugins-official
 /plugin install playground@claude-plugins-official
-/plugin install pr-review-toolkit@claude-plugins-official
 /plugin install pyright-lsp@claude-plugins-official
 /plugin install security-guidance@claude-plugins-official
-/plugin install superpowers@claude-plugins-official
 ```
 
 ### Plugin purpose
