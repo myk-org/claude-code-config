@@ -199,7 +199,7 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 
 **Installation:**
 
-```bash
+```text
 /plugin marketplace add myk-org/claude-code-config
 /plugin install myk-qodo@myk-org
 ```
@@ -480,14 +480,11 @@ This enforces that orchestrator delegates work instead of doing it directly.
 
 ### CLAUDE.md and AI_REVIEW.md Sync
 
-**When modifying CLAUDE.md, also update AI_REVIEW.md.**
+**`AI_REVIEW.md` is the canonical project-context file for AI review tools.**
 
-These files must stay in sync:
-
-- `CLAUDE.md` - Instructions for Claude Code
-- `AI_REVIEW.md` - Instructions for AI code review tools (CodeRabbit, Qodo)
-
-Both files contain the same project context and guidelines. When you change one, change the other.
+`CLAUDE.md` is a local-only file (gitignored) that contains personal Claude Code instructions.
+It is no longer tracked in this repository and therefore does not need to be kept in sync with `AI_REVIEW.md`.
+Update `AI_REVIEW.md` when modifying shared project context or guidelines.
 
 ---
 

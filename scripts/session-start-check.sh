@@ -7,6 +7,9 @@ set -euo pipefail
 missing_critical=()
 missing_optional=()
 
+# Precompute all installed plugin.json paths once (avoids repeated find scans)
+_plugin_cache=$(find "${HOME}/.claude" -maxdepth 6 -type f -name "plugin.json" 2>/dev/null || true)
+
 # Helper: check if a marketplace plugin is installed
 # Usage: check_plugin_installed "plugin-name"
 # Returns 0 if found, 1 if not
@@ -17,14 +20,11 @@ check_plugin_installed() {
     return 0
   elif [[ -d "${HOME}/.claude/plugins/${plugin}@claude-plugins-official" ]]; then
     return 0
-  elif echo "$_plugin_cache" | grep -q "/${plugin}@claude-plugins-official/"; then
+  elif grep -Fq "/${plugin}@claude-plugins-official/" <<<"$_plugin_cache"; then
     return 0
   fi
   return 1
 }
-
-# Precompute all installed plugin.json paths once (avoids repeated find scans)
-_plugin_cache=$(find "${HOME}/.claude" -maxdepth 6 -type f -name "plugin.json" 2>/dev/null)
 
 # CRITICAL: uv - Required for Python hooks
 if ! command -v uv &>/dev/null; then

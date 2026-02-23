@@ -12,7 +12,7 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 This configuration leverages these features:
 
 - **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert) (v2.1.0)
-- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only) (v2.1.0)
+- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., docs-fetcher is read-only) (v2.1.0)
 - **`additionalContext` in PreToolUse** - Provides guidance when blocking commands (v2.1.9)
 - **Task management system** - Built-in task tracking with `TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet` for complex workflows (v2.1.16)
 - **Slash command argument syntax** - Bracket syntax `$ARGUMENTS[0]` and shorthand `$0`, `$1` for positional arguments (v2.1.19)
@@ -25,13 +25,13 @@ The easiest way to use this repository's features is via plugins:
 
 ### 1. Add the marketplace
 
-```bash
+```text
 /plugin marketplace add myk-org/claude-code-config
 ```
 
 ### 2. Install plugins
 
-```bash
+```text
 # GitHub operations (PR reviews, releases, review handling)
 /plugin install myk-github@myk-org
 
@@ -140,13 +140,13 @@ This configuration uses plugins from the [Anthropic official marketplace](https:
 
 ### Install all at once
 
-```bash
+```text
 /plugin marketplace add claude-plugins-official
 ```
 
 Then install each plugin:
 
-```bash
+```text
 /plugin install code-review@claude-plugins-official
 /plugin install code-simplifier@claude-plugins-official
 /plugin install commit-commands@claude-plugins-official
@@ -292,7 +292,7 @@ User: "Add a new feature to handle user auth"
 
 ## Orchestrator Pattern Details
 
-The [`CLAUDE.md`](./CLAUDE.md) file defines an orchestrator pattern where:
+The `CLAUDE.md` file (local-only, not tracked in git) defines an orchestrator pattern where:
 
 1. The main Claude instance acts as a **manager/orchestrator**
 2. It delegates tasks to **specialist agents** based on the domain
@@ -361,8 +361,8 @@ pre-commit run --all-files
 ## Contributing
 
 When adding or modifying plugins, agents, or features, ensure all markdown documentation files
-in the repository are updated to reflect the changes. In particular, [`CLAUDE.md`](./CLAUDE.md)
-and [`AI_REVIEW.md`](./AI_REVIEW.md) must stay in sync.
+in the repository are updated to reflect the changes. In particular, update
+[`AI_REVIEW.md`](./AI_REVIEW.md) when modifying shared project context or guidelines.
 
 ## Plugins
 

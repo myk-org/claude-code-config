@@ -62,4 +62,3 @@ Merge and deduplicate findings from all 3 reviewers. Display grouped by:
 - Critical issues (must fix)
 - Warnings (should fix)
 - Suggestions (nice to have)
-- Positive observations (good patterns found)

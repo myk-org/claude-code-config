@@ -126,7 +126,8 @@ Provide each agent with:
 - The diff content from Phase 1a
 - The CLAUDE.md content from Phase 1b (or "No CLAUDE.md found" if empty)
 
-Each agent should analyze for security, bugs, error handling, performance issues and return JSON with findings. Merge and deduplicate findings from all 3 reviewers before proceeding.
+Each agent should analyze for security, bugs, error handling, and performance issues and return their findings as prose.
+Merge and deduplicate the findings from all 3 reviewers before proceeding.
 
 ### Phase 3: User Selection
 
