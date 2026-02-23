@@ -17,11 +17,14 @@ check_plugin_installed() {
     return 0
   elif [[ -d "${HOME}/.claude/plugins/${plugin}@claude-plugins-official" ]]; then
     return 0
-  elif find "${HOME}/.claude" -maxdepth 5 -type f -name "plugin.json" -path "*/${plugin}*" -print -quit 2>/dev/null | grep -q .; then
+  elif echo "$_plugin_cache" | grep -q "/${plugin}@claude-plugins-official/"; then
     return 0
   fi
   return 1
 }
+
+# Precompute all installed plugin.json paths once (avoids repeated find scans)
+_plugin_cache=$(find "${HOME}/.claude" -maxdepth 6 -type f -name "plugin.json" 2>/dev/null)
 
 # CRITICAL: uv - Required for Python hooks
 if ! command -v uv &>/dev/null; then
@@ -79,9 +82,14 @@ done
 
 if [[ ${#missing_critical_plugins[@]} -gt 0 ]]; then
   missing_list=$(IFS=', '; echo "${missing_critical_plugins[*]}")
+  install_cmds=""
+  for p in "${missing_critical_plugins[@]}"; do
+    install_cmds+="    /plugin install ${p}@claude-plugins-official"$'\n'
+  done
   missing_critical+=("[CRITICAL] Missing review plugins - Required for mandatory code review loop
-  Install: /plugin marketplace add claude-plugins-official && /plugin install <name>@claude-plugins-official
-  Missing: ${missing_list}")
+  Install:
+    /plugin marketplace add claude-plugins-official
+${install_cmds}  Missing: ${missing_list}")
 fi
 
 # OPTIONAL: Marketplace plugins - Check @claude-plugins-official plugins
@@ -111,9 +119,14 @@ done
 
 if [[ ${#missing_plugins[@]} -gt 0 ]]; then
   missing_list=$(IFS=', '; echo "${missing_plugins[*]}")
+  install_cmds=""
+  for p in "${missing_plugins[@]}"; do
+    install_cmds+="    /plugin install ${p}@claude-plugins-official"$'\n'
+  done
   missing_optional+=("[OPTIONAL] Missing marketplace plugins - Enhance functionality but not mandatory
-  Install with: /plugin marketplace add claude-plugins-official && /plugin install <name>@claude-plugins-official
-  Missing: ${missing_list}")
+  Install with:
+    /plugin marketplace add claude-plugins-official
+${install_cmds}  Missing: ${missing_list}")
 fi
 
 # Output report only if something is missing

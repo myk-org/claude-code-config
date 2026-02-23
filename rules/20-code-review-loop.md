@@ -40,7 +40,7 @@ Three plugin agents review code in parallel for comprehensive coverage:
 | `pr-review-toolkit:code-reviewer` | Project guidelines and style adherence (CLAUDE.md) |
 | `feature-dev:code-reviewer` | Bugs, logic errors, and security vulnerabilities |
 
-**All 3 MUST be called in a single message using parallel Task tool calls.**
+**All 3 MUST be invoked in the same assistant turn as 3 parallel Task tool calls (one response containing 3 Task invocations, not sequential messages).**
 
 **Note:** The overlapping scope between reviewers is intentional. Multiple reviewers examining similar areas
 ensures comprehensive coverage and reduces the chance of missed issues.
