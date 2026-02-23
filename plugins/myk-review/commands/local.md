@@ -8,7 +8,7 @@ allowed-tools: Bash(git:*), Task, AskUserQuestion
 
 Review uncommitted changes or changes compared to a specified branch.
 
-**MANDATORY: This command MUST use the `code-reviewer` agent via Task tool.**
+**MANDATORY: This command MUST use 3 review agents in parallel via Task tool.**
 
 ## Usage
 
@@ -36,11 +36,15 @@ Get all uncommitted changes (staged + unstaged):
 git diff HEAD
 ```
 
-### Step 2: Route to code-reviewer agent (MANDATORY)
+### Step 2: Route to review agents (MANDATORY)
 
-**CRITICAL: You MUST use the Task tool with `code-reviewer` agent.**
+**CRITICAL: You MUST use the Task tool to call ALL 3 review agents IN PARALLEL (single message):**
 
-Delegate to `code-reviewer` with the diff and ask it to analyze for:
+- `superpowers:code-reviewer` - General code quality and maintainability
+- `pr-review-toolkit:code-reviewer` - Project guidelines and style adherence
+- `feature-dev:code-reviewer` - Bugs, logic errors, and security vulnerabilities
+
+Delegate to all 3 with the diff and ask them to analyze for:
 
 1. Code quality and best practices
 2. Potential bugs or logic errors
@@ -53,7 +57,7 @@ Delegate to `code-reviewer` with the diff and ask it to analyze for:
 
 ### Step 3: Present the review
 
-Display the code-reviewer agent's findings grouped by:
+Merge and deduplicate findings from all 3 reviewers. Display grouped by:
 
 - Critical issues (must fix)
 - Warnings (should fix)

@@ -159,4 +159,4 @@ Need documentation?
 
 ## Fallback
 
-**Fallback:** No specialist? → `general-purpose` agent
+**Fallback:** No specialist? → built-in `general-purpose` agent (provided by Claude Code)

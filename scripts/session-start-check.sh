@@ -47,6 +47,85 @@ if ! command -v mcpl &>/dev/null; then
   Install: https://github.com/kenneth-liao/mcp-launchpad")
 fi
 
+# CRITICAL: Review plugins - Required for mandatory code review loop
+critical_marketplace_plugins=(
+  pr-review-toolkit
+  superpowers
+  feature-dev
+)
+
+missing_critical_plugins=()
+for plugin in "${critical_marketplace_plugins[@]}"; do
+  found=false
+  # Check common plugin locations
+  if [[ -d "${HOME}/.claude/share/plugins/${plugin}@claude-plugins-official" ]]; then
+    found=true
+  elif [[ -d "${HOME}/.claude/plugins/${plugin}@claude-plugins-official" ]]; then
+    found=true
+  elif find "${HOME}/.claude" -maxdepth 5 -type f -name "plugin.json" -path "*/${plugin}*" -print -quit 2>/dev/null | grep -q .; then
+    found=true
+  fi
+
+  if [[ "$found" == "false" ]]; then
+    missing_critical_plugins+=("$plugin")
+  fi
+done
+
+if [[ ${#missing_critical_plugins[@]} -gt 0 ]]; then
+  missing_list=""
+  for i in "${!missing_critical_plugins[@]}"; do
+    if [[ "$i" -gt 0 ]]; then
+      missing_list+=", "
+    fi
+    missing_list+="${missing_critical_plugins[$i]}"
+  done
+  missing_critical+=("[CRITICAL] Missing review plugins - Required for mandatory code review loop
+  Install: /plugin marketplace add claude-plugins-official && /plugin install <name>@claude-plugins-official
+  Missing: ${missing_list}")
+fi
+
+# OPTIONAL: Marketplace plugins - Check @claude-plugins-official plugins
+optional_marketplace_plugins=(
+  code-review
+  code-simplifier
+  commit-commands
+  frontend-design
+  playground
+  claude-md-management
+  claude-code-setup
+  security-guidance
+)
+
+missing_plugins=()
+for plugin in "${optional_marketplace_plugins[@]}"; do
+  found=false
+  # Check common plugin locations
+  if [[ -d "${HOME}/.claude/share/plugins/${plugin}@claude-plugins-official" ]]; then
+    found=true
+  elif [[ -d "${HOME}/.claude/plugins/${plugin}@claude-plugins-official" ]]; then
+    found=true
+  elif find "${HOME}/.claude" -maxdepth 5 -type f -name "plugin.json" -path "*/${plugin}*" -print -quit 2>/dev/null | grep -q .; then
+    found=true
+  fi
+
+  if [[ "$found" == "false" ]]; then
+    missing_plugins+=("$plugin")
+  fi
+done
+
+if [[ ${#missing_plugins[@]} -gt 0 ]]; then
+  missing_list=""
+  for i in "${!missing_plugins[@]}"; do
+    if [[ "$i" -gt 0 ]]; then
+      missing_list+=", "
+    fi
+    missing_list+="${missing_plugins[$i]}"
+  done
+  missing_optional+=("[OPTIONAL] Missing marketplace plugins - Enhance functionality but not mandatory
+  Install with: /plugin marketplace add claude-plugins-official && /plugin install <name>@claude-plugins-official
+  Missing: ${missing_list}")
+fi
+
 # Output report only if something is missing
 if [[ ${#missing_critical[@]} -gt 0 || ${#missing_optional[@]} -gt 0 ]]; then
   echo "MISSING_TOOLS_REPORT:"

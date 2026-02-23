@@ -17,13 +17,10 @@
 !agents/00-base-rules.md
 !agents/api-documenter.md
 !agents/bash-expert.md
-!agents/code-reviewer.md
-!agents/codebase-refactor-analyst.md
 !agents/debugger.md
 !agents/docs-fetcher.md
 !agents/docker-expert.md
 !agents/frontend-expert.md
-!agents/general-purpose.md
 !agents/git-expert.md
 !agents/github-expert.md
 !agents/go-expert.md

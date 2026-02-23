@@ -118,7 +118,7 @@ The agent will format the title and body according to its template.
 **As you work on the issue:**
 
 1. **Check off deliverables** - Update the issue to mark completed items
-2. **Follow code review loop** - All code changes go through `code-reviewer`
+2. **Follow code review loop** - All code changes go through the review loop (see `rules/20-code-review-loop.md`)
 3. **Update issue with progress** - Add comments if significant updates occur
 
 **When all deliverables are complete:**

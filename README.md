@@ -106,7 +106,7 @@ Your symlinks will automatically point to the updated files.
 
 - **4 plugins** with 10 commands (myk-github, myk-review, myk-qodo, myk-cursor)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
-- **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
+- **16 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **1 skill** for context-aware automation
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
@@ -130,12 +130,53 @@ Your symlinks will automatically point to the updated files.
 | `test-automator` | Test suites, CI pipelines |
 | `test-runner` | Test execution and reporting |
 | `debugger` | Error analysis, debugging |
-| `code-reviewer` | Code quality, security review |
-| `codebase-refactor-analyst` | Refactoring analysis and planning |
 | `technical-documentation-writer` | Documentation |
 | `api-documenter` | OpenAPI/Swagger specs |
 | `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |
-| `general-purpose` | Fallback for unspecified tasks |
+
+## Required Marketplace Plugins
+
+This configuration uses plugins from the [Anthropic official marketplace](https://github.com/anthropics/claude-plugins-official). Install them for full functionality:
+
+### Install all at once
+
+```bash
+/plugin marketplace add claude-plugins-official
+```
+
+Then install each plugin:
+
+```bash
+/plugin install code-review@claude-plugins-official
+/plugin install code-simplifier@claude-plugins-official
+/plugin install commit-commands@claude-plugins-official
+/plugin install feature-dev@claude-plugins-official
+/plugin install frontend-design@claude-plugins-official
+/plugin install playground@claude-plugins-official
+/plugin install pr-review-toolkit@claude-plugins-official
+/plugin install superpowers@claude-plugins-official
+/plugin install claude-md-management@claude-plugins-official
+/plugin install claude-code-setup@claude-plugins-official
+/plugin install security-guidance@claude-plugins-official
+```
+
+### Plugin purpose
+
+| Plugin | Purpose |
+|--------|---------|
+| `superpowers` | Brainstorming, debugging, TDD, code review workflows |
+| `pr-review-toolkit` | PR review with specialized agents (code-reviewer, test-analyzer, silent-failure-hunter) |
+| `feature-dev` | Feature architecture, codebase exploration, code review |
+| `code-review` | Pull request code review |
+| `code-simplifier` | Code simplification and refactoring |
+| `commit-commands` | Git commit, push, PR, and branch cleanup |
+| `frontend-design` | Frontend interface design |
+| `playground` | Interactive HTML playground creation |
+| `claude-md-management` | CLAUDE.md file management and improvement |
+| `claude-code-setup` | Claude Code automation recommendations |
+| `security-guidance` | Security best practices |
+
+> **Note:** Missing plugins are detected automatically at session start. Claude Code will prompt you to install any missing plugins.
 
 ### Automatic Documentation Fetching
 
@@ -208,7 +249,7 @@ This configuration implements an **orchestrator pattern** where Claude acts as a
 
 ### Quality Assurance
 
-- **Mandatory code review** - Every code change goes through `code-reviewer`
+- **Mandatory code review** - Every code change goes through 3 parallel plugin review agents
 - **Automated testing** - `test-automator` runs after changes
 - **Review loop** - Changes iterate until approved
 
@@ -233,9 +274,10 @@ User: "Add a new feature to handle user auth"
    └────────┴────────────────┘
             │
             ▼
-    ┌──────────────┐
-    │code-reviewer │
-    └──────────────┘
+  ┌──────────┬──────────┬──────────┐
+  │superpow. │pr-review │feat-dev  │
+  │ reviewer │ reviewer │ reviewer │
+  └──────────┴──────────┴──────────┘
             │
             ▼
        Done
