@@ -680,16 +680,28 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
 
     # Preload and index dismissed comments once per run for performance
     dismissed_by_path: dict[str, list[dict[str, Any]]] = {}
+    dismissed_by_comment_id: dict[int, list[dict[str, Any]]] = {}
     if db:
         try:
             for c in db.get_dismissed_comments(owner, repo):
-                p = (c.get("path") or "").strip()
                 b = (c.get("body") or "").strip()
-                if p and b:
+                if not b:
+                    continue
+                p = (c.get("path") or "").strip()
+                if p:
                     dismissed_by_path.setdefault(p, []).append(c)
+                cid = c.get("comment_id")
+                if cid is not None:
+                    try:
+                        cid = int(cid)
+                    except (TypeError, ValueError):
+                        pass
+                    else:
+                        dismissed_by_comment_id.setdefault(cid, []).append(c)
         except Exception as e:
             print_stderr(f"Warning: Failed to preload dismissed comments: {e}")
             dismissed_by_path = {}
+            dismissed_by_comment_id = {}
 
     for thread in threads:
         author = thread.get("author")
@@ -707,32 +719,51 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
         }
 
         # Check for previously dismissed similar comment (only if status is pending)
-        if dismissed_by_path and enriched.get("status") == "pending":
+        if (dismissed_by_path or dismissed_by_comment_id) and enriched.get("status") == "pending":
             path = (thread.get("path") or "").strip()
             thread_body = (thread.get("body") or "").strip()
-            if path and thread_body:
+            if thread_body:
                 try:
-                    # Find best matching dismissed comment
-                    best = None
-                    best_score = 0.0
-                    for prev in dismissed_by_path.get(path, []):
-                        prev_body = (prev.get("body") or "").strip()
-                        if not prev_body:
-                            continue
-                        score = similarity(thread_body, prev_body)
-                        if score >= 0.6 and score > best_score:
-                            best = prev
-                            best_score = score
-                            if best_score == 1.0:
-                                break
+                    # Build candidate list: try path first, then comment_id
+                    candidates: list[dict[str, Any]] = []
+                    if path:
+                        candidates = dismissed_by_path.get(path, [])
+                    if not candidates:
+                        # For pathless items (issue_comment_suggestions, outside_diff_comments),
+                        # match by comment_id instead
+                        cid = thread.get("comment_id")
+                        if cid is None:
+                            cid = thread.get("issue_comment_id")
+                        if cid is not None:
+                            try:
+                                cid = int(cid)
+                            except (TypeError, ValueError):
+                                cid = None
+                        if cid is not None:
+                            candidates = dismissed_by_comment_id.get(cid, [])
 
-                    if best:
-                        reason = (best.get("skip_reason") or best.get("reply") or "").strip()
-                        if reason:
-                            enriched["status"] = "skipped"
-                            enriched["skip_reason"] = reason
-                            enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
-                            enriched["is_auto_skipped"] = True
+                    # Find best matching dismissed comment
+                    if candidates:
+                        best = None
+                        best_score = 0.0
+                        for prev in candidates:
+                            prev_body = (prev.get("body") or "").strip()
+                            if not prev_body:
+                                continue
+                            score = similarity(thread_body, prev_body)
+                            if score >= 0.6 and score > best_score:
+                                best = prev
+                                best_score = score
+                                if best_score == 1.0:
+                                    break
+
+                        if best:
+                            reason = (best.get("reply") or "").strip()
+                            if reason:
+                                enriched["status"] = "skipped"
+                                enriched["skip_reason"] = reason
+                                enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
+                                enriched["is_auto_skipped"] = True
                 except Exception as e:
                     print_stderr(f"Warning: Failed to match dismissed comment: {e}")
 

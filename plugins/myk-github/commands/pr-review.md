@@ -115,12 +115,19 @@ Store the output as `claude_md_content`.
 
 ### Phase 2: Code Analysis
 
-Delegate to `code-reviewer` agent with:
+Delegate to ALL 3 review agents IN PARALLEL (single message with 3 Task tool calls):
+
+- `superpowers:code-reviewer` - General code quality and maintainability
+- `pr-review-toolkit:code-reviewer` - Project guidelines and style adherence
+- `feature-dev:code-reviewer` - Bugs, logic errors, and security vulnerabilities
+
+Provide each agent with:
 
 - The diff content from Phase 1a
 - The CLAUDE.md content from Phase 1b (or "No CLAUDE.md found" if empty)
 
-The agent should analyze for security, bugs, error handling, performance issues and return JSON with findings.
+Each agent should analyze for security, bugs, error handling, and performance issues and return their findings as prose.
+Merge and deduplicate the findings from all 3 reviewers before proceeding.
 
 ### Phase 3: User Selection
 

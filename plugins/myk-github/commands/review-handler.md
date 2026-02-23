@@ -62,12 +62,24 @@ separate item in the `qodo` category with `type: "issue_comment_suggestion"`.
 
 ### Phase 2: User Decision Collection
 
-Present each comment in priority order (HIGH -> MEDIUM -> LOW):
+**MANDATORY: Present ALL fetched items to the user for decision. Never auto-skip or auto-categorize items.**
+
+Even if an item appears to be a repeat from a previous round, was already addressed, or seems trivial — present it to the user. The user decides what to address or skip, not the AI.
+
+When presenting items:
+
+1. Group by source (human, qodo, coderabbit)
+2. Within each source, order by priority (HIGH → MEDIUM → LOW)
+3. For items that appear to be repeats of previously addressed work, note this but still present them
+4. Summarize each item concisely (1-2 lines) with file path and line number
+
+User response options:
 
 - 'yes' - Address this comment
 - 'no' - Skip (ask reason)
 - 'all' - Address all remaining
-- 'skip human/qodo/coderabbit/ai' - Skip remaining from source
+- 'skip human/qodo/coderabbit' - Skip remaining from that source
+- 'skip ai' - Skip remaining from all AI sources (qodo + coderabbit)
 
 ### Phase 3: Execute Approved Tasks
 

@@ -29,6 +29,7 @@
 **Built-in agents** are provided by Claude Code itself and do NOT require definition files in `agents/`:
 
 - `claude-code-guide` - Has current Claude Code documentation built into Claude Code
+- `general-purpose` - Default fallback agent when no specialist matches
 
 **Custom agents** are defined in this repository's `agents/` directory and require definition files:
 
@@ -159,4 +160,4 @@ Need documentation?
 
 ## Fallback
 
-**Fallback:** No specialist? → `general-purpose` agent
+**Fallback:** No specialist? → built-in `general-purpose` agent (provided by Claude Code)

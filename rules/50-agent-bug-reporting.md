@@ -15,13 +15,10 @@ This rule applies ONLY to agents defined in this repository (`agents/` directory
 
 - api-documenter
 - bash-expert
-- code-reviewer
-- codebase-refactor-analyst
 - debugger
 - docs-fetcher
 - docker-expert
 - frontend-expert
-- general-purpose
 - git-expert
 - github-expert
 - go-expert

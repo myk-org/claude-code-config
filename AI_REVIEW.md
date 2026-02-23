@@ -27,13 +27,10 @@ claude-code-config/
 │   ├── 00-base-rules.md       # Shared rules for ALL agents
 │   ├── api-documenter.md      # OpenAPI/Swagger specs
 │   ├── bash-expert.md         # Shell scripting
-│   ├── code-reviewer.md       # Code quality/security review
-│   ├── codebase-refactor-analyst.md  # Refactoring analysis
 │   ├── debugger.md            # Error analysis
 │   ├── docker-expert.md       # Container orchestration
 │   ├── docs-fetcher.md        # External docs (prioritizes llms.txt)
 │   ├── frontend-expert.md     # JS/TS/React/Vue/Angular
-│   ├── general-purpose.md     # Fallback agent
 │   ├── git-expert.md          # Git operations
 │   ├── github-expert.md       # GitHub platform operations
 │   ├── go-expert.md           # Go development
@@ -202,7 +199,7 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 
 **Installation:**
 
-```bash
+```text
 /plugin marketplace add myk-org/claude-code-config
 /plugin install myk-qodo@myk-org
 ```
@@ -241,24 +238,21 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 ### Development Workflow
 
 - **git-expert** - Git operations, branching strategies
-- **code-reviewer** - Code quality, security review (MANDATORY after changes)
 - **test-automator** - Test suite creation, CI pipelines
 - **test-runner** - Test execution and reporting
 - **debugger** - Error analysis and debugging
+
+### Code Review (Plugin Agents)
+
+- **superpowers:code-reviewer** - General code quality and maintainability
+- **pr-review-toolkit:code-reviewer** - Project guidelines and style adherence
+- **feature-dev:code-reviewer** - Bugs, logic errors, and security vulnerabilities
 
 ### Documentation
 
 - **docs-fetcher** - Fetches external library/framework docs (prioritizes llms.txt)
 - **technical-documentation-writer** - User-focused documentation
 - **api-documenter** - OpenAPI/Swagger specifications
-
-### Analysis
-
-- **codebase-refactor-analyst** - Refactoring analysis and planning
-
-### Fallback
-
-- **general-purpose** - Handles tasks without specific specialist
 
 ---
 
@@ -486,14 +480,11 @@ This enforces that orchestrator delegates work instead of doing it directly.
 
 ### CLAUDE.md and AI_REVIEW.md Sync
 
-**When modifying CLAUDE.md, also update AI_REVIEW.md.**
+**`AI_REVIEW.md` is the canonical project-context file for AI review tools.**
 
-These files must stay in sync:
-
-- `CLAUDE.md` - Instructions for Claude Code
-- `AI_REVIEW.md` - Instructions for AI code review tools (CodeRabbit, Qodo)
-
-Both files contain the same project context and guidelines. When you change one, change the other.
+`CLAUDE.md` is a local-only file (gitignored) that contains personal Claude Code instructions.
+It is no longer tracked in this repository and therefore does not need to be kept in sync with `AI_REVIEW.md`.
+Update `AI_REVIEW.md` when modifying shared project context or guidelines.
 
 ---
 
@@ -552,7 +543,7 @@ uv run ~/.claude/scripts/rule-enforcer.py
 
 ### 3. Quality Assurance
 
-- Mandatory code review loop
+- **Mandatory code review** - Every code change goes through 3 parallel review agents
 - Test automation after changes
 - Iterate until approved
 

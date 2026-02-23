@@ -205,7 +205,8 @@ class ReviewDB:
             repo: GitHub repository name.
 
         Returns:
-            List of dicts with keys: path, line, body, status, reply (reason for dismissal).
+            List of dicts with keys: path, line, body, status, reply (reason for dismissal),
+            comment_id (GitHub comment/review ID for exact matching).
             Returns empty list if database doesn't exist or on error.
 
         Example:
@@ -223,7 +224,7 @@ class ReviewDB:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT c.path, c.line, c.body, c.status, c.reply, c.skip_reason, c.author, c.type
+                SELECT c.path, c.line, c.body, c.status, c.reply, c.skip_reason, c.author, c.type, c.comment_id
                 FROM comments c
                 JOIN reviews r ON c.review_id = r.id
                 WHERE r.owner = ? AND r.repo = ?
@@ -245,6 +246,7 @@ class ReviewDB:
                     "reply": row["reply"] or row["skip_reason"],
                     "author": row["author"],
                     "type": row["type"],
+                    "comment_id": row["comment_id"],
                 })
             return results
         except sqlite3.Error as e:

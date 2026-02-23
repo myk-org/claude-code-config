@@ -12,7 +12,7 @@ Pre-configured Claude Code setup with specialized agents and workflow automation
 This configuration leverages these features:
 
 - **Agent-scoped hooks** - Hooks defined in agent frontmatter (e.g., `PreToolUse` in git-expert) (v2.1.0)
-- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., code-reviewer is read-only) (v2.1.0)
+- **`allowed-tools`** - Tool restrictions in agent frontmatter (e.g., docs-fetcher is read-only) (v2.1.0)
 - **`additionalContext` in PreToolUse** - Provides guidance when blocking commands (v2.1.9)
 - **Task management system** - Built-in task tracking with `TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet` for complex workflows (v2.1.16)
 - **Slash command argument syntax** - Bracket syntax `$ARGUMENTS[0]` and shorthand `$0`, `$1` for positional arguments (v2.1.19)
@@ -25,13 +25,13 @@ The easiest way to use this repository's features is via plugins:
 
 ### 1. Add the marketplace
 
-```bash
+```text
 /plugin marketplace add myk-org/claude-code-config
 ```
 
 ### 2. Install plugins
 
-```bash
+```text
 # GitHub operations (PR reviews, releases, review handling)
 /plugin install myk-github@myk-org
 
@@ -106,7 +106,7 @@ Your symlinks will automatically point to the updated files.
 
 - **4 plugins** with 10 commands (myk-github, myk-review, myk-qodo, myk-cursor)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
-- **19 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
+- **16 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **1 skill** for context-aware automation
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
@@ -130,12 +130,71 @@ Your symlinks will automatically point to the updated files.
 | `test-automator` | Test suites, CI pipelines |
 | `test-runner` | Test execution and reporting |
 | `debugger` | Error analysis, debugging |
-| `code-reviewer` | Code quality, security review |
-| `codebase-refactor-analyst` | Refactoring analysis and planning |
 | `technical-documentation-writer` | Documentation |
 | `api-documenter` | OpenAPI/Swagger specs |
 | `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |
-| `general-purpose` | Fallback for unspecified tasks |
+
+## Marketplace Plugins
+
+This configuration uses plugins from the [Anthropic official marketplace](https://github.com/anthropics/claude-plugins-official).
+
+> **Critical (required for the code-review loop):** `pr-review-toolkit`, `superpowers`, `feature-dev`
+> All others are optional enhancements.
+
+### Install all at once
+
+```text
+/plugin marketplace add claude-plugins-official
+```
+
+Then install each plugin:
+
+```text
+# --- Critical (required for code-review loop) ---
+/plugin install feature-dev@claude-plugins-official
+/plugin install pr-review-toolkit@claude-plugins-official
+/plugin install superpowers@claude-plugins-official
+
+# --- Optional enhancements ---
+/plugin install claude-code-setup@claude-plugins-official
+/plugin install claude-md-management@claude-plugins-official
+/plugin install code-review@claude-plugins-official
+/plugin install code-simplifier@claude-plugins-official
+/plugin install coderabbit@claude-plugins-official
+/plugin install commit-commands@claude-plugins-official
+/plugin install frontend-design@claude-plugins-official
+/plugin install github@claude-plugins-official
+/plugin install gopls-lsp@claude-plugins-official
+/plugin install jdtls-lsp@claude-plugins-official
+/plugin install lua-lsp@claude-plugins-official
+/plugin install playground@claude-plugins-official
+/plugin install pyright-lsp@claude-plugins-official
+/plugin install security-guidance@claude-plugins-official
+```
+
+### Plugin purpose
+
+| Plugin | Purpose |
+|--------|---------|
+| `claude-code-setup` | Claude Code automation recommendations |
+| `claude-md-management` | CLAUDE.md file management and improvement |
+| `code-review` | Pull request code review |
+| `code-simplifier` | Code simplification and refactoring |
+| `coderabbit` | CodeRabbit AI code review integration |
+| `commit-commands` | Git commit, push, PR, and branch cleanup |
+| `feature-dev` | Feature architecture, codebase exploration, code review |
+| `frontend-design` | Frontend interface design |
+| `github` | GitHub operations and workflows |
+| `gopls-lsp` | Go language server (gopls) integration |
+| `jdtls-lsp` | Java language server (Eclipse JDT.LS) integration |
+| `lua-lsp` | Lua language server integration |
+| `playground` | Interactive HTML playground creation |
+| `pr-review-toolkit` | PR review with specialized agents (code-reviewer, test-analyzer, silent-failure-hunter) |
+| `pyright-lsp` | Python language server (Pyright) integration |
+| `security-guidance` | Security best practices |
+| `superpowers` | Brainstorming, debugging, TDD, code review workflows |
+
+> **Note:** Missing plugins are detected automatically at session start. Claude Code will prompt you to install any missing plugins.
 
 ### Automatic Documentation Fetching
 
@@ -208,7 +267,7 @@ This configuration implements an **orchestrator pattern** where Claude acts as a
 
 ### Quality Assurance
 
-- **Mandatory code review** - Every code change goes through `code-reviewer`
+- **Mandatory code review** - Every code change goes through 3 parallel plugin review agents
 - **Automated testing** - `test-automator` runs after changes
 - **Review loop** - Changes iterate until approved
 
@@ -233,9 +292,10 @@ User: "Add a new feature to handle user auth"
    └────────┴────────────────┘
             │
             ▼
-    ┌──────────────┐
-    │code-reviewer │
-    └──────────────┘
+  ┌──────────┬──────────┬──────────┐
+  │superpow. │pr-review │feat-dev  │
+  │ reviewer │ reviewer │ reviewer │
+  └──────────┴──────────┴──────────┘
             │
             ▼
        Done
@@ -250,7 +310,7 @@ User: "Add a new feature to handle user auth"
 
 ## Orchestrator Pattern Details
 
-The [`CLAUDE.md`](./CLAUDE.md) file defines an orchestrator pattern where:
+The `CLAUDE.md` file (local-only, not tracked in git) defines an orchestrator pattern where:
 
 1. The main Claude instance acts as a **manager/orchestrator**
 2. It delegates tasks to **specialist agents** based on the domain
@@ -319,8 +379,8 @@ pre-commit run --all-files
 ## Contributing
 
 When adding or modifying plugins, agents, or features, ensure all markdown documentation files
-in the repository are updated to reflect the changes. In particular, [`CLAUDE.md`](./CLAUDE.md)
-and [`AI_REVIEW.md`](./AI_REVIEW.md) must stay in sync.
+in the repository are updated to reflect the changes. In particular, update
+[`AI_REVIEW.md`](./AI_REVIEW.md) when modifying shared project context or guidelines.
 
 ## Plugins
 

@@ -7,6 +7,25 @@ set -euo pipefail
 missing_critical=()
 missing_optional=()
 
+# Precompute all installed plugin.json paths once (avoids repeated find scans)
+_plugin_cache=$(find "${HOME}/.claude" -maxdepth 6 -type f -name "plugin.json" 2>/dev/null || true)
+
+# Helper: check if a marketplace plugin is installed
+# Usage: check_plugin_installed "plugin-name"
+# Returns 0 if found, 1 if not
+check_plugin_installed() {
+  local plugin="$1"
+  # Check common plugin locations
+  if [[ -d "${HOME}/.claude/share/plugins/${plugin}@claude-plugins-official" ]]; then
+    return 0
+  elif [[ -d "${HOME}/.claude/plugins/${plugin}@claude-plugins-official" ]]; then
+    return 0
+  elif grep -Fq "/${plugin}@claude-plugins-official/" <<<"$_plugin_cache"; then
+    return 0
+  fi
+  return 1
+}
+
 # CRITICAL: uv - Required for Python hooks
 if ! command -v uv &>/dev/null; then
   missing_critical+=("[CRITICAL] uv - Required for running Python hooks
@@ -45,6 +64,71 @@ fi
 if ! command -v mcpl &>/dev/null; then
   missing_optional+=("[OPTIONAL] mcpl - MCP Launchpad for MCP server access
   Install: https://github.com/kenneth-liao/mcp-launchpad")
+fi
+
+# CRITICAL: Review plugins - Required for mandatory code review loop
+critical_marketplace_plugins=(
+  pr-review-toolkit
+  superpowers
+  feature-dev
+)
+
+missing_critical_plugins=()
+for plugin in "${critical_marketplace_plugins[@]}"; do
+  if ! check_plugin_installed "$plugin"; then
+    missing_critical_plugins+=("$plugin")
+  fi
+done
+
+if [[ ${#missing_critical_plugins[@]} -gt 0 ]]; then
+  missing_list=$(printf '%s, ' "${missing_critical_plugins[@]}")
+  missing_list=${missing_list%, }
+  install_cmds=""
+  for p in "${missing_critical_plugins[@]}"; do
+    install_cmds+="    /plugin install ${p}@claude-plugins-official"$'\n'
+  done
+  missing_critical+=("[CRITICAL] Missing review plugins - Required for mandatory code review loop
+  Install:
+    /plugin marketplace add claude-plugins-official
+${install_cmds}  Missing: ${missing_list}")
+fi
+
+# OPTIONAL: Marketplace plugins - Check @claude-plugins-official plugins
+optional_marketplace_plugins=(
+  claude-code-setup
+  claude-md-management
+  code-review
+  code-simplifier
+  coderabbit
+  commit-commands
+  frontend-design
+  github
+  gopls-lsp
+  jdtls-lsp
+  lua-lsp
+  playground
+  pyright-lsp
+  security-guidance
+)
+
+missing_plugins=()
+for plugin in "${optional_marketplace_plugins[@]}"; do
+  if ! check_plugin_installed "$plugin"; then
+    missing_plugins+=("$plugin")
+  fi
+done
+
+if [[ ${#missing_plugins[@]} -gt 0 ]]; then
+  missing_list=$(printf '%s, ' "${missing_plugins[@]}")
+  missing_list=${missing_list%, }
+  install_cmds=""
+  for p in "${missing_plugins[@]}"; do
+    install_cmds+="    /plugin install ${p}@claude-plugins-official"$'\n'
+  done
+  missing_optional+=("[OPTIONAL] Missing marketplace plugins - Enhance functionality but not mandatory
+  Install with:
+    /plugin marketplace add claude-plugins-official
+${install_cmds}  Missing: ${missing_list}")
 fi
 
 # Output report only if something is missing
