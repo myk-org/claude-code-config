@@ -134,9 +134,12 @@ Your symlinks will automatically point to the updated files.
 | `api-documenter` | OpenAPI/Swagger specs |
 | `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |
 
-## Required Marketplace Plugins
+## Marketplace Plugins
 
-This configuration uses plugins from the [Anthropic official marketplace](https://github.com/anthropics/claude-plugins-official). Install them for full functionality:
+This configuration uses plugins from the [Anthropic official marketplace](https://github.com/anthropics/claude-plugins-official).
+
+> **Critical (required for the code-review loop):** `pr-review-toolkit`, `superpowers`, `feature-dev`
+> All others are optional enhancements.
 
 ### Install all at once
 
