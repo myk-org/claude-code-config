@@ -147,34 +147,46 @@ This configuration uses plugins from the [Anthropic official marketplace](https:
 Then install each plugin:
 
 ```text
+/plugin install claude-code-setup@claude-plugins-official
+/plugin install claude-md-management@claude-plugins-official
 /plugin install code-review@claude-plugins-official
 /plugin install code-simplifier@claude-plugins-official
+/plugin install coderabbit@claude-plugins-official
 /plugin install commit-commands@claude-plugins-official
 /plugin install feature-dev@claude-plugins-official
 /plugin install frontend-design@claude-plugins-official
+/plugin install github@claude-plugins-official
+/plugin install gopls-lsp@claude-plugins-official
+/plugin install jdtls-lsp@claude-plugins-official
+/plugin install lua-lsp@claude-plugins-official
 /plugin install playground@claude-plugins-official
 /plugin install pr-review-toolkit@claude-plugins-official
-/plugin install superpowers@claude-plugins-official
-/plugin install claude-md-management@claude-plugins-official
-/plugin install claude-code-setup@claude-plugins-official
+/plugin install pyright-lsp@claude-plugins-official
 /plugin install security-guidance@claude-plugins-official
+/plugin install superpowers@claude-plugins-official
 ```
 
 ### Plugin purpose
 
 | Plugin | Purpose |
 |--------|---------|
-| `superpowers` | Brainstorming, debugging, TDD, code review workflows |
-| `pr-review-toolkit` | PR review with specialized agents (code-reviewer, test-analyzer, silent-failure-hunter) |
-| `feature-dev` | Feature architecture, codebase exploration, code review |
+| `claude-code-setup` | Claude Code automation recommendations |
+| `claude-md-management` | CLAUDE.md file management and improvement |
 | `code-review` | Pull request code review |
 | `code-simplifier` | Code simplification and refactoring |
+| `coderabbit` | CodeRabbit AI code review integration |
 | `commit-commands` | Git commit, push, PR, and branch cleanup |
+| `feature-dev` | Feature architecture, codebase exploration, code review |
 | `frontend-design` | Frontend interface design |
+| `github` | GitHub operations and workflows |
+| `gopls-lsp` | Go language server (gopls) integration |
+| `jdtls-lsp` | Java language server (Eclipse JDT.LS) integration |
+| `lua-lsp` | Lua language server integration |
 | `playground` | Interactive HTML playground creation |
-| `claude-md-management` | CLAUDE.md file management and improvement |
-| `claude-code-setup` | Claude Code automation recommendations |
+| `pr-review-toolkit` | PR review with specialized agents (code-reviewer, test-analyzer, silent-failure-hunter) |
+| `pyright-lsp` | Python language server (Pyright) integration |
 | `security-guidance` | Security best practices |
+| `superpowers` | Brainstorming, debugging, TDD, code review workflows |
 
 > **Note:** Missing plugins are detected automatically at session start. Claude Code will prompt you to install any missing plugins.
 

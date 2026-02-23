@@ -81,7 +81,8 @@ for plugin in "${critical_marketplace_plugins[@]}"; do
 done
 
 if [[ ${#missing_critical_plugins[@]} -gt 0 ]]; then
-  missing_list=$(IFS=', '; echo "${missing_critical_plugins[*]}")
+  missing_list=$(printf '%s, ' "${missing_critical_plugins[@]}")
+  missing_list=${missing_list%, }
   install_cmds=""
   for p in "${missing_critical_plugins[@]}"; do
     install_cmds+="    /plugin install ${p}@claude-plugins-official"$'\n'
@@ -118,7 +119,8 @@ for plugin in "${optional_marketplace_plugins[@]}"; do
 done
 
 if [[ ${#missing_plugins[@]} -gt 0 ]]; then
-  missing_list=$(IFS=', '; echo "${missing_plugins[*]}")
+  missing_list=$(printf '%s, ' "${missing_plugins[@]}")
+  missing_list=${missing_list%, }
   install_cmds=""
   for p in "${missing_plugins[@]}"; do
     install_cmds+="    /plugin install ${p}@claude-plugins-official"$'\n'
