@@ -205,7 +205,8 @@ class ReviewDB:
             repo: GitHub repository name.
 
         Returns:
-            List of dicts with keys: path, line, body, status, reply (reason for dismissal).
+            List of dicts with keys: path, line, body, status, reply (reason for dismissal),
+            comment_id (GitHub comment/review ID for exact matching).
             Returns empty list if database doesn't exist or on error.
 
         Example:

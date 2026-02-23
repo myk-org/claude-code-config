@@ -78,7 +78,8 @@ User response options:
 - 'yes' - Address this comment
 - 'no' - Skip (ask reason)
 - 'all' - Address all remaining
-- 'skip human/qodo/coderabbit/ai' - Skip remaining from source
+- 'skip human/qodo/coderabbit' - Skip remaining from that source
+- 'skip ai' - Skip remaining from all AI sources (qodo + coderabbit)
 
 ### Phase 3: Execute Approved Tasks
 

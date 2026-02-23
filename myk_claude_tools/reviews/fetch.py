@@ -692,7 +692,12 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                     dismissed_by_path.setdefault(p, []).append(c)
                 cid = c.get("comment_id")
                 if cid is not None:
-                    dismissed_by_comment_id.setdefault(cid, []).append(c)
+                    try:
+                        cid = int(cid)
+                    except (TypeError, ValueError):
+                        pass
+                    else:
+                        dismissed_by_comment_id.setdefault(cid, []).append(c)
         except Exception as e:
             print_stderr(f"Warning: Failed to preload dismissed comments: {e}")
             dismissed_by_path = {}
@@ -726,7 +731,14 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                     if not candidates:
                         # For pathless items (issue_comment_suggestions, outside_diff_comments),
                         # match by comment_id instead
-                        cid = thread.get("comment_id") or thread.get("issue_comment_id")
+                        cid = thread.get("comment_id")
+                        if cid is None:
+                            cid = thread.get("issue_comment_id")
+                        if cid is not None:
+                            try:
+                                cid = int(cid)
+                            except (TypeError, ValueError):
+                                cid = None
                         if cid is not None:
                             candidates = dismissed_by_comment_id.get(cid, [])
 
