@@ -1236,9 +1236,9 @@ class TestFetchQodoIssueComments:
 
 
 class TestFetchCoderabbitOutsideDiffComments:
-    """Tests for fetch_coderabbit_outside_diff_comments()."""
+    """Tests for fetch_coderabbit_outside_diff_comments() (alias for fetch_coderabbit_body_comments)."""
 
-    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
     @patch.object(get_all_reviews, "run_gh_api")
     def test_filters_by_coderabbit_author(self, mock_api: Any, mock_parse: Any) -> None:
         """Only CodeRabbit reviews should be processed."""
@@ -1251,14 +1251,14 @@ class TestFetchCoderabbitOutsideDiffComments:
                 "body": "review body with outside diff",
             },
         ]
-        mock_parse.return_value = []
+        mock_parse.return_value = {"outside_diff": [], "nitpick": []}
 
         get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
 
-        # parse_outside_diff_comments should only be called for CodeRabbit reviews
+        # parse_review_body_comments should only be called for CodeRabbit reviews
         mock_parse.assert_called_once_with("review body with outside diff")
 
-    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
     @patch.object(get_all_reviews, "run_gh_api")
     def test_maps_parsed_comments_to_threads(self, mock_api: Any, mock_parse: Any) -> None:
         """Each parsed comment should become a separate thread-like dict."""
@@ -1270,24 +1270,27 @@ class TestFetchCoderabbitOutsideDiffComments:
                 "body": "review body",
             },
         ]
-        mock_parse.return_value = [
-            {
-                "path": "src/main.py",
-                "line": 100,
-                "end_line": 110,
-                "body": "Resource leak",
-                "category": "Potential issue",
-                "severity": "Major",
-            },
-            {
-                "path": "src/utils.py",
-                "line": 42,
-                "end_line": None,
-                "body": "Unused import",
-                "category": "Nitpick",
-                "severity": "Trivial",
-            },
-        ]
+        mock_parse.return_value = {
+            "outside_diff": [
+                {
+                    "path": "src/main.py",
+                    "line": 100,
+                    "end_line": 110,
+                    "body": "Resource leak",
+                    "category": "Potential issue",
+                    "severity": "Major",
+                },
+                {
+                    "path": "src/utils.py",
+                    "line": 42,
+                    "end_line": None,
+                    "body": "Unused import",
+                    "category": "Nitpick",
+                    "severity": "Trivial",
+                },
+            ],
+            "nitpick": [],
+        }
 
         result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
 
@@ -1353,7 +1356,7 @@ class TestFetchCoderabbitOutsideDiffComments:
 
         assert result == []
 
-    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
     @patch.object(get_all_reviews, "run_gh_api")
     def test_handles_reviews_with_no_outside_diff_comments(self, mock_api: Any, mock_parse: Any) -> None:
         """Reviews with no parseable outside-diff comments should yield nothing."""
@@ -1365,13 +1368,13 @@ class TestFetchCoderabbitOutsideDiffComments:
                 "body": "Clean review with no outside diff comments",
             },
         ]
-        mock_parse.return_value = []
+        mock_parse.return_value = {"outside_diff": [], "nitpick": []}
 
         result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
 
         assert result == []
 
-    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
     @patch.object(get_all_reviews, "run_gh_api")
     def test_skips_reviews_without_id(self, mock_api: Any, mock_parse: Any) -> None:
         """Reviews without an ID should be skipped."""
@@ -1383,15 +1386,18 @@ class TestFetchCoderabbitOutsideDiffComments:
                 "body": "review body",
             },
         ]
-        mock_parse.return_value = [
-            {"path": "f.py", "line": 1, "end_line": 2, "body": "test", "category": "Bug", "severity": "Major"}
-        ]
+        mock_parse.return_value = {
+            "outside_diff": [
+                {"path": "f.py", "line": 1, "end_line": 2, "body": "test", "category": "Bug", "severity": "Major"}
+            ],
+            "nitpick": [],
+        }
 
         result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
 
         assert result == []
 
-    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_outside_diff_comments")
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
     @patch.object(get_all_reviews, "run_gh_api")
     def test_accepts_coderabbitai_user_without_bot_suffix(self, mock_api: Any, mock_parse: Any) -> None:
         """The 'coderabbitai' username (without [bot]) should also be accepted."""
@@ -1403,9 +1409,12 @@ class TestFetchCoderabbitOutsideDiffComments:
                 "body": "review body",
             },
         ]
-        mock_parse.return_value = [
-            {"path": "f.py", "line": 10, "end_line": 20, "body": "issue", "category": "Bug", "severity": "Major"}
-        ]
+        mock_parse.return_value = {
+            "outside_diff": [
+                {"path": "f.py", "line": 10, "end_line": 20, "body": "issue", "category": "Bug", "severity": "Major"}
+            ],
+            "nitpick": [],
+        }
 
         result = get_all_reviews.fetch_coderabbit_outside_diff_comments("owner", "repo", "1")
 
@@ -1470,3 +1479,325 @@ class TestGetThreadKeyOutsideDiffComment:
             "comment_id": 100,
         }
         assert get_all_reviews.get_thread_key(thread) == "odc:100:0"
+
+
+# =============================================================================
+# Tests for get_thread_key() with nitpick_comment type
+# =============================================================================
+
+
+class TestGetThreadKeyNitpickComment:
+    """Tests for get_thread_key() with the nitpick_comment type."""
+
+    def test_nitpick_comment_key(self) -> None:
+        """Nitpick comment should use composite npc: key."""
+        thread = {
+            "type": "nitpick_comment",
+            "review_id": 300,
+            "suggestion_index": 1,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 300,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "npc:300:1"
+
+    def test_no_collision_with_odc_key(self) -> None:
+        """npc: prefix should not collide with odc: prefix."""
+        odc_thread = {
+            "type": "outside_diff_comment",
+            "review_id": 100,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 100,
+        }
+        npc_thread = {
+            "type": "nitpick_comment",
+            "review_id": 100,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 100,
+        }
+        odc_key = get_all_reviews.get_thread_key(odc_thread)
+        npc_key = get_all_reviews.get_thread_key(npc_thread)
+        assert odc_key != npc_key
+        assert odc_key == "odc:100:0"
+        assert npc_key == "npc:100:0"
+
+    def test_nitpick_comment_missing_review_id(self) -> None:
+        """Missing review_id should fall through to other key strategies."""
+        thread = {
+            "type": "nitpick_comment",
+            "review_id": None,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 300,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "n:n1"
+
+    def test_nitpick_comment_zero_index(self) -> None:
+        """suggestion_index of 0 should be valid."""
+        thread = {
+            "type": "nitpick_comment",
+            "review_id": 100,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 100,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "npc:100:0"
+
+
+# =============================================================================
+# Tests for fetch_coderabbit_body_comments() returning both types
+# =============================================================================
+
+
+class TestFetchCoderabbitBodyComments:
+    """Tests for fetch_coderabbit_body_comments() returning both outside_diff and nitpick types."""
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_returns_both_types(self, mock_api: Any, mock_parse: Any) -> None:
+        """Should return both outside_diff_comment and nitpick_comment threads."""
+        mock_api.return_value = [
+            {"id": 200, "node_id": "n1", "user": {"login": "coderabbitai[bot]"}, "body": "review body"},
+        ]
+        mock_parse.return_value = {
+            "outside_diff": [
+                {
+                    "path": "src/a.py",
+                    "line": 10,
+                    "end_line": 20,
+                    "body": "odc issue",
+                    "category": "Bug",
+                    "severity": "Major",
+                },
+            ],
+            "nitpick": [
+                {
+                    "path": "src/b.py",
+                    "line": 5,
+                    "end_line": None,
+                    "body": "nit issue",
+                    "category": "Nitpick",
+                    "severity": "Trivial",
+                },
+            ],
+        }
+
+        result = get_all_reviews.fetch_coderabbit_body_comments("owner", "repo", "1")
+
+        assert len(result) == 2
+        assert result[0]["type"] == "outside_diff_comment"
+        assert result[0]["path"] == "src/a.py"
+        assert result[0]["review_id"] == 200
+        assert result[0]["suggestion_index"] == 0
+
+        assert result[1]["type"] == "nitpick_comment"
+        assert result[1]["path"] == "src/b.py"
+        assert result[1]["review_id"] == 200
+        assert result[1]["suggestion_index"] == 0
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_only_nitpick(self, mock_api: Any, mock_parse: Any) -> None:
+        """Should handle reviews with only nitpick comments."""
+        mock_api.return_value = [
+            {"id": 200, "node_id": "n1", "user": {"login": "coderabbitai[bot]"}, "body": "review body"},
+        ]
+        mock_parse.return_value = {
+            "outside_diff": [],
+            "nitpick": [
+                {
+                    "path": "src/b.py",
+                    "line": 5,
+                    "end_line": None,
+                    "body": "nit",
+                    "category": "Nitpick",
+                    "severity": "Trivial",
+                },
+            ],
+        }
+
+        result = get_all_reviews.fetch_coderabbit_body_comments("owner", "repo", "1")
+
+        assert len(result) == 1
+        assert result[0]["type"] == "nitpick_comment"
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_empty_both_types(self, mock_api: Any, mock_parse: Any) -> None:
+        """Should return empty list when no comments found."""
+        mock_api.return_value = [
+            {"id": 200, "node_id": "n1", "user": {"login": "coderabbitai[bot]"}, "body": "review body"},
+        ]
+        mock_parse.return_value = {"outside_diff": [], "nitpick": []}
+
+        result = get_all_reviews.fetch_coderabbit_body_comments("owner", "repo", "1")
+
+        assert result == []
+
+
+# =============================================================================
+# Tests for fetch_review_body()
+# =============================================================================
+
+
+class TestFetchReviewBody:
+    """Tests for fetch_review_body()."""
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_fetches_review_metadata(self, mock_api: Any) -> None:
+        """Should fetch a single review by ID."""
+        mock_api.return_value = {
+            "id": 12345,
+            "node_id": "PRR_abc",
+            "user": {"login": "coderabbitai[bot]"},
+            "body": "review body text",
+        }
+
+        result = get_all_reviews.fetch_review_body("owner", "repo", "1", "12345")
+
+        assert result is not None
+        assert result["id"] == 12345
+        assert result["body"] == "review body text"
+        mock_api.assert_called_once_with("/repos/owner/repo/pulls/1/reviews/12345")
+
+    @patch.object(get_all_reviews, "run_gh_api")
+    def test_returns_none_on_failure(self, mock_api: Any) -> None:
+        """Should return None when API call fails."""
+        mock_api.return_value = None
+
+        result = get_all_reviews.fetch_review_body("owner", "repo", "1", "99999")
+
+        assert result is None
+
+
+# =============================================================================
+# Tests for run() - pullrequestreview-NNN body-embedded comments
+# =============================================================================
+
+
+class TestRunReviewUrlBodyComments:
+    """Tests for run() fetching body-embedded comments from a specific review URL."""
+
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
+    @patch.object(get_all_reviews, "fetch_review_body")
+    @patch.object(get_all_reviews, "fetch_review_comments")
+    @patch.object(get_all_reviews, "fetch_coderabbit_body_comments")
+    @patch.object(get_all_reviews, "fetch_qodo_issue_comments")
+    @patch.object(get_all_reviews, "fetch_unresolved_threads")
+    @patch.object(get_all_reviews, "get_pr_info")
+    @patch.object(get_all_reviews, "check_dependencies")
+    def test_merges_body_comments_for_coderabbit_review(
+        self,
+        _mock_check_deps: Any,
+        mock_pr_info: Any,
+        mock_threads: Any,
+        mock_qodo: Any,
+        mock_body_comments: Any,
+        mock_review_comments: Any,
+        mock_review_body: Any,
+        mock_parse: Any,
+    ) -> None:
+        """Body-embedded comments should be merged when review is from CodeRabbit."""
+        mock_pr_info.return_value = ("owner", "repo", "1")
+        mock_threads.return_value = []
+        mock_qodo.return_value = []
+        mock_body_comments.return_value = []
+        mock_review_comments.return_value = []
+        mock_review_body.return_value = {
+            "id": 12345,
+            "node_id": "PRR_abc",
+            "user": {"login": "coderabbitai[bot]"},
+            "body": "review with nitpicks",
+        }
+        mock_parse.return_value = {
+            "outside_diff": [],
+            "nitpick": [
+                {
+                    "path": "src/a.py",
+                    "line": 10,
+                    "end_line": None,
+                    "body": "nit",
+                    "category": "Nitpick",
+                    "severity": "Trivial",
+                },
+            ],
+        }
+
+        result = get_all_reviews.run("https://github.com/owner/repo/pull/1#pullrequestreview-12345")
+
+        assert result == 0
+        mock_review_body.assert_called_once_with("owner", "repo", "1", "12345")
+        mock_parse.assert_called_once_with("review with nitpicks")
+
+    @patch.object(get_all_reviews, "fetch_review_body")
+    @patch.object(get_all_reviews, "fetch_review_comments")
+    @patch.object(get_all_reviews, "fetch_coderabbit_body_comments")
+    @patch.object(get_all_reviews, "fetch_qodo_issue_comments")
+    @patch.object(get_all_reviews, "fetch_unresolved_threads")
+    @patch.object(get_all_reviews, "get_pr_info")
+    @patch.object(get_all_reviews, "check_dependencies")
+    @patch("myk_claude_tools.reviews.coderabbit_parser.parse_review_body_comments")
+    def test_skips_body_comments_for_non_coderabbit_review(
+        self,
+        mock_parse: Any,
+        _mock_check_deps: Any,
+        mock_pr_info: Any,
+        mock_threads: Any,
+        mock_qodo: Any,
+        mock_body_comments: Any,
+        mock_review_comments: Any,
+        mock_review_body: Any,
+    ) -> None:
+        """Body-embedded comments should NOT be parsed for non-CodeRabbit reviews."""
+        mock_pr_info.return_value = ("owner", "repo", "1")
+        mock_threads.return_value = []
+        mock_qodo.return_value = []
+        mock_body_comments.return_value = []
+        mock_review_comments.return_value = []
+        mock_review_body.return_value = {
+            "id": 12345,
+            "node_id": "PRR_abc",
+            "user": {"login": "human-reviewer"},
+            "body": "some review text",
+        }
+
+        result = get_all_reviews.run("https://github.com/owner/repo/pull/1#pullrequestreview-12345")
+
+        assert result == 0
+        mock_review_body.assert_called_once()
+        mock_parse.assert_not_called()
+
+    @patch.object(get_all_reviews, "fetch_review_body")
+    @patch.object(get_all_reviews, "fetch_review_comments")
+    @patch.object(get_all_reviews, "fetch_coderabbit_body_comments")
+    @patch.object(get_all_reviews, "fetch_qodo_issue_comments")
+    @patch.object(get_all_reviews, "fetch_unresolved_threads")
+    @patch.object(get_all_reviews, "get_pr_info")
+    @patch.object(get_all_reviews, "check_dependencies")
+    def test_handles_fetch_review_body_failure(
+        self,
+        _mock_check_deps: Any,
+        mock_pr_info: Any,
+        mock_threads: Any,
+        mock_qodo: Any,
+        mock_body_comments: Any,
+        mock_review_comments: Any,
+        mock_review_body: Any,
+    ) -> None:
+        """Should handle gracefully when fetch_review_body returns None."""
+        mock_pr_info.return_value = ("owner", "repo", "1")
+        mock_threads.return_value = []
+        mock_qodo.return_value = []
+        mock_body_comments.return_value = []
+        mock_review_comments.return_value = []
+        mock_review_body.return_value = None
+
+        result = get_all_reviews.run("https://github.com/owner/repo/pull/1#pullrequestreview-12345")
+
+        assert result == 0

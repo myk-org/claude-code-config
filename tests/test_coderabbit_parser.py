@@ -1,4 +1,4 @@
-"""Unit tests for CodeRabbit outside-diff-range comment parser.
+"""Unit tests for CodeRabbit review body comment parsers.
 
 This test suite covers:
 - Parsing real-world review body format
@@ -6,13 +6,17 @@ This test suite covers:
 - Multiple files in one review body
 - Single-line references
 - Edge cases (empty body, CAUTION-only, AI prompt exclusion)
+- Nitpick comment parsing
+- Combined review body parsing (outside diff + nitpick)
 """
 
 from __future__ import annotations
 
 from myk_claude_tools.reviews.coderabbit_parser import (
     _strip_blockquote_prefix,
+    parse_nitpick_comments,
     parse_outside_diff_comments,
+    parse_review_body_comments,
 )
 
 # =============================================================================
@@ -170,10 +174,86 @@ SAMPLE_BODY_TRAILING_AI_PROMPT = """\
 >
 > </details>
 """
+# A body with a nitpick section (using the broom emoji header).
+SAMPLE_BODY_NITPICK = """\
+> [!TIP]
+> Some nitpick comments are available.
+>
+> <details>
+> <summary>\U0001f9f9 Nitpick comments (2)</summary><blockquote>
+>
+> <details>
+> <summary>src/utils/helpers.py (2)</summary><blockquote>
+>
+> `15-20`: _\U0001f4dd Nitpick_ | _\U0001f7e2 Trivial_
+>
+> **Consider using a more descriptive variable name**
+>
+> The variable `x` could be renamed to `count` for clarity.
+>
+> ---
+>
+> `45`: _\U0001f4dd Nitpick_ | _\U0001f7e2 Trivial_
+>
+> **Unused import**
+>
+> The import of `os` is not used in this module.
+>
+> <details>
+> <summary>\U0001f916 Prompt for AI Agents</summary>
+>
+> ```
+> Remove the unused import of os from src/utils/helpers.py
+> ```
+>
+> </details>
+>
+> </blockquote></details>
+>
+> </blockquote></details>
+"""
+
+# A body with BOTH outside-diff AND nitpick sections.
+SAMPLE_BODY_COMBINED = """\
+> [!CAUTION]
+> Some comments are outside the diff.
+>
+> <details>
+> <summary>\u26a0\ufe0f Outside diff range comments (1)</summary><blockquote>
+>
+> <details>
+> <summary>src/main.py (1)</summary><blockquote>
+>
+> `100-110`: _\u26a0\ufe0f Potential issue_ | _\U0001f7e0 Major_
+>
+> **Resource leak in connection pool**
+>
+> The connection is never closed.
+>
+> </blockquote></details>
+>
+> </blockquote></details>
+>
+> <details>
+> <summary>\U0001f9f9 Nitpick comments (1)</summary><blockquote>
+>
+> <details>
+> <summary>src/config.py (1)</summary><blockquote>
+>
+> `5`: _\U0001f4dd Nitpick_ | _\U0001f7e2 Trivial_
+>
+> **Magic number should be a constant**
+>
+> Replace `42` with a named constant.
+>
+> </blockquote></details>
+>
+> </blockquote></details>
+"""
 
 
 # =============================================================================
-# Test class
+# Test classes
 # =============================================================================
 
 
@@ -378,3 +458,70 @@ class TestStripBlockquotePrefix:
         text = "no prefix\n> quoted\nnot quoted"
         result = _strip_blockquote_prefix(text)
         assert result == "no prefix\nquoted\nnot quoted"
+
+
+class TestParseNitpickComments:
+    """Tests for parse_nitpick_comments()."""
+
+    def test_parses_nitpick_comments(self) -> None:
+        """Should parse nitpick comments from the nitpick section."""
+        result = parse_nitpick_comments(SAMPLE_BODY_NITPICK)
+        assert len(result) == 2
+        assert result[0]["path"] == "src/utils/helpers.py"
+        assert result[0]["line"] == 15
+        assert result[0]["end_line"] == 20
+        assert result[0]["category"] == "Nitpick"
+        assert result[0]["severity"] == "Trivial"
+        assert "descriptive variable name" in result[0]["body"]
+
+        assert result[1]["path"] == "src/utils/helpers.py"
+        assert result[1]["line"] == 45
+        assert result[1]["end_line"] is None
+
+    def test_excludes_ai_prompt_section(self) -> None:
+        """AI prompt sections should be excluded from nitpick comment bodies."""
+        result = parse_nitpick_comments(SAMPLE_BODY_NITPICK)
+        assert len(result) == 2
+        assert "Prompt for AI Agents" not in result[1]["body"]
+        assert "Remove the unused import" not in result[1]["body"]
+
+    def test_empty_body(self) -> None:
+        """Should return empty list for empty body."""
+        assert parse_nitpick_comments("") == []
+
+    def test_no_cross_contamination_with_outside_diff(self) -> None:
+        """Nitpick parser should NOT find outside-diff comments."""
+        result = parse_nitpick_comments(SAMPLE_BODY_COMBINED)
+        assert len(result) == 1
+        assert result[0]["path"] == "src/config.py"
+        # Should NOT include the outside-diff comment
+        assert all(c["path"] != "src/main.py" for c in result)
+
+
+class TestParseReviewBodyComments:
+    """Tests for parse_review_body_comments()."""
+
+    def test_combined_body(self) -> None:
+        """Should return both outside_diff and nitpick comments."""
+        result = parse_review_body_comments(SAMPLE_BODY_COMBINED)
+        assert len(result["outside_diff"]) == 1
+        assert len(result["nitpick"]) == 1
+        assert result["outside_diff"][0]["path"] == "src/main.py"
+        assert result["nitpick"][0]["path"] == "src/config.py"
+
+    def test_only_outside_diff(self) -> None:
+        """Body with only outside-diff should have empty nitpick list."""
+        result = parse_review_body_comments(SAMPLE_BODY_TWO_COMMENTS)
+        assert len(result["outside_diff"]) == 2
+        assert result["nitpick"] == []
+
+    def test_only_nitpick(self) -> None:
+        """Body with only nitpick should have empty outside_diff list."""
+        result = parse_review_body_comments(SAMPLE_BODY_NITPICK)
+        assert result["outside_diff"] == []
+        assert len(result["nitpick"]) == 2
+
+    def test_empty_body(self) -> None:
+        """Empty body should return empty lists for both types."""
+        result = parse_review_body_comments("")
+        assert result == {"outside_diff": [], "nitpick": []}

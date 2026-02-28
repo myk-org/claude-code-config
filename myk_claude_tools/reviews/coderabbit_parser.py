@@ -1,8 +1,11 @@
-"""Parse CodeRabbit 'outside diff range' comments from review bodies.
+"""Parse CodeRabbit review body comments (outside diff range and nitpick).
 
-CodeRabbit embeds comments that reference code outside the PR diff range
-in the review body text (not as inline threads). This module extracts
-those comments into structured data.
+CodeRabbit embeds certain comments directly in the review body text
+(not as inline threads). This module extracts those comments into
+structured data. Two kinds of body-embedded sections are supported:
+
+- **Outside diff range** comments (code outside the PR diff range)
+- **Nitpick** comments (minor suggestions)
 
 The expected format is a blockquoted ``<details>`` section with nested
 file-level ``<details>`` blocks, each containing individual comments
@@ -21,6 +24,11 @@ from typing import Any
 # Matches the start of the outer "Outside diff range comments" section.
 _OUTSIDE_SECTION_START_RE = re.compile(
     r"<summary>\s*\S*\s*Outside diff range comments?\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
+)
+
+# Matches the start of the outer "Nitpick comments" section.
+_NITPICK_SECTION_START_RE = re.compile(
+    r"<summary>\s*\S*\s*Nitpick comments?\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
 )
 
 # Matches the start of a file-level <details> block with path and count.
@@ -173,35 +181,29 @@ def _parse_single_comment(raw: str) -> dict[str, Any] | None:
     }
 
 
-def parse_outside_diff_comments(body: str) -> list[dict[str, Any]]:
-    """Parse 'outside diff range' comments from a CodeRabbit review body.
+def _parse_section_comments(cleaned: str, section_re: re.Pattern[str]) -> list[dict[str, Any]]:
+    """Extract and parse comments from a single section of a cleaned review body.
+
+    This is the shared logic for both "outside diff range" and "nitpick"
+    sections. The caller is responsible for cleaning the text first (stripping
+    blockquote prefixes and trailing AI prompt blocks).
 
     Args:
-        body: The review body text.
+        cleaned: The review body text after blockquote-prefix and AI-prompt
+            stripping.
+        section_re: Compiled regex that matches the section's ``<summary>``
+            header (up to and including the opening ``<blockquote>`` tag).
 
     Returns:
         List of dicts, each with keys:
         - path: str (file path)
         - line: int (start line)
         - end_line: int | None (end line, or None if single line)
-        - body: str (the full comment body including title, but excluding AI prompt sections)
+        - body: str (comment body including title, excluding AI prompt sections)
         - category: str (e.g., "Potential issue", "Nitpick")
         - severity: str (e.g., "Major", "Trivial")
     """
-    if not body:
-        return []
-
-    # Strip blockquote prefixes so we can parse clean HTML
-    cleaned = _strip_blockquote_prefix(body)
-
-    # Also strip a trailing AI prompt section that may appear outside the
-    # blockquote at the very end of the review body.
-    cleaned = _AI_PROMPT_RE.sub("", cleaned).strip()
-
-    # Find the outer "Outside diff range comments" section.
-    # We use nesting-aware extraction because the content may contain
-    # nested <blockquote> tags (e.g., inside file-level details blocks).
-    section_start_match = _OUTSIDE_SECTION_START_RE.search(cleaned)
+    section_start_match = section_re.search(cleaned)
     if not section_start_match:
         return []
 
@@ -230,3 +232,78 @@ def parse_outside_diff_comments(body: str) -> list[dict[str, Any]]:
                 results.append(parsed)
 
     return results
+
+
+def parse_outside_diff_comments(body: str) -> list[dict[str, Any]]:
+    """Parse 'outside diff range' comments from a CodeRabbit review body.
+
+    Args:
+        body: The review body text.
+
+    Returns:
+        List of dicts, each with keys:
+        - path: str (file path)
+        - line: int (start line)
+        - end_line: int | None (end line, or None if single line)
+        - body: str (the full comment body including title, but excluding AI prompt sections)
+        - category: str (e.g., "Potential issue", "Nitpick")
+        - severity: str (e.g., "Major", "Trivial")
+    """
+    if not body:
+        return []
+
+    # Strip blockquote prefixes so we can parse clean HTML
+    cleaned = _strip_blockquote_prefix(body)
+
+    # Also strip a trailing AI prompt section that may appear outside the
+    # blockquote at the very end of the review body.
+    cleaned = _AI_PROMPT_RE.sub("", cleaned).strip()
+
+    return _parse_section_comments(cleaned, _OUTSIDE_SECTION_START_RE)
+
+
+def parse_nitpick_comments(body: str) -> list[dict[str, Any]]:
+    """Parse 'nitpick' comments from a CodeRabbit review body.
+
+    Args:
+        body: The review body text.
+
+    Returns:
+        List of dicts, each with keys:
+        - path: str (file path)
+        - line: int (start line)
+        - end_line: int | None (end line, or None if single line)
+        - body: str (the full comment body including title, but excluding AI prompt sections)
+        - category: str (e.g., "Nitpick")
+        - severity: str (e.g., "Trivial")
+    """
+    if not body:
+        return []
+
+    # Strip blockquote prefixes so we can parse clean HTML
+    cleaned = _strip_blockquote_prefix(body)
+
+    # Also strip a trailing AI prompt section that may appear outside the
+    # blockquote at the very end of the review body.
+    cleaned = _AI_PROMPT_RE.sub("", cleaned).strip()
+
+    return _parse_section_comments(cleaned, _NITPICK_SECTION_START_RE)
+
+
+def parse_review_body_comments(body: str) -> dict[str, list[dict[str, Any]]]:
+    """Parse all body-embedded comments from a CodeRabbit review body.
+
+    Returns:
+        Dict with keys ``'outside_diff'`` and ``'nitpick'``, each containing
+        a list of parsed comment dicts.
+    """
+    if not body:
+        return {"outside_diff": [], "nitpick": []}
+
+    cleaned = _strip_blockquote_prefix(body)
+    cleaned = _AI_PROMPT_RE.sub("", cleaned).strip()
+
+    return {
+        "outside_diff": _parse_section_comments(cleaned, _OUTSIDE_SECTION_START_RE),
+        "nitpick": _parse_section_comments(cleaned, _NITPICK_SECTION_START_RE),
+    }
