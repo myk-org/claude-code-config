@@ -592,17 +592,66 @@ def fetch_qodo_issue_comments(owner: str, repo: str, pr_number: str) -> list[dic
     return results
 
 
-def fetch_coderabbit_outside_diff_comments(owner: str, repo: str, pr_number: str) -> list[dict[str, Any]]:
-    """Fetch CodeRabbit 'outside diff range' comments from review bodies.
+def _build_body_comment_threads(
+    parsed: dict[str, list[dict[str, Any]]],
+    review_id: int,
+    node_id: str | None,
+    author: str | None,
+) -> list[dict[str, Any]]:
+    """Convert parsed body comments into thread-like dicts."""
+    threads: list[dict[str, Any]] = []
+    for section_key, thread_type in (("outside_diff", "outside_diff_comment"), ("nitpick", "nitpick_comment")):
+        for idx, comment in enumerate(parsed.get(section_key, [])):
+            path = comment.get("path")
+            line = comment.get("line")
+            body = comment.get("body")
+            if path is None or line is None or body is None:
+                print_stderr(f"Warning: Skipping malformed {thread_type} entry (missing path/line/body)")
+                continue
+
+            try:
+                line_int = int(line)
+            except (TypeError, ValueError):
+                continue
+
+            end_line = comment.get("end_line")
+            end_line_int: int | None = None
+            if end_line is not None:
+                try:
+                    end_line_int = int(end_line)
+                except (TypeError, ValueError):
+                    pass
+
+            threads.append({
+                "thread_id": None,
+                "node_id": node_id,
+                "comment_id": review_id,
+                "author": author,
+                "path": path,
+                "line": line_int,
+                "end_line": end_line_int,
+                "body": body,
+                "category": comment.get("category", ""),
+                "severity": comment.get("severity", ""),
+                "replies": [],
+                "type": thread_type,
+                "review_id": review_id,
+                "suggestion_index": idx,
+            })
+    return threads
+
+
+def fetch_coderabbit_body_comments(owner: str, repo: str, pr_number: str) -> list[dict[str, Any]]:
+    """Fetch CodeRabbit body-embedded comments from review bodies.
 
     CodeRabbit embeds some comments in the review body text (not as inline threads)
-    when they reference code outside the PR diff range. This function fetches
-    all CodeRabbit reviews and parses their bodies for these comments.
+    when they reference code outside the PR diff range or are nitpick-level suggestions.
+    This function fetches all CodeRabbit reviews and parses their bodies for these comments.
 
     Returns:
         List of thread-like dicts, one per parsed comment.
     """
-    from myk_claude_tools.reviews.coderabbit_parser import parse_outside_diff_comments  # noqa: PLC0415
+    from myk_claude_tools.reviews.coderabbit_parser import parse_review_body_comments  # noqa: PLC0415
 
     endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews?per_page=100"
     reviews = run_gh_api(endpoint, paginate=True)
@@ -617,7 +666,7 @@ def fetch_coderabbit_outside_diff_comments(owner: str, repo: str, pr_number: str
 
     results: list[dict[str, Any]] = []
     for review in reviews:
-        author = review.get("user", {}).get("login")
+        author = review.get("user", {}).get("login") if review.get("user") else None
         if author not in CODERABBIT_USERS:
             continue
 
@@ -625,41 +674,26 @@ def fetch_coderabbit_outside_diff_comments(owner: str, repo: str, pr_number: str
         if not body:
             continue
 
-        parsed_comments = parse_outside_diff_comments(body)
-        if not parsed_comments:
-            continue
+        parsed = parse_review_body_comments(body)
 
         review_id = review.get("id")
         if review_id is None:
             continue
 
         try:
-            review_id = int(review_id)
+            review_id_int = int(review_id)
         except (TypeError, ValueError):
             continue
 
         node_id = review.get("node_id")
 
-        for idx, comment in enumerate(parsed_comments):
-            thread_item: dict[str, Any] = {
-                "thread_id": None,
-                "node_id": node_id,
-                "comment_id": review_id,
-                "author": author,
-                "path": comment["path"],
-                "line": comment["line"],
-                "end_line": comment.get("end_line"),
-                "body": comment["body"],
-                "category": comment.get("category", ""),
-                "severity": comment.get("severity", ""),
-                "replies": [],
-                "type": "outside_diff_comment",
-                "review_id": review_id,
-                "suggestion_index": idx,
-            }
-            results.append(thread_item)
+        results.extend(_build_body_comment_threads(parsed, review_id_int, node_id, author))
 
     return results
+
+
+# Keep old name as alias for backward compatibility
+fetch_coderabbit_outside_diff_comments = fetch_coderabbit_body_comments
 
 
 def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str) -> dict[str, list[dict[str, Any]]]:
@@ -786,12 +820,23 @@ def get_thread_key(thread: dict[str, Any]) -> str | None:
         if issue_comment_id is not None and suggestion_index is not None:
             return f"ic:{issue_comment_id}:{suggestion_index}"
 
-    # Outside diff comments use review_id + suggestion_index as composite key
+    # Outside diff comments use review_id + location as composite key (stable across reordering)
     if thread.get("type") == "outside_diff_comment":
         review_id = thread.get("review_id")
-        suggestion_index = thread.get("suggestion_index")
-        if review_id is not None and suggestion_index is not None:
-            return f"odc:{review_id}:{suggestion_index}"
+        path = thread.get("path")
+        line = thread.get("line")
+        end_line = thread.get("end_line")
+        if review_id is not None and path and line is not None:
+            return f"odc:{review_id}:{path}:{line}:{end_line}"
+
+    # Nitpick comments use review_id + location as composite key (stable across reordering)
+    if thread.get("type") == "nitpick_comment":
+        review_id = thread.get("review_id")
+        path = thread.get("path")
+        line = thread.get("line")
+        end_line = thread.get("end_line")
+        if review_id is not None and path and line is not None:
+            return f"npc:{review_id}:{path}:{line}:{end_line}"
 
     thread_id = thread.get("thread_id")
     if thread_id:
@@ -830,6 +875,23 @@ def merge_threads(all_threads: list[dict[str, Any]], specific_threads: list[dict
             existing_keys.add(key)
 
     return merged
+
+
+def fetch_review_body(owner: str, repo: str, pr_number: str, review_id: str) -> dict[str, Any] | None:
+    """Fetch a single review's metadata (including body) via REST API.
+
+    Args:
+        owner: Repository owner.
+        repo: Repository name.
+        pr_number: Pull request number.
+        review_id: The review ID.
+
+    Returns:
+        The review dict from the API, or None on error.
+    """
+    endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews/{review_id}"
+    result = run_gh_api(endpoint)
+    return result if isinstance(result, dict) else None
 
 
 def run(review_url: str = "") -> int:
@@ -873,12 +935,12 @@ def run(review_url: str = "") -> int:
             print_stderr(f"Found {len(qodo_issue_threads)} Qodo issue comment suggestion(s)")
             all_threads = merge_threads(all_threads, qodo_issue_threads)
 
-        # Fetch CodeRabbit outside-diff-range comments from review bodies
-        print_stderr("Fetching CodeRabbit outside-diff-range comments...")
-        outside_diff_threads = fetch_coderabbit_outside_diff_comments(owner, repo, pr_number)
-        if outside_diff_threads:
-            print_stderr(f"Found {len(outside_diff_threads)} outside-diff-range comment(s)")
-            all_threads = merge_threads(all_threads, outside_diff_threads)
+        # Fetch CodeRabbit body-embedded comments from review bodies
+        print_stderr("Fetching CodeRabbit body-embedded comments...")
+        body_comment_threads = fetch_coderabbit_body_comments(owner, repo, pr_number)
+        if body_comment_threads:
+            print_stderr(f"Found {len(body_comment_threads)} body-embedded comment(s)")
+            all_threads = merge_threads(all_threads, body_comment_threads)
 
         # If review URL provided, also fetch specific thread(s)
         specific_threads: list[dict[str, Any]] = []
@@ -889,7 +951,40 @@ def run(review_url: str = "") -> int:
                 review_id = match.group(1)
                 print_stderr(f"Fetching comments from PR review {review_id}...")
                 specific_threads = fetch_review_comments(owner, repo, pr_number, review_id)
-                print_stderr(f"Found {len(specific_threads)} comment(s) from review {review_id}")
+                print_stderr(f"Found {len(specific_threads)} inline comment(s) from review {review_id}")
+
+                # Also fetch body-embedded comments for CodeRabbit reviews
+                try:
+                    review_meta = fetch_review_body(owner, repo, pr_number, review_id)
+                except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+                    print_stderr(f"Warning: Failed to fetch review body for {review_id}: {exc}")
+                    review_meta = None
+                if review_meta:
+                    review_author = review_meta.get("user", {}).get("login") if review_meta.get("user") else None
+                    if review_author in CODERABBIT_USERS:
+                        from myk_claude_tools.reviews.coderabbit_parser import (  # noqa: PLC0415
+                            parse_review_body_comments,
+                        )
+
+                        review_body = review_meta.get("body", "")
+                        if review_body:
+                            parsed = parse_review_body_comments(review_body)
+                            try:
+                                review_id_int = int(review_id)
+                            except (TypeError, ValueError):
+                                review_id_int = None
+                            if review_id_int is not None:
+                                node_id = review_meta.get("node_id")
+                                body_threads = _build_body_comment_threads(
+                                    parsed,
+                                    review_id_int,
+                                    node_id,
+                                    review_author,
+                                )
+                                if body_threads:
+                                    msg = f"Found {len(body_threads)} body-embedded comment(s) from review {review_id}"
+                                    print_stderr(msg)
+                                    specific_threads = merge_threads(specific_threads, body_threads)
 
             # Match discussion_rNNN
             elif match := re.search(r"discussion_r(\d+)", review_url):

@@ -375,6 +375,7 @@ def run(json_path: str) -> None:
     replied_not_resolved_count = 0
     already_posted_count = 0
     outside_diff_count = 0
+    nitpick_count = 0
 
     # Track issue comment suggestions for batch posting
     issue_comment_groups: dict[int, list[tuple[str, int, dict[str, Any]]]] = {}
@@ -420,22 +421,26 @@ def run(json_path: str) -> None:
                     issue_comment_groups.setdefault(ic_id, []).append((category, i, thread_data))
                 continue
 
-            # Outside-diff comments have no GitHub thread to post to or resolve.
+            # Outside-diff and nitpick comments have no GitHub thread to post to or resolve.
             # They are tracked via the review database only.
-            if thread_data.get("type") == "outside_diff_comment":
+            comment_type = thread_data.get("type")
+            if comment_type in ("outside_diff_comment", "nitpick_comment"):
                 if status == "pending":
                     pending_count += 1
-                    eprint(f"Skipping {category}[{i}] ({path}): outside-diff comment status is pending")
+                    eprint(f"Skipping {category}[{i}] ({path}): {comment_type} status is pending")
                     continue
                 if status in ("addressed", "not_addressed", "skipped"):
-                    outside_diff_count += 1
+                    if comment_type == "outside_diff_comment":
+                        outside_diff_count += 1
+                    else:
+                        nitpick_count += 1
                     eprint(
-                        f"Outside-diff comment {category}[{i}] ({path})"
+                        f"{comment_type.replace('_', ' ').title()} {category}[{i}] ({path})"
                         " - no thread to post to, will be tracked via review database"
                     )
                     continue
-                # Unknown status for outside-diff comment - skip with warning
-                eprint(f"Warning: Unknown status for outside-diff {category}[{i}] ({path}): {status}")
+                # Unknown status - skip with warning
+                eprint(f"Warning: Unknown status for {comment_type} {category}[{i}] ({path}): {status}")
                 continue
 
             # Determine if we should resolve this thread (MUST be before resolve_only_retry check)
@@ -582,7 +587,7 @@ def run(json_path: str) -> None:
 
     # Print summary
     total_resolved = addressed_count + skipped_count
-    total_processed = total_resolved + replied_not_resolved_count + outside_diff_count
+    total_processed = total_resolved + replied_not_resolved_count + outside_diff_count + nitpick_count
     eprint("")
     eprint("=== Summary ===")
     eprint(f"Processed {total_processed} threads")
@@ -593,6 +598,9 @@ def run(json_path: str) -> None:
 
     if outside_diff_count > 0:
         eprint(f"  Outside-diff: {outside_diff_count} (tracked in review database, no thread to post to)")
+
+    if nitpick_count > 0:
+        eprint(f"  Nitpick: {nitpick_count} (tracked in review database, no thread to post to)")
 
     if pending_count > 0:
         eprint(f"  Pending: {pending_count} threads (not processed yet)")
