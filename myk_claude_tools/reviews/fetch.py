@@ -600,40 +600,29 @@ def _build_body_comment_threads(
 ) -> list[dict[str, Any]]:
     """Convert parsed body comments into thread-like dicts."""
     threads: list[dict[str, Any]] = []
-    for idx, comment in enumerate(parsed.get("outside_diff", [])):
-        threads.append({
-            "thread_id": None,
-            "node_id": node_id,
-            "comment_id": review_id,
-            "author": author,
-            "path": comment["path"],
-            "line": comment["line"],
-            "end_line": comment.get("end_line"),
-            "body": comment["body"],
-            "category": comment.get("category", ""),
-            "severity": comment.get("severity", ""),
-            "replies": [],
-            "type": "outside_diff_comment",
-            "review_id": review_id,
-            "suggestion_index": idx,
-        })
-    for idx, comment in enumerate(parsed.get("nitpick", [])):
-        threads.append({
-            "thread_id": None,
-            "node_id": node_id,
-            "comment_id": review_id,
-            "author": author,
-            "path": comment["path"],
-            "line": comment["line"],
-            "end_line": comment.get("end_line"),
-            "body": comment["body"],
-            "category": comment.get("category", ""),
-            "severity": comment.get("severity", ""),
-            "replies": [],
-            "type": "nitpick_comment",
-            "review_id": review_id,
-            "suggestion_index": idx,
-        })
+    for section_key, thread_type in (("outside_diff", "outside_diff_comment"), ("nitpick", "nitpick_comment")):
+        for idx, comment in enumerate(parsed.get(section_key, [])):
+            path = comment.get("path")
+            line = comment.get("line")
+            body = comment.get("body")
+            if path is None or line is None or body is None:
+                continue
+            threads.append({
+                "thread_id": None,
+                "node_id": node_id,
+                "comment_id": review_id,
+                "author": author,
+                "path": path,
+                "line": line,
+                "end_line": comment.get("end_line"),
+                "body": body,
+                "category": comment.get("category", ""),
+                "severity": comment.get("severity", ""),
+                "replies": [],
+                "type": thread_type,
+                "review_id": review_id,
+                "suggestion_index": idx,
+            })
     return threads
 
 
@@ -662,7 +651,7 @@ def fetch_coderabbit_body_comments(owner: str, repo: str, pr_number: str) -> lis
 
     results: list[dict[str, Any]] = []
     for review in reviews:
-        author = review.get("user", {}).get("login")
+        author = review.get("user", {}).get("login") if review.get("user") else None
         if author not in CODERABBIT_USERS:
             continue
 
@@ -677,13 +666,13 @@ def fetch_coderabbit_body_comments(owner: str, repo: str, pr_number: str) -> lis
             continue
 
         try:
-            review_id = int(review_id)
+            review_id_int = int(review_id)
         except (TypeError, ValueError):
             continue
 
         node_id = review.get("node_id")
 
-        results.extend(_build_body_comment_threads(parsed, review_id, node_id, author))
+        results.extend(_build_body_comment_threads(parsed, review_id_int, node_id, author))
 
     return results
 
@@ -882,7 +871,8 @@ def fetch_review_body(owner: str, repo: str, pr_number: str, review_id: str) -> 
         The review dict from the API, or None on error.
     """
     endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}/reviews/{review_id}"
-    return run_gh_api(endpoint)
+    result = run_gh_api(endpoint)
+    return result if isinstance(result, dict) else None
 
 
 def run(review_url: str = "") -> int:
@@ -945,7 +935,11 @@ def run(review_url: str = "") -> int:
                 print_stderr(f"Found {len(specific_threads)} inline comment(s) from review {review_id}")
 
                 # Also fetch body-embedded comments for CodeRabbit reviews
-                review_meta = fetch_review_body(owner, repo, pr_number, review_id)
+                try:
+                    review_meta = fetch_review_body(owner, repo, pr_number, review_id)
+                except Exception as exc:
+                    print_stderr(f"Warning: Failed to fetch review body for {review_id}: {exc}")
+                    review_meta = None
                 if review_meta:
                     review_author = review_meta.get("user", {}).get("login") if review_meta.get("user") else None
                     if review_author in CODERABBIT_USERS:
