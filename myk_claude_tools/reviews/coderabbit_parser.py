@@ -23,12 +23,12 @@ from typing import Any
 
 # Matches the start of the outer "Outside diff range comments" section.
 _OUTSIDE_SECTION_START_RE = re.compile(
-    r"<summary>\s*\S*\s*Outside diff range comments?\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
+    r"<summary>\s*(?:\S+\s+)*?Outside diff range comments?\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
 )
 
 # Matches the start of the outer "Nitpick comments" section.
 _NITPICK_SECTION_START_RE = re.compile(
-    r"<summary>\s*\S*\s*Nitpick comments?\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
+    r"<summary>\s*(?:\S+\s+)*?Nitpick comments?\s*(?:\(\d+\))?\s*</summary>\s*<blockquote>",
 )
 
 # Matches the start of a file-level <details> block with path and count.
@@ -203,33 +203,30 @@ def _parse_section_comments(cleaned: str, section_re: re.Pattern[str]) -> list[d
         - category: str (e.g., "Potential issue", "Nitpick")
         - severity: str (e.g., "Major", "Trivial")
     """
-    section_start_match = section_re.search(cleaned)
-    if not section_start_match:
-        return []
-
-    section_content = _extract_blockquote_content(cleaned, section_start_match.end())
-    if section_content is None:
-        return []
-
     results: list[dict[str, Any]] = []
 
-    # Extract each file-level block using nesting-aware extraction.
-    for file_match in _FILE_SUMMARY_RE.finditer(section_content):
-        file_path = file_match.group("path").strip()
-        file_content = _extract_blockquote_content(section_content, file_match.end())
-        if file_content is None:
+    for section_start_match in section_re.finditer(cleaned):
+        section_content = _extract_blockquote_content(cleaned, section_start_match.end())
+        if section_content is None:
             continue
 
-        file_content = file_content.strip()
+        # Extract each file-level block using nesting-aware extraction.
+        for file_match in _FILE_SUMMARY_RE.finditer(section_content):
+            file_path = file_match.group("path").strip()
+            file_content = _extract_blockquote_content(section_content, file_match.end())
+            if file_content is None:
+                continue
 
-        # Split individual comments on --- separators
-        comment_blocks = re.split(r"\r?\n---\s*\r?\n", file_content)
+            file_content = file_content.strip()
 
-        for block in comment_blocks:
-            parsed = _parse_single_comment(block)
-            if parsed is not None:
-                parsed["path"] = file_path
-                results.append(parsed)
+            # Split individual comments on --- separators
+            comment_blocks = re.split(r"\r?\n---\s*\r?\n", file_content)
+
+            for block in comment_blocks:
+                parsed = _parse_single_comment(block)
+                if parsed is not None:
+                    parsed["path"] = file_path
+                    results.append(parsed)
 
     return results
 

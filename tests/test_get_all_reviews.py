@@ -1431,22 +1431,28 @@ class TestGetThreadKeyOutsideDiffComment:
     """Tests for get_thread_key() with the outside_diff_comment type."""
 
     def test_outside_diff_comment_key(self) -> None:
-        """Outside diff comment should use composite odc: key."""
+        """Outside diff comment should use composite odc: key with path/line/end_line."""
         thread = {
             "type": "outside_diff_comment",
             "review_id": 200,
+            "path": "src/main.py",
+            "line": 10,
+            "end_line": 20,
             "suggestion_index": 3,
             "thread_id": None,
             "node_id": "n1",
             "comment_id": 200,
         }
-        assert get_all_reviews.get_thread_key(thread) == "odc:200:3"
+        assert get_all_reviews.get_thread_key(thread) == "odc:200:src/main.py:10:20"
 
     def test_outside_diff_comment_missing_review_id(self) -> None:
         """Missing review_id should fall through to other key strategies."""
         thread = {
             "type": "outside_diff_comment",
             "review_id": None,
+            "path": "src/main.py",
+            "line": 10,
+            "end_line": 20,
             "suggestion_index": 0,
             "thread_id": None,
             "node_id": "n1",
@@ -1455,12 +1461,15 @@ class TestGetThreadKeyOutsideDiffComment:
         # Falls through to node_id
         assert get_all_reviews.get_thread_key(thread) == "n:n1"
 
-    def test_outside_diff_comment_missing_suggestion_index(self) -> None:
-        """Missing suggestion_index should fall through to other key strategies."""
+    def test_outside_diff_comment_missing_path(self) -> None:
+        """Missing path should fall through to other key strategies."""
         thread = {
             "type": "outside_diff_comment",
             "review_id": 200,
-            "suggestion_index": None,
+            "path": None,
+            "line": 10,
+            "end_line": 20,
+            "suggestion_index": 0,
             "thread_id": None,
             "node_id": "n1",
             "comment_id": 200,
@@ -1468,17 +1477,36 @@ class TestGetThreadKeyOutsideDiffComment:
         # Falls through to node_id
         assert get_all_reviews.get_thread_key(thread) == "n:n1"
 
-    def test_outside_diff_comment_zero_index(self) -> None:
-        """suggestion_index of 0 should be valid (not treated as falsy)."""
+    def test_outside_diff_comment_missing_line(self) -> None:
+        """Missing line should fall through to other key strategies."""
+        thread = {
+            "type": "outside_diff_comment",
+            "review_id": 200,
+            "path": "src/main.py",
+            "line": None,
+            "end_line": 20,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 200,
+        }
+        # Falls through to node_id
+        assert get_all_reviews.get_thread_key(thread) == "n:n1"
+
+    def test_outside_diff_comment_none_end_line(self) -> None:
+        """None end_line should still produce a valid key."""
         thread = {
             "type": "outside_diff_comment",
             "review_id": 100,
+            "path": "src/utils.py",
+            "line": 5,
+            "end_line": None,
             "suggestion_index": 0,
             "thread_id": None,
             "node_id": "n1",
             "comment_id": 100,
         }
-        assert get_all_reviews.get_thread_key(thread) == "odc:100:0"
+        assert get_all_reviews.get_thread_key(thread) == "odc:100:src/utils.py:5:None"
 
 
 # =============================================================================
@@ -1490,22 +1518,28 @@ class TestGetThreadKeyNitpickComment:
     """Tests for get_thread_key() with the nitpick_comment type."""
 
     def test_nitpick_comment_key(self) -> None:
-        """Nitpick comment should use composite npc: key."""
+        """Nitpick comment should use composite npc: key with path/line/end_line."""
         thread = {
             "type": "nitpick_comment",
             "review_id": 300,
+            "path": "src/app.py",
+            "line": 42,
+            "end_line": 50,
             "suggestion_index": 1,
             "thread_id": None,
             "node_id": "n1",
             "comment_id": 300,
         }
-        assert get_all_reviews.get_thread_key(thread) == "npc:300:1"
+        assert get_all_reviews.get_thread_key(thread) == "npc:300:src/app.py:42:50"
 
     def test_no_collision_with_odc_key(self) -> None:
         """npc: prefix should not collide with odc: prefix."""
         odc_thread = {
             "type": "outside_diff_comment",
             "review_id": 100,
+            "path": "src/file.py",
+            "line": 5,
+            "end_line": 10,
             "suggestion_index": 0,
             "thread_id": None,
             "node_id": "n1",
@@ -1514,6 +1548,9 @@ class TestGetThreadKeyNitpickComment:
         npc_thread = {
             "type": "nitpick_comment",
             "review_id": 100,
+            "path": "src/file.py",
+            "line": 5,
+            "end_line": 10,
             "suggestion_index": 0,
             "thread_id": None,
             "node_id": "n1",
@@ -1522,14 +1559,17 @@ class TestGetThreadKeyNitpickComment:
         odc_key = get_all_reviews.get_thread_key(odc_thread)
         npc_key = get_all_reviews.get_thread_key(npc_thread)
         assert odc_key != npc_key
-        assert odc_key == "odc:100:0"
-        assert npc_key == "npc:100:0"
+        assert odc_key == "odc:100:src/file.py:5:10"
+        assert npc_key == "npc:100:src/file.py:5:10"
 
     def test_nitpick_comment_missing_review_id(self) -> None:
         """Missing review_id should fall through to other key strategies."""
         thread = {
             "type": "nitpick_comment",
             "review_id": None,
+            "path": "src/app.py",
+            "line": 42,
+            "end_line": 50,
             "suggestion_index": 0,
             "thread_id": None,
             "node_id": "n1",
@@ -1537,17 +1577,50 @@ class TestGetThreadKeyNitpickComment:
         }
         assert get_all_reviews.get_thread_key(thread) == "n:n1"
 
-    def test_nitpick_comment_zero_index(self) -> None:
-        """suggestion_index of 0 should be valid."""
+    def test_nitpick_comment_missing_path(self) -> None:
+        """Missing path should fall through to other key strategies."""
+        thread = {
+            "type": "nitpick_comment",
+            "review_id": 300,
+            "path": None,
+            "line": 42,
+            "end_line": 50,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 300,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "n:n1"
+
+    def test_nitpick_comment_missing_line(self) -> None:
+        """Missing line should fall through to other key strategies."""
+        thread = {
+            "type": "nitpick_comment",
+            "review_id": 300,
+            "path": "src/app.py",
+            "line": None,
+            "end_line": 50,
+            "suggestion_index": 0,
+            "thread_id": None,
+            "node_id": "n1",
+            "comment_id": 300,
+        }
+        assert get_all_reviews.get_thread_key(thread) == "n:n1"
+
+    def test_nitpick_comment_none_end_line(self) -> None:
+        """None end_line should still produce a valid key."""
         thread = {
             "type": "nitpick_comment",
             "review_id": 100,
+            "path": "src/utils.py",
+            "line": 5,
+            "end_line": None,
             "suggestion_index": 0,
             "thread_id": None,
             "node_id": "n1",
             "comment_id": 100,
         }
-        assert get_all_reviews.get_thread_key(thread) == "npc:100:0"
+        assert get_all_reviews.get_thread_key(thread) == "npc:100:src/utils.py:5:None"
 
 
 # =============================================================================

@@ -606,15 +606,30 @@ def _build_body_comment_threads(
             line = comment.get("line")
             body = comment.get("body")
             if path is None or line is None or body is None:
+                print_stderr(f"Warning: Skipping malformed {thread_type} entry (missing path/line/body)")
                 continue
+
+            try:
+                line_int = int(line)
+            except (TypeError, ValueError):
+                continue
+
+            end_line = comment.get("end_line")
+            end_line_int: int | None = None
+            if end_line is not None:
+                try:
+                    end_line_int = int(end_line)
+                except (TypeError, ValueError):
+                    pass
+
             threads.append({
                 "thread_id": None,
                 "node_id": node_id,
                 "comment_id": review_id,
                 "author": author,
                 "path": path,
-                "line": line,
-                "end_line": comment.get("end_line"),
+                "line": line_int,
+                "end_line": end_line_int,
                 "body": body,
                 "category": comment.get("category", ""),
                 "severity": comment.get("severity", ""),
@@ -805,19 +820,23 @@ def get_thread_key(thread: dict[str, Any]) -> str | None:
         if issue_comment_id is not None and suggestion_index is not None:
             return f"ic:{issue_comment_id}:{suggestion_index}"
 
-    # Outside diff comments use review_id + suggestion_index as composite key
+    # Outside diff comments use review_id + location as composite key (stable across reordering)
     if thread.get("type") == "outside_diff_comment":
         review_id = thread.get("review_id")
-        suggestion_index = thread.get("suggestion_index")
-        if review_id is not None and suggestion_index is not None:
-            return f"odc:{review_id}:{suggestion_index}"
+        path = thread.get("path")
+        line = thread.get("line")
+        end_line = thread.get("end_line")
+        if review_id is not None and path and line is not None:
+            return f"odc:{review_id}:{path}:{line}:{end_line}"
 
-    # Nitpick comments use review_id + suggestion_index as composite key
+    # Nitpick comments use review_id + location as composite key (stable across reordering)
     if thread.get("type") == "nitpick_comment":
         review_id = thread.get("review_id")
-        suggestion_index = thread.get("suggestion_index")
-        if review_id is not None and suggestion_index is not None:
-            return f"npc:{review_id}:{suggestion_index}"
+        path = thread.get("path")
+        line = thread.get("line")
+        end_line = thread.get("end_line")
+        if review_id is not None and path and line is not None:
+            return f"npc:{review_id}:{path}:{line}:{end_line}"
 
     thread_id = thread.get("thread_id")
     if thread_id:
@@ -937,7 +956,7 @@ def run(review_url: str = "") -> int:
                 # Also fetch body-embedded comments for CodeRabbit reviews
                 try:
                     review_meta = fetch_review_body(owner, repo, pr_number, review_id)
-                except Exception as exc:
+                except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
                     print_stderr(f"Warning: Failed to fetch review body for {review_id}: {exc}")
                     review_meta = None
                 if review_meta:
