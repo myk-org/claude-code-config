@@ -151,10 +151,61 @@ class TestBumpVersionFiles:
         d = result.to_dict()
         assert d["status"] == "success"
         assert d["version"] == "2.0.0"
-        assert len(d["updated"]) == 1
+        updated = d["updated"]
+        assert isinstance(updated, list)
+        assert len(updated) == 1
 
     def test_bump_result_error_to_dict(self) -> None:
         """Test BumpResult error to_dict conversion."""
         result = BumpResult(status="failed", error="No version files found")
         d = result.to_dict()
         assert d == {"status": "failed", "error": "No version files found"}
+
+    def test_bump_setup_cfg_dynamic_version(self, tmp_path: Path) -> None:
+        """Skip setup.cfg with dynamic version directive."""
+        content = textwrap.dedent("""\
+            [metadata]
+            name = my-package
+            version = attr: mypackage.__version__
+        """)
+        (tmp_path / "setup.cfg").write_text(content)
+        result = bump_version_files("2.0.0", root=tmp_path)
+        assert result.status == "failed"
+        # The file should be untouched
+        assert (tmp_path / "setup.cfg").read_text() == content
+
+    def test_bump_pyproject_toml_correct_section(self, tmp_path: Path) -> None:
+        """Only bump version in [project] section, not other sections."""
+        content = textwrap.dedent("""\
+            [tool.commitizen]
+            version = "0.0.0"
+
+            [project]
+            name = "my-package"
+            version = "1.0.0"
+        """)
+        (tmp_path / "pyproject.toml").write_text(content)
+        bump_version_files("2.0.0", root=tmp_path)
+        new_content = (tmp_path / "pyproject.toml").read_text()
+        assert 'version = "2.0.0"' in new_content
+        # The tool.commitizen version should be unchanged
+        assert new_content.startswith('[tool.commitizen]\nversion = "0.0.0"')
+
+    def test_bump_read_only_file(self, tmp_path: Path) -> None:
+        """Handle read-only files gracefully."""
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
+        (tmp_path / "pyproject.toml").chmod(0o444)
+        result = bump_version_files("2.0.0", root=tmp_path)
+        assert result.status == "success"
+        assert len(result.skipped) == 1
+        assert "I/O error" in result.skipped[0]["reason"]
+        # Cleanup: restore permissions for tmp_path cleanup
+        (tmp_path / "pyproject.toml").chmod(0o644)
+
+    def test_bump_files_filter_partial_match(self, tmp_path: Path) -> None:
+        """Report unmatched file paths in skipped when some files match."""
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
+        result = bump_version_files("2.0.0", files=["pyproject.toml", "nonexistent.toml"], root=tmp_path)
+        assert result.status == "success"
+        assert len(result.updated) == 1
+        assert any("nonexistent.toml" in s["path"] for s in result.skipped)

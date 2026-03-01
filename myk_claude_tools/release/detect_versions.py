@@ -60,7 +60,18 @@ def _parse_pyproject_toml(filepath: Path) -> str | None:
         content = filepath.read_text()
     except OSError:
         return None
-    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+    # Find the [project] section and extract version from within it
+    project_match = re.search(r"^\[project\]\s*$", content, re.MULTILINE)
+    if not project_match:
+        return None
+    # Get content from [project] to next section header or end
+    section_start = project_match.end()
+    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
+    if next_section:
+        section_content = content[section_start : section_start + next_section.start()]
+    else:
+        section_content = content[section_start:]
+    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', section_content, re.MULTILINE)
     return match.group(1) if match else None
 
 
@@ -81,7 +92,13 @@ def _parse_setup_cfg(filepath: Path) -> str | None:
     except OSError:
         return None
     match = re.search(r"^version\s*=\s*(\S+)", content, re.MULTILINE)
-    return match.group(1) if match else None
+    if not match:
+        return None
+    version = match.group(1)
+    # Skip dynamic version directives (attr:, file:) and non-numeric versions
+    if not re.match(r"^\d+\.", version):
+        return None
+    return version
 
 
 def _parse_cargo_toml(filepath: Path) -> str | None:
@@ -90,7 +107,17 @@ def _parse_cargo_toml(filepath: Path) -> str | None:
         content = filepath.read_text()
     except OSError:
         return None
-    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+    # Find the [package] section and extract version from within it
+    package_match = re.search(r"^\[package\]\s*$", content, re.MULTILINE)
+    if not package_match:
+        return None
+    section_start = package_match.end()
+    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
+    if next_section:
+        section_content = content[section_start : section_start + next_section.start()]
+    else:
+        section_content = content[section_start:]
+    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', section_content, re.MULTILINE)
     return match.group(1) if match else None
 
 

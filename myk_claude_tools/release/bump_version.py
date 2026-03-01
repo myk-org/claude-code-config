@@ -41,11 +41,24 @@ class BumpResult:
 
 def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text()
-    match = re.search(r'^(version\s*=\s*["\'])([^"\']+)(["\'])', content, re.MULTILINE)
+    # Find the [project] section and only bump version within it
+    project_match = re.search(r"^\[project\]\s*$", content, re.MULTILINE)
+    if not project_match:
+        return None
+    section_start = project_match.end()
+    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
+    if next_section:
+        section_content = content[section_start : section_start + next_section.start()]
+    else:
+        section_content = content[section_start:]
+    match = re.search(r'^(version\s*=\s*["\'])([^"\']+)(["\'])', section_content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
-    new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
+    # Adjust match positions to full file offsets
+    abs_start = section_start + match.start(2)
+    abs_end = section_start + match.end(2)
+    new_content = content[:abs_start] + new_version + content[abs_end:]
     filepath.write_text(new_content)
     return old_version
 
@@ -69,6 +82,9 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
     if not match:
         return None
     old_version = match.group(2)
+    # Skip dynamic version directives (attr:, file:) and non-numeric versions
+    if not re.match(r"^\d+\.", old_version):
+        return None
     new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
     filepath.write_text(new_content)
     return old_version
@@ -76,11 +92,24 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
 
 def _bump_cargo_toml(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text()
-    match = re.search(r'^(version\s*=\s*["\'])([^"\']+)(["\'])', content, re.MULTILINE)
+    # Find the [package] section and only bump version within it
+    package_match = re.search(r"^\[package\]\s*$", content, re.MULTILINE)
+    if not package_match:
+        return None
+    section_start = package_match.end()
+    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
+    if next_section:
+        section_content = content[section_start : section_start + next_section.start()]
+    else:
+        section_content = content[section_start:]
+    match = re.search(r'^(version\s*=\s*["\'])([^"\']+)(["\'])', section_content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
-    new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
+    # Adjust match positions to full file offsets
+    abs_start = section_start + match.start(2)
+    abs_end = section_start + match.end(2)
+    new_content = content[:abs_start] + new_version + content[abs_end:]
     filepath.write_text(new_content)
     return old_version
 
@@ -140,6 +169,8 @@ def bump_version_files(
     if not detected:
         return BumpResult(status="failed", error="No version files found in repository.")
 
+    unmatched: list[str] = []
+
     if files is not None:
         filtered = [vf for vf in detected if vf.path in files]
         if not filtered:
@@ -148,6 +179,9 @@ def bump_version_files(
                 status="failed",
                 error=f"None of the specified files were found in detected version files. Available: {available}",
             )
+        # Report unmatched file paths as skipped
+        matched_paths = {vf.path for vf in filtered}
+        unmatched = [f for f in files if f not in matched_paths]
         detected = filtered
 
     updated: list[dict[str, str]] = []
@@ -160,11 +194,18 @@ def bump_version_files(
             continue
 
         filepath = root / vf.path
-        old_version = bumper(filepath, new_version)
+        try:
+            old_version = bumper(filepath, new_version)
+        except OSError as e:
+            skipped.append({"path": vf.path, "reason": f"I/O error: {e}"})
+            continue
         if old_version is not None:
             updated.append({"path": vf.path, "old_version": old_version, "new_version": new_version})
         else:
             skipped.append({"path": vf.path, "reason": "Could not find version pattern in file"})
+
+    for path in unmatched:
+        skipped.append({"path": path, "reason": "Not found in detected version files"})
 
     return BumpResult(
         status="success",
