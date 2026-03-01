@@ -95,10 +95,11 @@ def _parse_setup_cfg(filepath: Path) -> str | None:
         version = config.get("metadata", "version")
     except (configparser.NoSectionError, configparser.NoOptionError):
         return None
+    version = version.strip().strip("\"'")
     # Skip dynamic version directives (attr:, file:) and non-numeric versions
-    if not re.match(r"^\d+\.", version.strip()):
+    if not re.match(r"^\d+\.", version):
         return None
-    return version.strip()
+    return version
 
 
 def _parse_cargo_toml(filepath: Path) -> str | None:

@@ -7,6 +7,7 @@ git operations.
 
 from __future__ import annotations
 
+import configparser
 import json
 import re
 import sys
@@ -41,12 +42,13 @@ class BumpResult:
 
 def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text()
-    # Find the [project] section and only bump version within it
-    project_match = re.search(r"^\[project\]\s*$", content, re.MULTILINE)
+    # Find the [project] section (tolerant of trailing whitespace/comments)
+    project_match = re.search(r"^\[project\]", content, re.MULTILINE)
     if not project_match:
         return None
     section_start = project_match.end()
-    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
+    # Match next top-level section (not sub-tables like [project.urls])
+    next_section = re.search(r"^\[(?!project[.\]])", content[section_start:], re.MULTILINE)
     if next_section:
         section_content = content[section_start : section_start + next_section.start()]
     else:
@@ -78,26 +80,46 @@ def _bump_package_json(filepath: Path, new_version: str) -> str | None:
 
 def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text()
-    match = re.search(r"^(version\s*=\s*)(\S+)", content, re.MULTILINE)
-    if not match:
+    # First verify the version exists in [metadata] using configparser
+    config = configparser.ConfigParser()
+    try:
+        config.read_string(content)
+        old_version = config.get("metadata", "version")
+    except (configparser.NoSectionError, configparser.NoOptionError, configparser.Error):
         return None
-    old_version = match.group(2)
+    old_version = old_version.strip().strip("\"'")
     # Skip dynamic version directives (attr:, file:) and non-numeric versions
     if not re.match(r"^\d+\.", old_version):
         return None
-    new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
+    # Find [metadata] section and replace version only within it
+    metadata_match = re.search(r"^\[metadata\]\s*$", content, re.MULTILINE | re.IGNORECASE)
+    if not metadata_match:
+        return None
+    section_start = metadata_match.end()
+    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
+    if next_section:
+        section_content = content[section_start : section_start + next_section.start()]
+    else:
+        section_content = content[section_start:]
+    match = re.search(r"^(version\s*=\s*)(\S+)", section_content, re.MULTILINE)
+    if not match:
+        return None
+    abs_start = section_start + match.start(2)
+    abs_end = section_start + match.end(2)
+    new_content = content[:abs_start] + new_version + content[abs_end:]
     filepath.write_text(new_content)
     return old_version
 
 
 def _bump_cargo_toml(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text()
-    # Find the [package] section and only bump version within it
-    package_match = re.search(r"^\[package\]\s*$", content, re.MULTILINE)
+    # Find the [package] section (tolerant of trailing whitespace/comments)
+    package_match = re.search(r"^\[package\]", content, re.MULTILINE)
     if not package_match:
         return None
     section_start = package_match.end()
-    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
+    # Match next top-level section (not sub-tables like [package.metadata])
+    next_section = re.search(r"^\[(?!package[.\]])", content[section_start:], re.MULTILINE)
     if next_section:
         section_content = content[section_start : section_start + next_section.start()]
     else:

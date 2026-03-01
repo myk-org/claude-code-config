@@ -242,3 +242,19 @@ class TestDetectVersionFiles:
         result = detect_version_files(tmp_path)
         assert len(result) == 1
         assert result[0].current_version == "2.0.0"
+
+    def test_setup_cfg_multiple_version_keys(self, tmp_path: Path) -> None:
+        """Only detect version from [metadata] section, not other sections."""
+        (tmp_path / "setup.cfg").write_text(
+            textwrap.dedent("""\
+                [tool:pytest]
+                version = 99.99.99
+
+                [metadata]
+                name = my-package
+                version = 1.0.0
+            """)
+        )
+        result = detect_version_files(tmp_path)
+        assert len(result) == 1
+        assert result[0].current_version == "1.0.0"

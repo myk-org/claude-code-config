@@ -209,3 +209,39 @@ class TestBumpVersionFiles:
         assert result.status == "success"
         assert len(result.updated) == 1
         assert any("nonexistent.toml" in s["path"] for s in result.skipped)
+
+    def test_bump_setup_cfg_correct_section(self, tmp_path: Path) -> None:
+        """Only bump version in [metadata] section, not other sections."""
+        content = textwrap.dedent("""\
+            [tool:pytest]
+            version = 99.99.99
+
+            [metadata]
+            name = my-package
+            version = 1.0.0
+        """)
+        (tmp_path / "setup.cfg").write_text(content)
+        bump_version_files("2.0.0", root=tmp_path)
+        new_content = (tmp_path / "setup.cfg").read_text()
+        assert "version = 2.0.0" in new_content
+        # [tool:pytest] version should be unchanged
+        assert "version = 99.99.99" in new_content
+
+    def test_bump_pyproject_with_subtables(self, tmp_path: Path) -> None:
+        """Bump version even when [project] has sub-tables after it."""
+        content = textwrap.dedent("""\
+            [project]
+            name = "my-package"
+            version = "1.0.0"
+
+            [project.urls]
+            Homepage = "https://example.com"
+
+            [build-system]
+            requires = ["hatchling"]
+        """)
+        (tmp_path / "pyproject.toml").write_text(content)
+        bump_version_files("2.0.0", root=tmp_path)
+        new_content = (tmp_path / "pyproject.toml").read_text()
+        assert 'version = "2.0.0"' in new_content
+        assert 'Homepage = "https://example.com"' in new_content
