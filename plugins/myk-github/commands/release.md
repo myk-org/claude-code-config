@@ -102,7 +102,7 @@ Run the bump command with the confirmed version and files:
 myk-claude-tools release bump-version <VERSION> --files <file1> --files <file2>
 ```
 
-Where `<VERSION>` is the version number without `v` prefix (e.g., `1.2.0`).
+Where `<VERSION>` is the version number without `v` prefix (e.g., `1.2.0`, not `v1.2.0`).
 
 Then commit and push the version bump:
 

@@ -196,7 +196,8 @@ class TestBumpVersionFiles:
         (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
         (tmp_path / "pyproject.toml").chmod(0o444)
         result = bump_version_files("2.0.0", root=tmp_path)
-        assert result.status == "success"
+        assert result.status == "failed"
+        assert result.error == "No version files were updated."
         assert len(result.skipped) == 1
         assert "I/O error" in result.skipped[0]["reason"]
         # Cleanup: restore permissions for tmp_path cleanup

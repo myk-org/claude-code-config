@@ -89,7 +89,8 @@ def _parse_setup_cfg(filepath: Path) -> str | None:
     """Parse version from setup.cfg using configparser."""
     config = configparser.ConfigParser()
     try:
-        config.read(filepath)
+        content = filepath.read_text(encoding="utf-8")
+        config.read_string(content)
     except (OSError, configparser.Error):
         return None
     try:
@@ -98,8 +99,7 @@ def _parse_setup_cfg(filepath: Path) -> str | None:
         return None
     version = version.strip().strip("\"'")
     # Skip dynamic version directives (attr:, file:)
-    lowered = version.lower()
-    if lowered.startswith("attr:") or lowered.startswith("file:"):
+    if version.lower().startswith(("attr:", "file:")):
         return None
     return version
 

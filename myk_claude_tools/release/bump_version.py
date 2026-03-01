@@ -37,7 +37,10 @@ class BumpResult:
                 "updated": self.updated,
                 "skipped": self.skipped,
             }
-        return {"status": self.status, "error": self.error}
+        result: dict[str, object] = {"status": self.status, "error": self.error}
+        if self.skipped:
+            result["skipped"] = self.skipped
+        return result
 
 
 def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
@@ -67,12 +70,19 @@ def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
 
 def _bump_package_json(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text(encoding="utf-8")
-    # Match the "version" key-value pair, preserving surrounding formatting
-    match = re.search(r'("version"\s*:\s*")([^"]+)(")', content)
-    if not match:
+    # Confirm the top-level version via JSON parsing
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
         return None
-    old_version = match.group(2)
-    new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
+    old_version = data.get("version")
+    if not isinstance(old_version, str):
+        return None
+    # Replace only the first top-level "version" value that matches the parsed old_version
+    pattern = rf'("version"\s*:\s*"){re.escape(old_version)}(")'
+    new_content, n = re.subn(pattern, rf"\g<1>{new_version}\2", content, count=1)
+    if n != 1:
+        return None
     filepath.write_text(new_content, encoding="utf-8")
     return old_version
 
@@ -88,8 +98,7 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
         return None
     old_version = old_version.strip().strip("\"'")
     # Skip dynamic version directives (attr:, file:)
-    lowered = old_version.lower()
-    if lowered.startswith("attr:") or lowered.startswith("file:"):
+    if old_version.lower().startswith(("attr:", "file:")):
         return None
     # Find [metadata] section and replace version only within it
     metadata_match = re.search(r"^\[\s*metadata\s*\]", content, re.MULTILINE | re.IGNORECASE)
@@ -238,6 +247,13 @@ def bump_version_files(
         else:
             skipped.append({"path": vf.path, "reason": "Could not find version pattern in file"})
 
+    if not updated:
+        return BumpResult(
+            status="failed",
+            error="No version files were updated.",
+            skipped=skipped,
+        )
+
     return BumpResult(
         status="success",
         version=new_version,
@@ -251,6 +267,4 @@ def run(new_version: str, files: list[str] | None = None) -> None:
     result = bump_version_files(new_version=new_version, files=files if files else None)
     print(json.dumps(result.to_dict(), indent=2))
     if result.status == "failed":
-        sys.exit(1)
-    if not result.updated and result.skipped:
         sys.exit(1)
