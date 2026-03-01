@@ -2,7 +2,9 @@
 
 import click
 
+from myk_claude_tools.release.bump_version import run as bump_run
 from myk_claude_tools.release.create import run as create_run
+from myk_claude_tools.release.detect_versions import run as detect_run
 from myk_claude_tools.release.info import run as info_run
 
 
@@ -36,3 +38,17 @@ def release_create(
 ) -> None:
     """Create a GitHub release."""
     create_run(owner_repo, tag, changelog_file, prerelease, draft, target)
+
+
+@release.command("detect-versions")
+def release_detect_versions() -> None:
+    """Detect version files in the current repository."""
+    detect_run()
+
+
+@release.command("bump-version")
+@click.argument("version")
+@click.option("--files", multiple=True, help="Specific files to update (can be repeated)")
+def release_bump_version(version: str, files: tuple[str, ...]) -> None:
+    """Update version strings in detected version files."""
+    bump_run(version, list(files) if files else None)
