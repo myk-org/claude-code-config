@@ -7,12 +7,18 @@ their current version strings.
 
 from __future__ import annotations
 
+import configparser
 import json
 import re
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib  # type: ignore[no-redef]
 
 EXCLUDED_DIRS = frozenset({
     ".git",
@@ -55,24 +61,17 @@ class VersionFile:
 
 
 def _parse_pyproject_toml(filepath: Path) -> str | None:
-    """Parse version from pyproject.toml."""
+    """Parse version from pyproject.toml using tomllib."""
     try:
-        content = filepath.read_text()
-    except OSError:
+        with filepath.open("rb") as f:
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
         return None
-    # Find the [project] section and extract version from within it
-    project_match = re.search(r"^\[project\]\s*$", content, re.MULTILINE)
-    if not project_match:
+    try:
+        version = data["project"]["version"]
+    except (KeyError, TypeError):
         return None
-    # Get content from [project] to next section header or end
-    section_start = project_match.end()
-    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
-    if next_section:
-        section_content = content[section_start : section_start + next_section.start()]
-    else:
-        section_content = content[section_start:]
-    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', section_content, re.MULTILINE)
-    return match.group(1) if match else None
+    return version if isinstance(version, str) else None
 
 
 def _parse_package_json(filepath: Path) -> str | None:
@@ -86,39 +85,34 @@ def _parse_package_json(filepath: Path) -> str | None:
 
 
 def _parse_setup_cfg(filepath: Path) -> str | None:
-    """Parse version from setup.cfg."""
+    """Parse version from setup.cfg using configparser."""
+    config = configparser.ConfigParser()
     try:
-        content = filepath.read_text()
-    except OSError:
+        config.read(filepath)
+    except (OSError, configparser.Error):
         return None
-    match = re.search(r"^version\s*=\s*(\S+)", content, re.MULTILINE)
-    if not match:
+    try:
+        version = config.get("metadata", "version")
+    except (configparser.NoSectionError, configparser.NoOptionError):
         return None
-    version = match.group(1)
     # Skip dynamic version directives (attr:, file:) and non-numeric versions
-    if not re.match(r"^\d+\.", version):
+    if not re.match(r"^\d+\.", version.strip()):
         return None
-    return version
+    return version.strip()
 
 
 def _parse_cargo_toml(filepath: Path) -> str | None:
-    """Parse version from Cargo.toml."""
+    """Parse version from Cargo.toml using tomllib."""
     try:
-        content = filepath.read_text()
-    except OSError:
+        with filepath.open("rb") as f:
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
         return None
-    # Find the [package] section and extract version from within it
-    package_match = re.search(r"^\[package\]\s*$", content, re.MULTILINE)
-    if not package_match:
+    try:
+        version = data["package"]["version"]
+    except (KeyError, TypeError):
         return None
-    section_start = package_match.end()
-    next_section = re.search(r"^\[", content[section_start:], re.MULTILINE)
-    if next_section:
-        section_content = content[section_start : section_start + next_section.start()]
-    else:
-        section_content = content[section_start:]
-    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', section_content, re.MULTILINE)
-    return match.group(1) if match else None
+    return version if isinstance(version, str) else None
 
 
 def _parse_gradle(filepath: Path) -> str | None:
