@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import configparser
 import json
+import os
 import re
 import sys
 from collections.abc import Callable
@@ -96,8 +97,9 @@ def _parse_setup_cfg(filepath: Path) -> str | None:
     except (configparser.NoSectionError, configparser.NoOptionError):
         return None
     version = version.strip().strip("\"'")
-    # Skip dynamic version directives (attr:, file:) and non-numeric versions
-    if not re.match(r"^\d+\.", version):
+    # Skip dynamic version directives (attr:, file:)
+    lowered = version.lower()
+    if lowered.startswith("attr:") or lowered.startswith("file:"):
         return None
     return version
 
@@ -144,11 +146,13 @@ def _should_skip_dir(dir_name: str) -> bool:
 def _find_python_version_files(root: Path) -> list[VersionFile]:
     """Find Python files containing __version__ assignments."""
     results: list[VersionFile] = []
-    for pattern in ("**/__init__.py", "**/version.py"):
-        for filepath in root.glob(pattern):
-            rel_parts = filepath.relative_to(root).parts
-            if any(_should_skip_dir(part) for part in rel_parts[:-1]):
+    for dirpath, dirnames, filenames in os.walk(root):
+        # Prune excluded directories in-place to prevent traversal
+        dirnames[:] = [d for d in dirnames if not _should_skip_dir(d)]
+        for name in filenames:
+            if name not in ("__init__.py", "version.py"):
                 continue
+            filepath = Path(dirpath) / name
             version = _parse_python_version(filepath)
             if version:
                 results.append(

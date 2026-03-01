@@ -40,17 +40,6 @@ class BumpResult:
         return {"status": self.status, "error": self.error}
 
 
-def _detect_json_indent(content: str) -> int | str:
-    """Detect indentation from JSON file content."""
-    match = re.search(r'^\{\n(\s+)"', content)
-    if match:
-        indent_chars = match.group(1)
-        if "\t" in indent_chars:
-            return "\t"
-        return len(indent_chars)
-    return 2
-
-
 def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text(encoding="utf-8")
     # Find the [project] section (tolerant of whitespace around header)
@@ -78,16 +67,13 @@ def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
 
 def _bump_package_json(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text(encoding="utf-8")
-    try:
-        data = json.loads(content)
-    except json.JSONDecodeError:
+    # Match the "version" key-value pair, preserving surrounding formatting
+    match = re.search(r'("version"\s*:\s*")([^"]+)(")', content)
+    if not match:
         return None
-    old_version = data.get("version")
-    if not isinstance(old_version, str):
-        return None
-    data["version"] = new_version
-    indent = _detect_json_indent(content)
-    filepath.write_text(json.dumps(data, indent=indent) + "\n", encoding="utf-8")
+    old_version = match.group(2)
+    new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
+    filepath.write_text(new_content, encoding="utf-8")
     return old_version
 
 
@@ -101,8 +87,9 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
     except (configparser.NoSectionError, configparser.NoOptionError, configparser.Error):
         return None
     old_version = old_version.strip().strip("\"'")
-    # Skip dynamic version directives (attr:, file:) and non-numeric versions
-    if not re.match(r"^\d+\.", old_version):
+    # Skip dynamic version directives (attr:, file:)
+    lowered = old_version.lower()
+    if lowered.startswith("attr:") or lowered.startswith("file:"):
         return None
     # Find [metadata] section and replace version only within it
     metadata_match = re.search(r"^\[\s*metadata\s*\]", content, re.MULTILINE | re.IGNORECASE)
@@ -200,11 +187,15 @@ def bump_version_files(
     if root is None:
         root = Path.cwd()
 
+    if not new_version.strip() or any(ch in new_version for ch in ("\n", "\r")):
+        return BumpResult(
+            status="failed",
+            error="Invalid version: must be a non-empty single-line string.",
+        )
+
     detected = detect_version_files(root)
     if not detected:
         return BumpResult(status="failed", error="No version files found in repository.")
-
-    unmatched: list[str] = []
 
     if files is not None:
         filtered = [vf for vf in detected if vf.path in files]
@@ -214,9 +205,17 @@ def bump_version_files(
                 status="failed",
                 error=f"None of the specified files were found in detected version files. Available: {available}",
             )
-        # Report unmatched file paths as skipped
         matched_paths = {vf.path for vf in filtered}
         unmatched = [f for f in files if f not in matched_paths]
+        if unmatched:
+            available = [vf.path for vf in detected]
+            return BumpResult(
+                status="failed",
+                error=(
+                    f"Some specified files were not found in detected version files."
+                    f" Unmatched: {unmatched}. Available: {available}"
+                ),
+            )
         detected = filtered
 
     updated: list[dict[str, str]] = []
@@ -239,9 +238,6 @@ def bump_version_files(
         else:
             skipped.append({"path": vf.path, "reason": "Could not find version pattern in file"})
 
-    for path in unmatched:
-        skipped.append({"path": path, "reason": "Not found in detected version files"})
-
     return BumpResult(
         status="success",
         version=new_version,
@@ -254,5 +250,7 @@ def run(new_version: str, files: list[str] | None = None) -> None:
     """Entry point for CLI command."""
     result = bump_version_files(new_version=new_version, files=files if files else None)
     print(json.dumps(result.to_dict(), indent=2))
-    if result.status == "failed" or result.skipped:
+    if result.status == "failed":
+        sys.exit(1)
+    if not result.updated and result.skipped:
         sys.exit(1)

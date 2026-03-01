@@ -202,13 +202,31 @@ class TestBumpVersionFiles:
         # Cleanup: restore permissions for tmp_path cleanup
         (tmp_path / "pyproject.toml").chmod(0o644)
 
-    def test_bump_files_filter_partial_match(self, tmp_path: Path) -> None:
-        """Report unmatched file paths in skipped when some files match."""
+    def test_bump_empty_version(self, tmp_path: Path) -> None:
+        """Reject empty version string."""
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
+        result = bump_version_files("", root=tmp_path)
+        assert result.status == "failed"
+        assert result.error is not None
+        assert "Invalid version" in result.error
+
+    def test_bump_newline_in_version(self, tmp_path: Path) -> None:
+        """Reject version with newline."""
+        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
+        result = bump_version_files("1.0\n.0", root=tmp_path)
+        assert result.status == "failed"
+        assert result.error is not None
+        assert "Invalid version" in result.error
+
+    def test_bump_files_filter_partial_mismatch_fails_fast(self, tmp_path: Path) -> None:
+        """Fail fast when some --files don't match, without modifying any files."""
         (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
         result = bump_version_files("2.0.0", files=["pyproject.toml", "nonexistent.toml"], root=tmp_path)
-        assert result.status == "success"
-        assert len(result.updated) == 1
-        assert any("nonexistent.toml" in s["path"] for s in result.skipped)
+        assert result.status == "failed"
+        assert result.error is not None
+        assert "Unmatched" in result.error
+        # pyproject.toml should NOT have been modified
+        assert 'version = "1.0.0"' in (tmp_path / "pyproject.toml").read_text()
 
     def test_bump_setup_cfg_correct_section(self, tmp_path: Path) -> None:
         """Only bump version in [metadata] section, not other sections."""

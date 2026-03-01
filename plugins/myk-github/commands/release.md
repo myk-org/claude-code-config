@@ -1,6 +1,6 @@
 ---
 description: Create a GitHub release with automatic changelog generation
-argument-hint: [--dry-run] [--prerelease] [--draft]
+argument-hint: [--dry-run] [--prerelease] [--draft] [--target <branch>]
 allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion
 ---
 
@@ -49,6 +49,12 @@ myk-claude-tools release detect-versions
 Parse the JSON output. If version files are found, store them for Phase 4.
 If no version files are detected, skip version bumping phases and continue normally.
 
+Store the detect-versions JSON output for use in Phase 4. The key fields are:
+
+- `version_files[].path` -- file path relative to repo root
+- `version_files[].current_version` -- current version string
+- `count` -- number of detected files (0 means skip version bumping)
+
 ### Phase 3: Changelog Analysis
 
 Parse commits from Phase 1 output and categorize by conventional commit type:
@@ -78,6 +84,9 @@ User options:
 - 'major/minor/patch' -- Override the version bump type
 - 'exclude N' -- Exclude file by number from the version bump (e.g., 'exclude 2')
 - 'no' -- Cancel the release
+
+To exclude files, remove them from the list. Pass remaining file paths as
+`--files <path>` arguments to `bump-version` in Phase 5.
 
 **Without version files:**
 
@@ -110,18 +119,12 @@ Create temp directory with cleanup, write changelog to temp file, and create rel
 ```bash
 mkdir -p /tmp/claude
 trap 'rm -f /tmp/claude/release-changelog.md' EXIT
-```
 
-Write the changelog content (generated from Phase 3 analysis) to the file,
-then create the release:
-
-```bash
 cat > /tmp/claude/release-changelog.md << 'EOF'
 <changelog content from Phase 3>
 EOF
 
-myk-claude-tools release create {owner}/{repo} {tag} \
-  /tmp/claude/release-changelog.md [--prerelease] [--draft] [--target {target_branch}]
+myk-claude-tools release create {owner}/{repo} {tag} /tmp/claude/release-changelog.md [--prerelease] [--draft] [--target {target_branch}]
 ```
 
 ### Phase 7: Summary
