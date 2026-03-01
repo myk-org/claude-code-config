@@ -104,6 +104,10 @@ myk-claude-tools release bump-version <VERSION> --files <file1> --files <file2>
 
 Where `<VERSION>` is the version number without `v` prefix (e.g., `1.2.0`, not `v1.2.0`).
 
+Parse the JSON output from bump-version. Only `git add` the files listed in the
+`updated[]` array. If `skipped[]` is non-empty, inform the user which files were
+skipped and why before proceeding.
+
 Then commit and push the version bump:
 
 ```bash

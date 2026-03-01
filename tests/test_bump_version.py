@@ -192,16 +192,19 @@ class TestBumpVersionFiles:
         assert new_content.startswith('[tool.commitizen]\nversion = "0.0.0"')
 
     def test_bump_read_only_file(self, tmp_path: Path) -> None:
-        """Handle read-only files gracefully."""
-        (tmp_path / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
-        (tmp_path / "pyproject.toml").chmod(0o444)
-        result = bump_version_files("2.0.0", root=tmp_path)
-        assert result.status == "failed"
-        assert result.error == "No version files were updated."
-        assert len(result.skipped) == 1
-        assert "I/O error" in result.skipped[0]["reason"]
-        # Cleanup: restore permissions for tmp_path cleanup
-        (tmp_path / "pyproject.toml").chmod(0o644)
+        """Handle unwritable directory gracefully."""
+        subdir = tmp_path / "repo"
+        subdir.mkdir()
+        (subdir / "pyproject.toml").write_text('[project]\nversion = "1.0.0"\n')
+        subdir.chmod(0o555)
+        try:
+            result = bump_version_files("2.0.0", root=subdir)
+            assert result.status == "failed"
+            assert result.error == "No version files were updated."
+            assert len(result.skipped) == 1
+            assert "I/O error" in result.skipped[0]["reason"]
+        finally:
+            subdir.chmod(0o755)
 
     def test_bump_empty_version(self, tmp_path: Path) -> None:
         """Reject empty version string."""

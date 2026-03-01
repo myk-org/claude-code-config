@@ -11,7 +11,6 @@ import configparser
 import json
 import os
 import re
-import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -157,7 +156,7 @@ def _find_python_version_files(root: Path) -> list[VersionFile]:
             if version:
                 results.append(
                     VersionFile(
-                        path=str(filepath.relative_to(root)),
+                        path=filepath.relative_to(root).as_posix(),
                         current_version=version,
                         file_type="python_version",
                     )
@@ -208,4 +207,3 @@ def run() -> None:
         "count": len(results),
     }
     print(json.dumps(output, indent=2))
-    sys.exit(0)

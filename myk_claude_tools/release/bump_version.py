@@ -9,13 +9,27 @@ from __future__ import annotations
 
 import configparser
 import json
+import os
 import re
 import sys
+import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from myk_claude_tools.release.detect_versions import detect_version_files
+
+
+def _atomic_write(filepath: Path, content: str) -> None:
+    """Write content to file atomically using temp file + rename."""
+    fd, tmp_path = tempfile.mkstemp(dir=filepath.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(content)
+        Path(tmp_path).replace(filepath)
+    except BaseException:
+        Path(tmp_path).unlink(missing_ok=True)
+        raise
 
 
 @dataclass
@@ -64,7 +78,7 @@ def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
     abs_start = section_start + match.start(2)
     abs_end = section_start + match.end(2)
     new_content = content[:abs_start] + new_version + content[abs_end:]
-    filepath.write_text(new_content, encoding="utf-8")
+    _atomic_write(filepath, new_content)
     return old_version
 
 
@@ -83,7 +97,7 @@ def _bump_package_json(filepath: Path, new_version: str) -> str | None:
     new_content, n = re.subn(pattern, rf"\g<1>{new_version}\2", content, count=1)
     if n != 1:
         return None
-    filepath.write_text(new_content, encoding="utf-8")
+    _atomic_write(filepath, new_content)
     return old_version
 
 
@@ -116,7 +130,7 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
     abs_start = section_start + match.start(2)
     abs_end = section_start + match.end(2)
     new_content = content[:abs_start] + new_version + content[abs_end:]
-    filepath.write_text(new_content, encoding="utf-8")
+    _atomic_write(filepath, new_content)
     return old_version
 
 
@@ -141,7 +155,7 @@ def _bump_cargo_toml(filepath: Path, new_version: str) -> str | None:
     abs_start = section_start + match.start(2)
     abs_end = section_start + match.end(2)
     new_content = content[:abs_start] + new_version + content[abs_end:]
-    filepath.write_text(new_content, encoding="utf-8")
+    _atomic_write(filepath, new_content)
     return old_version
 
 
@@ -152,7 +166,7 @@ def _bump_gradle(filepath: Path, new_version: str) -> str | None:
         return None
     old_version = match.group(2)
     new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
-    filepath.write_text(new_content, encoding="utf-8")
+    _atomic_write(filepath, new_content)
     return old_version
 
 
@@ -163,7 +177,7 @@ def _bump_python_version(filepath: Path, new_version: str) -> str | None:
         return None
     old_version = match.group(2)
     new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
-    filepath.write_text(new_content, encoding="utf-8")
+    _atomic_write(filepath, new_content)
     return old_version
 
 
@@ -207,7 +221,8 @@ def bump_version_files(
         return BumpResult(status="failed", error="No version files found in repository.")
 
     if files is not None:
-        filtered = [vf for vf in detected if vf.path in files]
+        normalized_files = [Path(f).as_posix() for f in files]
+        filtered = [vf for vf in detected if vf.path in normalized_files]
         if not filtered:
             available = [vf.path for vf in detected]
             return BumpResult(
@@ -215,7 +230,7 @@ def bump_version_files(
                 error=f"None of the specified files were found in detected version files. Available: {available}",
             )
         matched_paths = {vf.path for vf in filtered}
-        unmatched = [f for f in files if f not in matched_paths]
+        unmatched = [f for f in normalized_files if f not in matched_paths]
         if unmatched:
             available = [vf.path for vf in detected]
             return BumpResult(
