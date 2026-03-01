@@ -76,7 +76,7 @@ User options:
 
 - 'yes' -- Proceed with proposed version and all listed files
 - 'major/minor/patch' -- Override the version bump type
-- User can request to exclude specific files from the version bump
+- 'exclude N' -- Exclude file by number from the version bump (e.g., 'exclude 2')
 - 'no' -- Cancel the release
 
 **Without version files:**
@@ -121,7 +121,7 @@ cat > /tmp/claude/release-changelog.md << 'EOF'
 EOF
 
 myk-claude-tools release create {owner}/{repo} {tag} \
-  /tmp/claude/release-changelog.md [--prerelease] [--draft]
+  /tmp/claude/release-changelog.md [--prerelease] [--draft] [--target {target_branch}]
 ```
 
 ### Phase 7: Summary

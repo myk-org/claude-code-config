@@ -382,11 +382,6 @@ def _should_skip_dir(dir_name: str) -> bool:
 def _find_python_version_files(root: Path) -> list[VersionFile]:
     """Recursively find Python files with __version__ definitions."""
     results: list[VersionFile] = []
-    for dirpath, dirnames, filenames in root.iterdir() if False else [(None, None, None)]:
-        pass  # replaced by os.walk-like approach below
-
-    # Use Path.rglob but filter excluded dirs
-    results = []
     for pattern in ("**/__init__.py", "**/version.py"):
         for filepath in root.glob(pattern):
             # Check if any parent directory should be excluded

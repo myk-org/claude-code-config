@@ -68,8 +68,8 @@
 !tests/test_review_db.py
 !tests/test_rule_enforcer.py
 !tests/test_store_reviews_to_db.py
-!tests/test_detect_versions.py
 !tests/test_bump_version.py
+!tests/test_detect_versions.py
 
 # Config files
 !tox.toml
@@ -159,8 +159,8 @@
 !myk_claude_tools/release/commands.py
 !myk_claude_tools/release/create.py
 !myk_claude_tools/release/info.py
-!myk_claude_tools/release/detect_versions.py
 !myk_claude_tools/release/bump_version.py
+!myk_claude_tools/release/detect_versions.py
 !myk_claude_tools/reviews/
 !myk_claude_tools/reviews/__init__.py
 !myk_claude_tools/reviews/commands.py

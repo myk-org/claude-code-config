@@ -40,10 +40,21 @@ class BumpResult:
         return {"status": self.status, "error": self.error}
 
 
+def _detect_json_indent(content: str) -> int | str:
+    """Detect indentation from JSON file content."""
+    match = re.search(r'^\{\n(\s+)"', content)
+    if match:
+        indent_chars = match.group(1)
+        if "\t" in indent_chars:
+            return "\t"
+        return len(indent_chars)
+    return 2
+
+
 def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
-    content = filepath.read_text()
-    # Find the [project] section (tolerant of trailing whitespace/comments)
-    project_match = re.search(r"^\[project\]", content, re.MULTILINE)
+    content = filepath.read_text(encoding="utf-8")
+    # Find the [project] section (tolerant of whitespace around header)
+    project_match = re.search(r"^\[\s*project\s*\]", content, re.MULTILINE)
     if not project_match:
         return None
     section_start = project_match.end()
@@ -61,25 +72,27 @@ def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
     abs_start = section_start + match.start(2)
     abs_end = section_start + match.end(2)
     new_content = content[:abs_start] + new_version + content[abs_end:]
-    filepath.write_text(new_content)
+    filepath.write_text(new_content, encoding="utf-8")
     return old_version
 
 
 def _bump_package_json(filepath: Path, new_version: str) -> str | None:
+    content = filepath.read_text(encoding="utf-8")
     try:
-        data = json.loads(filepath.read_text())
-    except (OSError, json.JSONDecodeError):
+        data = json.loads(content)
+    except json.JSONDecodeError:
         return None
     old_version = data.get("version")
     if not isinstance(old_version, str):
         return None
     data["version"] = new_version
-    filepath.write_text(json.dumps(data, indent=2) + "\n")
+    indent = _detect_json_indent(content)
+    filepath.write_text(json.dumps(data, indent=indent) + "\n", encoding="utf-8")
     return old_version
 
 
 def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
-    content = filepath.read_text()
+    content = filepath.read_text(encoding="utf-8")
     # First verify the version exists in [metadata] using configparser
     config = configparser.ConfigParser()
     try:
@@ -92,7 +105,7 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
     if not re.match(r"^\d+\.", old_version):
         return None
     # Find [metadata] section and replace version only within it
-    metadata_match = re.search(r"^\[metadata\]\s*$", content, re.MULTILINE | re.IGNORECASE)
+    metadata_match = re.search(r"^\[\s*metadata\s*\]", content, re.MULTILINE | re.IGNORECASE)
     if not metadata_match:
         return None
     section_start = metadata_match.end()
@@ -107,14 +120,14 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
     abs_start = section_start + match.start(2)
     abs_end = section_start + match.end(2)
     new_content = content[:abs_start] + new_version + content[abs_end:]
-    filepath.write_text(new_content)
+    filepath.write_text(new_content, encoding="utf-8")
     return old_version
 
 
 def _bump_cargo_toml(filepath: Path, new_version: str) -> str | None:
-    content = filepath.read_text()
-    # Find the [package] section (tolerant of trailing whitespace/comments)
-    package_match = re.search(r"^\[package\]", content, re.MULTILINE)
+    content = filepath.read_text(encoding="utf-8")
+    # Find the [package] section (tolerant of whitespace around header)
+    package_match = re.search(r"^\[\s*package\s*\]", content, re.MULTILINE)
     if not package_match:
         return None
     section_start = package_match.end()
@@ -132,29 +145,29 @@ def _bump_cargo_toml(filepath: Path, new_version: str) -> str | None:
     abs_start = section_start + match.start(2)
     abs_end = section_start + match.end(2)
     new_content = content[:abs_start] + new_version + content[abs_end:]
-    filepath.write_text(new_content)
+    filepath.write_text(new_content, encoding="utf-8")
     return old_version
 
 
 def _bump_gradle(filepath: Path, new_version: str) -> str | None:
-    content = filepath.read_text()
+    content = filepath.read_text(encoding="utf-8")
     match = re.search(r"""^(version\s*=?\s*['"])([^'"]+)(['"])""", content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
     new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
-    filepath.write_text(new_content)
+    filepath.write_text(new_content, encoding="utf-8")
     return old_version
 
 
 def _bump_python_version(filepath: Path, new_version: str) -> str | None:
-    content = filepath.read_text()
+    content = filepath.read_text(encoding="utf-8")
     match = re.search(r'^(__version__\s*=\s*["\'])([^"\']+)(["\'])', content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
     new_content = content[: match.start(2)] + new_version + content[match.end(2) :]
-    filepath.write_text(new_content)
+    filepath.write_text(new_content, encoding="utf-8")
     return old_version
 
 
@@ -241,5 +254,5 @@ def run(new_version: str, files: list[str] | None = None) -> None:
     """Entry point for CLI command."""
     result = bump_version_files(new_version=new_version, files=files if files else None)
     print(json.dumps(result.to_dict(), indent=2))
-    if result.status == "failed":
+    if result.status == "failed" or result.skipped:
         sys.exit(1)

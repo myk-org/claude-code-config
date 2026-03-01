@@ -77,7 +77,7 @@ def _parse_pyproject_toml(filepath: Path) -> str | None:
 def _parse_package_json(filepath: Path) -> str | None:
     """Parse version from package.json."""
     try:
-        data = json.loads(filepath.read_text())
+        data = json.loads(filepath.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
     version = data.get("version")
@@ -119,7 +119,7 @@ def _parse_cargo_toml(filepath: Path) -> str | None:
 def _parse_gradle(filepath: Path) -> str | None:
     """Parse version from build.gradle or build.gradle.kts."""
     try:
-        content = filepath.read_text()
+        content = filepath.read_text(encoding="utf-8")
     except OSError:
         return None
     match = re.search(r"""^version\s*=?\s*['"]([^'"]+)['"]""", content, re.MULTILINE)
@@ -129,7 +129,7 @@ def _parse_gradle(filepath: Path) -> str | None:
 def _parse_python_version(filepath: Path) -> str | None:
     """Parse __version__ from a Python file."""
     try:
-        content = filepath.read_text()
+        content = filepath.read_text(encoding="utf-8")
     except OSError:
         return None
     match = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
