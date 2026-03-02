@@ -249,6 +249,38 @@ class TestBumpVersionFiles:
         # [tool:pytest] version should be unchanged
         assert "version = 99.99.99" in new_content
 
+    def test_bump_pyproject_toml_indented_version(self, tmp_path: Path) -> None:
+        """Bump version when version key has leading whitespace."""
+        content = textwrap.dedent("""\
+            [project]
+            name = "my-package"
+              version = "1.0.0"
+            description = "A package"
+        """)
+        (tmp_path / "pyproject.toml").write_text(content)
+        result = bump_version_files("2.0.0", root=tmp_path)
+        assert result.status == "success"
+        assert result.updated[0]["old_version"] == "1.0.0"
+        new_content = (tmp_path / "pyproject.toml").read_text()
+        # Indentation should be preserved
+        assert '  version = "2.0.0"' in new_content
+
+    def test_bump_cargo_toml_indented_version(self, tmp_path: Path) -> None:
+        """Bump version in Cargo.toml when version key has leading whitespace."""
+        content = textwrap.dedent("""\
+            [package]
+            name = "my-crate"
+              version = "1.0.0"
+            edition = "2021"
+        """)
+        (tmp_path / "Cargo.toml").write_text(content)
+        result = bump_version_files("1.0.1", root=tmp_path)
+        assert result.status == "success"
+        assert result.updated[0]["old_version"] == "1.0.0"
+        new_content = (tmp_path / "Cargo.toml").read_text()
+        # Indentation should be preserved
+        assert '  version = "1.0.1"' in new_content
+
     def test_bump_pyproject_with_subtables(self, tmp_path: Path) -> None:
         """Bump version even when [project] has sub-tables after it."""
         content = textwrap.dedent("""\

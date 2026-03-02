@@ -112,18 +112,6 @@ def temp_db() -> Generator[Path, None, None]:
             "reviewer1",
             None,
         ),
-        (
-            review_id,
-            "qodo",
-            "path/to/file.py",
-            30,
-            "Consider adding input validation",
-            "MEDIUM",
-            "addressed",
-            "Done",
-            "qodo-code-review",
-            "issue_comment_suggestion",
-        ),
     ]
 
     for (
@@ -220,18 +208,16 @@ class TestReviewDB:
         db = ReviewDB(db_path=temp_db)
         dismissed = db.get_dismissed_comments("test-org", "test-repo")
 
-        # 2 addressed (outside_diff_comment + issue_comment_suggestion) + 1 not_addressed + 1 skipped = 4
-        assert len(dismissed) == 4
+        # 1 addressed (outside_diff_comment) + 1 not_addressed + 1 skipped = 3
+        assert len(dismissed) == 3
         statuses = {c["status"] for c in dismissed}
         assert statuses == {"addressed", "not_addressed", "skipped"}
 
-        # Only addressed comments with type in ('outside_diff_comment', 'issue_comment_suggestion') are included
+        # Only addressed comments with type='outside_diff_comment' are included
         addressed = [c for c in dismissed if c["status"] == "addressed"]
-        assert len(addressed) == 2
-        addressed_bodies = {c["body"] for c in addressed}
-        assert addressed_bodies == {"Add error handling", "Consider adding input validation"}
-        addressed_types = {c["type"] for c in addressed}
-        assert addressed_types == {"outside_diff_comment", "issue_comment_suggestion"}
+        assert len(addressed) == 1
+        assert addressed[0]["body"] == "Add error handling"
+        assert addressed[0]["type"] == "outside_diff_comment"
 
     def test_get_dismissed_comments_excludes_regular_addressed(self, temp_db: Path) -> None:
         """Test that addressed comments without type='outside_diff_comment' are excluded."""
@@ -360,12 +346,12 @@ class TestReviewDB:
         # Find qodo stats
         qodo_stats = next((s for s in stats if s["source"] == "qodo"), None)
         assert qodo_stats is not None
-        assert qodo_stats["total"] == 3
-        assert qodo_stats["addressed"] == 2
+        assert qodo_stats["total"] == 2
+        assert qodo_stats["addressed"] == 1
         assert qodo_stats["not_addressed"] == 1
         assert qodo_stats["skipped"] == 0
         assert "addressed_rate" in qodo_stats
-        assert qodo_stats["addressed_rate"] == "66.7%"
+        assert qodo_stats["addressed_rate"] == "50.0%"
 
     def test_get_stats_by_source_empty_db(self, empty_db: Path) -> None:
         """Test stats by source with empty database."""
@@ -395,8 +381,8 @@ class TestReviewDB:
         # Find qodo-code-review stats
         qodo_reviewer = next((s for s in stats if s["author"] == "qodo-code-review"), None)
         assert qodo_reviewer is not None
-        assert qodo_reviewer["total"] == 3
-        assert qodo_reviewer["addressed"] == 2
+        assert qodo_reviewer["total"] == 2
+        assert qodo_reviewer["addressed"] == 1
         assert qodo_reviewer["not_addressed"] == 1
 
     def test_get_reviewer_stats_empty_db(self, empty_db: Path) -> None:
@@ -460,7 +446,7 @@ class TestReviewDB:
         # SELECT should work
         result = db.query("SELECT COUNT(*) as count FROM comments")
         assert len(result) == 1
-        assert result[0]["count"] == 5
+        assert result[0]["count"] == 4
 
     def test_query_with_params(self, temp_db: Path) -> None:
         """Test query with parameters."""
@@ -468,7 +454,7 @@ class TestReviewDB:
 
         result = db.query("SELECT COUNT(*) as count FROM comments WHERE status = ?", ("addressed",))
         assert len(result) == 1
-        assert result[0]["count"] == 3
+        assert result[0]["count"] == 2
 
     def test_query_rejects_delete(self, temp_db: Path) -> None:
         """Test that DELETE queries are rejected."""
@@ -505,7 +491,7 @@ class TestReviewDB:
         # Lowercase select should work
         result = db.query("select count(*) as count from comments")
         assert len(result) == 1
-        assert result[0]["count"] == 5
+        assert result[0]["count"] == 4
 
     def test_query_nonexistent_db(self, tmp_path: Path) -> None:
         """Test query when database doesn't exist."""
@@ -623,7 +609,7 @@ class TestReviewDBCLI:
 
         assert result.exit_code == 0
         data = json.loads(result.output)
-        assert data[0]["count"] == 5
+        assert data[0]["count"] == 4
 
     def test_cli_query_rejects_non_select(self, temp_db: Path) -> None:
         """Test that CLI rejects non-SELECT queries."""
@@ -653,9 +639,8 @@ class TestReviewDBCLI:
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert isinstance(data, list)
-        # 2 addressed (outside_diff_comment + issue_comment_suggestion)
-        # + 1 not_addressed + 1 skipped
-        assert len(data) == 4
+        # 1 addressed (outside_diff_comment) + 1 not_addressed + 1 skipped
+        assert len(data) == 3
         statuses = {item["status"] for item in data}
         assert statuses == {"addressed", "not_addressed", "skipped"}
 

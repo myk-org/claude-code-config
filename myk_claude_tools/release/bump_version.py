@@ -74,7 +74,7 @@ def _bump_pyproject_toml(filepath: Path, new_version: str) -> str | None:
         section_content = content[section_start : section_start + next_section.start()]
     else:
         section_content = content[section_start:]
-    match = re.search(r'^(version\s*=\s*["\'])([^"\']+)(["\'])', section_content, re.MULTILINE)
+    match = re.search(r'^(\s*version\s*=\s*["\'])([^"\']+)(["\'])', section_content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
@@ -128,7 +128,7 @@ def _bump_setup_cfg(filepath: Path, new_version: str) -> str | None:
         section_content = content[section_start : section_start + next_section.start()]
     else:
         section_content = content[section_start:]
-    match = re.search(r"^(version\s*=\s*)(\S+)", section_content, re.MULTILINE)
+    match = re.search(r"^(\s*version\s*=\s*)(\S+)", section_content, re.MULTILINE)
     if not match:
         return None
     abs_start = section_start + match.start(2)
@@ -151,7 +151,7 @@ def _bump_cargo_toml(filepath: Path, new_version: str) -> str | None:
         section_content = content[section_start : section_start + next_section.start()]
     else:
         section_content = content[section_start:]
-    match = re.search(r'^(version\s*=\s*["\'])([^"\']+)(["\'])', section_content, re.MULTILINE)
+    match = re.search(r'^(\s*version\s*=\s*["\'])([^"\']+)(["\'])', section_content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
@@ -165,7 +165,7 @@ def _bump_cargo_toml(filepath: Path, new_version: str) -> str | None:
 
 def _bump_gradle(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text(encoding="utf-8")
-    match = re.search(r"""^(version\s*=?\s*['"])([^'"]+)(['"])""", content, re.MULTILINE)
+    match = re.search(r"""^(\s*version\s*=?\s*['"])([^'"]+)(['"])""", content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
@@ -176,7 +176,7 @@ def _bump_gradle(filepath: Path, new_version: str) -> str | None:
 
 def _bump_python_version(filepath: Path, new_version: str) -> str | None:
     content = filepath.read_text(encoding="utf-8")
-    match = re.search(r'^(__version__\s*=\s*["\'])([^"\']+)(["\'])', content, re.MULTILINE)
+    match = re.search(r'^(\s*__version__\s*=\s*["\'])([^"\']+)(["\'])', content, re.MULTILINE)
     if not match:
         return None
     old_version = match.group(2)
