@@ -1,12 +1,13 @@
 ---
 description: Create a GitHub release with automatic changelog generation
-argument-hint: [--dry-run] [--prerelease] [--draft]
+argument-hint: [--dry-run] [--prerelease] [--draft] [--target <branch>]
 allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion
 ---
 
 # GitHub Release Command
 
 Creates a GitHub release with automatic changelog generation based on conventional commits.
+Optionally detects and updates version files before creating the release.
 
 ## Prerequisites Check (MANDATORY)
 
@@ -39,9 +40,24 @@ Check validations:
 - Working tree must be clean
 - Must be synced with remote
 
-### Phase 2: Changelog Analysis
+### Phase 2: Version Detection
 
-Parse commits from the output and categorize by conventional commit type:
+```bash
+myk-claude-tools release detect-versions
+```
+
+Parse the JSON output. If version files are found, store them for Phase 4.
+If no version files are detected, skip version bumping phases and continue normally.
+
+Store the detect-versions JSON output for use in Phase 4. The key fields are:
+
+- `version_files[].path` -- file path relative to repo root
+- `version_files[].current_version` -- current version string
+- `count` -- number of detected files (0 means skip version bumping)
+
+### Phase 3: Changelog Analysis
+
+Parse commits from Phase 1 output and categorize by conventional commit type:
 
 - Breaking Changes (MAJOR)
 - Features (MINOR)
@@ -49,34 +65,73 @@ Parse commits from the output and categorize by conventional commit type:
 
 Determine version bump and generate changelog.
 
-### Phase 3: User Approval
+### Phase 4: User Approval
 
-Display proposed version, changelog preview, and ask for confirmation:
+Display the proposed release information. If version files were detected in Phase 2,
+include them in the approval prompt.
 
-- 'yes' - Proceed
-- 'major/minor/patch' - Override version bump
-- 'no' - Cancel
+**With version files:**
 
-### Phase 4: Create Release
+Present using AskUserQuestion. Show:
 
-Create temp directory with cleanup, write changelog to temp file, and create release:
+- Proposed version (e.g., v1.2.0, minor bump)
+- List of version files to update with current to new version
+- Changelog preview
+
+User options:
+
+- 'yes' -- Proceed with proposed version and all listed files
+- 'major/minor/patch' -- Override the version bump type
+- 'exclude N' -- Exclude file by number from the version bump (e.g., 'exclude 2')
+- 'no' -- Cancel the release
+
+To exclude files, remove them from the list. Pass remaining file paths as
+`--files <path>` arguments to `bump-version` in Phase 5.
+
+**Without version files:**
+
+Same as before -- show proposed version and changelog, ask for confirmation.
+
+### Phase 5: Bump Version (if version files detected)
+
+Skip this phase if no version files were detected in Phase 2.
+
+Run the bump command with the confirmed version and files:
 
 ```bash
-mkdir -p /tmp/claude
-trap 'rm -f /tmp/claude/release-changelog.md' EXIT
+myk-claude-tools release bump-version <VERSION> --files <file1> --files <file2>
 ```
 
-Write the changelog content (generated from Phase 2 analysis) to the file, then create the release:
+Where `<VERSION>` is the version number without `v` prefix (e.g., `1.2.0`, not `v1.2.0`).
+
+Parse the JSON output from bump-version. Only `git add` the files listed in the
+`updated[]` array. If `skipped[]` is non-empty, inform the user which files were
+skipped and why before proceeding.
+
+Then commit and push the version bump:
 
 ```bash
-# Write changelog content to file (use heredoc or echo)
-cat > /tmp/claude/release-changelog.md << 'EOF'
-<changelog content from Phase 2>
+git add <updated-files>
+git commit -m "chore: bump version to <VERSION>"
+git push
+```
+
+### Phase 6: Create Release
+
+Create a temp file with cleanup, write changelog to it, and create release:
+
+```bash
+CHANGELOG_FILE=$(mktemp /tmp/claude-release-XXXXXX.md)
+trap "rm -f $CHANGELOG_FILE" EXIT
+
+cat > "$CHANGELOG_FILE" << 'EOF'
+<changelog content from Phase 3>
 EOF
 
-myk-claude-tools release create {owner}/{repo} {tag} /tmp/claude/release-changelog.md [--prerelease] [--draft]
+myk-claude-tools release create {owner}/{repo} {tag} "$CHANGELOG_FILE" [--prerelease] [--draft] [--target {target_branch}]
 ```
 
-### Phase 5: Summary
+### Phase 7: Summary
 
 Display release URL and summary.
+If version files were bumped, include the list of updated files in the summary.

@@ -56,10 +56,6 @@ Returns JSON with:
 - `qodo`: Qodo AI review threads
 - `coderabbit`: CodeRabbit AI review threads
 
-Qodo issue comments (from `/improve` and `/review` workflows) are automatically
-fetched and parsed into individual suggestions. Each suggestion appears as a
-separate item in the `qodo` category with `type: "issue_comment_suggestion"`.
-
 ### Phase 2: User Decision Collection
 
 **MANDATORY: Present ALL fetched items to the user for decision. Never auto-skip or auto-categorize items.**
@@ -114,15 +110,6 @@ Update each JSON entry with `status` and `reply` fields before posting.
 - User said **no** → `skipped` (include the user's skip reason in `reply`)
 - User said **all** → same as **yes** for each remaining comment
 - User said **skip \<source\>** → `skipped` for all remaining from that source
-
-**Issue comment suggestions (Qodo):**
-
-Suggestions from Qodo issue comments (type `issue_comment_suggestion`) are handled differently:
-
-- They are NOT posted as review thread replies (they have no thread_id)
-- Instead, all suggestions from the same issue comment are batch-posted as a single summary reply
-- No thread resolution is performed (issue comments don't support GitHub's resolve concept)
-- The `resolved_at` field stays null for these items
 
 Post replies to GitHub:
 

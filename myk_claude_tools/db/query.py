@@ -193,12 +193,12 @@ class ReviewDB:
         Retrieves comments that were dismissed during review processing:
         - ``not_addressed`` and ``skipped`` comments are always included (any type).
         - ``addressed`` comments are only included when their type is
-          ``outside_diff_comment`` or ``issue_comment_suggestion``.  Both types
-          lack a GitHub review thread that can be resolved, so the database is
+          ``outside_diff_comment`` or ``nitpick_comment``.  These types lack
+          a GitHub review thread that can be resolved, so the database is
           the only mechanism to auto-skip them on subsequent fetches.  Normal
-          inline thread comments rely on GitHub's ``isResolved`` filter in the
-          GraphQL query, so including them here could incorrectly auto-skip a
-          similar new finding in a different PR.
+          inline thread comments rely on GitHub's ``isResolved`` filter in
+          the GraphQL query, so including them here could incorrectly
+          auto-skip a similar new finding in a different PR.
 
         Args:
             owner: GitHub repository owner (org or user).
@@ -230,7 +230,7 @@ class ReviewDB:
                 WHERE r.owner = ? AND r.repo = ?
                   AND (
                       c.status IN ('not_addressed', 'skipped')
-                      OR (c.status = 'addressed' AND c.type IN ('outside_diff_comment', 'issue_comment_suggestion'))
+                      OR (c.status = 'addressed' AND c.type IN ('outside_diff_comment', 'nitpick_comment'))
                   )
                 ORDER BY c.path, c.line
                 """,

@@ -18,7 +18,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
-dependencies = ["click>=8.0.0"]
+dependencies = ["click>=8.0.0", "tomli>=2.0.0; python_version < '3.11'"]
 
 [project.scripts]
 myk-claude-tools = "myk_claude_tools.cli:main"
