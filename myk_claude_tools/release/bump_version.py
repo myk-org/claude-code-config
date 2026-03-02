@@ -22,10 +22,14 @@ from myk_claude_tools.release.detect_versions import detect_version_files
 
 def _atomic_write(filepath: Path, content: str) -> None:
     """Write content to file atomically using temp file + rename."""
+    # Capture original permissions if file exists
+    original_mode = filepath.stat().st_mode if filepath.exists() else None
     fd, tmp_path = tempfile.mkstemp(dir=filepath.parent, suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(content)
+        if original_mode is not None:
+            os.chmod(tmp_path, original_mode)
         Path(tmp_path).replace(filepath)
     except BaseException:
         Path(tmp_path).unlink(missing_ok=True)
@@ -210,11 +214,20 @@ def bump_version_files(
     if root is None:
         root = Path.cwd()
 
-    if not new_version.strip() or any(ch in new_version for ch in ("\n", "\r")):
+    new_version = new_version.strip()
+    if not new_version or any(ch in new_version for ch in ("\n", "\r")):
         return BumpResult(
             status="failed",
             error="Invalid version: must be a non-empty single-line string.",
         )
+    if new_version.startswith("v") or new_version.startswith("V"):
+        return BumpResult(
+            status="failed",
+            error=f"Invalid version: '{new_version}' should not start with 'v'. Use '{new_version[1:]}' instead.",
+        )
+
+    if not root.is_dir():
+        return BumpResult(status="failed", error=f"Root path is not a directory: {root}")
 
     detected = detect_version_files(root)
     if not detected:
@@ -252,6 +265,12 @@ def bump_version_files(
             continue
 
         filepath = root / vf.path
+        # Prevent path traversal
+        try:
+            filepath.resolve().relative_to(root.resolve())
+        except ValueError:
+            skipped.append({"path": vf.path, "reason": "Path traversal detected"})
+            continue
         try:
             old_version = bumper(filepath, new_version)
         except OSError as e:

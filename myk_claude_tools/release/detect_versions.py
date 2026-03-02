@@ -186,6 +186,9 @@ def detect_version_files(root: Path | None = None) -> list[VersionFile]:
     if root is None:
         root = Path.cwd()
 
+    if not root.is_dir():
+        return []
+
     results: list[VersionFile] = []
 
     for filename, parser, file_type in _ROOT_SCANNERS:

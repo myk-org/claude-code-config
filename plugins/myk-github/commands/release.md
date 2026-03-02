@@ -118,17 +118,17 @@ git push
 
 ### Phase 6: Create Release
 
-Create temp directory with cleanup, write changelog to temp file, and create release:
+Create a temp file with cleanup, write changelog to it, and create release:
 
 ```bash
-mkdir -p /tmp/claude
-trap 'rm -f /tmp/claude/release-changelog.md' EXIT
+CHANGELOG_FILE=$(mktemp /tmp/claude-release-XXXXXX.md)
+trap "rm -f $CHANGELOG_FILE" EXIT
 
-cat > /tmp/claude/release-changelog.md << 'EOF'
+cat > "$CHANGELOG_FILE" << 'EOF'
 <changelog content from Phase 3>
 EOF
 
-myk-claude-tools release create {owner}/{repo} {tag} /tmp/claude/release-changelog.md [--prerelease] [--draft] [--target {target_branch}]
+myk-claude-tools release create {owner}/{repo} {tag} "$CHANGELOG_FILE" [--prerelease] [--draft] [--target {target_branch}]
 ```
 
 ### Phase 7: Summary
