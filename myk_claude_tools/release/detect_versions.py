@@ -123,7 +123,7 @@ def _parse_gradle(filepath: Path) -> str | None:
         content = filepath.read_text(encoding="utf-8")
     except OSError:
         return None
-    match = re.search(r"""^version\s*=?\s*['"]([^'"]+)['"]""", content, re.MULTILINE)
+    match = re.search(r"""^\s*version\s*=?\s*['"]([^'"]+)['"]""", content, re.MULTILINE)
     return match.group(1) if match else None
 
 
@@ -133,7 +133,7 @@ def _parse_python_version(filepath: Path) -> str | None:
         content = filepath.read_text(encoding="utf-8")
     except OSError:
         return None
-    match = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+    match = re.search(r'^\s*__version__\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
     return match.group(1) if match else None
 
 
