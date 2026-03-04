@@ -95,6 +95,7 @@ def create_release(
     prerelease: bool = False,
     draft: bool = False,
     target: str | None = None,
+    title: str | None = None,
 ) -> ReleaseResult:
     """Create a GitHub release.
 
@@ -105,6 +106,7 @@ def create_release(
         prerelease: Mark as pre-release.
         draft: Create as draft release.
         target: Target branch for the release.
+        title: Release title (defaults to tag name).
 
     Returns:
         ReleaseResult with status and details.
@@ -149,6 +151,8 @@ def create_release(
         owner_repo,
         "--notes-file",
         changelog_file,
+        "--title",
+        title if title else tag,
     ]
 
     if target:
@@ -190,6 +194,7 @@ def run(
     prerelease: bool = False,
     draft: bool = False,
     target: str | None = None,
+    title: str | None = None,
 ) -> None:
     """Entry point for CLI command.
 
@@ -200,6 +205,7 @@ def run(
         prerelease: Mark as pre-release.
         draft: Create as draft release.
         target: Target branch for the release.
+        title: Release title (defaults to tag name).
     """
     result = create_release(
         owner_repo=owner_repo,
@@ -208,6 +214,7 @@ def run(
         prerelease=prerelease,
         draft=draft,
         target=target,
+        title=title,
     )
     print(json.dumps(result.to_dict(), indent=2))
     if result.status == "failed":
