@@ -152,7 +152,7 @@ def create_release(
         "--notes-file",
         changelog_file,
         "--title",
-        title if title else tag,
+        title.strip() if title and title.strip() else tag,
     ]
 
     if target:

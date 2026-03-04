@@ -33,13 +33,22 @@ def release_create(
     owner_repo: str,
     tag: str,
     changelog_file: str,
+    *,
     prerelease: bool,
     draft: bool,
     target: str | None,
     title: str | None,
 ) -> None:
     """Create a GitHub release."""
-    create_run(owner_repo, tag, changelog_file, prerelease, draft, target, title)
+    create_run(
+        owner_repo=owner_repo,
+        tag=tag,
+        changelog_file=changelog_file,
+        prerelease=prerelease,
+        draft=draft,
+        target=target,
+        title=title,
+    )
 
 
 @release.command("detect-versions")
