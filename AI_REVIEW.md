@@ -486,6 +486,15 @@ This enforces that orchestrator delegates work instead of doing it directly.
 It is no longer tracked in this repository and therefore does not need to be kept in sync with `AI_REVIEW.md`.
 Update `AI_REVIEW.md` when modifying shared project context or guidelines.
 
+## Handling Review Feedback
+
+When fixing reviewer comments (human, CodeRabbit, Qodo):
+
+- If the reviewer provides a specific code suggestion or diff, implement it exactly — not your own interpretation
+- Do NOT simplify, minimize, or "half-fix" the suggestion
+- After fixing, verify your code matches what the reviewer asked for, not just "addresses the concern"
+- **NO SKIP WITHOUT USER APPROVAL:** If you disagree with a suggestion, ASK THE USER before skipping, partially fixing, or applying a minimum-viable fix
+
 ---
 
 ## Common Tasks
