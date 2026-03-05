@@ -81,6 +81,16 @@ User response options:
 
 For each approved comment, delegate to appropriate specialist agent.
 
+**When fixing review comments (MANDATORY):**
+
+- If the reviewer provides a specific code suggestion or diff, implement IT exactly — not your own interpretation
+- Do NOT simplify, minimize, or "half-fix" the suggestion
+- After fixing, verify your code matches what the reviewer asked for, not just "addresses the concern"
+- If you disagree with the suggestion, ASK THE USER before skipping — never skip or water-down without user approval
+
+**NO SKIP WITHOUT USER APPROVAL.** If the AI disagrees with a reviewer's suggestion, it must ask the user first.
+It cannot decide on its own to skip, partially fix, or do a "minimum viable fix."
+
 ### Phase 4: Review Unimplemented
 
 If any approved tasks weren't implemented, review with user.
