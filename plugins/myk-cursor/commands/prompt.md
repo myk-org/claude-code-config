@@ -1,12 +1,12 @@
 ---
-description: Run a one-shot prompt via Cursor agent CLI
+description: Run a prompt via Cursor agent CLI
 argument-hint: [--fix] [--model <model>] <prompt>
 allowed-tools: Bash(agent:*), Bash(git:*), AskUserQuestion
 ---
 
 # Cursor Agent Prompt Command
 
-Run a one-shot prompt through Cursor's agent CLI, enabling access to models like GPT-5.3, Gemini 3 Pro, Grok, and more.
+Run a prompt through Cursor's agent CLI, enabling access to models like GPT-5.3, Gemini 3 Pro, Grok, and more.
 
 ## Usage
 
@@ -30,19 +30,29 @@ If not found, abort with message: "Cursor agent CLI not found at `agent`. Ensure
 
 ### Step 2: Parse Arguments
 
-Parse `$ARGUMENTS` to extract optional model flag and the prompt:
+Parse leading flags from `$ARGUMENTS` before the prompt text:
 
-- If `$ARGUMENTS` starts with `--fix`, set fix mode to true and remove
-  `--fix` from the arguments before continuing to parse
-- `--fix` can appear before or after `--model`
+- Starting at the beginning of `$ARGUMENTS`, consume only these recognized
+  flags until you reach the first token that is not a supported flag:
+  - `--fix` -- enable fix mode
+  - `--model <model>` -- select a model
+- `--fix` and `--model` may appear in either order before the prompt
   (e.g., `--fix --model gemini-3-pro Fix this`
   or `--model gemini-3-pro --fix Fix this`)
-- If `$ARGUMENTS` starts with `--model` followed by a space, extract the model name (second word) and use the remainder as the prompt
-- If `$ARGUMENTS` is exactly `--model` with no following word, abort with: "Missing model name after --model flag."
-- If the word after `--model` starts with `--`, abort with: "Invalid model name. Model name cannot start with --."
-- Otherwise, the entire `$ARGUMENTS` is the prompt
+- After the first non-flag token, treat the rest of `$ARGUMENTS` as the
+  prompt verbatim, even if it contains strings like `--fix` or `--model`
+- If `--fix` appears more than once, abort with:
+  "Duplicate --fix flag. Pass --fix at most once."
+- If `--model` appears more than once, abort with:
+  "Duplicate --model flag. Pass at most one model."
+- If `$ARGUMENTS` ends with `--model` and no following word, abort with:
+  "Missing model name after --model flag."
+- If the word after `--model` starts with `--`, abort with:
+  "Invalid model name. Model name cannot start with --."
+- Otherwise, if no recognized flags are present, the entire `$ARGUMENTS` is
+  the prompt
 
-If no prompt text is provided (empty after parsing), abort with message: "No prompt provided. Usage: `/myk-cursor:prompt [--model <model>] <prompt>`"
+If no prompt text is provided (empty after parsing), abort with message: "No prompt provided. Usage: `/myk-cursor:prompt [--fix] [--model <model>] <prompt>`"
 
 ### Step 2b: Enrich Prompt with Context
 
@@ -87,32 +97,56 @@ excessive diff output.
 
 ### Step 2c: Session Continuation
 
-Check the current conversation history for any previous `agent --print` commands that completed successfully (returned valid JSON with `is_error: false`).
+Check the current conversation history for any previous successful `agent`
+command in the same mode:
 
-- **If a previous successful `agent` call exists**: Add `--continue` to the command.
-  This resumes the last Cursor session, preserving context from earlier interactions
-  (diffs already read, files already analyzed, etc.).
-- **If no previous `agent` call exists**: Run without `--continue` (fresh session).
+- **Non-fix mode:** A prior `agent --print` call counts as successful if it
+  returned valid JSON with `is_error: false` (or omitted `is_error`)
+- **Fix mode:** A prior non-`--print` `agent` call counts as successful if it
+  exited with code 0
+- **If a previous successful `agent` call exists in the same mode:** Add
+  `--continue` to the command. This resumes the last compatible Cursor
+  session, preserving context from earlier interactions.
+- **If no previous successful call exists in the same mode:** Run without
+  `--continue` (fresh session).
 
-### Step 2d: Commit Before Fix (--fix mode only)
+Do not reuse `--continue` when switching between non-fix and `--fix` mode
+unless the prior successful command used the same mode.
+
+### Step 2d: Workspace Safety Check (--fix mode only)
 
 **Skip this step if --fix was NOT passed.**
 
-**MANDATORY:** Before calling Cursor in fix mode, commit all current
-changes to preserve the working state. This ensures the user can always
-revert Cursor's modifications.
+Before calling Cursor in fix mode, inspect the workspace state first.
 
 ```bash
-git add -A
-git commit -m "chore: save state before Cursor fix"
+git rev-parse --is-inside-work-tree
+git status --short
 ```
 
-If there are no changes to commit (clean working tree), skip the commit
-but continue with the fix flow.
+Follow this decision process:
+
+1. If the current directory is not a Git repository, ask the user via
+   AskUserQuestion:
+   "This directory is not a Git repository. Continue with `--fix` anyway?
+   I won't be able to show a git diff or provide an easy rollback point."
+2. If the current directory is a Git repository and `git status --short`
+   shows existing changes, ask the user via AskUserQuestion:
+   "The working tree already has uncommitted changes. Continue with
+   `/myk-cursor:prompt --fix` anyway? Cursor may modify the same files,
+   and the final diff summary may include pre-existing edits. Recommended:
+   create your own checkpoint commit first if you want clean isolation."
+3. If the user declines either prompt, abort.
+4. Never auto-stage or auto-commit changes as part of `--fix`.
 
 ### Step 3: Run Prompt
 
-Execute the Cursor agent CLI with JSON output. Add `--continue` after `--print` when a previous successful `agent` call exists in this conversation (see Step 2c).
+Execute the Cursor agent CLI. Use `--continue` only when Step 2c found a
+previous successful `agent` command in the same mode.
+
+**Non-fix mode (default):**
+
+Run with JSON output:
 
 **First call (no prior session):**
 
@@ -130,22 +164,20 @@ agent --print --continue --output-format json --model <model> '<escaped_prompt>'
 
 **Fix mode (--fix):**
 
-When `--fix` is active, do NOT use `--print`. Cursor needs to run
-interactively to modify files. Remove `--print` and `--output-format json`
-from the command:
+Use `--print` with `--trust` so Cursor can modify files AND we capture its response.
 
 **First call (no prior session):**
 
 ```bash
-agent --trust '<escaped_prompt>'
-agent --trust --model <model> '<escaped_prompt>'
+agent --print --trust --output-format json '<escaped_prompt>'
+agent --print --trust --output-format json --model <model> '<escaped_prompt>'
 ```
 
 **Subsequent calls (with --continue):**
 
 ```bash
-agent --continue --trust '<escaped_prompt>'
-agent --continue --trust --model <model> '<escaped_prompt>'
+agent --print --continue --trust --output-format json '<escaped_prompt>'
+agent --print --continue --trust --output-format json --model <model> '<escaped_prompt>'
 ```
 
 **Additional prompt enrichment for fix mode:**
@@ -164,9 +196,15 @@ access.
 
 **Timeout:** Set the Bash tool timeout to 300000ms (5 minutes) to prevent the command from hanging indefinitely.
 
-If the command fails, check Step 3b for trust errors before falling through to Step 4 error handling.
+If a non-fix command fails, check Step 3b for trust errors before falling
+through to Step 4 error handling.
 
-### Step 3b: Handle Trust Errors
+If a fix-mode command fails, display the raw output as an error and stop.
+Do not continue to Steps 5 or 6.
+
+### Step 3b: Handle Trust Errors (non-fix mode only)
+
+**Skip this step if --fix was passed.** Fix mode already includes `--trust`.
 
 If the command exits with a non-zero code and the error output contains trust-related phrases
 (e.g., "workspace trust", "not trusted", "trust the workspace"):
@@ -218,18 +256,29 @@ The JSON output has this structure:
 
 ### Step 5: Read Diff (--fix mode only)
 
-**Skip this step if --fix was NOT passed.**
+**Skip this step if --fix was NOT passed, or if the fix-mode `agent`
+command failed.**
 
-**MANDATORY:** After Cursor completes in fix mode, read the git diff to
-understand what changed. This step cannot be skipped.
+After Cursor completes successfully in fix mode, inspect what changed.
+
+If the current directory is a Git repository, read the resulting workspace
+state:
 
 ```bash
+git status --short
 git diff --stat
 git diff
 ```
 
-If the diff is too large (over ~200 lines), use `git diff --stat` only
-and note the full diff was too large to display inline.
+If the diff is too large (over ~200 lines), use `git diff --stat` only and
+note the full diff was too large to display inline.
+
+If the workspace was already dirty before running `--fix`, explicitly note
+that the final diff may include pre-existing edits in addition to Cursor's
+changes.
+
+If the current directory is not a Git repository, report that git diff is
+unavailable and summarize Cursor's output instead.
 
 Report to the user:
 
@@ -239,7 +288,8 @@ Report to the user:
 
 ### Step 6: Summary (--fix mode only)
 
-**Skip this step if --fix was NOT passed.**
+**Skip this step if --fix was NOT passed, or if the fix-mode `agent`
+command failed.**
 
 Present a clear summary of what Cursor changed:
 
@@ -247,6 +297,9 @@ Present a clear summary of what Cursor changed:
 2. **What was done** — Brief description of the changes in plain language
 3. **Impact** — Note any behavioral changes, new dependencies,
    or things the user should verify
+
+If the workspace was already dirty before the run, or the current directory
+is not a Git repository, call out that limitation in the summary.
 
 Example format:
 
