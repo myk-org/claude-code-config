@@ -160,12 +160,14 @@ For each new `/myk-cursor:prompt` call, decide:
 #### Creating a New Session
 
 ```bash
-if ! CHAT_ID=$(agent create-chat); then
-  # Display the raw create-chat error and abort.
-  exit 1
+CHAT_ID=$(agent create-chat 2>&1)
+status=$?
+if [ $status -ne 0 ]; then
+  echo "$CHAT_ID" >&2
+  exit $status
 fi
 if [ -z "$CHAT_ID" ]; then
-  echo "agent create-chat did not return a chat ID"
+  echo "agent create-chat did not return a chat ID" >&2
   exit 1
 fi
 ```
@@ -189,9 +191,11 @@ After each successful call, display the session info to the user:
 ```text
 Session: <chatId> (topic: "<topic summary>")
 [New session | Resumed session]
+Resume with: agent --resume <chatId>
 ```
 
-This helps the user understand which session context Cursor is working in.
+Always show the full chat ID so the user can resume the session directly
+via the Cursor CLI if needed (e.g., `agent --resume <chatId> "follow-up prompt"`).
 
 #### Multi-Session Routing Example
 
