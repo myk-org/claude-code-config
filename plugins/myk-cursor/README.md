@@ -1,6 +1,6 @@
 # myk-cursor Plugin
 
-Run one-shot prompts via Cursor's [agent CLI](https://docs.cursor.com/cli) from within Claude Code.
+Run prompts via Cursor's [agent CLI](https://docs.cursor.com/cli) from within Claude Code, with optional `--fix` mode for direct file changes.
 
 ## Why
 
@@ -14,7 +14,7 @@ This plugin bridges the two tools, enabling cross-tool workflows like:
 ## Prerequisites
 
 - [Cursor](https://cursor.com) installed with CLI enabled
-- Cursor agent CLI available on PATH (default: `~/.local/bin/agent`)
+- Cursor agent CLI (`agent`) available on PATH
 - Authenticated in Cursor (`agent status` to verify)
 
 ## Installation
@@ -28,13 +28,23 @@ This plugin bridges the two tools, enabling cross-tool workflows like:
 
 ### `/myk-cursor:prompt`
 
-Run a one-shot prompt through Cursor's agent CLI.
+Run a prompt through Cursor's agent CLI.
 
 **Syntax:**
 
 ```text
-/myk-cursor:prompt [--model <model>] <prompt>
+/myk-cursor:prompt [--fix] [--model <model>] <prompt>
 ```
+
+When `--fix` is passed, Cursor is allowed to apply file changes directly and
+the command summarizes the resulting changes, including a git diff when
+available. `--fix` and `--model` must appear before the prompt text, and can
+appear in either order.
+
+If the directory is not a Git repository, or if the worktree already has
+uncommitted changes, the command asks before proceeding instead of
+auto-committing your changes. In non-fix mode, if Cursor reports workspace
+trust issues, the command can ask to re-run with `--trust`.
 
 **Examples:**
 
@@ -50,6 +60,12 @@ Run a one-shot prompt through Cursor's agent CLI.
 
 # Review a plan file
 /myk-cursor:prompt Review the implementation plan at /tmp/claude/my-plan.md
+
+# Fix failing tests (applies file changes)
+/myk-cursor:prompt --fix Fix the failing tests
+
+# Review and fix code quality issues with a specific model
+/myk-cursor:prompt --model gemini-3-pro --fix Review and fix code quality issues
 ```
 
 ## Available Models
