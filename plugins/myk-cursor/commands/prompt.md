@@ -122,11 +122,12 @@ responses where `is_error: true`.
 
 Track these fields:
 
-| Field   | Description                                              |
-|---------|----------------------------------------------------------|
-| Chat ID | UUID returned by `agent create-chat`                     |
-| Topic   | Short summary of the session's purpose (from the original user prompt) |
-| Mode    | `fix` or `non-fix`                                       |
+| Field     | Description                                              |
+|-----------|----------------------------------------------------------|
+| Chat ID   | UUID returned by `agent create-chat`                     |
+| Topic     | Short summary of the session's purpose (from the original user prompt) |
+| Mode      | `fix` or `non-fix`                                       |
+| Last used | Conversation turn number of the most recent successful use |
 
 #### Decision Logic
 
@@ -192,6 +193,28 @@ Session: <chatId> (topic: "<topic summary>")
 
 This helps the user understand which session context Cursor is working in.
 
+#### Multi-Session Routing Example
+
+```text
+Call 1: /myk-cursor:prompt Review this code for bugs
+  → agent create-chat → chat-id-A
+  → Topic: "code review for bugs", Mode: non-fix
+  → agent --print --resume "chat-id-A" ...
+
+Call 2: /myk-cursor:prompt What about the error handling?
+  → Matches chat-id-A (follow-up to code review)
+  → agent --print --resume "chat-id-A" ...
+
+Call 3: /myk-cursor:prompt --fix Review the test plan
+  → Different topic + mode switch → agent create-chat → chat-id-B
+  → Topic: "test plan review", Mode: fix
+  → agent --print --resume "chat-id-B" --trust ...
+
+Call 4: /myk-cursor:prompt Also check for SQL injection in the code
+  → Matches chat-id-A (back to code review topic, non-fix mode)
+  → agent --print --resume "chat-id-A" ...
+```
+
 ### Step 2d: Workspace Safety Check (--fix mode only)
 
 **Skip this step if --fix was NOT passed.**
@@ -219,17 +242,19 @@ Follow this decision process:
      diff summary may include pre-existing edits
    - **Abort** — Stop here to handle changes manually
 3. Handle the response as follows:
-   - If the user selects **Commit first (Recommended)**, stage all current
-     changes explicitly by path from `git status --short` (quote paths with
-     spaces). Do **not** use `git add .` or `git add -A`.
+   - If the user selects **Commit first (Recommended)**, collect changed
+     paths from `git status --porcelain -z` and stage them using a
+     NUL-safe mechanism (e.g., pipe to `xargs -0 git add --`). This
+     correctly handles filenames with spaces, renames, and deletions.
+     Do **not** parse human-oriented `git status --short` for staging.
      Then create a checkpoint commit with the message
      `chore: checkpoint before cursor --fix`.
-     After the commit, verify with `git status --short` that the workspace is
-     clean before proceeding.
-     If the commit fails, or the workspace is still dirty afterward, display
-     the raw git output and abort instead of running `--fix`.
-     If the commit succeeds and the workspace is clean, proceed with `--fix`
-     and treat it as a clean-worktree run.
+     After the commit, verify with `git status --porcelain -z` that the
+     output is empty (workspace is clean) before proceeding.
+     If the commit fails, or the workspace is still dirty afterward,
+     display the raw git output and abort instead of running `--fix`.
+     If the commit succeeds and the workspace is clean, proceed with
+     `--fix` and treat it as a clean-worktree run.
    - If the user selects **Continue anyway**, proceed and remember that the
      workspace was already dirty
    - If the user selects **Abort**, stop immediately
@@ -359,8 +384,9 @@ Steps 5 and 6 only if the JSON indicates success.
    If `is_error` is missing from the JSON, treat it as `false`.
 3. If successful, display the `result` field content to the user
 4. Include a note about which model was used (if `--model` was specified) or "default model" otherwise
-5. Display the session info: session ID, topic summary, and whether it was a new or resumed session (see Step 2c)
-6. Treat that session as eligible for future reuse in the current conversation
+5. Update that session's `Last used` value to the current conversation turn
+6. Display the session info: session ID, topic summary, and whether it was a new or resumed session (see Step 2c)
+7. Treat that session as eligible for future reuse in the current conversation
 
 **Error handling:**
 
