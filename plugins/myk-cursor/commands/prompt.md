@@ -160,14 +160,15 @@ For each new `/myk-cursor:prompt` call, decide:
 #### Creating a New Session
 
 ```bash
-CHAT_ID=$(agent create-chat 2>&1)
-status=$?
-if [ $status -ne 0 ]; then
-  echo "$CHAT_ID" >&2
-  exit $status
+CHAT_ID=$(agent create-chat)
+if [ $? -ne 0 ]; then
+  # stderr was already emitted by agent create-chat
+  echo "Failed to create chat session" >&2
+  exit 1
 fi
-if [ -z "$CHAT_ID" ]; then
-  echo "agent create-chat did not return a chat ID" >&2
+# Validate UUID format
+if ! echo "$CHAT_ID" | grep -qE '^[0-9a-f-]{36}$'; then
+  echo "agent create-chat returned invalid ID: $CHAT_ID" >&2
   exit 1
 fi
 ```
@@ -246,12 +247,8 @@ Follow this decision process:
      diff summary may include pre-existing edits
    - **Abort** — Stop here to handle changes manually
 3. Handle the response as follows:
-   - If the user selects **Commit first (Recommended)**, collect changed
-     paths from `git status --porcelain -z` and stage them using a
-     NUL-safe mechanism (e.g., pipe to `xargs -0 git add --`). This
-     correctly handles filenames with spaces, renames, and deletions.
-     Do **not** parse human-oriented `git status --short` for staging.
-     Then create a checkpoint commit with the message
+   - If the user selects **Commit first (Recommended)**, stage all changes
+     with `git add -A` and create a checkpoint commit with the message
      `chore: checkpoint before cursor --fix`.
      After the commit, verify with `git status --porcelain -z` that the
      output is empty (workspace is clean) before proceeding.
