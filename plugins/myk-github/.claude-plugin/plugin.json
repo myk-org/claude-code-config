@@ -1,6 +1,6 @@
 {
   "name": "myk-github",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "GitHub operations for Claude Code - PR reviews, releases, and review handling",
   "author": {
     "name": "myk-org"
