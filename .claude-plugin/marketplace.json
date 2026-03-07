@@ -8,19 +8,19 @@
       "name": "myk-qodo",
       "source": "./plugins/myk-qodo",
       "description": "Qodo AI code review integration",
-      "version": "1.1.11"
+      "version": "1.2.0"
     },
     {
       "name": "myk-github",
       "source": "./plugins/myk-github",
       "description": "GitHub operations - PR reviews, releases, review handling",
-      "version": "1.1.11"
+      "version": "1.2.0"
     },
     {
       "name": "myk-review",
       "source": "./plugins/myk-review",
       "description": "Local code review and review database operations",
-      "version": "1.1.11"
+      "version": "1.2.0"
     },
     {
       "name": "myk-cursor",
