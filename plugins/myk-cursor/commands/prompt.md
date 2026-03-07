@@ -120,6 +120,10 @@ Use `--continue` only when the prior successful `agent` call used the same
 mode (both non-fix or both `--fix`). Do not use `--continue` when switching
 between modes.
 
+**Why:** Fix mode and non-fix mode use different invocation patterns. A fix-mode
+session has file-write context that doesn't apply to read-only queries, and
+vice versa. Mixing sessions could cause unexpected behavior.
+
 ### Step 2d: Workspace Safety Check (--fix mode only)
 
 **Skip this step if --fix was NOT passed.**
@@ -285,6 +289,9 @@ git diff
 git diff --cached --stat
 git diff --cached
 ```
+
+Use `git status --short` to detect newly created untracked files that
+`git diff` won't show.
 
 If either the unstaged diff or staged diff is empty, omit that section from
 the report.
