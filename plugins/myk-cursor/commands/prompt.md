@@ -1,7 +1,7 @@
 ---
 description: Run a one-shot prompt via Cursor agent CLI
-argument-hint: [--model <model>] <prompt>
-allowed-tools: Bash(agent:*), AskUserQuestion
+argument-hint: [--fix] [--model <model>] <prompt>
+allowed-tools: Bash(agent:*), Bash(git:*), AskUserQuestion
 ---
 
 # Cursor Agent Prompt Command
@@ -13,6 +13,8 @@ Run a one-shot prompt through Cursor's agent CLI, enabling access to models like
 - `/myk-cursor:prompt What are best practices for HTML parsing in Python?`
 - `/myk-cursor:prompt --model gemini-3-pro Review this codebase for bugs`
 - `/myk-cursor:prompt --model gpt-5.3-codex Review the file src/main.py`
+- `/myk-cursor:prompt --fix Review and fix the code quality issues`
+- `/myk-cursor:prompt --fix --model gemini-3-pro Fix the failing tests`
 
 ## Workflow
 
@@ -30,6 +32,11 @@ If not found, abort with message: "Cursor agent CLI not found at `agent`. Ensure
 
 Parse `$ARGUMENTS` to extract optional model flag and the prompt:
 
+- If `$ARGUMENTS` starts with `--fix`, set fix mode to true and remove
+  `--fix` from the arguments before continuing to parse
+- `--fix` can appear before or after `--model`
+  (e.g., `--fix --model gemini-3-pro Fix this`
+  or `--model gemini-3-pro --fix Fix this`)
 - If `$ARGUMENTS` starts with `--model` followed by a space, extract the model name (second word) and use the remainder as the prompt
 - If `$ARGUMENTS` is exactly `--model` with no following word, abort with: "Missing model name after --model flag."
 - If the word after `--model` starts with `--`, abort with: "Invalid model name. Model name cannot start with --."
@@ -87,6 +94,22 @@ Check the current conversation history for any previous `agent --print` commands
   (diffs already read, files already analyzed, etc.).
 - **If no previous `agent` call exists**: Run without `--continue` (fresh session).
 
+### Step 2d: Commit Before Fix (--fix mode only)
+
+**Skip this step if --fix was NOT passed.**
+
+**MANDATORY:** Before calling Cursor in fix mode, commit all current
+changes to preserve the working state. This ensures the user can always
+revert Cursor's modifications.
+
+```bash
+git add -A
+git commit -m "chore: save state before Cursor fix"
+```
+
+If there are no changes to commit (clean working tree), skip the commit
+but continue with the fix flow.
+
 ### Step 3: Run Prompt
 
 Execute the Cursor agent CLI with JSON output. Add `--continue` after `--print` when a previous successful `agent` call exists in this conversation (see Step 2c).
@@ -104,6 +127,38 @@ agent --print --output-format json --model <model> '<escaped_prompt>'
 agent --print --continue --output-format json '<escaped_prompt>'
 agent --print --continue --output-format json --model <model> '<escaped_prompt>'
 ```
+
+**Fix mode (--fix):**
+
+When `--fix` is active, do NOT use `--print`. Cursor needs to run
+interactively to modify files. Remove `--print` and `--output-format json`
+from the command:
+
+**First call (no prior session):**
+
+```bash
+agent --trust '<escaped_prompt>'
+agent --trust --model <model> '<escaped_prompt>'
+```
+
+**Subsequent calls (with --continue):**
+
+```bash
+agent --continue --trust '<escaped_prompt>'
+agent --continue --trust --model <model> '<escaped_prompt>'
+```
+
+**Additional prompt enrichment for fix mode:**
+
+Append to the user's prompt:
+
+```text
+You have full permission to modify, create, and delete files as needed
+to fix this. Make all necessary changes directly.
+```
+
+`--trust` is always included in fix mode since Cursor needs file write
+access.
 
 **Shell safety:** Single-quote the prompt to prevent shell expansion. Replace any single quotes in the prompt with `'\''` before interpolation.
 
@@ -160,3 +215,51 @@ The JSON output has this structure:
 - If the command exits with a non-zero code, display the raw output as an error.
 - If the output is not valid JSON, display the raw output with a note that JSON parsing failed.
 - If the JSON is missing the `result` field, display the full JSON response.
+
+### Step 5: Read Diff (--fix mode only)
+
+**Skip this step if --fix was NOT passed.**
+
+**MANDATORY:** After Cursor completes in fix mode, read the git diff to
+understand what changed. This step cannot be skipped.
+
+```bash
+git diff --stat
+git diff
+```
+
+If the diff is too large (over ~200 lines), use `git diff --stat` only
+and note the full diff was too large to display inline.
+
+Report to the user:
+
+- Which files were modified/created/deleted
+- A summary of the changes
+- The full diff (or stat summary if too large)
+
+### Step 6: Summary (--fix mode only)
+
+**Skip this step if --fix was NOT passed.**
+
+Present a clear summary of what Cursor changed:
+
+1. **Files changed** — List each file with what was modified
+2. **What was done** — Brief description of the changes in plain language
+3. **Impact** — Note any behavioral changes, new dependencies,
+   or things the user should verify
+
+Example format:
+
+```text
+Cursor made the following changes:
+
+Files changed (3):
+  M src/auth.py — Added input validation to login handler
+  M tests/test_auth.py — Added 2 new test cases for validation
+  A src/validators.py — New file with email/password validators
+
+Summary: Added input validation to the login handler with email
+format and password length checks. Added corresponding tests.
+
+Verify: Run `pytest tests/test_auth.py` to confirm new tests pass.
+```

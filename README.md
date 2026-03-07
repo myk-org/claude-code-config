@@ -70,7 +70,7 @@ uv tool install git+https://github.com/myk-org/claude-code-config
 | myk-qodo | `/myk-qodo:describe` | Generate PR descriptions |
 | myk-qodo | `/myk-qodo:improve` | Get improvement suggestions |
 | myk-qodo | `/myk-qodo:ask` | Ask questions about code |
-| myk-cursor | `/myk-cursor:prompt` | Run one-shot prompts via Cursor agent CLI |
+| myk-cursor | `/myk-cursor:prompt` | Run prompts via Cursor agent CLI. Use `--fix` for file changes |
 
 > **For full orchestrator pattern with agents and hooks**, see [Full Installation](#installation) below.
 

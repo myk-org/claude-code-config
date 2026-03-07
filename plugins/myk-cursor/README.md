@@ -1,6 +1,6 @@
 # myk-cursor Plugin
 
-Run one-shot prompts via Cursor's [agent CLI](https://docs.cursor.com/cli) from within Claude Code.
+Run prompts via Cursor's [agent CLI](https://docs.cursor.com/cli) from within Claude Code. Supports `--fix` for automatic file changes.
 
 ## Why
 
@@ -33,8 +33,10 @@ Run a one-shot prompt through Cursor's agent CLI.
 **Syntax:**
 
 ```text
-/myk-cursor:prompt [--model <model>] <prompt>
+/myk-cursor:prompt [--fix] [--model <model>] <prompt>
 ```
+
+When `--fix` is passed, Cursor applies file changes directly instead of only returning text output.
 
 **Examples:**
 
@@ -50,6 +52,12 @@ Run a one-shot prompt through Cursor's agent CLI.
 
 # Review a plan file
 /myk-cursor:prompt Review the implementation plan at /tmp/claude/my-plan.md
+
+# Fix failing tests (applies file changes)
+/myk-cursor:prompt --fix Fix the failing tests
+
+# Review and fix code quality issues with a specific model
+/myk-cursor:prompt --fix --model gemini-3-pro Review and fix code quality issues
 ```
 
 ## Available Models
