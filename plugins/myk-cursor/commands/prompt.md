@@ -36,6 +36,8 @@ Parse leading flags from `$ARGUMENTS` before the prompt text:
   flags until you reach the first token that is not a supported flag:
   - `--fix` -- enable fix mode
   - `--model <model>` -- select a model
+- Flags must appear before the prompt text. Once you reach the first
+  non-flag token, stop parsing flags and treat the rest as prompt text.
 - `--fix` and `--model` may appear in either order before the prompt
   (e.g., `--fix --model gemini-3-pro Fix this`
   or `--model gemini-3-pro --fix Fix this`)
@@ -64,7 +66,8 @@ benefit from additional context that you already have from the current session.
 - First verify the current directory is a Git repository
   (`git rev-parse --is-inside-work-tree`). If not, skip all git-based enrichment.
 - The prompt references "the changes", "my changes", "the diff", or similar
-  → Run `git diff | wc -l` to count actual diff lines. If under ~200 lines, append the full
+  → Run `git diff --stat` first. If the diff looks reasonably small
+    (roughly under ~200 lines when viewed as a full diff), append the full
     `git diff` output. Otherwise, append only the `--stat` summary and note
     that the full diff was too large to include.
 - The prompt references "this file" or "the file" without specifying a path
@@ -100,18 +103,22 @@ excessive diff output.
 Check the current conversation history for any previous successful `agent`
 command in the same mode:
 
-- **Non-fix mode:** A prior `agent --print` call counts as successful if it
-  returned valid JSON with `is_error: false` (or omitted `is_error`)
-- **Fix mode:** A prior non-`--print` `agent` call counts as successful if it
-  exited with code 0
+- **Non-fix mode:** A prior `agent --print` call in non-fix mode counts as
+  successful if it returned valid JSON with `is_error: false`
+  (or omitted `is_error`)
+- **Fix mode:** A prior `agent --print` call in fix mode
+  (that is, the `--print --trust` variant described in Step 3)
+  counts as successful if it returned valid JSON with `is_error: false`
+  (or omitted `is_error`)
 - **If a previous successful `agent` call exists in the same mode:** Add
   `--continue` to the command. This resumes the last compatible Cursor
   session, preserving context from earlier interactions.
 - **If no previous successful call exists in the same mode:** Run without
   `--continue` (fresh session).
 
-Do not reuse `--continue` when switching between non-fix and `--fix` mode
-unless the prior successful command used the same mode.
+Use `--continue` only when the prior successful `agent` call used the same
+mode (both non-fix or both `--fix`). Do not use `--continue` when switching
+between modes.
 
 ### Step 2d: Workspace Safety Check (--fix mode only)
 
@@ -131,13 +138,17 @@ Follow this decision process:
    "This directory is not a Git repository. Continue with `--fix` anyway?
    I won't be able to show a git diff or provide an easy rollback point."
 2. If the current directory is a Git repository and `git status --short`
-   shows existing changes, ask the user via AskUserQuestion:
+   shows any output (modified, staged, or untracked files), ask the user via
+   AskUserQuestion:
    "The working tree already has uncommitted changes. Continue with
    `/myk-cursor:prompt --fix` anyway? Cursor may modify the same files,
    and the final diff summary may include pre-existing edits. Recommended:
    create your own checkpoint commit first if you want clean isolation."
 3. If the user declines either prompt, abort.
 4. Never auto-stage or auto-commit changes as part of `--fix`.
+5. If the user confirms despite an already dirty worktree, remember that
+   state so Steps 5 and 6 can explicitly warn that the final diff may include
+   pre-existing staged or unstaged edits.
 
 ### Step 3: Run Prompt
 
@@ -199,8 +210,8 @@ access.
 If a non-fix command fails, check Step 3b for trust errors before falling
 through to Step 4 error handling.
 
-If a fix-mode command fails, display the raw output as an error and stop.
-Do not continue to Steps 5 or 6.
+If a fix-mode command exits with a non-zero code, display the raw output as
+an error and stop. Do not continue to Steps 4, 5, or 6.
 
 ### Step 3b: Handle Trust Errors (non-fix mode only)
 
@@ -241,6 +252,9 @@ The JSON output has this structure:
 }
 ```
 
+In fix mode, still parse and display the `result` field first. Proceed to
+Steps 5 and 6 only if the JSON indicates success.
+
 1. Parse the JSON output
 2. Check `is_error` — if `true`, display the error from `result` and abort.
    If `is_error` is missing from the JSON, treat it as `false`.
@@ -256,8 +270,8 @@ The JSON output has this structure:
 
 ### Step 5: Read Diff (--fix mode only)
 
-**Skip this step if --fix was NOT passed, or if the fix-mode `agent`
-command failed.**
+**Skip this step if --fix was NOT passed, if the fix-mode `agent`
+command exited non-zero, or if Step 4 reported an error.**
 
 After Cursor completes successfully in fix mode, inspect what changed.
 
@@ -268,14 +282,20 @@ state:
 git status --short
 git diff --stat
 git diff
+git diff --cached --stat
+git diff --cached
 ```
 
-If the diff is too large (over ~200 lines), use `git diff --stat` only and
-note the full diff was too large to display inline.
+If either the unstaged diff or staged diff is empty, omit that section from
+the report.
+
+If the combined diff output is too large (over ~200 lines), use the
+available `--stat` summaries only and note the full diff was too large to
+display inline.
 
 If the workspace was already dirty before running `--fix`, explicitly note
-that the final diff may include pre-existing edits in addition to Cursor's
-changes.
+that the final diff may include pre-existing staged or unstaged edits in
+addition to Cursor's changes.
 
 If the current directory is not a Git repository, report that git diff is
 unavailable and summarize Cursor's output instead.
@@ -284,12 +304,12 @@ Report to the user:
 
 - Which files were modified/created/deleted
 - A summary of the changes
-- The full diff (or stat summary if too large)
+- The unstaged diff and any staged diff (or stat summaries if too large)
 
 ### Step 6: Summary (--fix mode only)
 
-**Skip this step if --fix was NOT passed, or if the fix-mode `agent`
-command failed.**
+**Skip this step if --fix was NOT passed, if the fix-mode `agent`
+command exited non-zero, or if Step 4 reported an error.**
 
 Present a clear summary of what Cursor changed:
 

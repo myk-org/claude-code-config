@@ -45,7 +45,9 @@ The easiest way to use this repository's features is via plugins:
 /plugin install myk-cursor@myk-org
 ```
 
-### 3. Install CLI (for github and review plugins)
+### 3. Install Required CLIs
+
+For `myk-github`, `myk-review`, and parts of `myk-qodo`:
 
 ```bash
 uv tool install myk-claude-tools
@@ -56,6 +58,11 @@ Or from this repository:
 ```bash
 uv tool install git+https://github.com/myk-org/claude-code-config
 ```
+
+For `myk-cursor`, install [Cursor](https://cursor.com), enable its CLI, and
+ensure `agent` is available on your PATH. See
+[`plugins/myk-cursor/README.md`](./plugins/myk-cursor/README.md) for usage and
+`--fix` mode details.
 
 ### Available Plugin Commands
 
@@ -70,7 +77,7 @@ uv tool install git+https://github.com/myk-org/claude-code-config
 | myk-qodo | `/myk-qodo:describe` | Generate PR descriptions |
 | myk-qodo | `/myk-qodo:improve` | Get improvement suggestions |
 | myk-qodo | `/myk-qodo:ask` | Ask questions about code |
-| myk-cursor | `/myk-cursor:prompt` | Run prompts via Cursor agent CLI, with optional `--fix` mode for direct file changes |
+| myk-cursor | `/myk-cursor:prompt` | Run prompts via Cursor agent CLI with optional `--fix` mode for direct file changes |
 
 > **For full orchestrator pattern with agents and hooks**, see [Full Installation](#installation) below.
 

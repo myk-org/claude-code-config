@@ -14,7 +14,7 @@ This plugin bridges the two tools, enabling cross-tool workflows like:
 ## Prerequisites
 
 - [Cursor](https://cursor.com) installed with CLI enabled
-- Cursor agent CLI available on PATH (default: `~/.local/bin/agent`)
+- Cursor agent CLI (`agent`) available on PATH
 - Authenticated in Cursor (`agent status` to verify)
 
 ## Installation
@@ -36,10 +36,15 @@ Run a prompt through Cursor's agent CLI.
 /myk-cursor:prompt [--fix] [--model <model>] <prompt>
 ```
 
-When `--fix` is passed, Cursor applies file changes directly instead of only
-returning text output. `--fix` and `--model` can appear in either order before
-the prompt text. If the worktree is already dirty, the command asks before
-proceeding instead of auto-committing your changes.
+When `--fix` is passed, Cursor is allowed to apply file changes directly and
+the command summarizes the resulting changes, including a git diff when
+available. `--fix` and `--model` must appear before the prompt text, and can
+appear in either order.
+
+If the directory is not a Git repository, or if the worktree already has
+uncommitted changes, the command asks before proceeding instead of
+auto-committing your changes. In non-fix mode, if Cursor reports workspace
+trust issues, the command can ask to re-run with `--trust`.
 
 **Examples:**
 
