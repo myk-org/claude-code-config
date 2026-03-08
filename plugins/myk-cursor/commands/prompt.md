@@ -234,7 +234,8 @@ Call 4: /myk-cursor:prompt --fix Fix the failing tests in test_api.py
 
 Call 5: /myk-cursor:prompt Also check for SQL injection in the code
   → Matches chat-id-A (back to code review topic)
-  → agent --print --resume "chat-id-A" ...
+  → Prepend mode reset guard ("permissions revoked"; read-only)
+  → agent --print --resume "chat-id-A" --trust ...
 ```
 
 ### Step 2d: Workspace Safety Check (--fix mode only)
@@ -356,8 +357,11 @@ Steps 5 and 6 only if the JSON indicates success.
    If `is_error` is missing from the JSON, treat it as `false`.
 3. If successful, display the `result` field content to the user
 4. Include a note about which model was used (if `--model` was specified) or "default model" otherwise
-5. Update that session's `Last used` value to the current conversation turn
-   and its `Mode` to the current call's mode (`fix` or `non-fix`)
+5. Update that session's `Last used` value to the current conversation turn,
+   its `Mode` to the current call's mode (`fix` or `non-fix`), and its
+   `Has used fix` value:
+   - set `Has used fix` to `true` if the current call used `--fix`
+   - otherwise preserve the existing value
 6. Display the session info: session ID, topic summary, and whether it was a new or resumed session (see Step 2c)
 7. Treat that session as eligible for future reuse in the current conversation
 
