@@ -195,7 +195,7 @@ Step 4 confirms the response succeeded.
 Use the stored chat ID from a previous successful call:
 
 ```bash
-agent --print --resume <chatId> --output-format json '<escaped_prompt>'
+agent --print --resume <chatId> --trust --output-format json '<escaped_prompt>'
 ```
 
 #### Session Info in Output
@@ -217,11 +217,11 @@ via the Cursor CLI if needed (e.g., `agent --resume <chatId> "follow-up prompt"`
 Call 1: /myk-cursor:prompt Review this code for bugs
   → agent create-chat → chat-id-A
   → Topic: "code review for bugs", Mode: non-fix
-  → agent --print --resume "chat-id-A" ...
+  → agent --print --resume "chat-id-A" --trust ...
 
 Call 2: /myk-cursor:prompt What about the error handling?
   → Matches chat-id-A (follow-up to code review)
-  → agent --print --resume "chat-id-A" ...
+  → agent --print --resume "chat-id-A" --trust ...
 
 Call 3: /myk-cursor:prompt --fix Fix the issues you found
   → Matches chat-id-A (same topic, mode switch non-fix → fix)
@@ -361,7 +361,8 @@ Steps 5 and 6 only if the JSON indicates success.
    its `Mode` to the current call's mode (`fix` or `non-fix`), and its
    `Has used fix` value:
    - set `Has used fix` to `true` if the current call used `--fix`
-   - otherwise preserve the existing value
+   - otherwise preserve the existing value for resumed sessions, or set it
+     to `false` for a brand-new session
 6. Display the session info: session ID, topic summary, and whether it was a new or resumed session (see Step 2c)
 7. Treat that session as eligible for future reuse in the current conversation
 
