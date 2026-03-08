@@ -170,6 +170,9 @@ For each new `/myk-cursor:prompt` call, decide:
 - Different files or components under discussion
 - Unrelated question or new analysis target
 
+**Note:** A mode switch alone (fix ↔ non-fix) does **not** create a new session
+if the topic is the same. Only a topic change triggers a new session.
+
 #### Creating a New Session
 
 ```bash
@@ -326,6 +329,11 @@ Important project conventions to respect:
 - <convention 2>
 Do not revert or contradict these conventions in your changes.
 ```
+
+**Guard placement:** The mode reset guard and convention guard are always
+appended to the end of the prompt (not prepended), so they have the highest
+priority in the model's context. Step 2b's context enrichment (repository info,
+diffs, etc.) is prepended before the user's prompt text.
 
 Only include conventions that are directly relevant to the files being
 reviewed or modified. Do not dump all project conventions — keep it
