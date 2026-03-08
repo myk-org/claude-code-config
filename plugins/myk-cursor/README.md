@@ -43,8 +43,8 @@ appear in either order.
 
 If the directory is not a Git repository, or if the worktree already has
 uncommitted changes, the command asks before proceeding instead of
-auto-committing your changes. In non-fix mode, if Cursor reports workspace
-trust issues, the command can ask to re-run with `--trust`.
+auto-committing your changes. `--trust` is always passed so Cursor can
+access workspace files for reading; in fix mode, this also enables file writes.
 
 **Examples:**
 
