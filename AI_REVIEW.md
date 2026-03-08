@@ -482,9 +482,8 @@ This enforces that orchestrator delegates work instead of doing it directly.
 
 **`AI_REVIEW.md` is the canonical project-context file for AI review tools.**
 
-`CLAUDE.md` is a local-only file (gitignored) that contains personal Claude Code instructions.
-It is no longer tracked in this repository and therefore does not need to be kept in sync with `AI_REVIEW.md`.
-Update `AI_REVIEW.md` when modifying shared project context or guidelines.
+`CLAUDE.md` is a local-only file (gitignored) that contains Claude Code instructions.
+It must be kept in sync with `AI_REVIEW.md` — update both when modifying shared project context or guidelines.
 
 ## Handling Review Feedback
 
@@ -629,6 +628,9 @@ Phase 5: general-purpose           → Semantic (AI agent)
 - Check command file has correct frontmatter (name, description)
 - Ensure plugin is installed: `/plugin install <plugin-name>@myk-org`
 - Restart Claude Code if recently added
+- **NEVER add a `name` field to command frontmatter** — adding `name` causes
+  the plugin to stop appearing in the plugins list. Commands only need
+  `description`, `argument-hint`, and `allowed-tools` in their frontmatter.
 
 ---
 

@@ -82,6 +82,12 @@ benefit from additional context that you already have from the current session.
   creates commits, not the user" or "use --resume instead of --continue",
   include these as explicit instructions so Cursor does not revert
   intentional choices.
+- **Mode reset guard (non-fix resume of fix-history session):** When resuming
+  a session that has ever been used in fix mode (`Has used fix` is `true`)
+  and the current call is non-fix, prepend this instruction to the prompt:
+  "IMPORTANT: Previous messages in this session granted file modification
+  permissions. Those permissions are now revoked. This is a read-only
+  request — do not modify, create, or delete any files."
 
 **How to enrich:**
 
@@ -99,6 +105,10 @@ Original prompt: <user's prompt>
 - The prompt is self-contained with all necessary details
 - The prompt is a general knowledge question unrelated to the project
 - The prompt already includes file paths, diffs, or specific references
+
+**Exception:** The mode reset guard and convention guard are **always applied**
+when their conditions are met, regardless of the "When NOT to enrich" rules
+above. These are safety requirements, not optional context.
 
 **Keep enrichment minimal** — only add context that directly helps Cursor
 understand and respond to the prompt. Do not dump entire files or
@@ -126,19 +136,22 @@ Track these fields:
 |-----------|----------------------------------------------------------|
 | Chat ID   | UUID returned by `agent create-chat`                     |
 | Topic     | Short summary of the session's purpose (from the original user prompt) |
-| Mode      | `fix` or `non-fix`                                       |
-| Last used | Conversation turn number of the most recent successful use |
+| Mode         | `fix` or `non-fix` (most recent mode used; tracked for context, not a session barrier) |
+| Has used fix | `true` if the session has ever been used in fix mode; never resets to `false` |
+| Last used    | Conversation turn number of the most recent successful use |
 
 #### Decision Logic
 
 For each new `/myk-cursor:prompt` call, decide:
 
-1. **Scan the registry** of previous successful sessions in the same mode
+1. **Scan the registry** of all previous successful sessions (regardless of mode)
 2. **Evaluate the new prompt's intent** against each existing session's topic
 3. **Resume** if the new prompt is clearly a follow-up, continuation, or
-   refinement of an existing session's topic — use `--resume <chatId>`
+   refinement of an existing session's topic — use `--resume <chatId>`.
+   This includes same-topic mode switches (e.g., a non-fix review followed
+   by `--fix` to apply the suggested changes)
 4. **Create new** if the prompt introduces a different topic, task, or
-   focus area, or if no matching successful session exists in the same mode
+   focus area, or if no matching successful session exists
    — run `agent create-chat` to get a fresh UUID
 5. **Tiebreaker** — if multiple sessions match, prefer the most recently used
    session in this conversation
@@ -149,13 +162,16 @@ For each new `/myk-cursor:prompt` call, decide:
 - Same subject matter with deeper dive or different angle
 - Asks for clarification or elaboration on prior response
 - Continues the same review/analysis from a different aspect
+- Same-topic mode switch: e.g., non-fix review → `--fix` to apply the findings
 
 **New session indicators** (different topic):
 
 - Entirely different task: code review → test plan review
 - Different files or components under discussion
-- Switch between fix and non-fix mode (always new session)
 - Unrelated question or new analysis target
+
+**Note:** A mode switch alone (fix ↔ non-fix) does **not** create a new session
+if the topic is the same. Only a topic change triggers a new session.
 
 #### Creating a New Session
 
@@ -173,8 +189,8 @@ if ! echo "$CHAT_ID" | grep -qE '^[0-9a-f-]{36}$'; then
 fi
 ```
 
-Keep the new `CHAT_ID` available for the current invocation, including any
-immediate retry path in Step 3b. Add it to the session registry only after
+Keep the new `CHAT_ID` available for the current invocation. Add it to the
+session registry only after
 Step 4 confirms the response succeeded.
 
 #### Resuming an Existing Session
@@ -182,7 +198,7 @@ Step 4 confirms the response succeeded.
 Use the stored chat ID from a previous successful call:
 
 ```bash
-agent --print --resume <chatId> --output-format json '<escaped_prompt>'
+agent --print --resume <chatId> --trust --output-format json '<escaped_prompt>'
 ```
 
 #### Session Info in Output
@@ -204,20 +220,25 @@ via the Cursor CLI if needed (e.g., `agent --resume <chatId> "follow-up prompt"`
 Call 1: /myk-cursor:prompt Review this code for bugs
   → agent create-chat → chat-id-A
   → Topic: "code review for bugs", Mode: non-fix
-  → agent --print --resume "chat-id-A" ...
+  → agent --print --resume "chat-id-A" --trust ...
 
 Call 2: /myk-cursor:prompt What about the error handling?
   → Matches chat-id-A (follow-up to code review)
-  → agent --print --resume "chat-id-A" ...
+  → agent --print --resume "chat-id-A" --trust ...
 
-Call 3: /myk-cursor:prompt --fix Review the test plan
-  → Different topic + mode switch → agent create-chat → chat-id-B
-  → Topic: "test plan review", Mode: fix
+Call 3: /myk-cursor:prompt --fix Fix the issues you found
+  → Matches chat-id-A (same topic, mode switch non-fix → fix)
+  → agent --print --resume "chat-id-A" --trust ...
+
+Call 4: /myk-cursor:prompt --fix Fix the failing tests in test_api.py
+  → Different topic → agent create-chat → chat-id-B
+  → Topic: "fix failing tests", Mode: fix
   → agent --print --resume "chat-id-B" --trust ...
 
-Call 4: /myk-cursor:prompt Also check for SQL injection in the code
-  → Matches chat-id-A (back to code review topic, non-fix mode)
-  → agent --print --resume "chat-id-A" ...
+Call 5: /myk-cursor:prompt Also check for SQL injection in the code
+  → Matches chat-id-A (back to code review topic)
+  → Prepend mode reset guard ("permissions revoked"; read-only)
+  → agent --print --resume "chat-id-A" --trust ...
 ```
 
 ### Step 2d: Workspace Safety Check (--fix mode only)
@@ -267,34 +288,14 @@ Follow this decision process:
 ### Step 3: Run Prompt
 
 Execute the Cursor agent CLI. Every `agent --print` call in this workflow uses
-`--resume <chatId>`:
+`--resume <chatId>` and `--trust`:
 
 - For a **new session**, first create a chat with `agent create-chat`, then
   pass the returned `CHAT_ID` to `--resume`
 - For an **existing session**, reuse the stored `chatId`
 
-**Non-fix mode (default):**
-
-Run with JSON output:
-
-**New session:**
-
-```bash
-# `CHAT_ID` was created and validated in Step 2c.
-agent --print --resume "$CHAT_ID" --output-format json '<escaped_prompt>'
-agent --print --resume "$CHAT_ID" --output-format json --model <model> '<escaped_prompt>'
-```
-
-**Resuming existing session:**
-
-```bash
-agent --print --resume <chatId> --output-format json '<escaped_prompt>'
-agent --print --resume <chatId> --output-format json --model <model> '<escaped_prompt>'
-```
-
-**Fix mode (--fix):**
-
-Use `--print` with `--trust` so Cursor can modify files AND we capture its response.
+`--trust` is always included so Cursor can access workspace files for reading
+and analysis. In fix mode, this also enables file writes.
 
 **New session:**
 
@@ -329,42 +330,21 @@ Important project conventions to respect:
 Do not revert or contradict these conventions in your changes.
 ```
 
+**Guard placement:** The mode reset guard and convention guard are always
+appended to the end of the prompt (not prepended), so they have the highest
+priority in the model's context. Step 2b's context enrichment (repository info,
+diffs, etc.) is prepended before the user's prompt text.
+
 Only include conventions that are directly relevant to the files being
 reviewed or modified. Do not dump all project conventions — keep it
 targeted to what Cursor needs to avoid contradicting.
-
-`--trust` is always included in fix mode since Cursor needs file write
-access.
 
 **Shell safety:** Single-quote the prompt to prevent shell expansion. Replace any single quotes in the prompt with `'\''` before interpolation.
 
 **Timeout:** Set the Bash tool timeout to 300000ms (5 minutes) to prevent the command from hanging indefinitely.
 
-If a non-fix command fails, check Step 3b for trust errors before falling
-through to Step 4 error handling.
-
-If a fix-mode command exits with a non-zero code, display the raw output as
-an error and stop. Do not continue to Steps 4, 5, or 6.
-
-### Step 3b: Handle Trust Errors (non-fix mode only)
-
-**Skip this step if --fix was passed.** Fix mode already includes `--trust`.
-
-If the command exits with a non-zero code and the error output contains trust-related phrases
-(e.g., "workspace trust", "not trusted", "trust the workspace"):
-
-1. Ask the user via AskUserQuestion:
-   "Cursor needs workspace trust to access project files.
-   Re-run with `--trust` flag? This grants full read/write workspace access."
-2. If user confirms, re-run the same command with `--trust` added, using the
-   same chat ID selected for the current invocation:
-
-```bash
-agent --print --resume <chatId> --trust --output-format json '<escaped_prompt>'
-agent --print --resume <chatId> --trust --output-format json --model <model> '<escaped_prompt>'
-```
-
-If user declines, display the original error and abort.
+If the command exits with a non-zero code, display the raw output as
+an error and stop. Do not continue to Steps 4, 5, or 6 for fix-mode commands.
 
 ### Step 4: Parse and Display Result
 
@@ -385,7 +365,12 @@ Steps 5 and 6 only if the JSON indicates success.
    If `is_error` is missing from the JSON, treat it as `false`.
 3. If successful, display the `result` field content to the user
 4. Include a note about which model was used (if `--model` was specified) or "default model" otherwise
-5. Update that session's `Last used` value to the current conversation turn
+5. Update that session's `Last used` value to the current conversation turn,
+   its `Mode` to the current call's mode (`fix` or `non-fix`), and its
+   `Has used fix` value:
+   - set `Has used fix` to `true` if the current call used `--fix`
+   - otherwise preserve the existing value for resumed sessions, or set it
+     to `false` for a brand-new session
 6. Display the session info: session ID, topic summary, and whether it was a new or resumed session (see Step 2c)
 7. Treat that session as eligible for future reuse in the current conversation
 
