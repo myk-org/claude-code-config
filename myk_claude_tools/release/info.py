@@ -36,7 +36,7 @@ class Metadata:
 class Validations:
     """Release prerequisite validations."""
 
-    on_default_branch: bool
+    on_target_branch: bool
     default_branch: str
     current_branch: str
     working_tree_clean: bool
@@ -50,7 +50,7 @@ class Validations:
     def to_dict(self) -> dict[str, str | bool | int]:
         """Convert to dictionary."""
         return {
-            "on_default_branch": self.on_default_branch,
+            "on_target_branch": self.on_target_branch,
             "default_branch": self.default_branch,
             "current_branch": self.current_branch,
             "working_tree_clean": self.working_tree_clean,
@@ -212,7 +212,7 @@ def _perform_validations(default_branch: str, current_branch: str, target_branch
     """Perform release prerequisite validations."""
     # 1. Default Branch Check
     effective_target = target_branch or default_branch
-    on_default_branch = current_branch == effective_target
+    on_target_branch = current_branch == effective_target
 
     # 2. Clean Working Tree Check
     working_tree_clean = True
@@ -257,10 +257,10 @@ def _perform_validations(default_branch: str, current_branch: str, target_branch
         synced_with_remote = unpushed_commits == 0 and behind_remote == 0
 
     # Calculate all_passed
-    all_passed = fetch_successful and on_default_branch and working_tree_clean and synced_with_remote
+    all_passed = fetch_successful and on_target_branch and working_tree_clean and synced_with_remote
 
     return Validations(
-        on_default_branch=on_default_branch,
+        on_target_branch=on_target_branch,
         default_branch=default_branch,
         current_branch=current_branch,
         working_tree_clean=working_tree_clean,
@@ -367,6 +367,10 @@ def get_release_info(repo: str | None = None, target: str | None = None, tag_mat
             effective_target = auto_target
             if not effective_tag_match:
                 effective_tag_match = auto_tag_match
+
+    # Fall back to default branch if no target was determined
+    if not effective_target:
+        effective_target = default_branch
 
     # Validate tag_match pattern
     if effective_tag_match and not _VALID_TAG_MATCH_RE.match(effective_tag_match):
