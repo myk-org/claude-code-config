@@ -16,9 +16,11 @@ def release() -> None:
 
 @release.command("info")
 @click.option("--repo", help="Repository in owner/repo format")
-def release_info(repo: str | None) -> None:
+@click.option("--target", help="Target branch for release (overrides default branch check)")
+@click.option("--tag-match", help="Glob pattern to filter tags (e.g., 'v2.10.*')")
+def release_info(repo: str | None, target: str | None, tag_match: str | None) -> None:
     """Fetch release validation info and commits since last tag."""
-    info_run(repo)
+    info_run(repo, target=target, tag_match=tag_match)
 
 
 @release.command("create")
