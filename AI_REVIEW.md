@@ -15,6 +15,9 @@ This repository implements an **orchestrator pattern** for Claude Code where:
 3. **Rule Enforcement** - Hooks ensure proper delegation
 4. **Auto-loading Rules** - Rules from `rules/` directory are automatically injected
 
+It also contains the **`myk-claude-tools`** CLI package (in `myk_claude_tools/`),
+which provides CLI commands for reviews, PR operations, releases, and database queries used by the plugins.
+
 The goal is to preserve context, improve code quality, and enable parallel execution by routing tasks to specialized agents.
 
 ---
@@ -79,6 +82,33 @@ claude-code-config/
 │   ├── rule-enforcer.py       # Blocks orchestrator from using Edit/Write/Bash
 │   ├── rule-injector.py       # Auto-loads rules from rules/
 │   └── session-start-check.sh # SessionStart hook for tool validation
+│
+├── myk_claude_tools/           # CLI package used by plugins
+│   ├── __init__.py
+│   ├── cli.py                  # CLI entry point
+│   ├── db/                     # Database operations
+│   │   ├── commands.py
+│   │   └── query.py
+│   ├── pr/                     # PR operations
+│   │   ├── claude_md.py
+│   │   ├── commands.py
+│   │   ├── common.py
+│   │   ├── diff.py
+│   │   └── post_comment.py
+│   ├── release/                # Release management
+│   │   ├── bump_version.py
+│   │   ├── commands.py
+│   │   ├── create.py
+│   │   ├── detect_versions.py
+│   │   └── info.py
+│   └── reviews/                # Review fetching and parsing
+│       ├── coderabbit_parser.py
+│       ├── commands.py
+│       ├── fetch.py
+│       ├── pending_fetch.py
+│       ├── pending_update.py
+│       ├── post.py
+│       └── store.py
 │
 ├── tests/                     # Unit tests for Python scripts
 │   ├── test_git_protection.py

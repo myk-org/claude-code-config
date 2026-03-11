@@ -534,7 +534,11 @@ def _build_body_comment_threads(
 ) -> list[dict[str, Any]]:
     """Convert parsed body comments into thread-like dicts."""
     threads: list[dict[str, Any]] = []
-    for section_key, thread_type in (("outside_diff", "outside_diff_comment"), ("nitpick", "nitpick_comment")):
+    for section_key, thread_type in (
+        ("outside_diff", "outside_diff_comment"),
+        ("nitpick", "nitpick_comment"),
+        ("duplicate", "duplicate_comment"),
+    ):
         for idx, comment in enumerate(parsed.get(section_key, [])):
             path = comment.get("path")
             line = comment.get("line")
@@ -764,6 +768,15 @@ def get_thread_key(thread: dict[str, Any]) -> str | None:
         end_line = thread.get("end_line")
         if review_id is not None and path and line is not None:
             return f"npc:{review_id}:{path}:{line}:{end_line}"
+
+    # Duplicate comments use review_id + location as composite key
+    if thread.get("type") == "duplicate_comment":
+        review_id = thread.get("review_id")
+        path = thread.get("path")
+        line = thread.get("line")
+        end_line = thread.get("end_line")
+        if review_id is not None and path and line is not None:
+            return f"dpc:{review_id}:{path}:{line}:{end_line}"
 
     thread_id = thread.get("thread_id")
     if thread_id:
