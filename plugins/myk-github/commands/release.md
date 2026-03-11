@@ -1,6 +1,6 @@
 ---
 description: Create a GitHub release with automatic changelog generation
-argument-hint: [--dry-run] [--prerelease] [--draft] [--target <branch>]
+argument-hint: [--dry-run] [--prerelease] [--draft] [--target <branch>] [--tag-match <pattern>]
 allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion
 ---
 
@@ -30,13 +30,30 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 
 ### Phase 1: Validation
 
+If `--target <branch>` was passed to the release command:
+
+```bash
+myk-claude-tools release info --target <branch>
+```
+
+If `--tag-match <pattern>` was also passed:
+
+```bash
+myk-claude-tools release info --target <branch> --tag-match <pattern>
+```
+
+Otherwise (auto-detect from current branch):
+
 ```bash
 myk-claude-tools release info
 ```
 
+Note: If on a version branch (e.g., `v2.10`), the command auto-detects the target
+and filters tags to that version range. No `--target` flag needed.
+
 Check validations:
 
-- Must be on default branch
+- Must be on default branch (or target branch if `--target` specified, or auto-detected version branch like `v2.10`)
 - Working tree must be clean
 - Must be synced with remote
 
