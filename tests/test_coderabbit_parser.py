@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from myk_claude_tools.reviews.coderabbit_parser import (
     _strip_blockquote_prefix,
+    parse_duplicate_comments,
     parse_nitpick_comments,
     parse_outside_diff_comments,
     parse_review_body_comments,
@@ -214,6 +215,42 @@ SAMPLE_BODY_NITPICK = """\
 """
 
 # A body with BOTH outside-diff AND nitpick sections.
+SAMPLE_BODY_DUPLICATE = """\
+> <details>
+> <summary>♻️ Duplicate comments (1)</summary><blockquote>
+>
+> <details>
+> <summary>CLAUDE.md (1)</summary><blockquote>
+>
+> `516-516`: _🛠️ Refactor suggestion_ | _🟠 Major_
+>
+> **HIGH: Replace the repeated path rule with a cross-reference.**
+>
+> Line 516 now duplicates the new MUST section below instead of pointing to it.
+>
+> <details>
+> <summary>Proposed doc fix</summary>
+>
+> ```diff
+> -1. Create test file `tests/<feature>/test_<feature>_migration.py`
+> +1. Create the test file in the feature subdirectory described in **Test File Location (MUST)**
+> ```
+> </details>
+>
+> <details>
+> <summary>🤖 Prompt for AI Agents</summary>
+>
+> ```
+> prompt text that should be excluded
+> ```
+>
+> </details>
+>
+> </blockquote></details>
+>
+> </blockquote></details>
+"""
+
 SAMPLE_BODY_COMBINED = """\
 > [!CAUTION]
 > Some comments are outside the diff.
@@ -498,6 +535,43 @@ class TestParseNitpickComments:
         assert all(c["path"] != "src/main.py" for c in result)
 
 
+class TestParseDuplicateComments:
+    """Tests for parse_duplicate_comments()."""
+
+    def test_parses_duplicate_comment(self) -> None:
+        """Should parse duplicate comments from the duplicate section."""
+        result = parse_duplicate_comments(SAMPLE_BODY_DUPLICATE)
+        assert len(result) == 1
+        assert result[0]["path"] == "CLAUDE.md"
+        assert result[0]["line"] == 516
+        assert result[0]["end_line"] == 516
+        assert result[0]["category"] == "Refactor suggestion"
+        assert result[0]["severity"] == "Major"
+        assert "Replace the repeated path rule" in result[0]["body"]
+
+    def test_excludes_ai_prompt_section(self) -> None:
+        """AI prompt sections should be excluded from duplicate comment bodies."""
+        result = parse_duplicate_comments(SAMPLE_BODY_DUPLICATE)
+        assert len(result) == 1
+        assert "prompt text that should be excluded" not in result[0]["body"]
+        assert "Prompt for AI Agents" not in result[0]["body"]
+
+    def test_keeps_proposed_fix(self) -> None:
+        """Proposed fix sections should be kept in the body."""
+        result = parse_duplicate_comments(SAMPLE_BODY_DUPLICATE)
+        assert len(result) == 1
+        assert "Proposed doc fix" in result[0]["body"]
+
+    def test_empty_body(self) -> None:
+        """Should return empty list for empty body."""
+        assert parse_duplicate_comments("") == []
+
+    def test_no_cross_contamination(self) -> None:
+        """Duplicate parser should NOT find outside-diff or nitpick comments."""
+        result = parse_duplicate_comments(SAMPLE_BODY_COMBINED)
+        assert result == []
+
+
 class TestParseReviewBodyComments:
     """Tests for parse_review_body_comments()."""
 
@@ -508,20 +582,31 @@ class TestParseReviewBodyComments:
         assert len(result["nitpick"]) == 1
         assert result["outside_diff"][0]["path"] == "src/main.py"
         assert result["nitpick"][0]["path"] == "src/config.py"
+        assert result["duplicate"] == []
 
     def test_only_outside_diff(self) -> None:
         """Body with only outside-diff should have empty nitpick list."""
         result = parse_review_body_comments(SAMPLE_BODY_TWO_COMMENTS)
         assert len(result["outside_diff"]) == 2
         assert result["nitpick"] == []
+        assert result["duplicate"] == []
 
     def test_only_nitpick(self) -> None:
         """Body with only nitpick should have empty outside_diff list."""
         result = parse_review_body_comments(SAMPLE_BODY_NITPICK)
         assert result["outside_diff"] == []
         assert len(result["nitpick"]) == 2
+        assert result["duplicate"] == []
 
     def test_empty_body(self) -> None:
-        """Empty body should return empty lists for both types."""
+        """Empty body should return empty lists for all types."""
         result = parse_review_body_comments("")
-        assert result == {"outside_diff": [], "nitpick": []}
+        assert result == {"outside_diff": [], "nitpick": [], "duplicate": []}
+
+    def test_body_with_duplicate_section(self) -> None:
+        """Body with only duplicate section should have empty outside_diff and nitpick."""
+        result = parse_review_body_comments(SAMPLE_BODY_DUPLICATE)
+        assert result["outside_diff"] == []
+        assert result["nitpick"] == []
+        assert len(result["duplicate"]) == 1
+        assert result["duplicate"][0]["path"] == "CLAUDE.md"
