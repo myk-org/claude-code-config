@@ -169,7 +169,7 @@ def _get_last_tag(tag_match: str | None = None) -> str | None:
     """Get the most recent tag, optionally filtered by a glob pattern."""
     cmd = ["git", "describe", "--tags", "--abbrev=0"]
     if tag_match:
-        cmd.extend(["--match", tag_match, "--"])
+        cmd.extend(["--match", tag_match])
     code, output = _run_command(cmd)
     return output if code == 0 and output else None
 
