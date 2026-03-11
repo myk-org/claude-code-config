@@ -308,6 +308,7 @@ def run(json_path: str) -> None:
     already_posted_count = 0
     outside_diff_count = 0
     nitpick_count = 0
+    duplicate_count = 0
 
     # Track updates for atomic application
     updates: list[dict[str, Any]] = []
@@ -336,7 +337,7 @@ def run(json_path: str) -> None:
             # Outside-diff and nitpick comments have no GitHub thread to post to or resolve.
             # They are tracked via the review database only.
             comment_type = thread_data.get("type")
-            if comment_type in ("outside_diff_comment", "nitpick_comment"):
+            if comment_type in ("outside_diff_comment", "nitpick_comment", "duplicate_comment"):
                 if status == "pending":
                     pending_count += 1
                     eprint(f"Skipping {category}[{i}] ({path}): {comment_type} status is pending")
@@ -344,8 +345,10 @@ def run(json_path: str) -> None:
                 if status in ("addressed", "not_addressed", "skipped"):
                     if comment_type == "outside_diff_comment":
                         outside_diff_count += 1
-                    else:
+                    elif comment_type == "nitpick_comment":
                         nitpick_count += 1
+                    else:
+                        duplicate_count += 1
                     eprint(
                         f"{comment_type.replace('_', ' ').title()} {category}[{i}] ({path})"
                         " - no thread to post to, will be tracked via review database"
@@ -466,7 +469,7 @@ def run(json_path: str) -> None:
 
     # Print summary
     total_resolved = addressed_count + skipped_count
-    total_processed = total_resolved + replied_not_resolved_count + outside_diff_count + nitpick_count
+    total_processed = total_resolved + replied_not_resolved_count + outside_diff_count + nitpick_count + duplicate_count
     eprint("")
     eprint("=== Summary ===")
     eprint(f"Processed {total_processed} threads")
@@ -480,6 +483,9 @@ def run(json_path: str) -> None:
 
     if nitpick_count > 0:
         eprint(f"  Nitpick: {nitpick_count} (tracked in review database, no thread to post to)")
+
+    if duplicate_count > 0:
+        eprint(f"  Duplicate: {duplicate_count} (tracked in review database, no thread to post to)")
 
     if pending_count > 0:
         eprint(f"  Pending: {pending_count} threads (not processed yet)")
