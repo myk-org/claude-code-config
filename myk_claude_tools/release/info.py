@@ -194,6 +194,9 @@ _VALID_TAG_MATCH_RE = re.compile(r"^[A-Za-z0-9._*][A-Za-z0-9._*-]*$")
 # Valid characters for branch names (no leading dash, no revision syntax)
 _VALID_BRANCH_RE = re.compile(r"^(?!.*\.\.)[A-Za-z0-9._/][A-Za-z0-9._/-]*$")
 
+_ERR_INVALID_TARGET = "Invalid target branch: {!r}. Must not start with '-' or contain revision syntax."
+_ERR_INVALID_TAG_MATCH = "Invalid tag-match pattern: {!r}. Only alphanumeric, '.', '*', '-', '_' allowed."
+
 
 def _detect_version_branch(current_branch: str) -> tuple[str | None, str | None]:
     """Auto-detect version branch and infer tag match pattern.
@@ -364,7 +367,7 @@ def get_release_info(repo: str | None = None, target: str | None = None, tag_mat
     # Auto-detect version branch if no explicit target
     effective_target = target
     if target and not _VALID_BRANCH_RE.match(target):
-        raise RuntimeError(f"Invalid target branch: {target!r}. Must not start with '-' or contain revision syntax.")
+        raise RuntimeError(_ERR_INVALID_TARGET.format(target))
     effective_tag_match = tag_match
     if not effective_target:
         auto_target, auto_tag_match = _detect_version_branch(current_branch)
@@ -379,9 +382,7 @@ def get_release_info(repo: str | None = None, target: str | None = None, tag_mat
 
     # Validate tag_match pattern
     if effective_tag_match and not _VALID_TAG_MATCH_RE.match(effective_tag_match):
-        raise RuntimeError(
-            f"Invalid tag-match pattern: {effective_tag_match!r}. Only alphanumeric, '.', '*', '-', '_' allowed."
-        )
+        raise RuntimeError(_ERR_INVALID_TAG_MATCH.format(effective_tag_match))
 
     # Perform validations
     validations = _perform_validations(default_branch, current_branch, effective_target)
