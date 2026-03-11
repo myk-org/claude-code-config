@@ -169,7 +169,7 @@ def _get_last_tag(tag_match: str | None = None) -> str | None:
     """Get the most recent tag, optionally filtered by a glob pattern."""
     cmd = ["git", "describe", "--tags", "--abbrev=0"]
     if tag_match:
-        cmd.extend(["--match", tag_match])
+        cmd.extend(["--match", tag_match, "--"])
     code, output = _run_command(cmd)
     return output if code == 0 and output else None
 
@@ -178,7 +178,7 @@ def _get_all_tags(limit: int = 10, tag_match: str | None = None) -> list[str]:
     """Get recent tags sorted by version (last N), optionally filtered."""
     cmd = ["git", "tag", "--sort=-v:refname"]
     if tag_match:
-        cmd.extend(["-l", tag_match])
+        cmd.extend(["-l", "--", tag_match])
     code, output = _run_command(cmd)
     if code != 0 or not output:
         return []
@@ -189,7 +189,10 @@ def _get_all_tags(limit: int = 10, tag_match: str | None = None) -> list[str]:
 _VERSION_BRANCH_RE = re.compile(r"^v(\d+\.\d+)$")
 
 # Valid characters for tag match glob patterns (letters, digits, dots, asterisks, hyphens, underscores)
-_VALID_TAG_MATCH_RE = re.compile(r"^[a-zA-Z0-9.*\-_]+$")
+_VALID_TAG_MATCH_RE = re.compile(r"^[A-Za-z0-9._*][A-Za-z0-9._*-]*$")
+
+# Valid characters for branch names (no leading dash, no revision syntax)
+_VALID_BRANCH_RE = re.compile(r"^(?!.*\.\.)[A-Za-z0-9._/][A-Za-z0-9._/-]*$")
 
 
 def _detect_version_branch(current_branch: str) -> tuple[str | None, str | None]:
@@ -360,6 +363,8 @@ def get_release_info(repo: str | None = None, target: str | None = None, tag_mat
 
     # Auto-detect version branch if no explicit target
     effective_target = target
+    if target and not _VALID_BRANCH_RE.match(target):
+        raise RuntimeError(f"Invalid target branch: {target!r}. Must not start with '-' or contain revision syntax.")
     effective_tag_match = tag_match
     if not effective_target:
         auto_target, auto_tag_match = _detect_version_branch(current_branch)
