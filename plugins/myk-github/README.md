@@ -25,6 +25,16 @@ uv tool install git+https://github.com/myk-org/claude-code-config
 
 ## Available Commands
 
+### /myk-github:coderabbit-rate-limit
+
+Handle CodeRabbit rate limits - waits and re-triggers review automatically.
+
+```bash
+/myk-github:coderabbit-rate-limit                    # Handle rate limit on current branch's PR
+/myk-github:coderabbit-rate-limit 123                # Handle rate limit on PR #123
+/myk-github:coderabbit-rate-limit https://github.com/owner/repo/pull/123
+```
+
 ### /myk-github:pr-review
 
 Review a GitHub PR and post inline comments on selected findings.

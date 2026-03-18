@@ -68,6 +68,7 @@
 !tests/test_rule_enforcer.py
 !tests/test_store_reviews_to_db.py
 !tests/test_bump_version.py
+!tests/test_coderabbit_rate_limit.py
 !tests/test_detect_versions.py
 
 # Config files
@@ -78,9 +79,6 @@
 
 # Qodo config
 !.pr_agent.toml
-
-# Claude data directory (SQLite databases)
-.claude/data/
 
 # plugins/
 !plugins/
@@ -99,6 +97,7 @@
 !plugins/myk-github/.claude-plugin/
 !plugins/myk-github/.claude-plugin/plugin.json
 !plugins/myk-github/commands/
+!plugins/myk-github/commands/coderabbit-rate-limit.md
 !plugins/myk-github/commands/pr-review.md
 !plugins/myk-github/commands/refine-review.md
 !plugins/myk-github/commands/release.md
@@ -142,6 +141,10 @@
 !myk_claude_tools/
 !myk_claude_tools/__init__.py
 !myk_claude_tools/cli.py
+!myk_claude_tools/coderabbit/
+!myk_claude_tools/coderabbit/__init__.py
+!myk_claude_tools/coderabbit/commands.py
+!myk_claude_tools/coderabbit/rate_limit.py
 !myk_claude_tools/db/
 !myk_claude_tools/db/__init__.py
 !myk_claude_tools/db/commands.py

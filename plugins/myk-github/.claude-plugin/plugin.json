@@ -7,5 +7,5 @@
   },
   "repository": "https://github.com/myk-org/claude-code-config",
   "license": "MIT",
-  "keywords": ["github", "pr-review", "refine-review", "release", "code-review"]
+  "keywords": ["github", "pr-review", "refine-review", "release", "code-review", "coderabbit", "rate-limit"]
 }
