@@ -51,7 +51,7 @@ def _find_summary_comment(owner_repo: str, pr_number: int) -> tuple[int | None, 
             "api",
             f"repos/{owner}/{repo}/issues/{pr_number}/comments",
             "--jq",
-            f'[.[] | select(.body | contains("{_SUMMARY_MARKER}"))][0] | {{id: .id, body: .body}}',
+            f'[.[] | select(.body | contains("{_SUMMARY_MARKER}"))] | last | {{id: .id, body: .body}}',
         ],
         timeout=60,
     )
@@ -64,7 +64,11 @@ def _find_summary_comment(owner_repo: str, pr_number: int) -> tuple[int | None, 
 
     try:
         data = json.loads(output)
-        return data.get("id"), data.get("body"), ""
+        comment_id = data.get("id")
+        body = data.get("body")
+        if comment_id is None or body is None:
+            return None, None, "No CodeRabbit summary comment found on this PR"
+        return comment_id, body, ""
     except (json.JSONDecodeError, KeyError):
         return None, None, "Failed to parse CodeRabbit comment data"
 
@@ -100,14 +104,20 @@ def _post_review_trigger(owner_repo: str, pr_number: int) -> bool:
     return code == 0
 
 
-def _is_rate_limited(owner_repo: str, pr_number: int) -> bool | None:
+def _is_rate_limited(owner_repo: str, pr_number: int) -> bool | str:
     """Check if the summary comment still shows rate limited.
 
-    Returns True if rate limited, False if not, None if comment not found.
+    Returns:
+        True if rate limited
+        False if not rate limited (review started)
+        "no_comment" if summary comment not found (likely replaced)
+        "error" if API call failed
     """
-    _, body, _ = _find_summary_comment(owner_repo, pr_number)
+    _, body, error = _find_summary_comment(owner_repo, pr_number)
     if body is None:
-        return None
+        if error == "No CodeRabbit summary comment found on this PR":
+            return "no_comment"
+        return "error"
     return _RATE_LIMITED_MARKER in body
 
 
@@ -170,14 +180,17 @@ def run_trigger(owner_repo: str, pr_number: int, wait_seconds: int = 0) -> int:
     none_streak = 0
     for attempt in range(1, _MAX_POLL_ATTEMPTS + 1):
         print(f"Polling for review start (attempt {attempt}/{_MAX_POLL_ATTEMPTS})...")
-        still_limited = _is_rate_limited(owner_repo, pr_number)
-        if still_limited is None:
+        status = _is_rate_limited(owner_repo, pr_number)
+        if status == "error":
+            print("Warning: API error while checking status. Retrying...")
+            none_streak = 0  # API errors don't count toward comment-gone detection
+        elif status == "no_comment":
             none_streak += 1
             if none_streak >= 2:
                 print("Review started (comment replaced).")
                 return 0
-            print("Warning: Could not fetch comment. Retrying...")
-        elif not still_limited:
+            print("Warning: Could not find comment. Retrying...")
+        elif not status:
             print("Review started!")
             return 0
         else:

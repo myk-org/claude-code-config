@@ -220,11 +220,13 @@ class TestRunTrigger:
     @patch("myk_claude_tools.coderabbit.rate_limit.time.sleep")
     @patch("myk_claude_tools.coderabbit.rate_limit._is_rate_limited")
     @patch("myk_claude_tools.coderabbit.rate_limit._post_review_trigger")
-    def test_consecutive_none_results(self, mock_trigger: object, mock_is_limited: object, _mock_sleep: object) -> None:
-        """Should return 0 after two consecutive None results (comment replaced)."""
+    def test_consecutive_no_comment_results(
+        self, mock_trigger: object, mock_is_limited: object, _mock_sleep: object
+    ) -> None:
+        """Should return 0 after two consecutive no_comment results (comment replaced)."""
         mock_trigger.return_value = True  # type: ignore[attr-defined]
-        # Two consecutive Nones means the comment was replaced (review started)
-        mock_is_limited.side_effect = [None, None]  # type: ignore[attr-defined]
+        # Two consecutive no_comment means the comment was replaced (review started)
+        mock_is_limited.side_effect = ["no_comment", "no_comment"]  # type: ignore[attr-defined]
 
         exit_code = run_trigger("owner/repo", 1, wait_seconds=0)
 
@@ -251,14 +253,29 @@ class TestRunTrigger:
     @patch("myk_claude_tools.coderabbit.rate_limit.time.sleep")
     @patch("myk_claude_tools.coderabbit.rate_limit._is_rate_limited")
     @patch("myk_claude_tools.coderabbit.rate_limit._post_review_trigger")
-    def test_single_none_then_not_limited(
+    def test_single_no_comment_then_not_limited(
         self, mock_trigger: object, mock_is_limited: object, _mock_sleep: object
     ) -> None:
-        """Should retry on single None and succeed when next poll shows not limited."""
+        """Should retry on single no_comment and succeed when next poll shows not limited."""
         mock_trigger.return_value = True  # type: ignore[attr-defined]
-        # Single None followed by not rate limited
-        mock_is_limited.side_effect = [None, False]  # type: ignore[attr-defined]
+        # Single no_comment followed by not rate limited
+        mock_is_limited.side_effect = ["no_comment", False]  # type: ignore[attr-defined]
 
         exit_code = run_trigger("owner/repo", 1, wait_seconds=0)
 
         assert exit_code == 0
+
+    @patch("myk_claude_tools.coderabbit.rate_limit.time.sleep")
+    @patch("myk_claude_tools.coderabbit.rate_limit._is_rate_limited")
+    @patch("myk_claude_tools.coderabbit.rate_limit._post_review_trigger")
+    def test_api_errors_not_treated_as_success(
+        self, mock_trigger: object, mock_is_limited: object, _mock_sleep: object
+    ) -> None:
+        """Should NOT treat consecutive API errors as review started."""
+        mock_trigger.return_value = True  # type: ignore[attr-defined]
+        # All attempts return "error" - should time out, not succeed
+        mock_is_limited.return_value = "error"  # type: ignore[attr-defined]
+
+        exit_code = run_trigger("owner/repo", 1, wait_seconds=0)
+
+        assert exit_code == 1
