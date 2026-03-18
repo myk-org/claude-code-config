@@ -158,7 +158,14 @@ If any approved tasks weren't implemented, review with user.
 
 Run tests with coverage. Fix failures before proceeding.
 
-### Phase 6: Post Replies
+### Phase 6: Commit & Push
+
+Ask user if they want to commit and push changes.
+
+Code must be pushed before posting replies so that reviewers can see the fixes
+when threads are resolved.
+
+### Phase 7: Post Replies
 
 Update each JSON entry with `status` and `reply` fields before posting.
 
@@ -209,7 +216,3 @@ Store to database:
 ```bash
 myk-claude-tools reviews store {json_path}
 ```
-
-### Phase 7: Commit & Push
-
-Ask user if they want to commit and push changes.
