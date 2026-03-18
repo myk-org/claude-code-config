@@ -1,6 +1,8 @@
 # myk-cursor Plugin
 
-Run prompts via Cursor's [agent CLI](https://docs.cursor.com/cli) from within Claude Code, with optional `--fix` mode for direct file changes.
+Run prompts via Cursor's [agent CLI](https://docs.cursor.com/cli) from within
+Claude Code, with `--fix` mode for direct file changes and `--peer` mode for
+autonomous AI-to-AI peer review.
 
 ## Why
 
@@ -10,6 +12,7 @@ This plugin bridges the two tools, enabling cross-tool workflows like:
 - Claude plans a feature, then invokes Cursor to review the plan
 - Claude writes code, then sends it to a different model for review
 - Route any ad-hoc prompt to a specific model via Cursor
+- Two AIs review and debate code until they converge on agreement (`--peer`)
 
 ## Prerequisites
 
@@ -33,7 +36,7 @@ Run a prompt through Cursor's agent CLI.
 **Syntax:**
 
 ```text
-/myk-cursor:prompt [--fix] [--model <model>] <prompt>
+/myk-cursor:prompt [--fix | --peer] [--model <model>] <prompt>
 ```
 
 When `--fix` is passed, Cursor is allowed to apply file changes directly and
@@ -45,6 +48,13 @@ If the directory is not a Git repository, or if the worktree already has
 uncommitted changes, the command asks before proceeding instead of
 auto-committing your changes. `--trust` is always passed so Cursor can
 access workspace files for reading; in fix mode, this also enables file writes.
+
+When `--peer` is passed, an autonomous AI-to-AI peer review loop starts.
+Cursor reviews the code, Claude evaluates the findings and fixes what it
+agrees with, then responds to Cursor with what was addressed and what it
+disagrees with (including technical reasoning). Cursor re-reviews, and the
+loop continues until both AIs converge. `--peer` and `--fix` are mutually
+exclusive.
 
 **Examples:**
 
@@ -66,6 +76,12 @@ access workspace files for reading; in fix mode, this also enables file writes.
 
 # Review and fix code quality issues with a specific model
 /myk-cursor:prompt --model gemini-3-pro --fix Review and fix code quality issues
+
+# Autonomous AI-to-AI peer review
+/myk-cursor:prompt --peer review
+
+# Peer review with a specific model
+/myk-cursor:prompt --peer --model gemini-3-pro Review this code
 ```
 
 ## Available Models

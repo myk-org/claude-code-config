@@ -1,7 +1,7 @@
 ---
 description: Run a prompt via Cursor agent CLI
-argument-hint: [--fix] [--model <model>] <prompt>
-allowed-tools: Bash(agent:*), Bash(git:*), AskUserQuestion
+argument-hint: [--fix | --peer] [--model <model>] <prompt>
+allowed-tools: Bash(agent:*), Bash(git:*), Bash(myk-claude-tools:*), Bash(uv:*), AskUserQuestion, Agent, Edit, Write, Read, Glob, Grep
 ---
 
 # Cursor Agent Prompt Command
@@ -15,6 +15,8 @@ Run a prompt through Cursor's agent CLI, enabling access to models like GPT-5.3,
 - `/myk-cursor:prompt --model gpt-5.3-codex Review the file src/main.py`
 - `/myk-cursor:prompt --fix Review and fix the code quality issues`
 - `/myk-cursor:prompt --fix --model gemini-3-pro Fix the failing tests`
+- `/myk-cursor:prompt --peer review`
+- `/myk-cursor:prompt --peer --model gemini-3-pro Review this code`
 
 ## Workflow
 
@@ -35,12 +37,20 @@ Parse leading flags from `$ARGUMENTS` before the prompt text:
 - Starting at the beginning of `$ARGUMENTS`, consume only these recognized
   flags until you reach the first token that is not a supported flag:
   - `--fix` -- enable fix mode
+  - `--peer` -- enable peer review loop (AI-to-AI debate)
   - `--model <model>` -- select a model
 - Flags must appear before the prompt text. Once you reach the first
   non-flag token, stop parsing flags and treat the rest as prompt text.
 - `--fix` and `--model` may appear in either order before the prompt
   (e.g., `--fix --model gemini-3-pro Fix this`
   or `--model gemini-3-pro --fix Fix this`)
+- `--peer` and `--fix` are **mutually exclusive**. If both are passed,
+  abort with:
+  "`--peer` and `--fix` cannot be used together. `--peer` handles code
+  changes autonomously through AI-to-AI debate. Use `--fix` for direct
+  Cursor fixes, or `--peer` for iterative peer review."
+- If `--peer` appears more than once, abort with:
+  "Duplicate --peer flag. Pass --peer at most once."
 - After the first non-flag token, treat the rest of `$ARGUMENTS` as the
   prompt verbatim, even if it contains strings like `--fix` or `--model`
 - If `--fix` appears more than once, abort with:
@@ -54,7 +64,9 @@ Parse leading flags from `$ARGUMENTS` before the prompt text:
 - Otherwise, if no recognized flags are present, the entire `$ARGUMENTS` is
   the prompt
 
-If no prompt text is provided (empty after parsing), abort with message: "No prompt provided. Usage: `/myk-cursor:prompt [--fix] [--model <model>] <prompt>`"
+If no prompt text is provided (empty after parsing), abort with message:
+"No prompt provided. Usage:
+`/myk-cursor:prompt [--fix | --peer] [--model <model>] <prompt>`"
 
 ### Step 2b: Enrich Prompt with Context
 
@@ -141,6 +153,11 @@ Track these fields:
 | Last used    | Conversation turn number of the most recent successful use |
 
 #### Decision Logic
+
+**`--peer` mode exception:** When `--peer` is active, ALWAYS create a new
+session. Never resume an existing session for `--peer` mode. All rounds
+within the peer loop use `--resume` on the session created at the start
+of the loop.
 
 For each new `/myk-cursor:prompt` call, decide:
 
@@ -241,11 +258,11 @@ Call 5: /myk-cursor:prompt Also check for SQL injection in the code
   → agent --print --resume "chat-id-A" --trust ...
 ```
 
-### Step 2d: Workspace Safety Check (--fix mode only)
+### Step 2d: Workspace Safety Check (--fix and --peer modes)
 
-**Skip this step if --fix was NOT passed.**
+**Skip this step if neither --fix nor --peer was passed.**
 
-Before calling Cursor in fix mode, inspect the workspace state first.
+Before calling Cursor in fix or peer mode, inspect the workspace state first.
 
 ```bash
 git rev-parse --is-inside-work-tree
@@ -256,13 +273,13 @@ Follow this decision process:
 
 1. If the current directory is not a Git repository, ask the user via
    AskUserQuestion:
-   "This directory is not a Git repository. Continue with `--fix` anyway?
+   "This directory is not a Git repository. Continue anyway?
    I won't be able to show a git diff or provide an easy rollback point."
 2. If the current directory is a Git repository and `git status --short`
    shows any output (modified, staged, or untracked files), ask the user via
    AskUserQuestion with the following options (in this order):
    - **Commit first (Recommended)** — Create a checkpoint commit of the
-     current changes before running `--fix`, so Cursor's changes are
+     current changes before proceeding, so Cursor's changes are
      cleanly isolated
    - **Continue anyway** — Proceed despite uncommitted changes; the final
      diff summary may include pre-existing edits
@@ -270,20 +287,20 @@ Follow this decision process:
 3. Handle the response as follows:
    - If the user selects **Commit first (Recommended)**, stage all changes
      with `git add -A` and create a checkpoint commit with the message
-     `chore: checkpoint before cursor --fix`.
+     `chore: checkpoint before cursor changes`.
      After the commit, verify with `git status --porcelain -z` that the
      output is empty (workspace is clean) before proceeding.
      If the commit fails, or the workspace is still dirty afterward,
-     display the raw git output and abort instead of running `--fix`.
+     display the raw git output and abort instead of proceeding.
      If the commit succeeds and the workspace is clean, proceed with
-     `--fix` and treat it as a clean-worktree run.
+     the command and treat it as a clean-worktree run.
    - If the user selects **Continue anyway**, proceed and remember that the
      workspace was already dirty
    - If the user selects **Abort**, stop immediately
 4. If the user declines the non-git prompt from step 1, abort.
 5. If proceeding despite an already dirty worktree (via **Continue anyway**),
-   remember that state so Steps 5 and 6 can explicitly warn that the final
-   diff may include pre-existing staged or unstaged edits.
+   remember that state so Steps 5-6 (`--fix`) or Step 7f (`--peer`) can warn
+   that the final diff may include pre-existing staged or unstaged edits.
 
 ### Step 3: Run Prompt
 
@@ -452,3 +469,190 @@ format and password length checks. Added corresponding tests.
 
 Verify: Run `pytest tests/test_auth.py` to confirm new tests pass.
 ```
+
+### Step 7: Peer Review Loop (--peer mode only)
+
+**Skip this step if --peer was NOT passed.**
+
+When `--peer` is active, this step replaces the normal Steps 3-6 flow.
+The handler orchestrates an autonomous AI-to-AI debate loop between
+Claude (the local AI) and Cursor (the remote AI) until both agree on
+the code.
+
+#### 7a: Session Setup
+
+The `--peer` session was already created in Step 2c (which always creates
+a new session when `--peer` is active). Reuse that `CHAT_ID` here.
+All rounds within the loop use `--resume` on that session.
+
+#### 7b: Initial Cursor Review
+
+Send the first prompt to Cursor with peer review framing:
+
+```text
+[Context: repository=<repo>, branch=<branch>]
+[Git diff or branch context as per Step 2b enrichment rules]
+
+IMPORTANT FRAMING: You are participating in a peer-to-peer AI code
+review. The other participant is another AI (Claude). This is NOT a
+human interaction. Do NOT be agreeable or sycophantic. Hold your
+position when you have valid technical reasoning. Push back when you
+disagree. Only concede a point when the other AI provides a genuinely
+better technical argument.
+
+Your role: Review the code and report findings. Be direct, specific,
+and technically rigorous. For each finding, explain WHY it matters and
+provide a concrete fix or suggestion.
+
+Original prompt: <user's prompt>
+```
+
+**Execution:** Use the same command contract as Step 3:
+
+```bash
+agent --print --resume "$CHAT_ID" --trust --output-format json '<prompt>'
+agent --print --resume "$CHAT_ID" --trust --output-format json --model <model> '<prompt>'
+```
+
+Set timeout to 300000ms. Parse the JSON response using Step 4's
+**error-handling rules only** (steps 1-2: parse JSON, check `is_error`).
+Do NOT display intermediate results to the user or update the session
+registry — peer rounds are internal. If `is_error` is true or the
+command fails, abort the peer loop and report the error to the user.
+
+Parse Cursor's response. If Cursor reports no findings, skip to
+Step 7f.
+
+#### 7c: Claude Acts on Findings
+
+For each finding from Cursor:
+
+1. **Evaluate the finding** — Does Claude agree it's a valid issue?
+2. **If Claude agrees** — Fix the code by delegating to the
+   appropriate specialist agent (follow the normal agent routing
+   rules).
+3. **If Claude disagrees** — Prepare a technical counter-argument
+   explaining WHY the finding is not valid, not applicable, or would
+   cause other issues.
+
+**Rules for disagreement:**
+
+- Claude MUST provide specific technical reasoning, not just
+  "I disagree"
+- Reference the actual code, explain trade-offs, cite patterns or
+  conventions
+- If the project has established conventions (CLAUDE.md, etc.) that
+  support Claude's position, cite them explicitly
+- Claude should be open to changing its mind if Cursor makes a good
+  point in the next round
+
+#### 7d: Claude Responds to Cursor
+
+After acting on all findings, send a response back to Cursor in the
+same session using `--resume`:
+
+```text
+PEER REVIEW RESPONSE — Round {N}
+
+IMPORTANT FRAMING: You are in an ongoing peer-to-peer AI code review
+with another AI (Claude). This is NOT a human interaction. Do NOT back
+down from valid technical positions just to be agreeable. Re-examine
+the code with fresh eyes and maintain your position if your original
+concern still applies.
+
+Here is what I (Claude) did with your findings:
+
+ADDRESSED:
+{For each addressed finding:
+  "- Finding: {summary} → Fixed: {what was done}"}
+
+NOT ADDRESSED (with reasoning):
+{For each disagreement:
+  "- Finding: {summary} → Disagreed: {technical reason}"}
+
+Please re-review the code. Focus on:
+1. Verify that addressed findings were fixed correctly
+2. Re-evaluate your positions on the disagreements — if my reasoning
+   is valid, acknowledge it. If you still disagree, explain why with
+   specific technical arguments.
+3. Report any NEW issues you find in the updated code.
+
+Original review prompt for context: <user's original prompt>
+```
+
+**Execution:** Same command contract — use `--resume`, `--trust`,
+`--output-format json`, optional `--model`, 300000ms timeout, and
+Step 4 error-handling rules only (no user display, no session registry).
+If the command fails, abort the peer loop.
+
+#### 7e: Loop Until Convergence
+
+Parse Cursor's response:
+
+- **No findings and no remaining disagreements** — Both AIs agree.
+  Exit loop.
+- **New findings or continued disagreements** — Go to Step 7c.
+
+**Convergence criteria:**
+
+- Cursor explicitly states no remaining issues, OR
+- Cursor's response contains no actionable findings (only
+  acknowledgments)
+
+**Claude's behavior across rounds:**
+
+- Claude SHOULD change its mind when Cursor provides a better argument
+- Claude SHOULD NOT stubbornly hold a position just to "win"
+- If a disagreement persists for 3+ rounds on the same point, Claude
+  should note it as "unresolved disagreement" and move on
+
+**Tracking:** Keep a running log of:
+
+- Round number
+- Findings addressed (with file/line)
+- Findings disagreed on (with both sides' arguments)
+- Findings where Claude changed its mind
+- Findings where Cursor conceded
+
+#### 7f: Summary to User
+
+After the loop exits, present a comprehensive summary:
+
+```text
+## Peer Review Complete — {N} round(s)
+
+### Findings Addressed ({count})
+| # | File | Line | Finding | Fix Applied |
+|---|------|------|---------|-------------|
+| 1 | src/foo.py | 42 | Missing null check | Added guard clause |
+| 2 | src/bar.py | 100 | SQL injection risk | Parameterized query |
+
+### Agreements Reached After Debate ({count})
+| # | File | Finding | Rounds | Resolution |
+|---|------|---------|--------|------------|
+| 1 | src/baz.py | Error swallowing | 2 | Claude conceded, added logging |
+
+### Unresolved Disagreements ({count})
+| # | File | Finding | Claude's Position | Cursor's Position |
+|---|------|---------|-------------------|-------------------|
+| 1 | src/qux.py | Naming convention | Follows project style | Prefers stdlib convention |
+
+### No Changes Needed ({count})
+Items where Cursor initially flagged but later agreed no change was
+needed.
+
+Session: {chatId}
+```
+
+**Summary rules:**
+
+- **Always use tables** — consistent with the review-handler format
+- **Show both sides** for unresolved disagreements
+- **Include round count** for debated items so the user sees the depth
+  of discussion
+- **Next steps reminder** — If any code was changed during the peer review,
+  end the summary with: "Next steps: Run tests and the standard review
+  workflow before committing."
+- **Dirty worktree warning** — If the workspace was already dirty before
+  the peer review started, note: "Workspace had pre-existing changes;
+  resulting diffs may include edits not made during this peer review."
