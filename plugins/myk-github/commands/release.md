@@ -128,21 +128,46 @@ skipped and why before proceeding.
 Then create a branch, commit, push, and merge via PR:
 
 ```bash
-git checkout -b chore/bump-version-<VERSION>
+BUMP_BRANCH="chore/bump-version-<VERSION>-$(date +%s)"
+git checkout -b "$BUMP_BRANCH"
 git add <updated-files>
 git commit -m "chore: bump version to <VERSION>"
-git push -u origin chore/bump-version-<VERSION>
+git push -u origin "$BUMP_BRANCH"
 ```
 
-Create a PR and merge it:
+Note: The timestamp suffix prevents conflicts with previous bump attempts.
+
+Create a PR and capture its URL:
 
 ```bash
-gh pr create --title "chore: bump version to <VERSION>" \
-  --body "Bump version to <VERSION>" --base <target_branch>
+PR_URL=$(gh pr create --title "chore: bump version to <VERSION>" \
+  --body "Bump version to <VERSION>" --base <target_branch>)
+```
+
+Merge the PR using admin privileges:
+
+```bash
 gh pr merge --merge --admin --delete-branch
 ```
 
-After merge, sync the local target branch:
+If the `--admin` merge fails, check the error:
+
+- **Permission denied / not admin** -- Fall back to manual merge:
+  1. Display `PR_URL` to the user
+  2. Tell the user: "Admin merge failed. Please merge the PR manually
+     (or wait for CI checks to pass). Let me know when it's merged."
+  3. Use `AskUserQuestion` to wait for confirmation
+  4. After user confirms, verify the PR is merged:
+
+     ```bash
+     gh pr view "$PR_URL" --json state --jq '.state'
+     ```
+
+     If the state is not `MERGED`, ask the user again.
+- **Other errors** (network, auth, etc.) -- Abort the release and
+  display the error.
+
+After merge (either admin or manual), sync the local target branch:
 
 ```bash
 git checkout <target_branch>
