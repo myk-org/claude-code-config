@@ -251,6 +251,204 @@ def apply_updates_to_json(json_path: Path, updates: list[dict[str, Any]]) -> Non
         sys.exit(1)
 
 
+def _build_comment_section(entry: dict[str, Any], max_section_len: int) -> str:
+    """Build a formatted markdown section for a single body comment entry.
+
+    Args:
+        entry: Entry dict with {"data": thread_data, "cat": category, "idx": index}
+        max_section_len: Maximum allowed length for the section text.
+
+    Returns:
+        Formatted section text.
+    """
+    truncated_suffix = "\n...[truncated]"
+    comment = entry["data"]
+    path = comment.get("path", "unknown")
+    line_num = comment.get("line", "")
+    status = comment.get("status", "")
+    reply = comment.get("reply", "") or comment.get("skip_reason", "")
+    comment_type = comment.get("type", "").replace("_", " ").replace("comment", "").strip()
+
+    body = comment.get("body", "")
+    summary = body.split("\n")[0][:100] if body else "No description"
+    summary = summary.strip("*").strip()
+
+    location = f"`{path}:{line_num}`" if line_num else f"`{path}`"
+    type_label = f" ({comment_type})" if comment_type else ""
+
+    section_lines = [f"### {location}{type_label} — {summary}"]
+    if status == "addressed":
+        section_lines.append(f"> Addressed: {reply}" if reply else "> Addressed.")
+    elif status == "skipped":
+        section_lines.append(f"> Skipped: {reply}" if reply else "> Skipped.")
+    elif status == "not_addressed":
+        section_lines.append(f"> Not addressed: {reply}" if reply else "> Not addressed.")
+    elif status == "failed":
+        section_lines.append(f"> Retry: {reply}" if reply else "> Retry.")
+    section_lines.append("")
+
+    section_text = "\n".join(section_lines)
+    if len(section_text) > max_section_len:
+        keep = max(0, max_section_len - len(truncated_suffix))
+        section_text = section_text[:keep] + truncated_suffix
+
+    return section_text
+
+
+def _chunk_sections(
+    header: str,
+    sections: list[tuple[str, dict[str, Any]]],
+    max_len: int,
+) -> list[list[tuple[str, dict[str, Any]]]]:
+    """Split sections into chunks that fit within the GitHub comment size limit.
+
+    Args:
+        header: Comment header text (included in each chunk's size budget).
+        sections: List of (section_text, entry) tuples.
+        max_len: Maximum allowed body length per chunk.
+
+    Returns:
+        List of chunks, where each chunk is a list of (section_text, entry) tuples.
+    """
+    chunks: list[list[tuple[str, dict[str, Any]]]] = []
+    current_chunk: list[tuple[str, dict[str, Any]]] = []
+    current_size = len(header)
+
+    for section_text, entry in sections:
+        section_size = len(section_text)
+        if current_chunk and current_size + section_size > max_len:
+            chunks.append(current_chunk)
+            current_chunk = []
+            current_size = len(header)
+        current_chunk.append((section_text, entry))
+        current_size += section_size
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks
+
+
+def _post_chunk(
+    owner: str,
+    repo: str,
+    pr_number: str | int,
+    reviewer: str,
+    chunk: list[tuple[str, dict[str, Any]]],
+    header: str,
+    chunk_idx: int,
+    total_chunks: int,
+    max_len: int,
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Post a single consolidated comment chunk to a pull request.
+
+    Args:
+        owner: Repository owner.
+        repo: Repository name.
+        pr_number: Pull request number.
+        reviewer: Reviewer username.
+        chunk: List of (section_text, entry) tuples for this chunk.
+        header: Comment header text.
+        chunk_idx: Zero-based index of this chunk.
+        total_chunks: Total number of chunks being posted.
+        max_len: Maximum allowed body length.
+
+    Returns:
+        Tuple of (success, list of posted_at update dicts).
+    """
+    truncated_suffix = "\n...[truncated]"
+    chunk_body = header + "".join(text for text, _ in chunk).strip()
+    if total_chunks > 1:
+        chunk_body = f"(Part {chunk_idx + 1}/{total_chunks})\n\n" + chunk_body
+
+    if len(chunk_body) > max_len:
+        keep = max(0, max_len - len(truncated_suffix))
+        chunk_body = chunk_body[:keep] + truncated_suffix
+
+    posted_updates: list[dict[str, Any]] = []
+    try:
+        result = subprocess.run(
+            ["gh", "api", f"repos/{owner}/{repo}/issues/{pr_number}/comments", "-f", f"body={chunk_body}"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode == 0:
+            chunk_count = len(chunk)
+            eprint(f"Posted consolidated reply for {chunk_count} body comment(s) mentioning @{reviewer}")
+            ts = get_utc_timestamp()
+            for _, entry in chunk:
+                posted_updates.append({
+                    "cat": entry["cat"],
+                    "idx": entry["idx"],
+                    "field": "posted_at",
+                    "ts": ts,
+                })
+            return True, posted_updates
+        eprint(f"Error posting consolidated reply for @{reviewer}: {result.stderr}")
+        return False, []
+    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+        eprint(f"Error posting consolidated reply for @{reviewer}: {e}")
+        return False, []
+
+
+def post_body_comment_replies(
+    owner: str,
+    repo: str,
+    pr_number: str | int,
+    body_comments: dict[str, list[dict[str, Any]]],
+) -> tuple[int, list[dict[str, Any]]]:
+    """Post consolidated PR comments for body comments (outside_diff, nitpick, duplicate).
+
+    Groups comments by reviewer author and posts one or more PR comments per reviewer
+    mentioning the reviewer so they know the comments were reviewed.
+    Chunks into multiple comments if the combined body exceeds GitHub's size limit.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        pr_number: Pull request number
+        body_comments: Dict mapping reviewer username to list of entry dicts
+            Each entry has {"data": thread_data, "cat": category, "idx": index}
+
+    Returns:
+        Tuple of (number of chunks successfully posted, list of posted_at updates)
+    """
+    max_len = 55000  # Leave margin below GitHub's ~65KB limit
+    header_template = "@{reviewer}\n\nThe following review comments were reviewed and a decision was made:\n\n"
+    posted = 0
+    posted_updates: list[dict[str, Any]] = []
+
+    for reviewer, entries in body_comments.items():
+        if not entries:
+            continue
+
+        header = header_template.format(reviewer=reviewer)
+        part_prefix_budget = 32  # "(Part N/M)\n\n" safety margin
+        max_section_len = max_len - len(header) - part_prefix_budget
+
+        # Build individual sections for each comment
+        sections: list[tuple[str, dict[str, Any]]] = []
+        for entry in entries:
+            section_text = _build_comment_section(entry, max_section_len)
+            sections.append((section_text, entry))
+
+        # Chunk sections into posts that fit within the size limit
+        chunks = _chunk_sections(header, sections, max_len)
+
+        # Post each chunk
+        for chunk_idx, chunk in enumerate(chunks):
+            success, chunk_updates = _post_chunk(
+                owner, repo, pr_number, reviewer, chunk, header, chunk_idx, len(chunks), max_len
+            )
+            if success:
+                posted += 1
+                posted_updates.extend(chunk_updates)
+
+    return posted, posted_updates
+
+
 def run(json_path: str) -> None:
     """Main entry point.
 
@@ -310,6 +508,9 @@ def run(json_path: str) -> None:
     nitpick_count = 0
     duplicate_count = 0
 
+    # Collect body comments for consolidated PR comments
+    body_comments_by_reviewer: dict[str, list[dict[str, Any]]] = {}
+
     # Track updates for atomic application
     updates: list[dict[str, Any]] = []
 
@@ -342,16 +543,32 @@ def run(json_path: str) -> None:
                     pending_count += 1
                     eprint(f"Skipping {category}[{i}] ({path}): {comment_type} status is pending")
                     continue
-                if status in ("addressed", "not_addressed", "skipped"):
-                    if comment_type == "outside_diff_comment":
-                        outside_diff_count += 1
-                    elif comment_type == "nitpick_comment":
-                        nitpick_count += 1
-                    else:
-                        duplicate_count += 1
+                if status in ("addressed", "not_addressed", "skipped", "failed"):
+                    # Skip if already posted (idempotency)
+                    if posted_at:
+                        already_posted_count += 1
+                        eprint(f"Skipping {category}[{i}] ({path}): {comment_type} already posted at {posted_at}")
+                        continue
+
+                    # Skip auto-skipped entries — they were already replied to in a previous cycle
+                    if thread_data.get("is_auto_skipped"):
+                        already_posted_count += 1
+                        eprint(
+                            f"Skipping {category}[{i}] ({path}): {comment_type}"
+                            " auto-skipped (already replied in previous cycle)"
+                        )
+                        continue
+
+                    # Collect for consolidated PR comment (counts tracked after posting)
+                    author_raw = thread_data.get("author")
+                    author = author_raw.strip() if isinstance(author_raw, str) and author_raw.strip() else "unknown"
+                    if author not in body_comments_by_reviewer:
+                        body_comments_by_reviewer[author] = []
+                    body_comments_by_reviewer[author].append({"data": thread_data, "cat": category, "idx": i})
+
                     eprint(
                         f"{comment_type.replace('_', ' ').title()} {category}[{i}] ({path})"
-                        " - no thread to post to, will be tracked via review database"
+                        " - collected for consolidated PR comment"
                     )
                     continue
                 # Unknown status - skip with warning
@@ -464,6 +681,30 @@ def run(json_path: str) -> None:
                 replied_not_resolved_count += 1
                 eprint(f"Replied to {category}[{i}] ({path}) (not resolved)")
 
+    # Post consolidated PR comments for body comments
+    if body_comments_by_reviewer:
+        total_body = sum(len(c) for c in body_comments_by_reviewer.values())
+        eprint(f"\nPosting consolidated replies for {total_body} body comment(s)...")
+        _, body_updates = post_body_comment_replies(owner, repo, pr_number, body_comments_by_reviewer)
+        updates.extend(body_updates)
+
+        # Count successfully posted body comments by type
+        for update in body_updates:
+            cat = update["cat"]
+            idx = update["idx"]
+            comment_data = data.get(cat, [])[idx] if idx < len(data.get(cat, [])) else {}
+            comment_type = comment_data.get("type", "")
+            if comment_type == "outside_diff_comment":
+                outside_diff_count += 1
+            elif comment_type == "nitpick_comment":
+                nitpick_count += 1
+            elif comment_type == "duplicate_comment":
+                duplicate_count += 1
+
+        body_comment_failed = total_body - len(body_updates)
+        if body_comment_failed > 0:
+            failed_count += body_comment_failed
+
     # Apply all JSON updates atomically
     apply_updates_to_json(json_path_obj, updates)
 
@@ -479,13 +720,13 @@ def run(json_path: str) -> None:
         eprint(f"  Replied only: {replied_not_resolved_count} (human reviews - awaiting reviewer follow-up)")
 
     if outside_diff_count > 0:
-        eprint(f"  Outside-diff: {outside_diff_count} (tracked in review database, no thread to post to)")
+        eprint(f"  Outside-diff: {outside_diff_count} (replied via consolidated PR comment)")
 
     if nitpick_count > 0:
-        eprint(f"  Nitpick: {nitpick_count} (tracked in review database, no thread to post to)")
+        eprint(f"  Nitpick: {nitpick_count} (replied via consolidated PR comment)")
 
     if duplicate_count > 0:
-        eprint(f"  Duplicate: {duplicate_count} (tracked in review database, no thread to post to)")
+        eprint(f"  Duplicate: {duplicate_count} (replied via consolidated PR comment)")
 
     if pending_count > 0:
         eprint(f"  Pending: {pending_count} threads (not processed yet)")
