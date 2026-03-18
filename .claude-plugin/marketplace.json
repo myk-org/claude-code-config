@@ -14,7 +14,7 @@
       "name": "myk-github",
       "source": "./plugins/myk-github",
       "description": "GitHub operations - PR reviews, releases, review handling, CodeRabbit rate limits",
-      "version": "1.4.0"
+      "version": "1.4.1"
     },
     {
       "name": "myk-review",
