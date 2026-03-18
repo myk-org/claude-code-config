@@ -1079,11 +1079,16 @@ class TestOutsideDiffCommentHandling:
         json_path.write_text(json.dumps(data))
         return json_path
 
+    @patch.object(
+        post_review_replies,
+        "post_body_comment_replies",
+        return_value=(1, [{"cat": "coderabbit", "idx": 0, "field": "posted_at", "ts": "2024-01-01T00:00:00Z"}]),
+    )
     @patch.object(post_review_replies, "resolve_thread")
     @patch.object(post_review_replies, "post_thread_reply")
     @patch.object(post_review_replies, "check_dependencies")
     def test_outside_diff_addressed_no_post(
-        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, mock_body: Any, tmp_path: Path
     ) -> None:
         """Outside-diff comments with addressed status should not post or resolve."""
         del mock_deps  # Injected by @patch decorator, unused in test
@@ -1099,6 +1104,7 @@ class TestOutsideDiffCommentHandling:
                         "status": "addressed",
                         "reply": "Fixed",
                         "path": "src/main.py",
+                        "author": "coderabbitai[bot]",
                     }
                 ],
             },
@@ -1110,12 +1116,25 @@ class TestOutsideDiffCommentHandling:
         assert excinfo.value.code == 0
         mock_post.assert_not_called()
         mock_resolve.assert_not_called()
+        # Verify body comment was posted via consolidated PR comment
+        mock_body.assert_called_once()
+        args = mock_body.call_args.args
+        assert args[0] == "test-owner"
+        assert args[1] == "test-repo"
+        assert args[2] == "123"
+        grouped = args[3]
+        assert "coderabbitai[bot]" in grouped
 
+    @patch.object(
+        post_review_replies,
+        "post_body_comment_replies",
+        return_value=(1, [{"cat": "coderabbit", "idx": 0, "field": "posted_at", "ts": "2024-01-01T00:00:00Z"}]),
+    )
     @patch.object(post_review_replies, "resolve_thread")
     @patch.object(post_review_replies, "post_thread_reply")
     @patch.object(post_review_replies, "check_dependencies")
     def test_outside_diff_not_addressed_no_post(
-        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, mock_body: Any, tmp_path: Path
     ) -> None:
         """Outside-diff comments with not_addressed status should not post or resolve."""
         del mock_deps  # Injected by @patch decorator, unused in test
@@ -1131,6 +1150,7 @@ class TestOutsideDiffCommentHandling:
                         "status": "not_addressed",
                         "reply": "Cannot fix",
                         "path": "src/main.py",
+                        "author": "coderabbitai[bot]",
                     }
                 ],
             },
@@ -1142,12 +1162,25 @@ class TestOutsideDiffCommentHandling:
         assert excinfo.value.code == 0
         mock_post.assert_not_called()
         mock_resolve.assert_not_called()
+        # Verify body comment was posted via consolidated PR comment
+        mock_body.assert_called_once()
+        args = mock_body.call_args.args
+        assert args[0] == "test-owner"
+        assert args[1] == "test-repo"
+        assert args[2] == "123"
+        grouped = args[3]
+        assert "coderabbitai[bot]" in grouped
 
+    @patch.object(
+        post_review_replies,
+        "post_body_comment_replies",
+        return_value=(1, [{"cat": "coderabbit", "idx": 0, "field": "posted_at", "ts": "2024-01-01T00:00:00Z"}]),
+    )
     @patch.object(post_review_replies, "resolve_thread")
     @patch.object(post_review_replies, "post_thread_reply")
     @patch.object(post_review_replies, "check_dependencies")
     def test_outside_diff_skipped_no_post(
-        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, mock_body: Any, tmp_path: Path
     ) -> None:
         """Outside-diff comments with skipped status should not post or resolve."""
         del mock_deps  # Injected by @patch decorator, unused in test
@@ -1163,6 +1196,7 @@ class TestOutsideDiffCommentHandling:
                         "status": "skipped",
                         "skip_reason": "Out of scope",
                         "path": "src/main.py",
+                        "author": "coderabbitai[bot]",
                     }
                 ],
             },
@@ -1174,12 +1208,21 @@ class TestOutsideDiffCommentHandling:
         assert excinfo.value.code == 0
         mock_post.assert_not_called()
         mock_resolve.assert_not_called()
+        # Verify body comment was posted via consolidated PR comment
+        mock_body.assert_called_once()
+        args = mock_body.call_args.args
+        assert args[0] == "test-owner"
+        assert args[1] == "test-repo"
+        assert args[2] == "123"
+        grouped = args[3]
+        assert "coderabbitai[bot]" in grouped
 
+    @patch.object(post_review_replies, "post_body_comment_replies")
     @patch.object(post_review_replies, "resolve_thread")
     @patch.object(post_review_replies, "post_thread_reply")
     @patch.object(post_review_replies, "check_dependencies")
     def test_outside_diff_pending_skipped(
-        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, mock_body: Any, tmp_path: Path
     ) -> None:
         """Outside-diff comments with pending status should be skipped."""
         del mock_deps  # Injected by @patch decorator, unused in test
@@ -1205,14 +1248,21 @@ class TestOutsideDiffCommentHandling:
         assert excinfo.value.code == 0
         mock_post.assert_not_called()
         mock_resolve.assert_not_called()
+        # Pending comments should not trigger body comment posting
+        mock_body.assert_not_called()
 
+    @patch.object(
+        post_review_replies,
+        "post_body_comment_replies",
+        return_value=(1, [{"cat": "coderabbit", "idx": 0, "field": "posted_at", "ts": "2024-01-01T00:00:00Z"}]),
+    )
     @patch.object(post_review_replies, "resolve_thread")
     @patch.object(post_review_replies, "post_thread_reply")
     @patch.object(post_review_replies, "check_dependencies")
-    def test_outside_diff_failed_status_warning(
-        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    def test_outside_diff_failed_collected_for_body_comment(
+        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, mock_body: Any, tmp_path: Path
     ) -> None:
-        """Failed status on outside-diff comment should trigger unknown status warning."""
+        """Failed status on outside-diff comment should be collected for consolidated PR comment."""
         del mock_deps  # Injected by @patch decorator, unused in test
         json_path = self._create_test_json(
             tmp_path,
@@ -1226,6 +1276,7 @@ class TestOutsideDiffCommentHandling:
                         "status": "failed",
                         "reply": "Retry needed",
                         "path": "src/main.py",
+                        "author": "coderabbitai[bot]",
                     }
                 ],
             },
@@ -1237,15 +1288,31 @@ class TestOutsideDiffCommentHandling:
         assert excinfo.value.code == 0
         mock_post.assert_not_called()
         mock_resolve.assert_not_called()
+        # Verify body comment was posted via consolidated PR comment
+        mock_body.assert_called_once()
+        args = mock_body.call_args.args
+        assert args[0] == "test-owner"
+        assert args[1] == "test-repo"
+        assert args[2] == "123"
+        grouped = args[3]
+        assert "coderabbitai[bot]" in grouped
 
-        captured = capsys.readouterr()
-        assert "unknown status" in captured.err.lower()
-
+    @patch.object(
+        post_review_replies,
+        "post_body_comment_replies",
+        return_value=(1, [{"cat": "coderabbit", "idx": 0, "field": "posted_at", "ts": "2024-01-01T00:00:00Z"}]),
+    )
     @patch.object(post_review_replies, "resolve_thread")
     @patch.object(post_review_replies, "post_thread_reply")
     @patch.object(post_review_replies, "check_dependencies")
     def test_outside_diff_not_counted_as_no_thread_id(
-        self, mock_deps: Any, mock_post: Any, mock_resolve: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+        self,
+        mock_deps: Any,
+        mock_post: Any,
+        mock_resolve: Any,
+        mock_body: Any,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
     ) -> None:
         """Outside-diff comments should not appear in no_thread_id count."""
         del mock_deps  # Injected by @patch decorator, unused in test
@@ -1261,6 +1328,7 @@ class TestOutsideDiffCommentHandling:
                         "status": "addressed",
                         "reply": "Done",
                         "path": "src/main.py",
+                        "author": "coderabbitai[bot]",
                     }
                 ],
             },
@@ -1279,4 +1347,170 @@ class TestOutsideDiffCommentHandling:
         assert "no thread_id" not in captured.err.lower()
         # Should mention outside-diff tracking
         assert "outside-diff" in captured.err.lower()
-        assert "review database" in captured.err.lower()
+        assert "consolidated pr comment" in captured.err.lower()
+        # Verify body comment was posted via consolidated PR comment
+        mock_body.assert_called_once()
+        args = mock_body.call_args.args
+        assert args[0] == "test-owner"
+        assert args[1] == "test-repo"
+        assert args[2] == "123"
+        grouped = args[3]
+        assert "coderabbitai[bot]" in grouped
+
+
+# =============================================================================
+# Tests for post_body_comment_replies() chunking logic
+# =============================================================================
+
+
+class TestPostBodyCommentChunking:
+    """Tests for chunking boundary behavior in post_body_comment_replies()."""
+
+    @staticmethod
+    def _make_entry(reply: str, idx: int = 0, path: str = "src/main.py", status: str = "addressed") -> dict[str, Any]:
+        """Helper to create a body comment entry dict."""
+        return {
+            "data": {
+                "path": path,
+                "line": 10,
+                "status": status,
+                "reply": reply,
+                "type": "outside_diff_comment",
+                "body": "Original comment body",
+            },
+            "cat": "coderabbit",
+            "idx": idx,
+        }
+
+    @patch("subprocess.run")
+    def test_single_small_comment_fits_one_chunk(self, mock_run: Any) -> None:
+        """A single small comment should produce exactly one API call."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
+
+        body_comments = {"coderabbitai[bot]": [self._make_entry(reply="Fixed this issue", idx=0)]}
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 1
+        assert len(updates) == 1
+        assert updates[0]["cat"] == "coderabbit"
+        assert updates[0]["idx"] == 0
+        assert updates[0]["field"] == "posted_at"
+        # Exactly one API call
+        assert mock_run.call_count == 1
+        # Verify posted body does not contain "(Part" prefix since it fits in one chunk
+        call_args = mock_run.call_args
+        body_arg = [a for a in call_args.args[0] if isinstance(a, str) and a.startswith("body=")]
+        assert len(body_arg) == 1
+        assert "(Part" not in body_arg[0]
+
+    @patch("subprocess.run")
+    def test_multiple_small_comments_fit_one_chunk(self, mock_run: Any) -> None:
+        """Multiple small comments that fit within max_len should produce one API call."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
+
+        entries = [self._make_entry(reply=f"Fixed issue {i}", idx=i, path=f"src/file{i}.py") for i in range(5)]
+        body_comments = {"coderabbitai[bot]": entries}
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 1
+        assert len(updates) == 5
+        assert mock_run.call_count == 1
+
+    @patch("subprocess.run")
+    def test_large_comments_split_into_multiple_chunks(self, mock_run: Any) -> None:
+        """Comments exceeding max_len should be split into multiple API calls."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
+
+        # Each reply is ~10000 chars; max_len is 55000, so 7 entries should require 2 chunks
+        large_reply = "x" * 10000
+        entries = [self._make_entry(reply=large_reply, idx=i, path=f"src/file{i}.py") for i in range(7)]
+        body_comments = {"coderabbitai[bot]": entries}
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 2
+        assert len(updates) == 7
+        assert mock_run.call_count == 2
+        # Verify "(Part" prefix is present in multi-chunk posts
+        for call in mock_run.call_args_list:
+            cmd_args = call.args[0]
+            body_parts = [a for a in cmd_args if isinstance(a, str) and a.startswith("body=")]
+            assert len(body_parts) == 1
+            assert "(Part" in body_parts[0]
+
+    @patch("subprocess.run")
+    def test_single_oversized_comment_not_split(self, mock_run: Any) -> None:
+        """A single comment that exceeds max_len should still be posted in one chunk."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
+
+        # Reply of 60000 chars exceeds 55000 max_len but it's a single entry
+        oversized_reply = "y" * 60000
+        body_comments = {"coderabbitai[bot]": [self._make_entry(reply=oversized_reply, idx=0)]}
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 1
+        assert len(updates) == 1
+        # Only one API call since a single section cannot be split further
+        assert mock_run.call_count == 1
+
+    @patch("subprocess.run")
+    def test_multiple_reviewers_post_separately(self, mock_run: Any) -> None:
+        """Each reviewer should get their own consolidated comment(s)."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
+
+        body_comments = {
+            "coderabbitai[bot]": [self._make_entry(reply="Fixed", idx=0)],
+            "qodo-ai[bot]": [self._make_entry(reply="Addressed", idx=1)],
+        }
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 2
+        assert len(updates) == 2
+        assert mock_run.call_count == 2
+
+    @patch("subprocess.run")
+    def test_api_failure_returns_no_updates(self, mock_run: Any) -> None:
+        """Failed API calls should not produce posted_at updates."""
+        mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="API error")
+
+        body_comments = {"coderabbitai[bot]": [self._make_entry(reply="Fixed", idx=0)]}
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 0
+        assert len(updates) == 0
+
+    @patch("subprocess.run")
+    def test_empty_entries_skipped(self, mock_run: Any) -> None:
+        """Empty entry list for a reviewer should not produce any API call."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
+
+        body_comments: dict[str, list[dict[str, Any]]] = {"coderabbitai[bot]": []}
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 0
+        assert len(updates) == 0
+        mock_run.assert_not_called()
+
+    @patch("subprocess.run")
+    def test_chunk_boundary_exact_fit(self, mock_run: Any) -> None:
+        """Comments that fit within max_len should produce a single chunk."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}", stderr="")
+
+        # Build entries that together are under the 55000 limit
+        # Header is ~80 chars, each section is ~200 chars base + reply length
+        reply_size = 5000
+        # 10 entries * ~5200 per section = ~52000 + header ~80 = ~52080 < 55000
+        entries = [self._make_entry(reply="z" * reply_size, idx=i, path=f"src/f{i}.py") for i in range(10)]
+        body_comments = {"coderabbitai[bot]": entries}
+
+        posted, updates = post_review_replies.post_body_comment_replies("test-owner", "test-repo", "123", body_comments)
+
+        assert posted == 1
+        assert len(updates) == 10
+        assert mock_run.call_count == 1

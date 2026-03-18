@@ -190,6 +190,14 @@ Update each JSON entry with `status` and `reply` fields before posting.
 - User said **skip ai** → `skipped` for all remaining AI sources
   (include the user's skip reason in `reply`)
 
+**Body comments (outside-diff, nitpick, duplicate):**
+
+Comments that don't have GitHub review threads (e.g., CodeRabbit outside-diff,
+nitpick, and duplicate comments) are replied to via a single consolidated PR
+comment per reviewer. The comment mentions the reviewer (e.g., `@coderabbitai`)
+and includes sections for each comment with the decision made. This ensures
+automated reviewers know their comments were reviewed and won't re-raise them.
+
 Post replies to GitHub:
 
 ```bash
