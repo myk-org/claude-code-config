@@ -1,6 +1,6 @@
 {
   "name": "myk-cursor",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Run prompts via Cursor agent CLI with --fix mode and --peer AI-to-AI review",
   "author": { "name": "myk-org" },
   "repository": "https://github.com/myk-org/claude-code-config",
