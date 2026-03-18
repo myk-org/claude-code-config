@@ -125,13 +125,32 @@ Parse the JSON output from bump-version. Only `git add` the files listed in the
 `updated[]` array. If `skipped[]` is non-empty, inform the user which files were
 skipped and why before proceeding.
 
-Then commit and push the version bump:
+Then create a branch, commit, push, and merge via PR:
 
 ```bash
+git checkout -b chore/bump-version-<VERSION>
 git add <updated-files>
 git commit -m "chore: bump version to <VERSION>"
-git push
+git push -u origin chore/bump-version-<VERSION>
 ```
+
+Create a PR and merge it:
+
+```bash
+gh pr create --title "chore: bump version to <VERSION>" \
+  --body "Bump version to <VERSION>" --base <target_branch>
+gh pr merge --merge --admin --delete-branch
+```
+
+After merge, sync the local target branch:
+
+```bash
+git checkout <target_branch>
+git pull origin <target_branch>
+```
+
+Where `<target_branch>` is the branch from Phase 1 validation
+(default branch or `--target` value).
 
 ### Phase 6: Create Release
 
