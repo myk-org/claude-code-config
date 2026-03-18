@@ -67,6 +67,10 @@ not the AI.
 
 **Presentation format (MANDATORY — always use this exact structure):**
 
+**HARD RULE: The table MUST include ALL items — pending AND auto-skipped.
+No exceptions. Never present a partial table. If you omit auto-skipped items,
+the output is INVALID and must be redone.**
+
 Present one table per source (human, qodo, coderabbit). Skip sources with zero items.
 Within each table, sort by priority (HIGH → MEDIUM → LOW).
 Use a **global counter** for the `#` column across all tables (not per-table).
