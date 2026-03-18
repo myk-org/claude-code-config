@@ -58,28 +58,72 @@ Returns JSON with:
 
 ### Phase 2: User Decision Collection
 
-**MANDATORY: Present ALL fetched items to the user for decision. Never auto-skip or auto-categorize items.**
+**MANDATORY: Present ALL fetched items to the user for decision.
+Never silently hide or omit items — including auto-skipped ones.**
 
-Even if an item appears to be a repeat from a previous round, was already addressed, or seems trivial — present it to the user. The user decides what to address or skip, not the AI.
+Even if an item appears to be a repeat from a previous round, was already addressed,
+or seems trivial — present it to the user. The user decides what to address or skip,
+not the AI.
 
-When presenting items:
+**Presentation format (MANDATORY — always use this exact structure):**
 
-1. Group by source (human, qodo, coderabbit)
-2. Within each source, order by priority (HIGH → MEDIUM → LOW)
-3. For items that appear to be repeats of previously addressed work, note this but still present them
-4. Summarize each item concisely (1-2 lines) with file path and line number
+Present one table per source (human, qodo, coderabbit). Skip sources with zero items.
+Within each table, sort by priority (HIGH → MEDIUM → LOW).
+Use a **global counter** for the `#` column across all tables (not per-table).
 
-User response options:
+```text
+## Review Items: {source} ({total} total, {auto_skipped} auto-skipped)
 
-- 'yes' - Address this comment
-- 'no' - Skip (ask reason)
-- 'all' - Address all remaining
-- 'skip human/qodo/coderabbit' - Skip remaining from that source
-- 'skip ai' - Skip remaining from all AI sources (qodo + coderabbit)
+| # | Priority | File | Line | Summary | Status |
+|---|----------|------|------|---------|--------|
+| 1 | HIGH | src/storage.py | 231 | Backfill destroys historical chronology | Pending |
+| 2 | MEDIUM | src/html_report.py | 1141 | Add/delete leaves badges stale | Pending |
+| 3 | LOW | src/utils.py | 42 | Unused import | Auto-skipped: "style only" |
+
+(Numbering continues across tables — e.g., if this table ends at 3, the next table starts at 4.)
+```
+
+**Table rules:**
+
+- **Always a table** — never use bullets, prose, or any other format
+- **Summary column:** 1-2 lines summarizing the comment.
+  Include "Also applies to" references if present
+- **Status column values:**
+  - `Pending` — awaiting user decision
+  - `Auto-skipped: "{reason}"` — previously dismissed, showing the stored reason
+- **Every item gets a row** — including auto-skipped items so the user can override
+
+**After presenting all tables, show the response options:**
+
+```text
+Respond with:
+- 'yes' / 'no' (per item number — if 'no', ask for a reason)
+- 'all' — address all remaining pending items
+- 'skip human/qodo/coderabbit' — skip remaining from that source (ask for a reason)
+- 'skip ai' — skip all AI sources (qodo + coderabbit) (ask for a reason)
+```
+
+**User input method (MANDATORY):**
+
+Always use the `AskUserQuestion` tool to collect user decisions — never rely on
+free-text conversation. Present the tables first as regular output, then call
+`AskUserQuestion` with a concise prompt summarizing the available options.
+
+Example `AskUserQuestion` prompt:
+
+```text
+Enter your decisions (e.g., '1 yes, 2 no: already addressed, 3 yes, skip coderabbit: duplicates human review'):
+```
+
+The handler collects ALL decisions in a single `AskUserQuestion` call.
+If the user says 'no' or 'skip' without a reason, follow up with another
+`AskUserQuestion` asking for the reason before proceeding.
 
 ### Phase 3: Execute Approved Tasks
 
 For each approved comment, delegate to appropriate specialist agent.
+When delegating, pass the FULL original review thread to the agent — including the complete comment body,
+all replies, every code suggestion/diff, and all referenced locations. Do NOT summarize or compress the thread.
 
 **When fixing review comments (MANDATORY):**
 
@@ -87,6 +131,20 @@ For each approved comment, delegate to appropriate specialist agent.
 - Do NOT simplify, minimize, or "half-fix" the suggestion
 - After fixing, verify your code matches what the reviewer asked for, not just "addresses the concern"
 - **NO SKIP WITHOUT USER APPROVAL:** If you disagree with the suggestion, ASK THE USER before skipping, partially fixing, or applying a minimum-viable fix
+- **Read the ENTIRE review thread before acting.** Review threads contain a top-level comment plus replies.
+  Comments often contain multiple parts: a main issue description, code suggestions, AND additional references
+  like "Also applies to: 663-668" or mentions of other files/lines. Replies may contain clarifications,
+  additional locations, or refined suggestions. You MUST address ALL parts from the comment AND replies,
+  not just the first paragraph.
+- **Multi-location fixes are MANDATORY.** When a comment says "Also applies to: X-Y" or references other lines/files,
+  apply the same logical fix, adapted as needed to each location. These are not optional — they are part of the
+  comment's requirements.
+- **Post-fix verification checklist.** After fixing a comment, re-read the ORIGINAL review thread in full and verify:
+  1. Every code suggestion or diff was implemented
+  2. Every referenced file and line range was addressed
+  3. Every "Also applies to" location was fixed
+  4. No secondary instructions or reply clarifications were skipped
+  If any part was missed, fix it before moving to the next comment.
 
 ### Phase 4: Review Unimplemented
 
@@ -117,6 +175,9 @@ Update each JSON entry with `status` and `reply` fields before posting.
 - User said **no** → `skipped` (include the user's skip reason in `reply`)
 - User said **all** → same as **yes** for each remaining comment
 - User said **skip \<source\>** → `skipped` for all remaining from that source
+  (include the user's skip reason in `reply`)
+- User said **skip ai** → `skipped` for all remaining AI sources
+  (include the user's skip reason in `reply`)
 
 Post replies to GitHub:
 

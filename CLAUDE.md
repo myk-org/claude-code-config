@@ -15,8 +15,8 @@ This repository implements an **orchestrator pattern** for Claude Code where:
 3. **Rule Enforcement** - Hooks ensure proper delegation
 4. **Auto-loading Rules** - Rules from `rules/` directory are automatically injected
 
-It also contains the **`myk-claude-tools`** CLI package (in `myk_claude_tools/`),
-which provides CLI commands for reviews, PR operations, releases, and database queries used by the plugins.
+It also contains the **`myk-claude-tools`** CLI package (in `myk_claude_tools/`), which provides CLI commands
+for reviews, PR operations, releases, and database queries used by the plugins.
 
 The goal is to preserve context, improve code quality, and enable parallel execution by routing tasks to specialized agents.
 
@@ -528,10 +528,11 @@ When fixing reviewer comments (human, CodeRabbit, Qodo):
   like "Also applies to: 663-668" or mentions of other files/lines. Replies may contain clarifications,
   additional locations, or refined suggestions. You MUST address ALL parts from the comment AND replies,
   not just the first paragraph.
-- **Multi-location fixes are MANDATORY.** When a comment says "Also applies to: X-Y" or references other lines/files,
-  apply the same logical fix, adapted as needed to each location. These are not optional — they are part of the
-  comment's requirements.
-- **Post-fix verification checklist.** After fixing a comment, re-read the ORIGINAL review thread in full and verify:
+- **Multi-location fixes are MANDATORY.** When a comment says "Also applies to: X-Y" or references
+  other lines/files, apply the same logical fix, adapted as needed to each location. These are not
+  optional — they are part of the comment's requirements.
+- **Post-fix verification checklist.** After fixing a comment, re-read the ORIGINAL review thread
+  in full and verify:
   1. Every code suggestion or diff was implemented
   2. Every referenced file and line range was addressed
   3. Every "Also applies to" location was fixed
