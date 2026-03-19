@@ -1,6 +1,6 @@
 {
   "name": "myk-qodo",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Qodo AI code review integration for Claude Code",
   "author": {
     "name": "myk-org"
