@@ -82,9 +82,10 @@ Use a **global counter** for the `#` column across all tables (not per-table).
 |---|----------|------|------|---------|--------|
 | 1 | HIGH | src/storage.py | 231 | Backfill destroys historical chronology | Pending |
 | 2 | MEDIUM | src/html_report.py | 1141 | Add/delete leaves badges stale | Pending |
-| 3 | LOW | src/utils.py | 42 | Unused import | Auto-skipped: "style only" |
+| 3 | LOW | src/utils.py | 42 | Unused import | Auto-skipped (skipped): "style only" |
+| 4 | LOW | src/config.py | 15 | Missing validation | Auto-skipped (addressed): "added in prev PR" |
 
-(Numbering continues across tables — e.g., if this table ends at 3, the next table starts at 4.)
+(Numbering continues across tables — e.g., if this table ends at 4, the next table starts at 5.)
 ```
 
 **Table rules:**
@@ -94,7 +95,7 @@ Use a **global counter** for the `#` column across all tables (not per-table).
   Include "Also applies to" references if present
 - **Status column values:**
   - `Pending` — awaiting user decision
-  - `Auto-skipped: "{reason}"` — previously dismissed, showing the stored reason
+  - `Auto-skipped ({original_status}): "{reason}"` — showing the original status (addressed/skipped/not_addressed) and the stored reason
 - **Every item gets a row** — including auto-skipped items so the user can override
 
 **After presenting all tables, show the response options:**
