@@ -1,6 +1,6 @@
 {
   "name": "myk-review",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Local code review and review database operations for Claude Code",
   "author": {
     "name": "myk-org"

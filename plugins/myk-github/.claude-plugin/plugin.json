@@ -1,6 +1,6 @@
 {
   "name": "myk-github",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "GitHub operations for Claude Code - PR reviews, releases, review handling, and CodeRabbit rate limits",
   "author": {
     "name": "myk-org"
