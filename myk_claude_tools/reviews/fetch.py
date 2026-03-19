@@ -730,11 +730,13 @@ def process_and_categorize(threads: list[dict[str, Any]], owner: str, repo: str)
                                     break
 
                         if best:
-                            reason = (best.get("reply") or "").strip()
+                            reason = (best.get("skip_reason") or best.get("reply") or "").strip()
                             if reason:
+                                original_status = best.get("status", "skipped")
                                 enriched["status"] = "skipped"
                                 enriched["skip_reason"] = reason
-                                enriched["reply"] = f"Auto-skipped: Previously dismissed - {reason}"
+                                enriched["original_status"] = original_status  # Display-only, not persisted to DB
+                                enriched["reply"] = f"Auto-skipped ({original_status}): {reason}"
                                 enriched["is_auto_skipped"] = True
                 except Exception as e:
                     print_stderr(f"Warning: Failed to match dismissed comment: {e}")

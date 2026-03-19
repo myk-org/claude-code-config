@@ -207,7 +207,7 @@ class ReviewDB:
 
         Returns:
             List of dicts with keys: path, line, body, status, reply (reason for dismissal),
-            comment_id (GitHub comment/review ID for exact matching).
+            skip_reason (raw reason without formatting), comment_id (GitHub comment/review ID for exact matching).
             Returns empty list if database doesn't exist or on error.
 
         Example:
@@ -246,6 +246,7 @@ class ReviewDB:
                     "body": row["body"],
                     "status": row["status"],
                     "reply": row["reply"] or row["skip_reason"],
+                    "skip_reason": row["skip_reason"],
                     "author": row["author"],
                     "type": row["type"],
                     "comment_id": row["comment_id"],
