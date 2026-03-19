@@ -154,10 +154,10 @@ Track these fields:
 
 #### Decision Logic
 
-**`--peer` mode exception:** When `--peer` is active, ALWAYS create a new
-session. Never resume an existing session for `--peer` mode. All rounds
-within the peer loop use `--resume` on the session created at the start
-of the loop.
+**`--peer` mode:** Peer mode uses the same topic-based session routing as
+non-peer mode. If a previous session matches the topic, resume it. All
+rounds within the peer loop use `--resume` on the matched or newly created
+session.
 
 For each new `/myk-cursor:prompt` call, decide:
 
@@ -256,6 +256,12 @@ Call 5: /myk-cursor:prompt Also check for SQL injection in the code
   → Matches chat-id-A (back to code review topic)
   → Prepend mode reset guard ("permissions revoked"; read-only)
   → agent --print --resume "chat-id-A" --trust ...
+
+Call 6: /myk-cursor:prompt --peer review
+  → Matches chat-id-A (same code review topic)
+  → Prepend mode reset guard ("permissions revoked"; read-only)
+  → Resumes chat-id-A for peer review loop
+  → All peer rounds use --resume "chat-id-A"
 ```
 
 ### Step 2d: Workspace Safety Check (--fix and --peer modes)
@@ -481,9 +487,10 @@ the code.
 
 #### 7a: Session Setup
 
-The `--peer` session was already created in Step 2c (which always creates
-a new session when `--peer` is active). Reuse that `CHAT_ID` here.
-All rounds within the loop use `--resume` on that session.
+The `--peer` session was resolved in Step 2c using the standard topic-based
+routing — either resuming a matching session or creating a new one. Reuse
+that `CHAT_ID` here. All rounds within the loop use `--resume` on that
+session.
 
 #### 7b: Initial Cursor Review
 
@@ -517,7 +524,8 @@ agent --print --resume "$CHAT_ID" --trust --output-format json --model <model> '
 Set timeout to 300000ms. Parse the JSON response using Step 4's
 **error-handling rules only** (steps 1-2: parse JSON, check `is_error`).
 Do NOT display intermediate results to the user or update the session
-registry — peer rounds are internal. If `is_error` is true or the
+registry mid-round — peer rounds are internal (registry update happens
+in Step 7f after the loop). If `is_error` is true or the
 command fails, abort the peer loop and report the error to the user.
 
 Parse Cursor's response. If Cursor reports no findings, skip to
@@ -582,7 +590,8 @@ Original review prompt for context: <user's original prompt>
 
 **Execution:** Same command contract — use `--resume`, `--trust`,
 `--output-format json`, optional `--model`, 300000ms timeout, and
-Step 4 error-handling rules only (no user display, no session registry).
+Step 4 error-handling rules only (no user display, no mid-round registry
+update).
 If the command fails, abort the peer loop.
 
 #### 7e: Loop Until Convergence
@@ -643,6 +652,15 @@ needed.
 
 Session: {chatId}
 ```
+
+After displaying the summary, update the session registry for the peer
+session:
+
+- Set `Last used` to the current conversation turn
+- Set `Mode` to `non-fix` (peer mode does not grant Cursor file-write
+  permissions)
+- Leave `Has used fix` unchanged
+- Treat the session as eligible for future reuse
 
 **Summary rules:**
 
