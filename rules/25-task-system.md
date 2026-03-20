@@ -194,9 +194,9 @@ Slash commands that benefit from task tracking should:
 
 ### Reference Implementation
 
-See `/github-review-handler` for a complete example of task system integration:
+See `/myk-github:review-handler` for a complete example of task system integration:
 
-- 6 phases with task tracking
+- 8 phases with task tracking
 - Proper dependency chains
 - User approval gates
 - Final cleanup step

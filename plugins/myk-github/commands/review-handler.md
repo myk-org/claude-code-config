@@ -155,18 +155,7 @@ all replies, every code suggestion/diff, and all referenced locations. Do NOT su
 
 If any approved tasks weren't implemented, review with user.
 
-### Phase 5: Testing
-
-Run tests with coverage. Fix failures before proceeding.
-
-### Phase 6: Commit & Push
-
-Ask user if they want to commit and push changes.
-
-Code must be pushed before posting replies so that reviewers can see the fixes
-when threads are resolved.
-
-### Phase 7: Post Replies
+### Phase 5: Persist Decisions
 
 Update each JSON entry with `status` and `reply` fields before posting.
 
@@ -190,6 +179,28 @@ Update each JSON entry with `status` and `reply` fields before posting.
   (include the user's skip reason in `reply`)
 - User said **skip ai** → `skipped` for all remaining AI sources
   (include the user's skip reason in `reply`)
+
+### Phase 6: Testing
+
+Run tests with coverage.
+
+**ALL tests must pass before proceeding. No exceptions.**
+
+- Do NOT skip or ignore failures, even if they appear "pre-existing" or "unrelated to our changes"
+- Do NOT rationalize failures as acceptable
+- If a test fails, fix it — regardless of whether this PR introduced the failure
+- Only proceed to Phase 7 when the test suite is fully green (zero failures)
+
+### Phase 7: Commit & Push
+
+Ask user if they want to commit and push changes.
+
+Code must be pushed before posting replies so that reviewers can see the fixes
+when threads are resolved.
+
+### Phase 8: Post Replies
+
+Post all replies to GitHub and store results in the database.
 
 **Body comments (outside-diff, nitpick, duplicate):**
 
