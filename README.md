@@ -127,7 +127,6 @@ Your symlinks will automatically point to the updated files.
 | `python-expert` | Python development, testing, async patterns |
 | `go-expert` | Go development, goroutines, modules |
 | `java-expert` | Java/Spring Boot development |
-| `frontend-expert` | JS/TS/React/Vue/Angular |
 | `bash-expert` | Shell scripting and automation |
 | `docker-expert` | Dockerfile, container orchestration |
 | `kubernetes-expert` | K8s/OpenShift, Helm, GitOps |
@@ -202,6 +201,15 @@ Then install each plugin:
 | `superpowers` | Brainstorming, debugging, TDD, code review workflows |
 
 > **Note:** Missing plugins are detected automatically at session start. Claude Code will prompt you to install any missing plugins.
+
+### Recommended: Anthropic Claude Code Plugins
+
+Additional plugins from the [Claude Code repository](https://github.com/anthropics/claude-code):
+
+```bash
+/plugin marketplace add anthropics/claude-code
+/plugin install frontend-design@anthropics-claude-code
+```
 
 ### Automatic Documentation Fetching
 

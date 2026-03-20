@@ -18,7 +18,6 @@ This rule applies ONLY to agents defined in this repository (`agents/` directory
 - debugger
 - docs-fetcher
 - docker-expert
-- frontend-expert
 - git-expert
 - github-expert
 - go-expert

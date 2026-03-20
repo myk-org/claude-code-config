@@ -8,7 +8,6 @@
 | Python (.py)                                                                     | `python-expert`                    |
 | Go (.go)                                                                         | `go-expert`                        |
 | Java (.java)                                                                     | `java-expert`                      |
-| Frontend (JS/TS/React/Vue)                                                       | `frontend-expert`                  |
 | Shell scripts (.sh)                                                              | `bash-expert`                      |
 | Markdown (.md)                                                                   | `technical-documentation-writer`   |
 | **Infrastructure**                                                               |                                    |
