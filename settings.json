@@ -120,13 +120,20 @@
     "claude-code-setup@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
     "coderabbit@claude-plugins-official": true,
-    "cli-anything@cli-anything": true
+    "cli-anything@cli-anything": true,
+    "worktrunk@worktrunk": true
   },
   "extraKnownMarketplaces": {
     "cli-anything": {
       "source": {
         "source": "github",
         "repo": "HKUDS/CLI-Anything"
+      }
+    },
+    "worktrunk": {
+      "source": {
+        "source": "github",
+        "repo": "max-sixty/worktrunk"
       }
     }
   },
