@@ -1,5 +1,11 @@
 # myk-cursor Plugin
 
+> **DEPRECATED:** This plugin is deprecated in favor of
+> [`myk-acpx`](../myk-acpx/README.md).
+> Use `/myk-acpx:prompt cursor` instead of `/myk-cursor:prompt`.
+> The myk-acpx plugin provides the same Cursor functionality plus multi-agent
+> support and structured ACP protocol.
+
 Run prompts via Cursor's [agent CLI](https://docs.cursor.com/cli) from within
 Claude Code, with `--fix` mode for direct file changes and `--peer` mode for
 autonomous AI-to-AI peer review.

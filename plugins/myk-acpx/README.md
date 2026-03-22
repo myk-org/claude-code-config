@@ -82,5 +82,6 @@ Multiple agents can be specified as a comma-separated list. `--fix` requires a s
 - Cursor persistent sessions may fail with acpx v0.3.x due to a `session/load` protocol mismatch
   ([#152](https://github.com/openclaw/acpx/issues/152),
   [#161](https://github.com/openclaw/acpx/issues/161)).
-  The plugin automatically falls back to one-shot mode when this occurs.
-  For full Cursor session support, use `/myk-cursor:prompt` instead.
+  The command walks you through automatic fallback to one-shot mode when this occurs.
+  If you need the native Cursor CLI with persistent sessions and acpx session setup keeps failing,
+  use the Cursor `agent` tool directly, or the deprecated `/myk-cursor:prompt` until it is removed.

@@ -1,7 +1,7 @@
 ---
 description: Run a prompt via acpx to any supported coding agent
 argument-hint: <agent>[,agent2,...] [--fix | --peer | --exec] [--model <model>] <prompt>
-allowed-tools: Bash(acpx:*), AskUserQuestion, Agent, Edit, Write, Read, Glob, Grep
+allowed-tools: Bash(acpx:*), Bash(git:*), AskUserQuestion, Agent, Edit, Write, Read, Glob, Grep
 ---
 
 # acpx Multi-Agent Prompt Command
@@ -133,6 +133,8 @@ If no prompt is provided after the agent name, abort with:
 
 Ensure a session exists for the current directory:
 
+**Multi-agent:** Run `sessions ensure` for each agent in the list.
+
 ```bash
 acpx <agent> sessions ensure
 ```
@@ -205,8 +207,8 @@ Build and execute the acpx command:
 **Exec mode (stateless):**
 
 ```bash
-acpx --approve-reads <agent> exec '<prompt>'
-acpx --approve-reads <agent> exec --model <model> '<prompt>'
+acpx --approve-reads --non-interactive-permissions fail <agent> exec '<prompt>'
+acpx --approve-reads --non-interactive-permissions fail <agent> exec --model <model> '<prompt>'
 ```
 
 **Fix mode:**
@@ -214,6 +216,15 @@ acpx --approve-reads <agent> exec --model <model> '<prompt>'
 ```bash
 acpx --approve-all <agent> '<prompt>'
 acpx --approve-all <agent> --model <model> '<prompt>'
+```
+
+**Read-only prompt guard (non-fix modes):**
+
+When `--fix` is NOT passed, append to the user's prompt:
+
+```text
+IMPORTANT: This is a read-only request. Do NOT modify, create, or
+delete any files. Report your findings only.
 ```
 
 In fix mode, append to the user's prompt:
@@ -226,22 +237,17 @@ Make all necessary changes directly.
 **Session mode (persistent, default):**
 
 ```bash
-acpx --approve-reads <agent> '<prompt>'
-acpx --approve-reads <agent> --model <model> '<prompt>'
-```
-
-```text
-# Replace --approve-reads with --approve-all if prompt contains action words:
-# fix, modify, change, edit, update, create, delete
+acpx --approve-reads --non-interactive-permissions fail <agent> '<prompt>'
+acpx --approve-reads --non-interactive-permissions fail <agent> --model <model> '<prompt>'
 ```
 
 **Permissions summary:**
 
 | Mode | Flag | Description |
 |------|------|-------------|
-| Default | `--approve-reads` | Agent can read files only |
+| Default | `--approve-reads --non-interactive-permissions fail` | Agent can read files only, writes blocked |
 | Fix (`--fix`) | `--approve-all` | Agent can read and write files |
-| Peer (`--peer`) | `--approve-reads` | Agent reviews only, Claude delegates fixes |
+| Peer (`--peer`) | `--approve-reads --non-interactive-permissions fail` | Agent reviews only, writes blocked |
 
 **Multi-agent execution:**
 
@@ -262,11 +268,27 @@ When multiple agents are specified, run all agents **in parallel**:
 Each agent uses the same mode and flags (exec, session, model).
 
 **Shell safety:** Single-quote the prompt to prevent shell expansion. Replace any single quotes in the prompt with `'\''` before interpolation.
-**Permissions (session mode only):** Use `--approve-reads` by default (allows the agent to read
-files). If the prompt contains action words like "fix", "modify", "change",
-"edit", "update", "create", or "delete", use `--approve-all` instead.
 
-If the command exits with a non-zero code, display the raw output as an error.
+**Error handling:**
+
+If the command exits with a non-zero code:
+
+- If the error indicates a **permission failure** (write denied, permission
+  rejected, or similar), this means the agent attempted to modify files
+  without `--fix` mode. Retry the prompt once with a stricter instruction
+  appended:
+
+  ```text
+  CRITICAL: You are NOT allowed to modify any files. Your previous
+  attempt was blocked because you tried to write files. This is a
+  read-only review. Report findings as text only. Do NOT use any
+  file modification tools.
+  ```
+
+  If the retry also fails with a permission error, display the error
+  and abort.
+
+- For any other error, display the raw output as an error.
 
 ### Step 6: Display Result
 
@@ -351,8 +373,8 @@ Original prompt: <user's prompt>
 Execute via acpx:
 
 ```bash
-acpx --approve-reads <agent> '<peer_framing_prompt>'
-acpx --approve-reads <agent> --model <model> '<peer_framing_prompt>'
+acpx --approve-reads --non-interactive-permissions fail <agent> '<peer_framing_prompt>'
+acpx --approve-reads --non-interactive-permissions fail <agent> --model <model> '<peer_framing_prompt>'
 ```
 
 Do NOT display intermediate results to the user.
@@ -425,8 +447,8 @@ Parse the agent's response:
 
 **Convergence criteria:**
 
-- Agent explicitly states no remaining issues, OR
-- Agent's response contains no actionable findings (only acknowledgments)
+- All agents explicitly state no remaining issues, OR
+- All agents' responses contain no actionable findings (only acknowledgments)
 
 **Claude's behavior across rounds:**
 

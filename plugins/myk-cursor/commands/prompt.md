@@ -6,6 +6,37 @@ allowed-tools: Bash(agent:*), Bash(git:*), Bash(myk-claude-tools:*), Bash(uv:*),
 
 # Cursor Agent Prompt Command
 
+> **DEPRECATED:** This plugin is deprecated in favor of `/myk-acpx:prompt cursor`.
+> The myk-acpx plugin provides the same functionality plus multi-agent support,
+> `--peer` debate with any agent, and structured ACP protocol.
+> Install: `/plugin install myk-acpx@myk-org`
+
+## Redirect
+
+This command is deprecated. Before proceeding, ask the user via AskUserQuestion:
+
+"The `/myk-cursor:prompt` plugin is **deprecated** and will be removed soon.
+Use `/myk-acpx:prompt cursor` instead — it provides the same Cursor
+functionality plus multi-agent support and structured ACP protocol.
+
+What would you like to do?"
+
+Options:
+
+- **Switch to myk-acpx (Recommended)** — Abort this command. Prepend the
+  agent name `cursor` to your invocation and keep the same flags and prompt
+  text (for example: `/myk-cursor:prompt --fix tidy imports` becomes
+  `/myk-acpx:prompt cursor --fix tidy imports`).
+- **Continue anyway** — Run this deprecated command one more time.
+
+If the user selects **Switch to myk-acpx**, abort and tell the user:
+"Run your command as: `/myk-acpx:prompt cursor` followed by any flags, then your prompt."
+
+If the user selects **Continue anyway**, proceed with the original
+workflow below.
+
+---
+
 Run a prompt through Cursor's agent CLI, enabling access to models like GPT-5.3, Gemini 3 Pro, Grok, and more.
 
 ## Usage
