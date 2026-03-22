@@ -121,7 +121,8 @@
     "gopls-lsp@claude-plugins-official": true,
     "coderabbit@claude-plugins-official": true,
     "cli-anything@cli-anything": true,
-    "worktrunk@worktrunk": true
+    "worktrunk@worktrunk": true,
+    "myk-acpx@myk-org": true
   },
   "extraKnownMarketplaces": {
     "cli-anything": {
