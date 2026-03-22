@@ -41,6 +41,9 @@ The easiest way to use this repository's features is via plugins:
 # Qodo AI code review integration
 /plugin install myk-qodo@myk-org
 
+# Multi-agent prompt execution via acpx
+/plugin install myk-acpx@myk-org
+
 # Cursor agent CLI integration
 /plugin install myk-cursor@myk-org
 ```
@@ -58,6 +61,9 @@ Or from this repository:
 ```bash
 uv tool install git+https://github.com/myk-org/claude-code-config
 ```
+
+For `myk-acpx`, install [acpx](https://github.com/openclaw/acpx) (`npm install -g acpx@latest`)
+and the target coding agent CLI. The plugin offers to install acpx automatically if missing.
 
 For `myk-cursor`, install [Cursor](https://cursor.com), enable its CLI, and
 ensure `agent` is available on your PATH. See
@@ -77,6 +83,7 @@ ensure `agent` is available on your PATH. See
 | myk-qodo | `/myk-qodo:describe` | Generate PR descriptions |
 | myk-qodo | `/myk-qodo:improve` | Get improvement suggestions |
 | myk-qodo | `/myk-qodo:ask` | Ask questions about code |
+| myk-acpx | `/myk-acpx:prompt` | Run prompts to any ACP-compatible coding agent via acpx |
 | myk-cursor | `/myk-cursor:prompt` | Run prompts via Cursor agent CLI with optional `--fix` mode for direct file changes |
 
 > **For full orchestrator pattern with agents and hooks**, see [Full Installation](#installation) below.
@@ -111,7 +118,7 @@ Your symlinks will automatically point to the updated files.
 
 ## What's Included
 
-- **4 plugins** with 10 commands (myk-github, myk-review, myk-qodo, myk-cursor)
+- **5 plugins** with 11 commands (myk-acpx, myk-github, myk-review, myk-qodo, myk-cursor)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
 - **16 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **1 skill** for context-aware automation
@@ -342,7 +349,7 @@ The `CLAUDE.md` file (local-only, not tracked in git) defines an orchestrator pa
 ```text
 ~/.claude/
 ├── agents/           # Specialist agent definitions
-├── plugins/          # Plugin definitions (myk-github, myk-review, myk-qodo, myk-cursor)
+├── plugins/          # Plugin definitions (myk-acpx, myk-github, myk-review, myk-qodo, myk-cursor)
 ├── skills/           # Skills (auto-invoked based on context)
 │   └── agent-browser/
 │       └── SKILL.md

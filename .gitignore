@@ -83,6 +83,14 @@
 !plugins/
 !plugins/README.md
 
+# plugins/myk-acpx/
+!plugins/myk-acpx/
+!plugins/myk-acpx/.claude-plugin/
+!plugins/myk-acpx/.claude-plugin/plugin.json
+!plugins/myk-acpx/commands/
+!plugins/myk-acpx/commands/prompt.md
+!plugins/myk-acpx/README.md
+
 # plugins/myk-cursor/
 !plugins/myk-cursor/
 !plugins/myk-cursor/.claude-plugin/

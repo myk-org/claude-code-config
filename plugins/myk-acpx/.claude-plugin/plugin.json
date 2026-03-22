@@ -1,0 +1,9 @@
+{
+  "name": "myk-acpx",
+  "version": "1.4.6",
+  "description": "Multi-agent prompt execution via acpx (Agent Client Protocol)",
+  "author": { "name": "myk-org" },
+  "repository": "https://github.com/myk-org/claude-code-config",
+  "license": "MIT",
+  "keywords": ["acpx", "acp", "multi-agent", "codex", "gemini", "cursor", "copilot"]
+}
