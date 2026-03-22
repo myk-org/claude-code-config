@@ -26,7 +26,6 @@
       "Bash(myk-claude-tools:*)"
     ]
   },
-  "model": "gemini-3-pro-image",
   "hooks": {
     "Notification": [
       {
