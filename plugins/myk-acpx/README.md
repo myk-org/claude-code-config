@@ -28,7 +28,7 @@ Run a prompt through acpx to any supported agent.
 **Syntax:**
 
 ```text
-/myk-acpx:prompt <agent> [--exec] [--model <model>] <prompt>
+/myk-acpx:prompt <agent>[,agent2,...] [--fix | --peer | --exec] [--model <model>] <prompt>
 ```
 
 **Supported agents:** pi, openclaw, codex, claude, gemini, cursor, copilot, droid, iflow, kilocode, kimi, kiro, opencode, qwen
@@ -47,7 +47,35 @@ Run a prompt through acpx to any supported agent.
 
 # Use a specific model
 /myk-acpx:prompt codex --model o3-pro review the architecture
+
+# Fix code with Codex (agent gets write access)
+/myk-acpx:prompt codex --fix fix the code quality issues
+
+# AI-to-AI peer review with Gemini
+/myk-acpx:prompt gemini --peer review this code
+
+# Peer review with specific model
+/myk-acpx:prompt codex --peer --model o3-pro review the architecture
+
+# Multi-agent review (parallel)
+/myk-acpx:prompt cursor,codex review this code
+
+# 3-way peer review debate
+/myk-acpx:prompt cursor,gemini,codex --peer review the architecture
 ```
+
+## Modes
+
+| Mode | Flag | Description |
+|------|------|-------------|
+| Default | (none) | Agent reads and reviews, no file changes |
+| Fix | `--fix` | Agent can modify files directly, diff shown after |
+| Peer | `--peer` | AI-to-AI debate loop between Claude and the agent |
+| Exec | `--exec` | One-shot stateless execution, no session persistence |
+
+`--fix`, `--peer`, and `--exec` are mutually exclusive.
+
+Multiple agents can be specified as a comma-separated list. `--fix` requires a single agent; all other modes support multiple agents running in parallel.
 
 ## Known Issues
 
