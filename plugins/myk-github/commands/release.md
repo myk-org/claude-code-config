@@ -131,6 +131,18 @@ Then create a branch, commit, push, and merge via PR:
 BUMP_BRANCH="chore/bump-version-<VERSION>-$(date +%s)"
 git checkout -b "$BUMP_BRANCH"
 git add <updated-files>
+```
+
+If `uv.lock` exists in the project root, regenerate it after bumping:
+
+```bash
+uv lock
+git add uv.lock
+```
+
+Then commit and push:
+
+```bash
 git commit -m "chore: bump version to <VERSION>"
 git push -u origin "$BUMP_BRANCH"
 ```
