@@ -353,6 +353,10 @@ merged findings.
 
 #### 9a: Initial Agent Review
 
+Before sending the peer framing prompt, check if `CLAUDE.md` exists
+in the project. If it does, reference it in the framing prompt so the
+agent reads it itself.
+
 Send the first prompt to the agent with peer review framing:
 
 ```text
@@ -362,6 +366,11 @@ human interaction. Do NOT be agreeable or sycophantic. Hold your
 position when you have valid technical reasoning. Push back when you
 disagree. Only concede a point when the other AI provides a genuinely
 better technical argument.
+
+[If CLAUDE.md exists in the project:]
+IMPORTANT: This project has a CLAUDE.md file with coding conventions
+and project guidelines. Read it before reviewing. Flag any violations
+of those conventions as findings.
 
 Your role: Review the code and report findings. Be direct, specific,
 and technically rigorous. For each finding, explain WHY it matters and
