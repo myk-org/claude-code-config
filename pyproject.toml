@@ -1,6 +1,6 @@
 [project]
 name = "myk-claude-tools"
-version = "1.5.3"
+version = "1.5.4"
 description = "CLI utilities for Claude Code plugins"
 readme = "README.md"
 license = "MIT"
