@@ -351,6 +351,11 @@ all participants agree on the code. When multiple agents are specified,
 each agent reviews independently in parallel, and Claude evaluates the
 merged findings.
 
+**CRITICAL RULE: Only the peer agent can end the loop.** Claude fixing
+code does NOT count as convergence. After EVERY fix round, Claude MUST
+send the fixes back to the peer agent (Step 9c) for re-review. The loop
+ends ONLY when the peer agent confirms no remaining issues.
+
 #### 9a: Initial Agent Review
 
 Before sending the peer framing prompt, check if `CLAUDE.md` exists
@@ -415,6 +420,9 @@ For each finding from the agent:
 - Claude should be open to changing its mind if the agent makes a good
   point in the next round
 
+**After completing all fixes and counter-arguments, proceed to Step 9c.
+This is MANDATORY — do NOT skip to the summary.**
+
 #### 9c: Claude Responds to Agent
 
 After acting on all findings, send a response back to the agent:
@@ -454,10 +462,16 @@ Parse the agent's response:
 - **No findings and no remaining disagreements** — All AIs agree. Exit loop.
 - **New findings or continued disagreements** — Go to Step 9b.
 
-**Convergence criteria:**
+**Convergence criteria (checked ONLY from the peer agent's response in Step 9c):**
 
 - All agents explicitly state no remaining issues, OR
 - All agents' responses contain no actionable findings (only acknowledgments)
+
+**What does NOT count as convergence:**
+
+- Claude fixing all findings (fixes must be verified by the agent)
+- Claude agreeing with all findings (the agent must confirm the fixes are correct)
+- A single round completing (minimum: agent reviews → Claude fixes → agent re-reviews)
 
 **Claude's behavior across rounds:**
 
