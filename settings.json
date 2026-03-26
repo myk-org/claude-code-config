@@ -138,6 +138,7 @@
     }
   },
   "alwaysThinkingEnabled": true,
+  "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "_scriptsNote": "Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.",
   "allowedTools": [

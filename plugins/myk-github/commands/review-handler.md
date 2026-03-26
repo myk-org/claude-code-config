@@ -1,6 +1,6 @@
 ---
 description: Process ALL review sources (human, Qodo, CodeRabbit) from current PR
-argument-hint: [REVIEW_URL]
+argument-hint: [--autorabbit] [REVIEW_URL]
 allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task
 ---
 
@@ -30,8 +30,18 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 
 - `/myk-github:review-handler` - Process reviews from current PR
 - `/myk-github:review-handler https://github.com/owner/repo/pull/123#pullrequestreview-456` - With specific review URL
+- `/myk-github:review-handler --autorabbit` - Auto-fix CodeRabbit comments in a loop
 
 ## Workflow
+
+### Phase 0: Parse Arguments
+
+Check if `--autorabbit` flag is present in `$ARGUMENTS`:
+
+- If `--autorabbit` is found, remove it from `$ARGUMENTS` and enable
+  autorabbit mode. The remaining `$ARGUMENTS` (if any) are passed to
+  `reviews fetch` as before.
+- If `--autorabbit` is not found, proceed normally.
 
 ### Phase 1: Fetch Reviews
 
@@ -57,6 +67,18 @@ Returns JSON with:
 - `coderabbit`: CodeRabbit AI review threads
 
 ### Phase 2: User Decision Collection
+
+**`--autorabbit` mode:** If autorabbit mode is active:
+
+- **CodeRabbit comments**: Automatically set to "yes" (address all).
+  Do NOT ask the user. Present the CodeRabbit table for visibility
+  but mark all items as auto-approved.
+- **Human and Qodo comments**: Follow the normal user decision flow
+  below (present table, ask user via AskUserQuestion).
+- If there are ONLY CodeRabbit comments (no human or Qodo), skip the
+  user decision step entirely and proceed to Phase 3.
+
+**Normal mode (no `--autorabbit`):** Follow the full decision flow below.
 
 **MANDATORY: Present ALL fetched items to the user for decision.
 Never silently hide or omit items — including auto-skipped ones.**
@@ -235,4 +257,66 @@ Store to database:
 
 ```bash
 myk-claude-tools reviews store {json_path}
+```
+
+### Phase 9: Autorabbit Polling Loop (--autorabbit mode only)
+
+**Skip this phase if `--autorabbit` was NOT passed.**
+
+After the review flow completes (Phases 1-8), enter a polling loop
+to watch for new CodeRabbit comments.
+
+#### 9a: Wait
+
+Wait 5 minutes before checking for new comments.
+
+#### 9b: Check for Rate Limit
+
+Before fetching new reviews, check if CodeRabbit is rate-limited:
+
+```bash
+myk-claude-tools coderabbit check <owner/repo> <pr_number>
+```
+
+If `rate_limited` is `true`:
+
+1. Read `wait_seconds` from the response
+1. Add 30-second buffer
+1. Run the trigger command:
+
+```bash
+myk-claude-tools coderabbit trigger <owner/repo> <pr_number> --wait <wait_seconds + 30>
+```
+
+1. After the trigger completes, resume at Step 9c
+
+If `rate_limited` is `false`, proceed to Step 9c.
+
+#### 9c: Fetch New Reviews
+
+```bash
+myk-claude-tools reviews fetch
+```
+
+Check if there are new CodeRabbit comments (comments without
+`posted_at` timestamps, not auto-skipped).
+
+- If **new CodeRabbit comments found**: Run Phases 2-8 again with
+  autorabbit behavior (auto-approve CodeRabbit, ask user for others).
+  After completing, return to Step 9a.
+- If **no new CodeRabbit comments**: Display "No new CodeRabbit
+  comments. Checking again in 5 minutes..." and return to Step 9a.
+
+#### 9d: Exit
+
+The polling loop has **no automatic exit condition**. It continues
+until the user stops it (Ctrl+C or explicit request). Each cycle
+displays a status update so the user knows the loop is active:
+
+```text
+[autorabbit] Cycle {N} complete. Next check in 5 minutes...
+[autorabbit] Checking for new CodeRabbit comments...
+[autorabbit] Found {N} new comments — processing...
+[autorabbit] No new comments. Next check in 5 minutes...
+[autorabbit] CodeRabbit rate-limited. Waiting {N} seconds...
 ```
