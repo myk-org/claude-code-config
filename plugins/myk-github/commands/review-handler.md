@@ -1,7 +1,7 @@
 ---
 description: Process ALL review sources (human, Qodo, CodeRabbit) from current PR
 argument-hint: [--autorabbit] [REVIEW_URL]
-allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task
+allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task, Agent
 ---
 
 # GitHub Review Handler
