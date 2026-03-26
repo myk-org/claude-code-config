@@ -46,7 +46,7 @@ wheels = [
 
 [[package]]
 name = "myk-claude-tools"
-version = "1.6.1"
+version = "1.6.2"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
