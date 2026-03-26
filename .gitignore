@@ -104,25 +104,6 @@
 !plugins/myk-github/commands/review-handler.md
 !plugins/myk-github/README.md
 
-# plugins/myk-qodo/
-!plugins/myk-qodo/
-!plugins/myk-qodo/.claude-plugin/
-!plugins/myk-qodo/.claude-plugin/plugin.json
-!plugins/myk-qodo/skills/
-!plugins/myk-qodo/skills/ask/
-!plugins/myk-qodo/skills/ask/SKILL.md
-!plugins/myk-qodo/skills/describe/
-!plugins/myk-qodo/skills/describe/SKILL.md
-!plugins/myk-qodo/skills/improve/
-!plugins/myk-qodo/skills/improve/SKILL.md
-!plugins/myk-qodo/skills/review/
-!plugins/myk-qodo/skills/review/SKILL.md
-!plugins/myk-qodo/commands/
-!plugins/myk-qodo/commands/ask.md
-!plugins/myk-qodo/commands/describe.md
-!plugins/myk-qodo/commands/improve.md
-!plugins/myk-qodo/commands/review.md
-!plugins/myk-qodo/README.md
 
 # plugins/myk-review/
 !plugins/myk-review/

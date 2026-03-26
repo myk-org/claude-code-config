@@ -19,10 +19,6 @@
       "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
       "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
       "Grep",
-      "Skill(qodo:review)",
-      "Skill(qodo:describe)",
-      "Skill(qodo:improve)",
-      "Skill(qodo:ask)",
       "Bash(myk-claude-tools:*)"
     ]
   },
@@ -102,7 +98,6 @@
     "jdtls-lsp@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
     "github@claude-plugins-official": true,
-    "myk-qodo@myk-org": true,
     "myk-review@myk-org": true,
     "myk-github@myk-org": true,
     "code-simplifier@claude-plugins-official": true,
@@ -137,8 +132,8 @@
     }
   },
   "alwaysThinkingEnabled": true,
-  "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
+  "autoDreamEnabled": true,
   "_scriptsNote": "Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.",
   "allowedTools": [
     "Edit(/tmp/claude/**)",
@@ -157,10 +152,6 @@
     "Bash(uv run ~/.claude/scripts/rule-injector.py:*)",
     "Bash(uv run ~/.claude/scripts/rule-enforcer.py:*)",
     "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
-    "Skill(qodo:review)",
-    "Skill(qodo:describe)",
-    "Skill(qodo:improve)",
-    "Skill(qodo:ask)",
     "Bash(myk-claude-tools:*)"
   ],
   "feedbackSurveyState": {

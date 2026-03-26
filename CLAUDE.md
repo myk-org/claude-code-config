@@ -47,16 +47,11 @@ claude-code-config/
 ├── plugins/                   # Claude Code plugins (slash commands)
 │   ├── myk-github/            # GitHub operations plugin
 │   │   ├── .claude-plugin/plugin.json
-│   │   ├── commands/          # /myk-github:coderabbit-rate-limit, /myk-github:pr-review, /myk-github:release, /myk-github:review-handler
+│   │   ├── commands/          # /myk-github:coderabbit-rate-limit, /myk-github:pr-review, /myk-github:refine-review, /myk-github:release, /myk-github:review-handler
 │   │   └── README.md
 │   ├── myk-review/            # Local review operations plugin
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── commands/          # /myk-review:local, /myk-review:query-db
-│   │   └── README.md
-│   ├── myk-qodo/              # Qodo AI code review plugin
-│   │   ├── .claude-plugin/plugin.json
-│   │   ├── commands/          # /myk-qodo:review, /myk-qodo:describe, /myk-qodo:improve, /myk-qodo:ask
-│   │   ├── skills/            # Skill implementations
 │   │   └── README.md
 │   ├── myk-acpx/              # Multi-agent ACP plugin (via acpx)
 │   │   ├── .claude-plugin/plugin.json
@@ -233,16 +228,14 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 
 ```text
 /plugin marketplace add myk-org/claude-code-config
-/plugin install myk-qodo@myk-org
 ```
 
 **Available Plugins:**
 
 | Plugin | Description | Commands |
 |--------|-------------|----------|
-| `myk-github` | GitHub operations | `/myk-github:coderabbit-rate-limit`, `/myk-github:pr-review`, `/myk-github:release`, `/myk-github:review-handler` |
+| `myk-github` | GitHub operations | `/myk-github:coderabbit-rate-limit`, `/myk-github:pr-review`, `/myk-github:refine-review`, `/myk-github:release`, `/myk-github:review-handler` |
 | `myk-review` | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
-| `myk-qodo` | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
 | `myk-acpx` | Multi-agent ACP | `/myk-acpx:prompt` |
 
 **Plugin Location:** `plugins/` directory
@@ -518,7 +511,7 @@ It must be kept in sync with `AI_REVIEW.md` — update both when modifying share
 
 ## Handling Review Feedback
 
-When fixing reviewer comments (human, CodeRabbit, Qodo):
+When fixing reviewer comments (human, CodeRabbit):
 
 - If the reviewer provides a specific code suggestion or diff, implement it exactly — not your own interpretation
 - Do NOT simplify, minimize, or "half-fix" the suggestion

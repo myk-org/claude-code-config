@@ -38,9 +38,6 @@ The easiest way to use this repository's features is via plugins:
 # Local code review and database queries
 /plugin install myk-review@myk-org
 
-# Qodo AI code review integration
-/plugin install myk-qodo@myk-org
-
 # Multi-agent prompt execution via acpx
 /plugin install myk-acpx@myk-org
 
@@ -48,7 +45,7 @@ The easiest way to use this repository's features is via plugins:
 
 ### 3. Install Required CLIs
 
-For `myk-github`, `myk-review`, and parts of `myk-qodo`:
+For `myk-github` and `myk-review`:
 
 ```bash
 uv tool install myk-claude-tools
@@ -67,15 +64,13 @@ and the target coding agent CLI. The plugin offers to install acpx automatically
 
 | Plugin | Command | Description |
 |--------|---------|-------------|
+| myk-github | `/myk-github:coderabbit-rate-limit` | Check CodeRabbit rate limit status |
 | myk-github | `/myk-github:pr-review` | Review PR and post inline comments |
+| myk-github | `/myk-github:refine-review` | Refine and improve review comments |
 | myk-github | `/myk-github:release` | Create release with changelog |
 | myk-github | `/myk-github:review-handler` | Process all review sources |
 | myk-review | `/myk-review:local` | Review uncommitted changes |
 | myk-review | `/myk-review:query-db` | Query review database |
-| myk-qodo | `/myk-qodo:review` | AI-powered code review |
-| myk-qodo | `/myk-qodo:describe` | Generate PR descriptions |
-| myk-qodo | `/myk-qodo:improve` | Get improvement suggestions |
-| myk-qodo | `/myk-qodo:ask` | Ask questions about code |
 | myk-acpx | `/myk-acpx:prompt` | Run prompts to any ACP-compatible coding agent via acpx |
 
 > **For full orchestrator pattern with agents and hooks**, see [Full Installation](#installation) below.
@@ -110,7 +105,7 @@ Your symlinks will automatically point to the updated files.
 
 ## What's Included
 
-- **4 plugins** with 10 commands (myk-acpx, myk-github, myk-review, myk-qodo)
+- **3 plugins** with 8 commands (myk-acpx, myk-github, myk-review)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
 - **16 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
 - **1 skill** for context-aware automation
@@ -341,7 +336,7 @@ The `CLAUDE.md` file (local-only, not tracked in git) defines an orchestrator pa
 ```text
 ~/.claude/
 ├── agents/           # Specialist agent definitions
-├── plugins/          # Plugin definitions (myk-acpx, myk-github, myk-review, myk-qodo)
+├── plugins/          # Plugin definitions (myk-acpx, myk-github, myk-review)
 ├── skills/           # Skills (auto-invoked based on context)
 │   └── agent-browser/
 │       └── SKILL.md

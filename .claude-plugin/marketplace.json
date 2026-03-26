@@ -5,12 +5,6 @@
   },
   "plugins": [
     {
-      "name": "myk-qodo",
-      "source": "./plugins/myk-qodo",
-      "description": "Qodo AI code review integration",
-      "version": "1.6.1"
-    },
-    {
       "name": "myk-github",
       "source": "./plugins/myk-github",
       "description": "GitHub operations - PR reviews, releases, review handling, CodeRabbit rate limits",

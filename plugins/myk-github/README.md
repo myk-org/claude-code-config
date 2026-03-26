@@ -45,6 +45,14 @@ Review a GitHub PR and post inline comments on selected findings.
 /myk-github:pr-review https://github.com/owner/repo/pull/123
 ```
 
+### /myk-github:refine-review
+
+Refine pending PR review comments before submitting.
+
+```bash
+/myk-github:refine-review
+```
+
 ### /myk-github:release
 
 Create a GitHub release with automatic changelog generation.

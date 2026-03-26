@@ -6,9 +6,8 @@ This directory contains Claude Code plugins that can be installed via the plugin
 
 | Plugin | Description | Commands |
 |--------|-------------|----------|
-| **[myk-github](./myk-github/README.md)** | GitHub operations | `/myk-github:pr-review`, `/myk-github:refine-review`, `/myk-github:release`, `/myk-github:review-handler` |
+| **[myk-github](./myk-github/README.md)** | GitHub operations | `/myk-github:coderabbit-rate-limit`, `/myk-github:pr-review`, `/myk-github:refine-review`, `/myk-github:release`, `/myk-github:review-handler` |
 | **[myk-review](./myk-review/README.md)** | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
-| **[myk-qodo](./myk-qodo/README.md)** | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
 | **[myk-acpx](./myk-acpx/README.md)** | Run prompts to any ACP-compatible coding agent via acpx | `/myk-acpx:prompt` |
 
 ## Installation
@@ -22,7 +21,6 @@ This directory contains Claude Code plugins that can be installed via the plugin
 # Install plugins
 /plugin install myk-github@myk-org    # GitHub operations
 /plugin install myk-review@myk-org    # Local review operations
-/plugin install myk-qodo@myk-org      # Qodo AI code review
 /plugin install myk-acpx@myk-org      # Multi-agent ACP (via acpx)
 ```
 
@@ -49,7 +47,6 @@ claude --plugin-dir ./plugins/myk-github
 # Test the plugin commands
 /myk-github:pr-review
 /myk-review:local
-/myk-qodo:review
 ```
 
 ## Creating New Plugins
