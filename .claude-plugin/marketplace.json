@@ -8,25 +8,25 @@
       "name": "myk-qodo",
       "source": "./plugins/myk-qodo",
       "description": "Qodo AI code review integration",
-      "version": "1.5.4"
+      "version": "1.6.0"
     },
     {
       "name": "myk-github",
       "source": "./plugins/myk-github",
       "description": "GitHub operations - PR reviews, releases, review handling, CodeRabbit rate limits",
-      "version": "1.5.4"
+      "version": "1.6.0"
     },
     {
       "name": "myk-review",
       "source": "./plugins/myk-review",
       "description": "Local code review and review database operations",
-      "version": "1.5.4"
+      "version": "1.6.0"
     },
     {
       "name": "myk-acpx",
       "source": "./plugins/myk-acpx",
       "description": "Multi-agent prompt execution via acpx (Agent Client Protocol)",
-      "version": "1.5.4"
+      "version": "1.6.0"
     }
   ]
 }
