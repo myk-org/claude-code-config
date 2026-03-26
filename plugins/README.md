@@ -10,7 +10,6 @@ This directory contains Claude Code plugins that can be installed via the plugin
 | **[myk-review](./myk-review/README.md)** | Local review operations | `/myk-review:local`, `/myk-review:query-db` |
 | **[myk-qodo](./myk-qodo/README.md)** | Qodo AI code review | `/myk-qodo:review`, `/myk-qodo:describe`, `/myk-qodo:improve`, `/myk-qodo:ask` |
 | **[myk-acpx](./myk-acpx/README.md)** | Run prompts to any ACP-compatible coding agent via acpx | `/myk-acpx:prompt` |
-| **[myk-cursor](./myk-cursor/README.md)** | Run prompts via Cursor agent CLI with optional `--fix` mode for direct file changes | `/myk-cursor:prompt` |
 
 ## Installation
 
@@ -25,7 +24,6 @@ This directory contains Claude Code plugins that can be installed via the plugin
 /plugin install myk-review@myk-org    # Local review operations
 /plugin install myk-qodo@myk-org      # Qodo AI code review
 /plugin install myk-acpx@myk-org      # Multi-agent ACP (via acpx)
-/plugin install myk-cursor@myk-org    # Cursor agent CLI
 ```
 
 ### Prerequisites for github/review plugins

@@ -84,4 +84,4 @@ Multiple agents can be specified as a comma-separated list. `--fix` requires a s
   [#161](https://github.com/openclaw/acpx/issues/161)).
   The command walks you through automatic fallback to one-shot mode when this occurs.
   If you need the native Cursor CLI with persistent sessions and acpx session setup keeps failing,
-  use the Cursor `agent` tool directly, or the deprecated `/myk-cursor:prompt` until it is removed.
+  use the Cursor `agent` tool directly.

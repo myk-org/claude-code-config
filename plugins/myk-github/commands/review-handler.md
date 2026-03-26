@@ -40,7 +40,8 @@ Check if `--autorabbit` flag is present in `$ARGUMENTS`:
 
 - If `--autorabbit` is found, remove it from `$ARGUMENTS` and enable
   autorabbit mode. The remaining `$ARGUMENTS` (if any) are passed to
-  `reviews fetch` as before.
+  `reviews fetch` as before. **Store the final fetch arguments** for
+  reuse in Phase 9c polling.
 - If `--autorabbit` is not found, proceed normally.
 
 ### Phase 1: Fetch Reviews
@@ -294,8 +295,12 @@ If `rate_limited` is `false`, proceed to Step 9c.
 
 #### 9c: Fetch New Reviews
 
+Use the same arguments that were passed to `reviews fetch` in Phase 1
+(review URL if provided, otherwise auto-detect). This ensures the
+polling loop stays scoped to the same PR.
+
 ```bash
-myk-claude-tools reviews fetch
+myk-claude-tools reviews fetch [same arguments as Phase 1]
 ```
 
 Check if there are new CodeRabbit comments (comments without

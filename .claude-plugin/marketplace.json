@@ -27,12 +27,6 @@
       "source": "./plugins/myk-acpx",
       "description": "Multi-agent prompt execution via acpx (Agent Client Protocol)",
       "version": "1.5.4"
-    },
-    {
-      "name": "myk-cursor",
-      "source": "./plugins/myk-cursor",
-      "description": "Run prompts via Cursor agent CLI with optional --fix mode for direct file changes",
-      "version": "1.5.4"
     }
   ]
 }
