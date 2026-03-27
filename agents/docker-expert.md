@@ -1,6 +1,7 @@
 ---
 name: docker-expert
 description: MUST BE USED for all Docker and container-related tasks including Dockerfile creation, container orchestration, image optimization, and containerization workflows. Specializes in Docker, Docker Compose, Podman, BuildKit, and multi-architecture builds.
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Docker Expert

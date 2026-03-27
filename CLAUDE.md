@@ -33,6 +33,7 @@ claude-code-config/
 │   ├── debugger.md            # Error analysis
 │   ├── docker-expert.md       # Container orchestration
 │   ├── docs-fetcher.md        # External docs (prioritizes llms.txt)
+│   ├── frontend-expert.md     # JS/TS/React/Vue/Angular
 │   ├── git-expert.md          # Git operations
 │   ├── github-expert.md       # GitHub platform operations
 │   ├── go-expert.md           # Go development
@@ -250,6 +251,7 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 
 - **python-expert** - Python development, async, testing
 - **go-expert** - Go development, goroutines, modules
+- **frontend-expert** - JS/TS/React/Vue/Angular
 - **java-expert** - Java/Spring Boot development
 
 ### Infrastructure
@@ -264,7 +266,7 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 - **git-expert** - Git operations, branching strategies
 - **test-automator** - Test suite creation, CI pipelines
 - **test-runner** - Test execution and reporting
-- **debugger** - Error analysis and debugging
+- **debugger** - Root cause analysis (diagnosis only, delegates fixes to specialists)
 
 ### Code Review (Plugin Agents)
 

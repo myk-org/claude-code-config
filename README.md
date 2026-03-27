@@ -107,7 +107,7 @@ Your symlinks will automatically point to the updated files.
 
 - **3 plugins** with 8 commands (myk-acpx, myk-github, myk-review)
 - **CLI tool** (`myk-claude-tools`) for plugin operations
-- **16 specialized agents** for different domains (Python, Go, Java, Docker, Kubernetes, Git, etc.)
+- **16 specialized agents** for different domains (Python, Go, Java, Frontend, Docker, Kubernetes, Git, etc.)
 - **1 skill** for context-aware automation
 - **Orchestrator pattern** with automatic agent routing via CLAUDE.md
 - **Pre-commit hooks** for rule enforcement
@@ -123,13 +123,14 @@ Your symlinks will automatically point to the updated files.
 | `java-expert` | Java/Spring Boot development |
 | `bash-expert` | Shell scripting and automation |
 | `docker-expert` | Dockerfile, container orchestration |
+| `frontend-expert` | JS/TS/React/Vue/Angular |
 | `kubernetes-expert` | K8s/OpenShift, Helm, GitOps |
 | `jenkins-expert` | CI/CD pipelines, Jenkinsfiles |
 | `git-expert` | Git operations, branching strategies |
 | `github-expert` | GitHub platform operations (PRs, issues, releases) |
 | `test-automator` | Test suites, CI pipelines |
 | `test-runner` | Test execution and reporting |
-| `debugger` | Error analysis, debugging |
+| `debugger` | Root cause analysis (diagnosis only) |
 | `technical-documentation-writer` | Documentation |
 | `api-documenter` | OpenAPI/Swagger specs |
 | `docs-fetcher` | Fetches external library/framework documentation, prioritizes llms.txt |

@@ -21,6 +21,7 @@
 !agents/debugger.md
 !agents/docs-fetcher.md
 !agents/docker-expert.md
+!agents/frontend-expert.md
 !agents/git-expert.md
 !agents/github-expert.md
 !agents/go-expert.md

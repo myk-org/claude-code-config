@@ -1,6 +1,7 @@
 ---
 name: jenkins-expert
 description: MUST BE USED for all Jenkins-related code including CI/CD pipelines, Jenkinsfiles, Groovy scripts, Gradle build scripts, and Jenkins automation.
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Jenkins Expert

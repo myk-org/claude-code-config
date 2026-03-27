@@ -1,6 +1,8 @@
 ---
 name: java-expert
 description: MUST BE USED for Java code creation, modification, refactoring, and fixes. Specializes in Java development including Spring Boot, Maven, Gradle, JUnit testing, and enterprise applications.
+tools: Read, Write, Edit, Bash, Glob, Grep, LSP
+skills: [test-driven-development]
 ---
 
 # Java Expert

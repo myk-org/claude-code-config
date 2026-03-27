@@ -7,6 +7,7 @@
 | **Languages (by file type)**                                                     |                                    |
 | Python (.py)                                                                     | `python-expert`                    |
 | Go (.go)                                                                         | `go-expert`                        |
+| Frontend (JS/TS/React/Vue/Angular)                                                | `frontend-expert`                  |
 | Java (.java)                                                                     | `java-expert`                      |
 | Shell scripts (.sh)                                                              | `bash-expert`                      |
 | Markdown (.md)                                                                   | `technical-documentation-writer`   |

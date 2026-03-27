@@ -1,6 +1,8 @@
 ---
 name: python-expert
 description: MUST BE USED for Python code creation, modification, refactoring, and fixes. Specializes in idiomatic Python, async/await, testing, and modern Python development.
+tools: Read, Write, Edit, Bash, Glob, Grep, LSP
+skills: [test-driven-development]
 ---
 
 # Python Expert

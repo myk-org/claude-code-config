@@ -1,6 +1,7 @@
 ---
 name: kubernetes-expert
 description: MUST BE USED for all Kubernetes-related tasks including cluster management, workload deployment, service mesh configuration, and cloud-native application orchestration. Specializes in Kubernetes, OpenShift, Helm, and GitOps.
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Kubernetes Expert

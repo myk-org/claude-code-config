@@ -1,6 +1,7 @@
 ---
 name: technical-documentation-writer
 description: MUST BE USED when you need comprehensive, user-focused technical documentation for projects, features, or systems.
+tools: Read, Write, Edit, Glob, Grep
 ---
 
 # Technical Documentation Writer

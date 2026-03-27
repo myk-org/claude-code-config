@@ -1,6 +1,7 @@
 ---
 name: git-expert
 description: Use this agent for LOCAL git operations including commits, branching, merging, rebasing, stash, and resolving git issues. For GitHub platform operations (PRs, issues, releases), use github-expert instead. This agent will never use --no-verify flag and will delegate to appropriate specialists when encountering issues (e.g., calling python-expert for pre-commit Python issues).
+tools: Read, Bash, Glob, Grep
 color: blue
 hooks:
   PreToolUse:

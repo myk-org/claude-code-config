@@ -1,6 +1,7 @@
 ---
 name: github-expert
 description: Use this agent for all GitHub platform operations including PRs, issues, releases, repos, and workflows. Uses the `gh` CLI for all GitHub API interactions.
+tools: Read, Bash, Glob, Grep
 color: purple
 hooks:
   PreToolUse:

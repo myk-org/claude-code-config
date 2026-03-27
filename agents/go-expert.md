@@ -1,6 +1,8 @@
 ---
 name: go-expert
 description: MUST BE USED for Go code creation, modification, refactoring, and fixes. Specializes in Go development including goroutines, channels, modules, testing, and high-performance applications.
+tools: Read, Write, Edit, Bash, Glob, Grep, LSP
+skills: [test-driven-development]
 ---
 
 # Go Expert

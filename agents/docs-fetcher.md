@@ -1,6 +1,7 @@
 ---
 name: docs-fetcher
 description: Fetches current documentation for external libraries and frameworks. Prioritizes llms.txt when available, falls back to web parsing.
+tools: Read, WebFetch, WebSearch
 ---
 
 # Docs Fetcher

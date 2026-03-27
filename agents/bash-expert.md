@@ -1,6 +1,7 @@
 ---
 name: bash-expert
 description: MUST BE USED for Bash and shell scripting creation, modification, refactoring, and fixes. Specializes in Bash, Zsh, POSIX shell, automation scripts, and system administration tasks.
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Bash Expert

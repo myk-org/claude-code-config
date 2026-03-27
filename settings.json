@@ -154,6 +154,12 @@
     "Bash(uv run ~/.claude/scripts/git-protection.py:*)",
     "Bash(myk-claude-tools:*)"
   ],
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
+  },
+  "feedbackSurveyRate": 0,
   "feedbackSurveyState": {
     "lastShownTime": 1754082998309
   }
