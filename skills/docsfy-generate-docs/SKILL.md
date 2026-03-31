@@ -92,6 +92,11 @@ If generation fails, show the error and ask the user how to proceed.
 
 After generation completes (status: `ready`), create a local branch to isolate docs changes.
 
+**Note:** This phase assumes the current working directory is the target repository
+(the same repo as `<repo_url>`). If the user provided a URL for a different
+repository, inform them that the docs branch will be created in the current
+local repository and confirm before proceeding.
+
 **Extract `<project_name>`** from the repo URL: strip any trailing `/` and `.git` suffix, then take the last path segment (e.g., `docsfy` from `https://github.com/myk-org/docsfy.git`).
 
 Before switching branches, check for uncommitted changes:
@@ -126,8 +131,8 @@ The download creates a nested subdirectory: `<output_dir>/<project>-<branch>-<pr
 
 ```bash
 ls <output_dir>/<project>-<branch>-<provider>-<model>/
-mv <output_dir>/<project>-<branch>-<provider>-<model>/* <output_dir>/
-mv <output_dir>/<project>-<branch>-<provider>-<model>/.* <output_dir>/ 2>/dev/null
+mv <output_dir>/<project>-<branch>-<provider>-<model>/* <output_dir>/ || true
+mv <output_dir>/<project>-<branch>-<provider>-<model>/.* <output_dir>/ 2>/dev/null || true
 rm -rf <output_dir>/<project>-<branch>-<provider>-<model>
 ```
 
@@ -139,13 +144,15 @@ If the nested subdirectory does not exist after download, the project name or pa
 
 #### 5a. Display Docs Site Link
 
-Show the user the live documentation URL:
+Show the user the live documentation URL.
 
-```text
-Your documentation site: https://<owner>.github.io/<repo>/
-```
+Extract `<owner>` and `<repo>` from the repository URL, then construct the URL:
 
-Extract `<owner>` and `<repo>` from the repository URL.
+- If the repo name equals `<owner>.github.io` (org/user pages site):
+  `https://<owner>.github.io/`
+- Otherwise: `https://<owner>.github.io/<repo>/`
+
+Display the URL to the user.
 
 #### 5b. Offer README Simplification
 
@@ -155,10 +162,10 @@ Ask the user if they want to simplify the project README to keep it minimal and 
 
 - **Yes** → Read the current `README.md` in the repository root. Create a simplified version that keeps ONLY:
   - Project title + one-line description
-  - Link to the docs site prominently (`https://<owner>.github.io/<repo>/`)
+  - Link to the docs site prominently (use the URL from Phase 5a)
   - Quick start (e.g., docker run or install command, 5 lines max)
   - CLI install + 3-line usage example
-  - "See the [full documentation](https://<owner>.github.io/<repo>/) for everything else"
+  - "See the [full documentation](<docs_site_url>) for everything else"
   - License section
 
   Remove all other detailed content (API docs, configuration guides, detailed usage, etc.).
