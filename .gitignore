@@ -37,6 +37,8 @@
 !skills/
 !skills/agent-browser/
 !skills/agent-browser/SKILL.md
+!skills/docsfy-generate-docs/
+!skills/docsfy-generate-docs/SKILL.md
 
 # rules/
 !rules/
