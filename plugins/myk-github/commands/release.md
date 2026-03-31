@@ -125,7 +125,7 @@ Parse the JSON output from bump-version. Only `git add` the files listed in the
 `updated[]` array. If `skipped[]` is non-empty, inform the user which files were
 skipped and why before proceeding.
 
-Then create a branch, commit, push, and merge via PR:
+Then create a branch and stage files:
 
 ```bash
 BUMP_BRANCH="chore/bump-version-<VERSION>-$(date +%s)"
@@ -133,14 +133,17 @@ git checkout -b "$BUMP_BRANCH"
 git add <updated-files>
 ```
 
-If `uv.lock` exists in the project root, regenerate it after bumping:
+**MANDATORY: Sync uv.lock if it exists.** This step MUST NOT be skipped — failing to sync causes
+a dirty `uv.lock` after the release merge, requiring a separate fix commit.
 
 ```bash
-uv lock
-git add uv.lock
+if [ -f uv.lock ]; then
+    uv lock
+    git add uv.lock
+fi
 ```
 
-Then commit and push:
+Commit and push:
 
 ```bash
 git commit -m "chore: bump version to <VERSION>"
