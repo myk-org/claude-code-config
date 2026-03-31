@@ -60,5 +60,6 @@ repos:
     rev: v0.44.0
     hooks:
       - id: markdownlint
+        exclude: ^docs/
         args: [--config, .markdownlint.yaml]
         types: [markdown]

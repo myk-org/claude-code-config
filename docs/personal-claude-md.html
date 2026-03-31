@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal CLAUDE.md - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link active" aria-current="page">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="personal-claudemd">Personal CLAUDE.md</h1>
+<p>Use a personal <code>CLAUDE.md</code> when you want Claude to follow your own preferences in this repository without editing shared files like <code>AI_REVIEW.md</code>, <code>rules/</code>, <code>scripts/</code>, or <code>settings.json</code>. It is the right place for personal style, communication, environment, and workflow notes.</p>
+<p>This repository already includes a starting template in <code>CLAUDE.md.example</code>.</p>
+<h2 id="quick-start">Quick Start</h2>
+<p>Copy the template and edit it for your own workflow:</p>
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>CLAUDE.md.example<span class="w"> </span>CLAUDE.md
+</code></pre></div>
+
+<p>The template starts like this:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># Personal Claude Configuration Template</span>
+
+This is a template for your personal <span class="sb">`CLAUDE.md`</span> file. Copy this to <span class="sb">`CLAUDE.md`</span> and customize it to your preferences.
+
+<span class="k">&gt; </span><span class="ge">**Note**: Orchestrator rules (agent routing, delegation, etc.) auto-load from `.claude/rules/` - you don&#39;t need to include them here. This file is for YOUR personal preferences only.</span>
+</code></pre></div>
+
+<p>The template already gives you sections for:</p>
+<ul>
+<li>code style preferences</li>
+<li>communication preferences</li>
+<li>project context</li>
+<li>tools and environment</li>
+<li>custom personal rules</li>
+<li>rule overrides</li>
+</ul>
+<p>A real example from the template:</p>
+<div class="highlight"><pre><span></span><code># Example preferences:
+- Be concise - skip explanations unless I ask
+- Always explain complex decisions
+- Use technical terminology freely
+- Provide context for breaking changes
+- Highlight security implications
+</code></pre></div>
+
+<blockquote>
+<p><strong>Tip:</strong> Start small. A short <code>CLAUDE.md</code> with a few strong preferences is usually more useful than a long list of vague rules.</p>
+</blockquote>
+<h2 id="where-to-put-it">Where To Put It</h2>
+<p>The repository tooling supports either of these locations:</p>
+<ul>
+<li><code>CLAUDE.md</code></li>
+<li><code>.claude/CLAUDE.md</code></li>
+</ul>
+<p>If both exist, <code>CLAUDE.md</code> wins because it is checked first.</p>
+<p>Use <code>CLAUDE.md</code> when you want the simplest setup. Use <code>.claude/CLAUDE.md</code> when you want to keep local AI configuration inside an ignored <code>.claude/</code> directory.</p>
+<h2 id="why-it-stays-personal">Why It Stays Personal</h2>
+<p>This repository ignores everything by default and then explicitly re-includes tracked files. The top of <code>.gitignore</code> shows the pattern:</p>
+<div class="highlight"><pre><span></span><code># Ignore everything by default
+# This config integrates into ~/.claude so we must be explicit about what we track
+*
+
+# Core config files
+!.coderabbit.yaml
+!.gitignore
+!LICENSE
+!AI_REVIEW.md
+!README.md
+!settings.json
+!statusline.sh
+</code></pre></div>
+
+<p><code>CLAUDE.md</code> is not whitelisted there, which makes it a good place for local preferences in this repo.</p>
+<p>That means you can tune Claude for your own work without creating shared repository changes just to store personal taste.</p>
+<blockquote>
+<p><strong>Note:</strong> <code>CLAUDE.md.example</code> is the tracked template. Your own <code>CLAUDE.md</code> is the personal working copy.</p>
+</blockquote>
+<h2 id="what-belongs-in-personal-claudemd">What Belongs In Personal <code>CLAUDE.md</code></h2>
+<p>Good things to put here:</p>
+<ul>
+<li>how concise or detailed you want responses</li>
+<li>your preferred editors, shells, runtimes, or package managers</li>
+<li>local workflow habits you want Claude to respect</li>
+<li>project-specific reminders that matter to your daily work</li>
+<li>narrow, well-documented overrides for your own workflow</li>
+</ul>
+<p>The template includes practical sections for exactly that:</p>
+<div class="highlight"><pre><span></span><code>## Code Style Preferences
+## Communication Preferences
+## Project Context
+## Tools &amp; Environment
+## Custom Personal Rules
+## Rule Overrides
+</code></pre></div>
+
+<p>A real tools-and-environment example from the template:</p>
+<div class="highlight"><pre><span></span><code># Example preferences:
+- Editor: VSCode with Pylance
+- Terminal: zsh with oh-my-zsh
+- Container runtime: Podman (not Docker)
+- Cloud provider: AWS
+- Preferred testing frameworks:
+  - Python: pytest
+  - JavaScript: Jest
+  - Go: standard testing package
+</code></pre></div>
+
+<h2 id="how-it-is-discovered">How It Is Discovered</h2>
+<p>The repository’s PR helper looks for <code>CLAUDE.md</code> content in a fixed order in <code>myk_claude_tools/pr/claude_md.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check local ./CLAUDE.md</span>
+<span class="n">local_claude_md</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;./CLAUDE.md&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">local_claude_md</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">local_claude_md</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+    <span class="k">return</span>
+
+<span class="c1"># Check local ./.claude/CLAUDE.md</span>
+<span class="n">local_claude_dir_md</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;./.claude/CLAUDE.md&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">local_claude_dir_md</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">local_claude_dir_md</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+    <span class="k">return</span>
+
+<span class="c1"># Fetch upstream CLAUDE.md</span>
+<span class="n">content</span> <span class="o">=</span> <span class="n">fetch_from_github</span><span class="p">(</span><span class="n">pr_info</span><span class="o">.</span><span class="n">owner</span><span class="p">,</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span> <span class="s2">&quot;CLAUDE.md&quot;</span><span class="p">)</span>
+
+<span class="c1"># Fetch upstream .claude/CLAUDE.md</span>
+<span class="n">content</span> <span class="o">=</span> <span class="n">fetch_from_github</span><span class="p">(</span><span class="n">pr_info</span><span class="o">.</span><span class="n">owner</span><span class="p">,</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span> <span class="s2">&quot;.claude/CLAUDE.md&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>In practice, the lookup order is:</p>
+<ol>
+<li>local <code>./CLAUDE.md</code></li>
+<li>local <code>./.claude/CLAUDE.md</code></li>
+<li>remote <code>CLAUDE.md</code></li>
+<li>remote <code>.claude/CLAUDE.md</code></li>
+</ol>
+<p>This matters because a personal file in your local clone can be picked up before anything fetched from GitHub.</p>
+<h2 id="how-the-repo-uses-it">How The Repo Uses It</h2>
+<h3 id="pr-review">PR review</h3>
+<p>The GitHub PR review workflow has an explicit <code>CLAUDE.md</code> fetch step:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>pr<span class="w"> </span>claude-md<span class="w"> </span><span class="o">{</span>pr_number<span class="o">}</span>
+</code></pre></div>
+
+<p>That content is then passed into the review agents alongside the diff. In other words, if you keep stable review-relevant conventions in your personal <code>CLAUDE.md</code>, the review flow can use them.</p>
+<h3 id="peer-review">Peer review</h3>
+<p>The ACPX peer review workflow checks whether <code>CLAUDE.md</code> exists and, if it does, tells the peer agent to read it:</p>
+<div class="highlight"><pre><span></span><code>IMPORTANT: This project has a CLAUDE.md file with coding conventions
+and project guidelines. Read it before reviewing. Flag any violations
+of those conventions as findings.
+</code></pre></div>
+
+<p>This makes <code>CLAUDE.md</code> useful for conventions you want reviewers to enforce consistently.</p>
+<blockquote>
+<p><strong>Warning:</strong> If you ever choose to track a <code>CLAUDE.md</code> in another project, its contents may be read by review tooling and fetched remotely. Do not put secrets, tokens, or private credentials in it.</p>
+</blockquote>
+<h2 id="using-the-rule-overrides-section">Using The Rule Overrides Section</h2>
+<p>The template includes a <code>Rule Overrides</code> section for personal, targeted exceptions. These are written as readable instructions, not as a replacement for tracked repo configuration.</p>
+<p>Real examples from <code>CLAUDE.md.example</code>:</p>
+<div class="highlight"><pre><span></span><code># IGNORE RULE: 20-code-review-loop.md
+# Reason: Working on quick prototypes, skip mandatory code review
+
+# OVERRIDE: Allow direct Bash usage
+# For simple commands (ls, pwd, cd), allow orchestrator to use Bash directly
+# instead of delegating to bash-expert
+
+# ROUTE OVERRIDE: Python tests
+# Route Python test execution to test-automator instead of python-expert
+
+# CONDITIONAL: Code review for critical files only
+# Only enforce code review for files in: src/core/, src/security/
+# Skip review for: tests/, docs/, scripts/
+</code></pre></div>
+
+<p>The template also shows a more structured style with scope and reason:</p>
+<div class="highlight"><pre><span></span><code># My Custom Workflow Overrides
+
+# 1. Skip code review for documentation
+IGNORE RULE: 20-code-review-loop.md
+SCOPE: **/*.md, docs/**/*
+
+# 2. Allow direct bash for git commands
+OVERRIDE: Git operations can use Bash directly
+REASON: Git commands are simple and don&#39;t need git-expert delegation
+</code></pre></div>
+
+<p>When you use overrides:</p>
+<ul>
+<li>keep them narrow</li>
+<li>include a reason</li>
+<li>include scope when possible</li>
+<li>review them periodically</li>
+<li>remove them when they are no longer useful</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> If an override would help everyone, it probably belongs in a tracked shared rule instead of your personal file.</p>
+</blockquote>
+<h2 id="what-personal-overrides-cannot-change">What Personal Overrides Cannot Change</h2>
+<p>Personal guidance is not the same thing as changing repository enforcement.</p>
+<p>For example, <code>scripts/rule-enforcer.py</code> denies direct <code>python</code>, <code>python3</code>, <code>pip</code>, <code>pip3</code>, and <code>pre-commit</code> commands in favor of <code>uv</code>, <code>uvx</code>, and <code>prek</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_forbidden_python_command</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># Allow uv/uvx commands</span>
+    <span class="k">if</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;uv &quot;</span><span class="p">,</span> <span class="s2">&quot;uvx &quot;</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Block direct python/pip</span>
+    <span class="n">forbidden</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;python &quot;</span><span class="p">,</span> <span class="s2">&quot;python3 &quot;</span><span class="p">,</span> <span class="s2">&quot;pip &quot;</span><span class="p">,</span> <span class="s2">&quot;pip3 &quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">forbidden</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_forbidden_precommit_command</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># Block direct pre-commit commands</span>
+    <span class="k">return</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;pre-commit &quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The test suite confirms that behavior in <code>tests/test_rule_enforcer.py</code>: commands like <code>python script.py</code> and <code>pre-commit run --all-files</code> are denied, while <code>uv run script.py</code>, <code>uvx ruff check .</code>, and <code>prek run --all-files</code> are allowed.</p>
+<p>So a personal note like “use <code>python</code> directly” does not override that hook. Shared hook behavior still lives in tracked configuration and scripts.</p>
+<h2 id="keep-shared-changes-separate">Keep Shared Changes Separate</h2>
+<p>Use this rule of thumb:</p>
+<table>
+<thead>
+<tr>
+<th>Put it in personal <code>CLAUDE.md</code></th>
+<th>Change a tracked shared file instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>response tone and detail level</td>
+<td>team-wide documentation or project guidance</td>
+</tr>
+<tr>
+<td>preferred editor, shell, runtime, package manager</td>
+<td>shared hooks and permissions</td>
+</tr>
+<tr>
+<td>local workflow preferences</td>
+<td>repository rule files in <code>rules/</code></td>
+</tr>
+<tr>
+<td>narrow personal overrides</td>
+<td><code>settings.json</code> behavior</td>
+</tr>
+<tr>
+<td>personal reminders for review</td>
+<td>shared project context in <code>AI_REVIEW.md</code></td>
+</tr>
+</tbody>
+</table>
+<p>This also applies to automated checks. Repository validation is configured separately in <code>.pre-commit-config.yaml</code>, for example:</p>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/astral-sh/ruff-pre-commit</span>
+<span class="w">  </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ruff</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ruff-format</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/pre-commit/mirrors-mypy</span>
+<span class="w">  </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mypy</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/igorshubovych/markdownlint-cli</span>
+<span class="w">  </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">markdownlint</span>
+</code></pre></div>
+
+<p>Your personal <code>CLAUDE.md</code> can ask Claude to write in a certain style, but it does not disable tracked linting, typing, or documentation checks.</p>
+<h2 id="optional-plugin-support">Optional Plugin Support</h2>
+<p>The repo enables the official <code>claude-md-management</code> plugin in <code>settings.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;enabledPlugins&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;claude-md-management@claude-plugins-official&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The session-start check also looks for <code>claude-md-management</code> as an optional plugin. That means the repository is ready to work well with the official <code>CLAUDE.md</code> management tooling, but you can still use the template and lookup behavior without editing shared repository files.</p>
+<h2 id="recommended-workflow">Recommended Workflow</h2>
+<ol>
+<li>Copy <code>CLAUDE.md.example</code> to <code>CLAUDE.md</code>.</li>
+<li>Remove sections you do not need.</li>
+<li>Add only the preferences you actually care about.</li>
+<li>Put stable review-relevant conventions in the file if you want PR and peer-review tools to use them.</li>
+<li>Keep shared policy changes out of it and update tracked repo files only when you intentionally want to change behavior for everyone.</li>
+</ol>
+<p>A good personal <code>CLAUDE.md</code> is short, specific, and local. It should make Claude easier to work with for you, without turning personal preferences into shared repository policy.</p>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="first-run-checks.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">First-Run Checks</span>
+                </a>
+
+
+                <a href="settings-json-reference.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">settings.json Reference</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#where-to-put-it">Where To Put It</a></li>
+<li><a href="#why-it-stays-personal">Why It Stays Personal</a></li>
+<li><a href="#what-belongs-in-personal-claudemd">What Belongs In Personal CLAUDE.md</a></li>
+<li><a href="#how-it-is-discovered">How It Is Discovered</a></li>
+<li><a href="#how-the-repo-uses-it">How The Repo Uses It</a><ul>
+<li><a href="#pr-review">PR review</a></li>
+<li><a href="#peer-review">Peer review</a></li>
+</ul>
+</li>
+<li><a href="#using-the-rule-overrides-section">Using The Rule Overrides Section</a></li>
+<li><a href="#what-personal-overrides-cannot-change">What Personal Overrides Cannot Change</a></li>
+<li><a href="#keep-shared-changes-separate">Keep Shared Changes Separate</a></li>
+<li><a href="#optional-plugin-support">Optional Plugin Support</a></li>
+<li><a href="#recommended-workflow">Recommended Workflow</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

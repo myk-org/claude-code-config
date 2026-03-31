@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slash Command Reference - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link active" aria-current="page">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="slash-command-reference">Slash Command Reference</h1>
+<p>This repository bundles eight slash commands across three plugins:</p>
+<table>
+<thead>
+<tr>
+<th>Plugin</th>
+<th>Command</th>
+<th>Best for</th>
+<th>Triggered workflow</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>myk-github</code></td>
+<td><code>/myk-github:coderabbit-rate-limit</code></td>
+<td>Waiting out a CodeRabbit cooldown</td>
+<td><code>coderabbit check</code> -&gt; <code>coderabbit trigger</code></td>
+</tr>
+<tr>
+<td><code>myk-github</code></td>
+<td><code>/myk-github:pr-review</code></td>
+<td>Reviewing an open GitHub PR and posting selected findings</td>
+<td><code>pr diff</code> -&gt; <code>pr claude-md</code> -&gt; 3 reviewer tasks -&gt; <code>pr post-comment</code></td>
+</tr>
+<tr>
+<td><code>myk-github</code></td>
+<td><code>/myk-github:refine-review</code></td>
+<td>Polishing your own pending GitHub review comments before submission</td>
+<td><code>reviews pending-fetch</code> -&gt; AI refinement -&gt; <code>reviews pending-update</code></td>
+</tr>
+<tr>
+<td><code>myk-github</code></td>
+<td><code>/myk-github:release</code></td>
+<td>Validating, versioning, and publishing a GitHub release</td>
+<td><code>release info</code> -&gt; <code>release detect-versions</code> -&gt; optional <code>release bump-version</code> -&gt; <code>release create</code></td>
+</tr>
+<tr>
+<td><code>myk-github</code></td>
+<td><code>/myk-github:review-handler</code></td>
+<td>Working through human, Qodo, and CodeRabbit feedback end to end</td>
+<td><code>reviews fetch</code> -&gt; decision/fix/test loop -&gt; <code>reviews post</code> -&gt; <code>reviews store</code></td>
+</tr>
+<tr>
+<td><code>myk-review</code></td>
+<td><code>/myk-review:local</code></td>
+<td>Reviewing local changes before or instead of a PR</td>
+<td><code>git diff</code> -&gt; 3 reviewer tasks</td>
+</tr>
+<tr>
+<td><code>myk-review</code></td>
+<td><code>/myk-review:query-db</code></td>
+<td>Querying stored review history and analytics</td>
+<td><code>db stats|patterns|dismissed|query|find-similar</code></td>
+</tr>
+<tr>
+<td><code>myk-acpx</code></td>
+<td><code>/myk-acpx:prompt</code></td>
+<td>Sending prompts to ACP-compatible coding agents through <code>acpx</code></td>
+<td><code>acpx</code> session, exec, fix, or peer workflow</td>
+</tr>
+</tbody>
+</table>
+<p>Most of the GitHub and review commands are orchestration layers over the bundled helper CLI:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[project.scripts]</span>
+<span class="n">myk-claude-tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myk_claude_tools.cli:main&quot;</span>
+</code></pre></div>
+
+<p>The slash command metadata itself is defined in each command file. A typical example looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Review a GitHub PR and post inline comments on selected findings</span>
+<span class="nt">argument-hint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">PR_NUMBER|PR_URL</span><span class="p p-Indicator">]</span>
+<span class="nt">allowed-tools</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> The <code>allowed-tools</code> values below come from each command's frontmatter. They describe the command's intended tool budget. Your local Claude Code installation still needs the matching executables and permissions.</p>
+</blockquote>
+<h2 id="shared-prerequisites">Shared Prerequisites</h2>
+<ul>
+<li><code>myk-claude-tools</code> backs most <code>myk-github</code> commands and <code>/myk-review:query-db</code>.</li>
+<li><code>gh</code> is required for GitHub PR, comment, and release operations.</li>
+<li><code>git</code> is required anywhere the workflow inspects or validates the local worktree.</li>
+<li><code>acpx</code> plus the underlying agent CLI are required for <code>/myk-acpx:prompt</code>.</li>
+<li><code>/myk-github:pr-review</code> and <code>/myk-review:local</code> both expect the reviewer agents <code>superpowers:code-reviewer</code>, <code>pr-review-toolkit:code-reviewer</code>, and <code>feature-dev:code-reviewer</code> to be available.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> When a command checks for <code>myk-claude-tools</code> and cannot find it, the command docs consistently instruct Claude to offer <code>uv tool install myk-claude-tools</code>.</p>
+</blockquote>
+<h2 id="allowed-tools-cheat-sheet">Allowed Tools Cheat Sheet</h2>
+<table>
+<thead>
+<tr>
+<th>Tool token</th>
+<th>What it means in practice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Bash(myk-claude-tools:*)</code></td>
+<td>Run the repo's helper CLI subcommands such as <code>pr diff</code>, <code>reviews fetch</code>, or <code>release info</code></td>
+</tr>
+<tr>
+<td><code>Bash(gh:*)</code></td>
+<td>Call GitHub CLI for PRs, GraphQL, comments, and releases</td>
+</tr>
+<tr>
+<td><code>Bash(git:*)</code></td>
+<td>Inspect or update local git state</td>
+</tr>
+<tr>
+<td><code>Bash(acpx:*)</code></td>
+<td>Run ACP-compatible agent CLIs through <code>acpx</code></td>
+</tr>
+<tr>
+<td><code>AskUserQuestion</code></td>
+<td>Require an explicit choice or confirmation from you</td>
+</tr>
+<tr>
+<td><code>Task</code></td>
+<td>Launch structured parallel review tasks</td>
+</tr>
+<tr>
+<td><code>Agent</code></td>
+<td>Delegate implementation or specialist analysis work</td>
+</tr>
+<tr>
+<td><code>Edit</code> / <code>Write</code></td>
+<td>Update temp handoff files, or in <code>myk-acpx:prompt</code>, allow writable workflows</td>
+</tr>
+<tr>
+<td><code>Read</code>, <code>Glob</code>, <code>Grep</code></td>
+<td>Read and search the workspace, mainly for <code>myk-acpx:prompt</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="myk-github"><code>myk-github</code></h2>
+<p>The <code>myk-github</code> plugin bundles GitHub-facing workflows: PR review, review follow-up, release automation, and CodeRabbit cooldown handling.</p>
+<h3 id="myk-githubcoderabbit-rate-limit"><code>/myk-github:coderabbit-rate-limit</code></h3>
+<p>Use this when CodeRabbit has rate-limited a PR and you want Claude to wait, retrigger the review, and watch for it to start.</p>
+<ul>
+<li><code>argument-hint</code>: <code>[PR_NUMBER|PR_URL]</code></li>
+<li><code>allowed-tools</code>: <code>Bash(myk-claude-tools:*)</code>, <code>Bash(uv:*)</code>, <code>Bash(git:*)</code>, <code>Bash(gh:*)</code></li>
+</ul>
+<p>Actual usage examples:</p>
+<div class="highlight"><pre><span></span><code>/myk-github:coderabbit-rate-limit
+/myk-github:coderabbit-rate-limit 123
+/myk-github:coderabbit-rate-limit https://github.com/owner/repo/pull/123
+</code></pre></div>
+
+<p>What it does:</p>
+<ol>
+<li>Resolves the PR from a URL, a PR number, or the current branch.</li>
+<li>Runs the helper CLI to check CodeRabbit's current status.</li>
+<li>If the PR is rate-limited, adds a 30-second safety buffer and triggers a fresh <code>@coderabbitai review</code>.</li>
+<li>Polls every 60 seconds for up to 10 minutes to confirm the review has started.</li>
+</ol>
+<p>The core helper calls are exactly these:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>coderabbit<span class="w"> </span>check<span class="w"> </span>&lt;owner/repo&gt;<span class="w"> </span>&lt;pr_number&gt;
+myk-claude-tools<span class="w"> </span>coderabbit<span class="w"> </span>trigger<span class="w"> </span>&lt;owner/repo&gt;<span class="w"> </span>&lt;pr_number&gt;<span class="w"> </span>--wait<span class="w"> </span>&lt;wait_seconds<span class="w"> </span>+<span class="w"> </span><span class="m">30</span>&gt;
+</code></pre></div>
+
+<p>A few implementation details matter here:</p>
+<ul>
+<li>The rate-limit detector looks for CodeRabbit's summary comment on the PR and parses the cooldown text from that comment.</li>
+<li>The trigger flow treats two consecutive "summary comment disappeared" checks as success, because that usually means CodeRabbit replaced the summary while starting a new review.</li>
+<li>If the PR is not rate-limited, the command exits early instead of waiting.</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> This workflow depends on CodeRabbit's summary comment being present on the PR. If that comment is missing, the check step fails instead of guessing.</p>
+</blockquote>
+<h3 id="myk-githubpr-review"><code>/myk-github:pr-review</code></h3>
+<p>Use this when you want Claude to review an actual GitHub PR, merge findings from three review agents, and post only the findings you approve.</p>
+<ul>
+<li><code>argument-hint</code>: <code>[PR_NUMBER|PR_URL]</code></li>
+<li><code>allowed-tools</code>: <code>Bash(myk-claude-tools:*)</code>, <code>Bash(uv:*)</code>, <code>Bash(git:*)</code>, <code>Bash(gh:*)</code>, <code>AskUserQuestion</code>, <code>Task</code></li>
+</ul>
+<p>Actual usage examples:</p>
+<div class="highlight"><pre><span></span><code>/myk-github:pr-review
+/myk-github:pr-review 123
+/myk-github:pr-review https://github.com/owner/repo/pull/123
+</code></pre></div>
+
+<p>What it does:</p>
+<ol>
+<li>Detects the PR from the current branch when you do not pass an argument.</li>
+<li>Fetches PR metadata, full diff text, and changed-file data through <code>myk-claude-tools pr diff</code>.</li>
+<li>Fetches project rules through <code>myk-claude-tools pr claude-md</code>. The helper checks local <code>CLAUDE.md</code> or <code>.claude/CLAUDE.md</code> first when you are already in the target repo, then falls back to GitHub.</li>
+<li>Runs three review agents in parallel and merges their findings.</li>
+<li>Shows the findings grouped by severity and asks which ones to post.</li>
+<li>Posts the selected findings back to GitHub as a single review.</li>
+</ol>
+<p>The reviewer trio is defined directly in the command workflow:</p>
+<div class="highlight"><pre><span></span><code>- superpowers:code-reviewer
+- pr-review-toolkit:code-reviewer
+- feature-dev:code-reviewer
+</code></pre></div>
+
+<p>One important detail for fork PRs: the command uses <code>gh repo view</code> to determine the base repository context. That avoids accidentally treating the fork as the target repo.</p>
+<p>When the posting step runs, it uses the helper CLI's JSON contract for inline review comments:</p>
+<div class="highlight"><pre><span></span><code><span class="n">JSON</span> <span class="n">Input</span> <span class="n">Format</span> <span class="p">(</span><span class="n">array</span> <span class="n">of</span> <span class="n">comments</span><span class="p">):</span>
+    <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/main.py&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;line&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="s2">&quot;### [CRITICAL] SQL Injection</span><span class="se">\n\n</span><span class="s2">Description...&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/utils.py&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;line&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="s2">&quot;### [WARNING] Missing error handling</span><span class="se">\n\n</span><span class="s2">Description...&quot;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+
+<span class="n">Severity</span> <span class="n">Markers</span><span class="p">:</span>
+    <span class="o">-</span> <span class="c1">### [CRITICAL] Title - For critical security/functionality issues</span>
+    <span class="o">-</span> <span class="c1">### [WARNING] Title  - For important but non-critical issues</span>
+    <span class="o">-</span> <span class="c1">### [SUGGESTION] Title - For code improvements and suggestions</span>
+</code></pre></div>
+
+<p>That means the final post back to GitHub is not just free-form prose. It is a structured review with per-line comments and a summary body.</p>
+<blockquote>
+<p><strong>Tip:</strong> Inline review comments only work on lines that are actually part of the PR diff. If posting fails, the helper CLI specifically points to stale line numbers, wrong file paths, or a stale PR head SHA as the most common causes.</p>
+</blockquote>
+<h3 id="myk-githubrefine-review"><code>/myk-github:refine-review</code></h3>
+<p>Use this when you have already started a review in GitHub, added draft comments, and want Claude to polish those comments before you submit them.</p>
+<ul>
+<li><code>argument-hint</code>: <code>&lt;PR_URL&gt;</code></li>
+<li><code>allowed-tools</code>: <code>Bash(myk-claude-tools:*)</code>, <code>Bash(uv:*)</code>, <code>AskUserQuestion</code>, <code>Edit(/tmp/claude/**)</code>, <code>Write(/tmp/claude/**)</code></li>
+</ul>
+<p>Actual usage example:</p>
+<div class="highlight"><pre><span></span><code>/myk-github:refine-review https://github.com/owner/repo/pull/123
+</code></pre></div>
+
+<p>What it does:</p>
+<ol>
+<li>Fetches your own pending review with <code>myk-claude-tools reviews pending-fetch "&lt;PR_URL&gt;"</code>.</li>
+<li>Loads the pending review comments plus PR diff context from a temp JSON file.</li>
+<li>Generates refined wording for each comment while preserving the original technical intent.</li>
+<li>Shows you each original comment alongside the refined version.</li>
+<li>Lets you accept all, accept specific comments, keep originals, cancel, or replace individual comments with custom text.</li>
+<li>Updates the temp JSON and runs <code>myk-claude-tools reviews pending-update</code>, optionally with <code>--submit</code>.</li>
+</ol>
+<p>The backing helper calls are straightforward:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>reviews<span class="w"> </span>pending-fetch<span class="w"> </span><span class="s2">&quot;&lt;PR_URL&gt;&quot;</span>
+myk-claude-tools<span class="w"> </span>reviews<span class="w"> </span>pending-update<span class="w"> </span><span class="s2">&quot;&lt;json_path&gt;&quot;</span><span class="w"> </span>--submit
+</code></pre></div>
+
+<p>The workflow is intentionally conservative:</p>
+<ul>
+<li>It only updates <code>refined_body</code> and <code>status</code> for each comment during the accept/reject step.</li>
+<li>It only submits the review if you explicitly choose a submit action.</li>
+<li>The lower-level fetcher only works against the authenticated user's latest <code>PENDING</code> review on that PR.</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> This command requires a full PR URL. A bare PR number is not enough.</p>
+<p><strong>Note:</strong> The pending-review fetcher stores diff context in the temp JSON, but it truncates very large diffs after 50,000 characters. On very large PRs, refinement happens with shortened context instead of the full diff.</p>
+</blockquote>
+<h3 id="myk-githubrelease"><code>/myk-github:release</code></h3>
+<p>Use this when you want Claude to validate the repo state, generate a conventional-commit changelog, optionally bump version files, and publish a GitHub release.</p>
+<ul>
+<li><code>argument-hint</code>: <code>[--dry-run] [--prerelease] [--draft] [--target &lt;branch&gt;] [--tag-match &lt;pattern&gt;]</code></li>
+<li><code>allowed-tools</code>: <code>Bash(myk-claude-tools:*)</code>, <code>Bash(uv:*)</code>, <code>Bash(git:*)</code>, <code>Bash(gh:*)</code>, <code>AskUserQuestion</code></li>
+</ul>
+<p>Actual usage examples:</p>
+<div class="highlight"><pre><span></span><code>/myk-github:release
+/myk-github:release --dry-run
+/myk-github:release --prerelease
+/myk-github:release --draft
+</code></pre></div>
+
+<p>What it does:</p>
+<ol>
+<li>Runs <code>myk-claude-tools release info</code> to validate branch, worktree cleanliness, and sync with remote.</li>
+<li>Runs <code>myk-claude-tools release detect-versions</code> to discover version files in the current repository.</li>
+<li>Parses commits since the last matching tag and proposes a major, minor, or patch bump using conventional-commit rules.</li>
+<li>Shows you the proposed version and changelog, and lets you override the bump type or exclude detected version files.</li>
+<li>If version files are being updated, runs <code>myk-claude-tools release bump-version</code>.</li>
+<li>Creates a bump branch, commits, pushes, opens a PR, and merges it.</li>
+<li>Creates the GitHub release with <code>myk-claude-tools release create</code>.</li>
+</ol>
+<p>The release helper exposes these subcommands:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>release<span class="w"> </span>info<span class="w"> </span>--target<span class="w"> </span>&lt;branch&gt;<span class="w"> </span>--tag-match<span class="w"> </span>&lt;pattern&gt;
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>detect-versions
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>bump-version<span class="w"> </span>&lt;VERSION&gt;<span class="w"> </span>--files<span class="w"> </span>&lt;file1&gt;<span class="w"> </span>--files<span class="w"> </span>&lt;file2&gt;
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>create<span class="w"> </span>&lt;owner/repo&gt;<span class="w"> </span>&lt;tag&gt;<span class="w"> </span><span class="s2">&quot;&lt;changelog_file&gt;&quot;</span>
+</code></pre></div>
+
+<p>Version detection is broader than just Python packages. The implementation scans these root-level files:</p>
+<div class="highlight"><pre><span></span><code><span class="n">_ROOT_SCANNERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">,</span> <span class="n">_parse_pyproject_toml</span><span class="p">,</span> <span class="s2">&quot;pyproject&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;package.json&quot;</span><span class="p">,</span> <span class="n">_parse_package_json</span><span class="p">,</span> <span class="s2">&quot;package_json&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;setup.cfg&quot;</span><span class="p">,</span> <span class="n">_parse_setup_cfg</span><span class="p">,</span> <span class="s2">&quot;setup_cfg&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Cargo.toml&quot;</span><span class="p">,</span> <span class="n">_parse_cargo_toml</span><span class="p">,</span> <span class="s2">&quot;cargo&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;build.gradle&quot;</span><span class="p">,</span> <span class="n">_parse_gradle</span><span class="p">,</span> <span class="s2">&quot;gradle&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;build.gradle.kts&quot;</span><span class="p">,</span> <span class="n">_parse_gradle</span><span class="p">,</span> <span class="s2">&quot;gradle&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>It also searches Python <code>__init__.py</code> and <code>version.py</code> files for <code>__version__</code>.</p>
+<p>Important behaviors to know:</p>
+<ul>
+<li>If you are already on a version branch such as <code>v2.10</code>, the validation step auto-detects that branch as the target and scopes tag discovery to <code>v2.10.*</code>.</li>
+<li>The bump step expects a version without the <code>v</code> prefix, such as <code>1.2.0</code>.</li>
+<li>If <code>uv.lock</code> exists, the workflow regenerates it after bumping version files.</li>
+<li>The low-level <code>release create</code> helper warns if the tag does not look like semantic versioning (<code>vX.Y.Z</code>), but it does not hard-block the release.</li>
+</ul>
+<p>User choices during approval include:</p>
+<ul>
+<li><code>yes</code> to continue with the proposed version and all detected files</li>
+<li><code>major</code>, <code>minor</code>, or <code>patch</code> to override the proposed bump</li>
+<li><code>exclude N</code> to remove one detected version file from the bump</li>
+<li><code>no</code> to cancel the release</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> This workflow can modify version files, create a branch, push commits, open and merge a PR, and publish a GitHub release. Use <code>--dry-run</code> first if you want a preview without creating anything.</p>
+</blockquote>
+<h3 id="myk-githubreview-handler"><code>/myk-github:review-handler</code></h3>
+<p>Use this when you want the full PR review follow-up workflow: fetch all review feedback, choose what to address, delegate fixes, run tests, reply to reviewers, and store the outcome in the local review database.</p>
+<ul>
+<li><code>argument-hint</code>: <code>[--autorabbit] [REVIEW_URL]</code></li>
+<li><code>allowed-tools</code>: <code>Bash(myk-claude-tools:*)</code>, <code>Bash(uv:*)</code>, <code>Bash(git:*)</code>, <code>Bash(gh:*)</code>, <code>AskUserQuestion</code>, <code>Task</code>, <code>Agent</code></li>
+</ul>
+<p>Actual usage examples:</p>
+<div class="highlight"><pre><span></span><code>/myk-github:review-handler
+/myk-github:review-handler https://github.com/owner/repo/pull/123#pullrequestreview-456
+/myk-github:review-handler --autorabbit
+</code></pre></div>
+
+<p>What it does:</p>
+<ol>
+<li>Runs <code>myk-claude-tools reviews fetch</code>, usually against the current branch's PR.</li>
+<li>Groups unresolved feedback by source: human, Qodo, and CodeRabbit.</li>
+<li>Shows every item in mandatory tables, including auto-skipped items, and asks you what to address.</li>
+<li>Delegates approved fixes to specialist agents with the full review thread, not a summary.</li>
+<li>Requires a fully green test run before moving on.</li>
+<li>Optionally asks whether to commit and push your changes.</li>
+<li>Posts replies with <code>myk-claude-tools reviews post</code>.</li>
+<li>Stores the finished review record in <code>.claude/data/reviews.db</code> with <code>myk-claude-tools reviews store</code>.</li>
+</ol>
+<p>The table format is defined directly in the command:</p>
+<div class="highlight"><pre><span></span><code>## Review Items: {source} ({total} total, {auto_skipped} auto-skipped)
+
+| # | Priority | File | Line | Summary | Status |
+|---|----------|------|------|---------|--------|
+| 1 | HIGH | src/storage.py | 231 | Backfill destroys historical chronology | Pending |
+| 2 | MEDIUM | src/html_report.py | 1141 | Add/delete leaves badges stale | Pending |
+| 3 | LOW | src/utils.py | 42 | Unused import | Auto-skipped (skipped): &quot;style only&quot; |
+| 4 | LOW | src/config.py | 15 | Missing validation | Auto-skipped (addressed): &quot;added in prev PR&quot; |
+</code></pre></div>
+
+<p>The response options are also part of the command contract:</p>
+<div class="highlight"><pre><span></span><code>Respond with:
+- &#39;yes&#39; / &#39;no&#39; (per item number — if &#39;no&#39;, ask for a reason)
+- &#39;all&#39; — address all remaining pending items
+- &#39;skip human/qodo/coderabbit&#39; — skip remaining from that source (ask for a reason)
+- &#39;skip ai&#39; — skip all AI sources (qodo + coderabbit) (ask for a reason)
+</code></pre></div>
+
+<p>A few user-facing details are easy to miss:</p>
+<ul>
+<li><code>reviews fetch</code> auto-detects the PR from the current branch and can fall back to an <code>upstream</code> remote when needed.</li>
+<li>CodeRabbit review bodies can contain outside-diff, nitpick, and duplicate comments that do not have normal GitHub review threads. The post step handles those through consolidated PR comments instead of per-thread replies.</li>
+<li>Human threads with <code>skipped</code> or <code>not_addressed</code> status stay unresolved on purpose, so the reviewer can follow up. Qodo and CodeRabbit replies are resolved after posting.</li>
+<li>After a successful <code>reviews store</code>, the JSON handoff file is deleted and the database entry is appended rather than updated.</li>
+</ul>
+<p>The storage step is described in the helper CLI itself:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@reviews</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;json_path&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">reviews_store</span><span class="p">(</span><span class="n">json_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="s2">&quot;&quot;&quot;Store completed review to database.</span>
+
+<span class="s2">    Stores the completed review JSON to SQLite database for analytics.</span>
+<span class="s2">    The database is stored at: &lt;project-root&gt;/.claude/data/reviews.db</span>
+
+<span class="s2">    This command should run AFTER the review flow completes.</span>
+<span class="s2">    The JSON file is deleted after successful storage.</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> Previous skip decisions are used for auto-skip suggestions, but those items are still shown in the table so you can override them.</p>
+<p><strong>Tip:</strong> If <code>myk-claude-tools reviews post</code> reports failures, rerun the exact retry command it prints. The post helper is designed to retry only entries that have not been successfully posted yet.</p>
+<p><strong>Warning:</strong> <code>--autorabbit</code> does not stop on its own. It waits 5 minutes between checks, handles CodeRabbit rate limits automatically, and keeps looping until you stop it.</p>
+</blockquote>
+<h2 id="myk-review"><code>myk-review</code></h2>
+<p>The <code>myk-review</code> plugin covers local review before GitHub and post-review analytics after GitHub.</p>
+<h3 id="myk-reviewlocal"><code>/myk-review:local</code></h3>
+<p>Use this when you want a three-agent review of your local changes without opening or touching a GitHub PR.</p>
+<ul>
+<li><code>argument-hint</code>: <code>[BRANCH]</code></li>
+<li><code>allowed-tools</code>: <code>Bash(git:*)</code>, <code>Task</code>, <code>AskUserQuestion</code></li>
+</ul>
+<p>Actual usage examples:</p>
+<div class="highlight"><pre><span></span><code>/myk-review:local
+/myk-review:local main
+/myk-review:local feature/branch
+</code></pre></div>
+
+<p>What it does:</p>
+<ol>
+<li>If you pass a branch, it reviews <code>git diff "$ARGUMENTS"...HEAD</code>.</li>
+<li>If you do not pass a branch, it reviews <code>git diff HEAD</code>, which covers tracked staged and unstaged changes.</li>
+<li>It sends the diff to the same three review agents used by <code>/myk-github:pr-review</code>.</li>
+<li>It merges and deduplicates findings and presents them as critical issues, warnings, and suggestions.</li>
+</ol>
+<p>The diff commands are taken directly from the command file:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>diff<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ARGUMENTS</span><span class="s2">&quot;</span>...HEAD
+git<span class="w"> </span>diff<span class="w"> </span>HEAD
+</code></pre></div>
+
+<p>This command does not post comments anywhere. It is purely a local review surface.</p>
+<blockquote>
+<p><strong>Tip:</strong> Use <code>/myk-review:local</code> before opening a PR, and <code>/myk-github:pr-review</code> after the PR exists. The review model is similar, but the data source is different.</p>
+</blockquote>
+<h3 id="myk-reviewquery-db"><code>/myk-review:query-db</code></h3>
+<p>Use this when you want analytics and historical context from the review database created by <code>/myk-github:review-handler</code>.</p>
+<ul>
+<li><code>argument-hint</code>: <code>[stats|patterns|dismissed|query|find-similar] [OPTIONS]</code></li>
+<li><code>allowed-tools</code>: <code>Bash(myk-claude-tools:*)</code>, <code>Bash(uv:*)</code></li>
+</ul>
+<p>Common slash-command examples from the command definition:</p>
+<div class="highlight"><pre><span></span><code>/myk-review:query-db stats --by-source
+/myk-review:query-db stats --by-reviewer
+/myk-review:query-db patterns --min 2
+/myk-review:query-db dismissed --owner X --repo Y
+/myk-review:query-db query &quot;SELECT * FROM comments WHERE status=&#39;skipped&#39; LIMIT 10&quot;
+</code></pre></div>
+
+<p>Subcommands:</p>
+<table>
+<thead>
+<tr>
+<th>Subcommand</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stats</code></td>
+<td>Shows addressed rates by source or by reviewer</td>
+</tr>
+<tr>
+<td><code>patterns</code></td>
+<td>Finds recurring dismissed comments that look like repeat feedback</td>
+</tr>
+<tr>
+<td><code>dismissed</code></td>
+<td>Returns dismissed review comments for one repo</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td>Runs a raw read-only SQL query</td>
+</tr>
+<tr>
+<td><code>find-similar</code></td>
+<td>Looks for a previously dismissed comment with the same path and similar body text</td>
+</tr>
+</tbody>
+</table>
+<p>The database location is fixed by the helper code:</p>
+<ul>
+<li>Default path: <code>&lt;git-root&gt;/.claude/data/reviews.db</code></li>
+<li>Override: <code>--db-path</code></li>
+</ul>
+<p>A few behavior details are worth knowing:</p>
+<ul>
+<li><code>stats</code> defaults to <code>--by-source</code> if you do not pass <code>--by-source</code> or <code>--by-reviewer</code>.</li>
+<li><code>--by-source</code> and <code>--by-reviewer</code> are mutually exclusive.</li>
+<li><code>patterns</code> groups recurring comments by path plus approximate body similarity, not only exact string matches.</li>
+<li><code>find-similar</code> requires both <code>--owner</code> and <code>--repo</code>, and it expects a single JSON object on stdin.</li>
+</ul>
+<p>The actual helper example for <code>find-similar</code> is:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;{&quot;path&quot;: &quot;foo.py&quot;, &quot;body&quot;: &quot;Add error handling...&quot;}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>find-similar<span class="w"> </span>--owner<span class="w"> </span>myk-org<span class="w"> </span>--repo<span class="w"> </span>claude-code-config<span class="w"> </span>--json
+</code></pre></div>
+
+<p>Read-only SQL is enforced in code:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="ow">not</span> <span class="n">sql_upper</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;SELECT&quot;</span><span class="p">,</span> <span class="s2">&quot;WITH&quot;</span><span class="p">)):</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only SELECT/CTE queries are allowed for safety&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>That means <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>, <code>ALTER</code>, and other write operations are rejected.</p>
+<blockquote>
+<p><strong>Warning:</strong> <code>query</code> is intentionally read-only. It is for analytics and exploration, not for editing the review database.</p>
+<p><strong>Note:</strong> The <code>dismissed</code> view intentionally includes <code>not_addressed</code> and <code>skipped</code> comments, plus addressed body-only comments that do not have normal GitHub review threads. That behavior supports later auto-skip decisions.</p>
+</blockquote>
+<h2 id="myk-acpx"><code>myk-acpx</code></h2>
+<p>The <code>myk-acpx</code> plugin is the bridge to <code>acpx</code>, which in turn can drive multiple ACP-compatible coding agents from one slash command.</p>
+<h3 id="myk-acpxprompt"><code>/myk-acpx:prompt</code></h3>
+<p>Use this when you want to send a prompt to one or more external coding agents such as Codex, Gemini, Cursor, or Claude through <code>acpx</code>.</p>
+<ul>
+<li><code>argument-hint</code>: <code>&lt;agent&gt;[,agent2,...] [--fix | --peer | --exec] [--model &lt;model&gt;] &lt;prompt&gt;</code></li>
+<li><code>allowed-tools</code>: <code>Bash(acpx:*)</code>, <code>Bash(git:*)</code>, <code>AskUserQuestion</code>, <code>Agent</code>, <code>Edit</code>, <code>Write</code>, <code>Read</code>, <code>Glob</code>, <code>Grep</code></li>
+</ul>
+<p>Actual usage examples:</p>
+<div class="highlight"><pre><span></span><code>/myk-acpx:prompt codex fix the tests
+/myk-acpx:prompt cursor review this code
+/myk-acpx:prompt gemini explain this function
+/myk-acpx:prompt codex --exec summarize this repo
+/myk-acpx:prompt codex --model o3-pro review the architecture
+/myk-acpx:prompt codex --fix fix the code quality issues
+/myk-acpx:prompt gemini --peer review this code
+/myk-acpx:prompt codex --peer --model o3-pro review the architecture
+/myk-acpx:prompt cursor,codex review this code
+/myk-acpx:prompt cursor,gemini,codex --peer review the architecture
+</code></pre></div>
+
+<p>Supported agents are declared in the command file:</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Wraps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pi</code></td>
+<td>Pi Coding Agent</td>
+</tr>
+<tr>
+<td><code>openclaw</code></td>
+<td>OpenClaw ACP bridge</td>
+</tr>
+<tr>
+<td><code>codex</code></td>
+<td>Codex CLI (OpenAI)</td>
+</tr>
+<tr>
+<td><code>claude</code></td>
+<td>Claude Code</td>
+</tr>
+<tr>
+<td><code>gemini</code></td>
+<td>Gemini CLI</td>
+</tr>
+<tr>
+<td><code>cursor</code></td>
+<td>Cursor CLI</td>
+</tr>
+<tr>
+<td><code>copilot</code></td>
+<td>GitHub Copilot CLI</td>
+</tr>
+<tr>
+<td><code>droid</code></td>
+<td>Factory Droid</td>
+</tr>
+<tr>
+<td><code>iflow</code></td>
+<td>iFlow CLI</td>
+</tr>
+<tr>
+<td><code>kilocode</code></td>
+<td>Kilocode</td>
+</tr>
+<tr>
+<td><code>kimi</code></td>
+<td>Kimi CLI</td>
+</tr>
+<tr>
+<td><code>kiro</code></td>
+<td>Kiro CLI</td>
+</tr>
+<tr>
+<td><code>opencode</code></td>
+<td>OpenCode</td>
+</tr>
+<tr>
+<td><code>qwen</code></td>
+<td>Qwen Code</td>
+</tr>
+</tbody>
+</table>
+<p>Modes:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Flag</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session</td>
+<td>none</td>
+<td>Read-only by default, with session persistence</td>
+</tr>
+<tr>
+<td>Exec</td>
+<td><code>--exec</code></td>
+<td>Read-only, one-shot, no session persistence</td>
+</tr>
+<tr>
+<td>Fix</td>
+<td><code>--fix</code></td>
+<td>Writable run, single agent only</td>
+</tr>
+<tr>
+<td>Peer</td>
+<td><code>--peer</code></td>
+<td>Read-only AI-to-AI review loop</td>
+</tr>
+</tbody>
+</table>
+<p>The mode-specific <code>acpx</code> calls are defined like this:</p>
+<div class="highlight"><pre><span></span><code>acpx<span class="w"> </span>--approve-reads<span class="w"> </span>--non-interactive-permissions<span class="w"> </span>fail<span class="w"> </span>&lt;agent&gt;<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s1">&#39;&lt;prompt&gt;&#39;</span>
+acpx<span class="w"> </span>--approve-all<span class="w"> </span>&lt;agent&gt;<span class="w"> </span><span class="s1">&#39;&lt;prompt&gt;&#39;</span>
+acpx<span class="w"> </span>--approve-reads<span class="w"> </span>--non-interactive-permissions<span class="w"> </span>fail<span class="w"> </span>&lt;agent&gt;<span class="w"> </span><span class="s1">&#39;&lt;prompt&gt;&#39;</span>
+</code></pre></div>
+
+<p>What it does:</p>
+<ol>
+<li>Checks whether <code>acpx</code> is installed and offers <code>npm install -g acpx@latest</code> if needed.</li>
+<li>Validates the agent list and the mode flags.</li>
+<li>In default session mode, runs <code>acpx &lt;agent&gt; sessions ensure</code> and falls back to <code>sessions new</code> when needed.</li>
+<li>In <code>--fix</code> or <code>--peer</code> mode, checks git state first and offers a checkpoint commit if the worktree is dirty.</li>
+<li>Runs the selected agent or agents.</li>
+<li>In <code>--fix</code> mode, reads the resulting diff and summarizes file changes.</li>
+<li>In <code>--peer</code> mode, loops until the peer agent confirms there are no remaining actionable issues, or the discussion is recorded as an unresolved disagreement.</li>
+</ol>
+<p>Important flag rules:</p>
+<ul>
+<li><code>--fix</code>, <code>--peer</code>, and <code>--exec</code> are mutually exclusive.</li>
+<li><code>--fix</code> can only be used with a single agent.</li>
+<li><code>--model</code> can only appear once.</li>
+<li>If no prompt is provided, the command aborts with a usage message.</li>
+</ul>
+<p>Two implementation details are especially useful:</p>
+<ul>
+<li>In non-fix modes, the command appends a read-only guard to the prompt so the target agent does not try to modify files.</li>
+<li>In <code>--peer</code> mode, the workflow includes project <code>CLAUDE.md</code> conventions in the peer-review framing when a <code>CLAUDE.md</code> file exists.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> Use session mode when you expect follow-up prompts in the same repo. Use <code>--exec</code> when you want a one-shot answer with no session state.</p>
+<p><strong>Warning:</strong> <code>--fix</code> can modify files and is single-agent only. In a dirty git worktree, the command may offer to create a checkpoint commit before it proceeds.</p>
+<p><strong>Note:</strong> If <code>acpx</code> session management fails with the known session bugs handled by the command, the workflow falls back to one-shot exec mode instead of simply giving up.</p>
+</blockquote>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="cli-and-interface-reference.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">CLI and Interface Reference</span>
+                </a>
+
+
+                <a href="reviews-cli-reference.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Reviews CLI Reference</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#shared-prerequisites">Shared Prerequisites</a></li>
+<li><a href="#allowed-tools-cheat-sheet">Allowed Tools Cheat Sheet</a></li>
+<li><a href="#myk-github">myk-github</a><ul>
+<li><a href="#myk-githubcoderabbit-rate-limit">/myk-github:coderabbit-rate-limit</a></li>
+<li><a href="#myk-githubpr-review">/myk-github:pr-review</a></li>
+<li><a href="#myk-githubrefine-review">/myk-github:refine-review</a></li>
+<li><a href="#myk-githubrelease">/myk-github:release</a></li>
+<li><a href="#myk-githubreview-handler">/myk-github:review-handler</a></li>
+</ul>
+</li>
+<li><a href="#myk-review">myk-review</a><ul>
+<li><a href="#myk-reviewlocal">/myk-review:local</a></li>
+<li><a href="#myk-reviewquery-db">/myk-review:query-db</a></li>
+</ul>
+</li>
+<li><a href="#myk-acpx">myk-acpx</a><ul>
+<li><a href="#myk-acpxprompt">/myk-acpx:prompt</a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

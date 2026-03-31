@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI and Interface Reference - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link active" aria-current="page">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="cli-and-interface-reference">CLI and Interface Reference</h1>
+<p>This repository exposes its public functionality through local interfaces: a Python CLI, Claude Code slash commands, hook scripts, and JSON files passed between them. It does not expose a standalone HTTP API.</p>
+<blockquote>
+<p><strong>Note:</strong> The interfaces are intentionally composable. A slash command often calls <code>myk-claude-tools</code>, which then reads or writes JSON under <code>/tmp/claude/</code> or <code>.claude/data/</code>.</p>
+</blockquote>
+<h2 id="interface-map">Interface Map</h2>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Primary files</th>
+<th>What you use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI</td>
+<td><code>myk_claude_tools/</code></td>
+<td>Pull request data, review handling, review analytics, release automation, CodeRabbit rate-limit handling</td>
+</tr>
+<tr>
+<td>Slash commands</td>
+<td><code>plugins/*/commands/*.md</code></td>
+<td>Running those workflows from Claude Code with guided prompts and tool permissions</td>
+</tr>
+<tr>
+<td>Hooks</td>
+<td><code>settings.json</code>, <code>scripts/</code></td>
+<td>Enforcing guardrails, injecting context, checking prerequisites, desktop notifications</td>
+</tr>
+<tr>
+<td>JSON/config files</td>
+<td><code>settings.json</code>, <code>.claude-plugin/*.json</code>, <code>/tmp/claude/*.json</code></td>
+<td>Configuring Claude Code and passing machine-readable data between commands</td>
+</tr>
+<tr>
+<td>Review database</td>
+<td><code>.claude/data/reviews.db</code></td>
+<td>Persisting completed review history for analytics and auto-skip logic</td>
+</tr>
+</tbody>
+</table>
+<h2 id="myk-claude-tools-cli"><code>myk-claude-tools</code> CLI</h2>
+<p>The package exposes a single console entrypoint:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[project.scripts]</span>
+<span class="n">myk-claude-tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myk_claude_tools.cli:main&quot;</span>
+</code></pre></div>
+
+<p>Python <code>&gt;=3.10</code> is required. The command is designed to be installed as a tool, and the plugin workflows repeatedly check for it before they proceed.</p>
+<p>Install it with:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>myk-claude-tools
+</code></pre></div>
+
+<p>At runtime, the CLI is organized into five command groups:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">version_option</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CLI utilities for Claude Code plugins.&quot;&quot;&quot;</span>
+
+
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">coderabbit_commands</span><span class="o">.</span><span class="n">coderabbit</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;coderabbit&quot;</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">db_commands</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;db&quot;</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">pr_commands</span><span class="o">.</span><span class="n">pr</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pr&quot;</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">release_commands</span><span class="o">.</span><span class="n">release</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;release&quot;</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">reviews_commands</span><span class="o">.</span><span class="n">reviews</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;reviews&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="shared-invocation-patterns">Shared invocation patterns</h3>
+<p><code>pr diff</code> and <code>pr claude-md</code> accept the same three input styles:</p>
+<ul>
+<li><code>owner/repo</code> plus a PR number</li>
+<li>A full GitHub PR URL</li>
+<li>A bare PR number when you are already inside the target repository</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> If you only have a PR number, run the command from the repository you want to inspect. The parser uses <code>gh repo view</code> to infer <code>owner/repo</code>.</p>
+</blockquote>
+<p>Most GitHub-backed commands depend on a working <code>gh</code> CLI login. Review and release workflows also assume <code>git</code>, and many slash-command wrappers check for <code>uv</code> before continuing.</p>
+<h2 id="pr-commands"><code>pr</code> commands</h2>
+<p>The <code>pr</code> group covers three public interfaces:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>myk-claude-tools pr diff</code></td>
+<td><code>owner/repo &lt;pr_number&gt;</code>, PR URL, or PR number</td>
+<td>JSON with PR metadata, full diff text, and changed files</td>
+</tr>
+<tr>
+<td><code>myk-claude-tools pr claude-md</code></td>
+<td>Same three forms as <code>pr diff</code></td>
+<td>Plain-text <code>CLAUDE.md</code> content, or an empty string if none exists</td>
+</tr>
+<tr>
+<td><code>myk-claude-tools pr post-comment</code></td>
+<td><code>owner/repo &lt;pr_number&gt; &lt;commit_sha&gt; &lt;json_file&gt;</code> or <code>-</code> for stdin</td>
+<td>JSON reporting success or failure of posted inline comments</td>
+</tr>
+</tbody>
+</table>
+<p><code>pr diff</code> is the main machine-readable PR payload. Its output shape is defined directly in the implementation:</p>
+<div class="highlight"><pre><span></span><code>    <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">owner</span><span class="p">,</span>
+            <span class="s2">&quot;repo&quot;</span><span class="p">:</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+            <span class="s2">&quot;pr_number&quot;</span><span class="p">:</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">pr_number</span><span class="p">,</span>
+            <span class="s2">&quot;head_sha&quot;</span><span class="p">:</span> <span class="n">head_sha</span><span class="p">,</span>
+            <span class="s2">&quot;base_ref&quot;</span><span class="p">:</span> <span class="n">base_ref</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">pr_title</span><span class="p">,</span>
+            <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">pr_state</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;diff&quot;</span><span class="p">:</span> <span class="n">pr_diff</span><span class="p">,</span>
+        <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="n">files</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre></div>
+
+<p>The <code>files</code> array contains one object per changed file with:</p>
+<ul>
+<li><code>path</code></li>
+<li><code>status</code></li>
+<li><code>additions</code></li>
+<li><code>deletions</code></li>
+<li><code>patch</code></li>
+</ul>
+<p><code>pr claude-md</code> is intentionally plain text. It checks in this order:</p>
+<ol>
+<li>Local <code>./CLAUDE.md</code> if the current checkout matches the target repo</li>
+<li>Local <code>./.claude/CLAUDE.md</code> if the current checkout matches the target repo</li>
+<li>Remote <code>CLAUDE.md</code> via GitHub</li>
+<li>Remote <code>.claude/CLAUDE.md</code> via GitHub</li>
+<li>Empty output if nothing is found</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> <code>pr claude-md</code> is local-first. If you are already in the target repository, it will use your local file before calling GitHub.</p>
+</blockquote>
+<p><code>pr post-comment</code> expects a JSON array of inline comments. Each object must have <code>path</code>, <code>line</code>, and <code>body</code>. The command also recognizes optional severity markers inside <code>body</code>:</p>
+<ul>
+<li><code>### [CRITICAL]</code></li>
+<li><code>### [WARNING]</code></li>
+<li><code>### [SUGGESTION]</code></li>
+</ul>
+<p>If no marker is present, the comment is treated as a suggestion. The command posts a single GitHub review with a generated summary and the inline comments.</p>
+<blockquote>
+<p><strong>Warning:</strong> GitHub only accepts inline comments on lines that are part of the current PR diff. If the path, line number, or commit SHA do not match the diff, <code>pr post-comment</code> will fail.</p>
+</blockquote>
+<h2 id="reviews-commands"><code>reviews</code> commands</h2>
+<p>The <code>reviews</code> group is the most important interface family in this repository. It handles fetching review data, updating replies, refining pending reviews, and storing completed review history.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+<th>File behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reviews fetch</code></td>
+<td>Fetch unresolved review threads for the current branch’s PR, or for a supplied review URL</td>
+<td>Writes <code>/tmp/claude/pr-&lt;number&gt;-reviews.json</code> and also prints the JSON to stdout</td>
+</tr>
+<tr>
+<td><code>reviews post</code></td>
+<td>Read a fetched review JSON file, post replies, and resolve threads where appropriate</td>
+<td>Updates timestamps in place and can be safely re-run</td>
+</tr>
+<tr>
+<td><code>reviews pending-fetch</code></td>
+<td>Fetch the authenticated user’s pending PR review</td>
+<td>Writes <code>/tmp/claude/pr-&lt;repo&gt;-&lt;number&gt;-pending-review.json</code> and prints only the path</td>
+</tr>
+<tr>
+<td><code>reviews pending-update</code></td>
+<td>Update accepted pending review comments, optionally submit the review</td>
+<td>Reads the pending-review JSON file</td>
+</tr>
+<tr>
+<td><code>reviews store</code></td>
+<td>Persist a completed review JSON file into SQLite</td>
+<td>Imports it into <code>.claude/data/reviews.db</code> and deletes the JSON file on success</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reviews-fetch"><code>reviews fetch</code></h3>
+<p><code>reviews fetch</code> outputs a categorized JSON document with three arrays: <code>human</code>, <code>qodo</code>, and <code>coderabbit</code>.</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">final_output</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span>
+                <span class="s2">&quot;repo&quot;</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+                <span class="s2">&quot;pr_number&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">pr_number</span><span class="p">),</span>
+                <span class="s2">&quot;json_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">json_path</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;human&quot;</span><span class="p">:</span> <span class="n">categorized</span><span class="p">[</span><span class="s2">&quot;human&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;qodo&quot;</span><span class="p">:</span> <span class="n">categorized</span><span class="p">[</span><span class="s2">&quot;qodo&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;coderabbit&quot;</span><span class="p">:</span> <span class="n">categorized</span><span class="p">[</span><span class="s2">&quot;coderabbit&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+</code></pre></div>
+
+<p>Each review entry can include:</p>
+<ul>
+<li><code>thread_id</code></li>
+<li><code>node_id</code></li>
+<li><code>comment_id</code></li>
+<li><code>author</code></li>
+<li><code>path</code></li>
+<li><code>line</code></li>
+<li><code>body</code></li>
+<li><code>replies</code></li>
+<li><code>source</code></li>
+<li><code>priority</code></li>
+<li><code>status</code></li>
+<li><code>reply</code></li>
+</ul>
+<p>Depending on the review source and matching history, you may also see:</p>
+<ul>
+<li><code>skip_reason</code></li>
+<li><code>original_status</code></li>
+<li><code>is_auto_skipped</code></li>
+<li><code>type</code></li>
+<li><code>review_id</code></li>
+<li><code>suggestion_index</code></li>
+</ul>
+<p><code>reviews fetch</code> also supports review-specific URL fragments, including:</p>
+<ul>
+<li><code>#pullrequestreview-&lt;id&gt;</code></li>
+<li><code>#discussion_r&lt;id&gt;</code></li>
+<li>A raw numeric review ID</li>
+</ul>
+<p>That matters when you want to focus on one review rather than all unresolved threads.</p>
+<p>CodeRabbit support goes further than GitHub’s review-thread API. The implementation also parses CodeRabbit review-body comments and classifies them as:</p>
+<ul>
+<li><code>outside_diff_comment</code></li>
+<li><code>nitpick_comment</code></li>
+<li><code>duplicate_comment</code></li>
+</ul>
+<p>Those comment types are important later, because they are replied to via consolidated PR comments rather than normal thread replies.</p>
+<h3 id="status-values-and-reply-behavior">Status values and reply behavior</h3>
+<p>The review-posting workflow is driven by status values stored in the JSON:</p>
+<div class="highlight"><pre><span></span><code><span class="n">Status</span> <span class="n">handling</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">addressed</span><span class="p">:</span> <span class="n">Post</span> <span class="n">reply</span> <span class="ow">and</span> <span class="n">resolve</span> <span class="n">thread</span>
+  <span class="o">-</span> <span class="n">not_addressed</span><span class="p">:</span> <span class="n">Post</span> <span class="n">reply</span> <span class="ow">and</span> <span class="n">resolve</span> <span class="n">thread</span> <span class="p">(</span><span class="n">similar</span> <span class="n">to</span> <span class="n">addressed</span><span class="p">)</span>
+  <span class="o">-</span> <span class="n">skipped</span><span class="p">:</span> <span class="n">Post</span> <span class="n">reply</span> <span class="p">(</span><span class="k">with</span> <span class="n">skip</span> <span class="n">reason</span><span class="p">)</span> <span class="ow">and</span> <span class="n">resolve</span> <span class="n">thread</span>
+  <span class="o">-</span> <span class="n">pending</span><span class="p">:</span> <span class="n">Skip</span> <span class="p">(</span><span class="ow">not</span> <span class="n">processed</span> <span class="n">yet</span><span class="p">)</span>
+  <span class="o">-</span> <span class="n">failed</span><span class="p">:</span> <span class="n">Retry</span> <span class="n">posting</span>
+
+<span class="n">Resolution</span> <span class="n">behavior</span> <span class="n">by</span> <span class="n">source</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">qodo</span><span class="o">/</span><span class="n">coderabbit</span><span class="p">:</span> <span class="n">Always</span> <span class="n">resolve</span> <span class="n">threads</span> <span class="n">after</span> <span class="n">replying</span>
+  <span class="o">-</span> <span class="n">human</span><span class="p">:</span> <span class="n">Only</span> <span class="n">resolve</span> <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="s2">&quot;addressed&quot;</span><span class="p">;</span> <span class="n">skipped</span><span class="o">/</span><span class="n">not_addressed</span>
+          <span class="n">threads</span> <span class="n">are</span> <span class="ow">not</span> <span class="n">resolved</span> <span class="n">to</span> <span class="n">allow</span> <span class="n">reviewer</span> <span class="n">follow</span><span class="o">-</span><span class="n">up</span>
+</code></pre></div>
+
+<p>In practice, that means:</p>
+<ul>
+<li>Human reviews stay open when you reply with <code>skipped</code> or <code>not_addressed</code></li>
+<li>Qodo and CodeRabbit threads are resolved after a reply</li>
+<li>Re-running <code>reviews post</code> is safe because it tracks <code>posted_at</code> and <code>resolved_at</code></li>
+<li>If some posts fail, the command prints an exact retry command you can run again</li>
+</ul>
+<p><code>reviews post</code> also groups body-only comments by reviewer and posts one or more consolidated PR comments mentioning that reviewer. That is how outside-diff, nitpick, and duplicate comments are acknowledged.</p>
+<h3 id="reviews-pending-fetch-and-reviews-pending-update"><code>reviews pending-fetch</code> and <code>reviews pending-update</code></h3>
+<p>Pending-review refinement uses a separate JSON format. The output file contains metadata, a flat <code>comments</code> list, and a truncated PR diff for context.</p>
+<div class="highlight"><pre><span></span><code>    <span class="n">final_output</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span>
+            <span class="s2">&quot;repo&quot;</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+            <span class="s2">&quot;pr_number&quot;</span><span class="p">:</span> <span class="n">pr_number_int</span><span class="p">,</span>
+            <span class="s2">&quot;review_id&quot;</span><span class="p">:</span> <span class="n">review_id</span><span class="p">,</span>
+            <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span>
+            <span class="s2">&quot;json_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">json_path</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;comments&quot;</span><span class="p">:</span> <span class="n">comments</span><span class="p">,</span>
+        <span class="s2">&quot;diff&quot;</span><span class="p">:</span> <span class="n">diff</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre></div>
+
+<p>Each pending comment includes:</p>
+<ul>
+<li><code>id</code></li>
+<li><code>path</code></li>
+<li><code>line</code></li>
+<li><code>side</code></li>
+<li><code>body</code></li>
+<li><code>diff_hunk</code></li>
+<li><code>refined_body</code></li>
+<li><code>status</code></li>
+</ul>
+<p>The initial <code>status</code> is <code>pending</code>, and <code>refined_body</code> starts as <code>null</code>.</p>
+<p><code>reviews pending-update</code> is deliberately conservative:</p>
+<ul>
+<li>It only updates comments whose <code>status</code> is <code>accepted</code></li>
+<li>It only updates when <code>refined_body</code> is non-empty</li>
+<li>It skips updates if the refined text is unchanged from the original</li>
+<li>It only submits the review when both conditions are true:</li>
+<li><code>metadata.submit_action</code> is set to <code>COMMENT</code>, <code>APPROVE</code>, or <code>REQUEST_CHANGES</code></li>
+<li>The CLI was run with <code>--submit</code></li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> <code>reviews store</code> deletes the source JSON file after it has been imported into <code>.claude/data/reviews.db</code>. If you want to keep a copy, duplicate it before running the store step.</p>
+</blockquote>
+<h2 id="db-commands"><code>db</code> commands</h2>
+<p>The <code>db</code> group is the read-only analytics interface over the review history database. By default it opens:</p>
+<ul>
+<li><code>&lt;git-root&gt;/.claude/data/reviews.db</code></li>
+</ul>
+<p>You can override that with <code>--db-path</code> on every command.</p>
+<h3 id="available-subcommands">Available subcommands</h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>db stats</code></td>
+<td>Review stats grouped by source or reviewer</td>
+</tr>
+<tr>
+<td><code>db patterns</code></td>
+<td>Recurring dismissed comment patterns</td>
+</tr>
+<tr>
+<td><code>db dismissed</code></td>
+<td>Previously dismissed comments for a repository</td>
+</tr>
+<tr>
+<td><code>db query</code></td>
+<td>A raw SQL query result</td>
+</tr>
+<tr>
+<td><code>db find-similar</code></td>
+<td>The closest previously dismissed comment for a new path/body pair</td>
+</tr>
+</tbody>
+</table>
+<h3 id="important-safety-rules">Important safety rules</h3>
+<p><code>db query</code> is intentionally locked down:</p>
+<ul>
+<li>It only accepts <code>SELECT</code> and <code>WITH</code> queries</li>
+<li>It rejects multiple SQL statements</li>
+<li>It blocks dangerous keywords such as <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>, <code>ALTER</code>, <code>CREATE</code>, <code>ATTACH</code>, <code>DETACH</code>, and <code>PRAGMA</code></li>
+</ul>
+<p>That behavior is enforced in code and covered by tests.</p>
+<h3 id="actual-stdin-contract-for-find-similar">Actual stdin contract for <code>find-similar</code></h3>
+<p>The implementation expects one JSON object on stdin with <code>path</code> and <code>body</code> fields:</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">Reads</span> <span class="n">JSON</span> <span class="kn">from</span><span class="w"> </span><span class="nn">stdin</span> <span class="k">with</span> <span class="s1">&#39;path&#39;</span> <span class="ow">and</span> <span class="s1">&#39;body&#39;</span> <span class="n">fields</span><span class="o">.</span> <span class="n">Uses</span> <span class="n">exact</span> <span class="n">path</span> <span class="n">match</span>
+        <span class="n">combined</span> <span class="k">with</span> <span class="n">body</span> <span class="n">similarity</span> <span class="p">(</span><span class="n">Jaccard</span> <span class="n">word</span> <span class="n">overlap</span><span class="p">)</span><span class="o">.</span> <span class="n">This</span> <span class="ow">is</span> <span class="n">useful</span> <span class="k">for</span>
+        <span class="n">auto</span><span class="o">-</span><span class="n">skip</span> <span class="n">logic</span><span class="p">:</span> <span class="k">if</span> <span class="n">a</span> <span class="n">similar</span> <span class="n">comment</span> <span class="n">was</span> <span class="n">previously</span> <span class="n">dismissed</span> <span class="k">with</span> <span class="n">a</span> <span class="n">reason</span><span class="p">,</span>
+        <span class="n">the</span> <span class="n">same</span> <span class="n">reason</span> <span class="n">may</span> <span class="n">apply</span><span class="o">.</span>
+
+        <span class="n">Examples</span><span class="p">:</span>
+
+            <span class="c1"># Find similar comment</span>
+            <span class="n">echo</span> <span class="s1">&#39;{&quot;path&quot;: &quot;foo.py&quot;, &quot;body&quot;: &quot;Add error handling...&quot;}&#39;</span> <span class="o">|</span> \
+                <span class="n">myk</span><span class="o">-</span><span class="n">claude</span><span class="o">-</span><span class="n">tools</span> <span class="n">db</span> <span class="n">find</span><span class="o">-</span><span class="n">similar</span> <span class="o">--</span><span class="n">owner</span> <span class="n">myk</span><span class="o">-</span><span class="n">org</span> <span class="o">--</span><span class="n">repo</span> <span class="n">claude</span><span class="o">-</span><span class="n">code</span><span class="o">-</span><span class="n">config</span> <span class="o">--</span><span class="n">json</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> <code>db find-similar</code> expects a single JSON object, not an array. The CLI implementation and tests both use one object with <code>path</code> and <code>body</code>.</p>
+</blockquote>
+<h3 id="database-tables">Database tables</h3>
+<p>If you use <code>db query</code>, these are the key tables and columns you will interact with:</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Key columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reviews</code></td>
+<td><code>id</code>, <code>pr_number</code>, <code>owner</code>, <code>repo</code>, <code>commit_sha</code>, <code>created_at</code></td>
+</tr>
+<tr>
+<td><code>comments</code></td>
+<td><code>review_id</code>, <code>source</code>, <code>thread_id</code>, <code>node_id</code>, <code>comment_id</code>, <code>author</code>, <code>path</code>, <code>line</code>, <code>body</code>, <code>priority</code>, <code>status</code>, <code>reply</code>, <code>skip_reason</code>, <code>posted_at</code>, <code>resolved_at</code>, <code>type</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <code>type</code> column is especially useful when working with CodeRabbit body comments such as <code>outside_diff_comment</code>, <code>nitpick_comment</code>, and <code>duplicate_comment</code>.</p>
+<h2 id="release-commands"><code>release</code> commands</h2>
+<p>The <code>release</code> group exposes the release workflow in four parts:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>release info</code></td>
+<td>Validates the repo state and returns commits since the last matching tag</td>
+</tr>
+<tr>
+<td><code>release detect-versions</code></td>
+<td>Finds version files in the current repository</td>
+</tr>
+<tr>
+<td><code>release bump-version</code></td>
+<td>Updates detected version strings in place</td>
+</tr>
+<tr>
+<td><code>release create</code></td>
+<td>Creates a GitHub release from a changelog file</td>
+</tr>
+</tbody>
+</table>
+<h3 id="release-info"><code>release info</code></h3>
+<p><code>release info</code> returns JSON with:</p>
+<ul>
+<li><code>metadata</code></li>
+<li><code>validations</code></li>
+<li><code>last_tag</code></li>
+<li><code>all_tags</code></li>
+<li><code>commits</code></li>
+<li><code>commit_count</code></li>
+<li><code>is_first_release</code></li>
+<li><code>target_branch</code></li>
+<li><code>tag_match</code></li>
+</ul>
+<p>The <code>validations</code> block tells you whether the repo is ready to release:</p>
+<ul>
+<li>On the target branch</li>
+<li>Working tree clean</li>
+<li><code>git fetch</code> succeeded</li>
+<li>Synced with remote</li>
+</ul>
+<p>If validation fails, the command still returns JSON, but it skips expensive tag and commit collection.</p>
+<blockquote>
+<p><strong>Tip:</strong> If you are on a branch named like <code>v2.10</code>, <code>release info</code> auto-detects it as the target branch and automatically narrows tag matching to <code>v2.10.*</code>.</p>
+</blockquote>
+<h3 id="release-detect-versions"><code>release detect-versions</code></h3>
+<p>Version-file detection covers several common ecosystems:</p>
+<div class="highlight"><pre><span></span><code><span class="n">_ROOT_SCANNERS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Path</span><span class="p">],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">,</span> <span class="n">_parse_pyproject_toml</span><span class="p">,</span> <span class="s2">&quot;pyproject&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;package.json&quot;</span><span class="p">,</span> <span class="n">_parse_package_json</span><span class="p">,</span> <span class="s2">&quot;package_json&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;setup.cfg&quot;</span><span class="p">,</span> <span class="n">_parse_setup_cfg</span><span class="p">,</span> <span class="s2">&quot;setup_cfg&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Cargo.toml&quot;</span><span class="p">,</span> <span class="n">_parse_cargo_toml</span><span class="p">,</span> <span class="s2">&quot;cargo&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;build.gradle&quot;</span><span class="p">,</span> <span class="n">_parse_gradle</span><span class="p">,</span> <span class="s2">&quot;gradle&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;build.gradle.kts&quot;</span><span class="p">,</span> <span class="n">_parse_gradle</span><span class="p">,</span> <span class="s2">&quot;gradle&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>It also scans Python <code>__version__</code> assignments in <code>__init__.py</code> and <code>version.py</code>.</p>
+<p>Tests confirm several important details:</p>
+<ul>
+<li><code>pyproject.toml</code> detection only reads <code>[project]</code>, not unrelated sections</li>
+<li><code>setup.cfg</code> detection only reads <code>[metadata]</code></li>
+<li><code>Cargo.toml</code> detection only reads <code>[package]</code></li>
+<li>Dynamic <code>setup.cfg</code> versions such as <code>attr:</code> or <code>file:</code> are skipped</li>
+<li>Common generated or vendor directories like <code>.venv</code>, <code>node_modules</code>, <code>.tox</code>, and <code>target</code> are ignored</li>
+</ul>
+<p>The command prints JSON in this shape:</p>
+<ul>
+<li><code>version_files</code>: an array of <code>{path, current_version, type}</code></li>
+<li><code>count</code>: number of detected version files</li>
+</ul>
+<h3 id="release-bump-version"><code>release bump-version</code></h3>
+<p><code>release bump-version</code> updates the files returned by <code>detect-versions</code>. Its output is machine-readable and reports:</p>
+<ul>
+<li><code>status</code></li>
+<li><code>version</code></li>
+<li><code>updated</code></li>
+<li><code>skipped</code></li>
+<li><code>error</code> on failure</li>
+</ul>
+<p>It also validates the version string before doing any file writes.</p>
+<blockquote>
+<p><strong>Warning:</strong> Pass <code>1.2.3</code>, not <code>v1.2.3</code>. The implementation rejects versions with a leading <code>v</code> and tells you to use the bare version number instead.</p>
+</blockquote>
+<p>Tests verify that <code>bump-version</code>:</p>
+<ul>
+<li>Only updates the correct section in multi-section files</li>
+<li>Preserves unrelated content</li>
+<li>Fails fast when <code>--files</code> does not match detected version files</li>
+<li>Returns skipped reasons instead of silently ignoring failures</li>
+</ul>
+<h3 id="release-create"><code>release create</code></h3>
+<p><code>release create</code> expects:</p>
+<ul>
+<li><code>owner/repo</code></li>
+<li>A tag such as <code>v1.2.3</code></li>
+<li>A path to a changelog file</li>
+</ul>
+<p>It calls <code>gh release create</code> and returns JSON with:</p>
+<ul>
+<li><code>status</code></li>
+<li><code>tag</code></li>
+<li><code>url</code></li>
+<li><code>prerelease</code></li>
+<li><code>draft</code></li>
+</ul>
+<p>If the tag is not semantic-version-like, the command warns to stderr but still attempts the release.</p>
+<h2 id="coderabbit-commands"><code>coderabbit</code> commands</h2>
+<p>The <code>coderabbit</code> group exposes two composable commands:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>coderabbit check</code></td>
+<td>Inspect the latest CodeRabbit summary comment and report whether the PR is rate-limited</td>
+</tr>
+<tr>
+<td><code>coderabbit trigger</code></td>
+<td>Wait if requested, post <code>@coderabbitai review</code>, and poll until the review starts</td>
+</tr>
+</tbody>
+</table>
+<p><code>coderabbit check</code> returns one of these JSON shapes:</p>
+<ul>
+<li><code>{"rate_limited": false}</code></li>
+<li><code>{"rate_limited": true, "wait_seconds": &lt;seconds&gt;, "comment_id": &lt;id&gt;}</code></li>
+</ul>
+<p>The command parses CodeRabbit’s own comment body for the wait time, and the tests cover both minute/second and second-only formats.</p>
+<p><code>coderabbit trigger</code> behaves like this:</p>
+<ul>
+<li>Optional initial sleep via <code>--wait</code></li>
+<li>Post <code>@coderabbitai review</code></li>
+<li>Poll every 60 seconds</li>
+<li>Give up after 10 attempts</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> The polling logic treats two consecutive “summary comment disappeared” checks as success. That matches CodeRabbit replacing the rate-limit comment when the new review begins.</p>
+</blockquote>
+<h2 id="slash-commands-and-plugin-interfaces">Slash commands and plugin interfaces</h2>
+<p>Claude Code plugin commands live under <code>plugins/*/commands/*.md</code>. Each command file begins with YAML frontmatter that defines the public interface seen in Claude Code:</p>
+<div class="highlight"><pre><span></span><code>---
+description: Review a GitHub PR and post inline comments on selected findings
+argument-hint: [PR_NUMBER|PR_URL]
+<span class="gu">allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task</span>
+<span class="gu">---</span>
+</code></pre></div>
+
+<p>At the plugin level, metadata comes from <code>plugins/*/.claude-plugin/plugin.json</code>, and the root marketplace index comes from <code>.claude-plugin/marketplace.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-org&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;owner&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-org&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;plugins&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-github&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;./plugins/myk-github&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GitHub operations - PR reviews, releases, review handling, CodeRabbit rate limits&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.7.2&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-review&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;./plugins/myk-review&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Local code review and review database operations&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.7.2&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-acpx&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;./plugins/myk-acpx&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Multi-agent prompt execution via acpx (Agent Client Protocol)&quot;</span><span class="p">,</span>
+</code></pre></div>
+
+<h3 id="myk-github"><code>myk-github</code></h3>
+<p><code>myk-github</code> is the GitHub workflow plugin. Its public commands are:</p>
+<table>
+<thead>
+<tr>
+<th>Slash command</th>
+<th>What it wraps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/myk-github:pr-review</code></td>
+<td><code>pr diff</code>, <code>pr claude-md</code>, review agents, and optionally <code>pr post-comment</code></td>
+</tr>
+<tr>
+<td><code>/myk-github:review-handler</code></td>
+<td><code>reviews fetch</code>, local fixes, tests, <code>reviews post</code>, <code>reviews store</code>; optional <code>--autorabbit</code> polling loop</td>
+</tr>
+<tr>
+<td><code>/myk-github:refine-review</code></td>
+<td><code>reviews pending-fetch</code> plus a refinement and submission flow</td>
+</tr>
+<tr>
+<td><code>/myk-github:release</code></td>
+<td><code>release info</code>, <code>detect-versions</code>, <code>bump-version</code>, <code>release create</code></td>
+</tr>
+<tr>
+<td><code>/myk-github:coderabbit-rate-limit</code></td>
+<td><code>coderabbit check</code> and <code>coderabbit trigger</code></td>
+</tr>
+</tbody>
+</table>
+<p>These commands are documented as full workflows, not just wrappers. That means their public interface includes:</p>
+<ul>
+<li>Required prerequisites</li>
+<li>Expected arguments</li>
+<li>Temp-file conventions under <code>/tmp/claude/</code></li>
+<li>User-decision points</li>
+<li>Allowed tool list</li>
+</ul>
+<h3 id="myk-review"><code>myk-review</code></h3>
+<p><code>myk-review</code> provides two local workflows:</p>
+<table>
+<thead>
+<tr>
+<th>Slash command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/myk-review:local [BRANCH]</code></td>
+<td>Review uncommitted changes or diff against a branch using three review agents in parallel</td>
+</tr>
+<tr>
+<td><code>/myk-review:query-db ...</code></td>
+<td>Run the <code>db</code> analytics commands through Claude Code</td>
+</tr>
+</tbody>
+</table>
+<p><code>/myk-review:local</code> is intentionally simple: it chooses either <code>git diff HEAD</code> or <code>git diff "&lt;branch&gt;"...HEAD</code>, then sends that diff to the review agents.</p>
+<h3 id="myk-acpx"><code>myk-acpx</code></h3>
+<p><code>myk-acpx</code> is different from the rest of the repo because it does not call <code>myk-claude-tools</code>. It is a slash-command interface for the external <code>acpx</code> CLI.</p>
+<p>Public inputs include:</p>
+<ul>
+<li>One agent name or a comma-separated list of agents</li>
+<li>Optional <code>--fix</code>, <code>--peer</code>, or <code>--exec</code></li>
+<li>Optional <code>--model &lt;model&gt;</code></li>
+<li>The prompt text</li>
+</ul>
+<p>Supported agent names come directly from the command file and include:</p>
+<ul>
+<li><code>pi</code></li>
+<li><code>openclaw</code></li>
+<li><code>codex</code></li>
+<li><code>claude</code></li>
+<li><code>gemini</code></li>
+<li><code>cursor</code></li>
+<li><code>copilot</code></li>
+<li><code>droid</code></li>
+<li><code>iflow</code></li>
+<li><code>kilocode</code></li>
+<li><code>kimi</code></li>
+<li><code>kiro</code></li>
+<li><code>opencode</code></li>
+<li><code>qwen</code></li>
+</ul>
+<p>Important validation rules:</p>
+<ul>
+<li><code>--fix</code>, <code>--peer</code>, and <code>--exec</code> are mutually exclusive in the combinations documented by the command</li>
+<li>Multiple agents are allowed, but not with <code>--fix</code></li>
+<li><code>--model</code> cannot be repeated</li>
+<li>An agent name and prompt are both required</li>
+</ul>
+<p>In day-to-day use:</p>
+<ul>
+<li>Default mode is a persistent, read-only session</li>
+<li><code>--exec</code> is one-shot and stateless</li>
+<li><code>--fix</code> allows file writes</li>
+<li><code>--peer</code> runs a review loop where the peer agent re-checks the code after every fix round</li>
+</ul>
+<h2 id="hooks-and-settingsjson">Hooks and <code>settings.json</code></h2>
+<p>The checked-in <code>settings.json</code> is the central runtime configuration file for Claude Code. It defines:</p>
+<ul>
+<li><code>permissions.allow</code></li>
+<li><code>allowedTools</code></li>
+<li><code>hooks</code></li>
+<li><code>statusLine</code></li>
+<li><code>enabledPlugins</code></li>
+<li><code>extraKnownMarketplaces</code></li>
+<li><code>env</code></li>
+</ul>
+<p>The hook registration is explicit and machine-readable:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Notification&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;~/.claude/scripts/my-notifier.sh&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;PreToolUse&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TodoWrite|Bash&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-enforcer.py&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bash&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/git-protection.py&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">},</span>
+</code></pre></div>
+
+<h3 id="hook-events-and-contracts">Hook events and contracts</h3>
+<table>
+<thead>
+<tr>
+<th>Hook</th>
+<th>Script or handler</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Notification</code></td>
+<td><code>scripts/my-notifier.sh</code></td>
+<td>Reads JSON from stdin and expects a <code>.message</code> field</td>
+</tr>
+<tr>
+<td><code>PreToolUse</code></td>
+<td><code>scripts/rule-enforcer.py</code></td>
+<td>Reads hook JSON with <code>tool_name</code> and <code>tool_input</code>; prints deny JSON when blocking</td>
+</tr>
+<tr>
+<td><code>PreToolUse</code></td>
+<td><code>scripts/git-protection.py</code></td>
+<td>Same hook JSON shape; denies protected <code>git commit</code> and <code>git push</code> operations</td>
+</tr>
+<tr>
+<td><code>PreToolUse</code></td>
+<td>Inline prompt gate in <code>settings.json</code></td>
+<td>Returns JSON with <code>decision: approve|block|ask</code> for destructive Bash commands</td>
+</tr>
+<tr>
+<td><code>UserPromptSubmit</code></td>
+<td><code>scripts/rule-injector.py</code></td>
+<td>Prints <code>hookSpecificOutput.additionalContext</code></td>
+</tr>
+<tr>
+<td><code>SessionStart</code></td>
+<td><code>scripts/session-start-check.sh</code></td>
+<td>Prints a human-readable <code>MISSING_TOOLS_REPORT</code> when prerequisites are missing</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rule-enforcerpy"><code>rule-enforcer.py</code></h3>
+<p><code>rule-enforcer.py</code> blocks direct <code>python</code>, <code>python3</code>, <code>pip</code>, <code>pip3</code>, and <code>pre-commit</code> Bash commands. Instead, it instructs users and agents to use:</p>
+<ul>
+<li><code>uv run</code></li>
+<li><code>uvx</code></li>
+<li><code>prek</code></li>
+</ul>
+<p>The deny payload is a standard Claude Code hook response:</p>
+<div class="highlight"><pre><span></span><code>        <span class="c1"># Block direct python/pip commands</span>
+        <span class="k">if</span> <span class="n">tool_name</span> <span class="o">==</span> <span class="s2">&quot;Bash&quot;</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">tool_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_forbidden_python_command</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;hookSpecificOutput&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;hookEventName&quot;</span><span class="p">:</span> <span class="s2">&quot;PreToolUse&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecision&quot;</span><span class="p">:</span> <span class="s2">&quot;deny&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecisionReason&quot;</span><span class="p">:</span> <span class="s2">&quot;Direct python/pip commands are forbidden.&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;additionalContext&quot;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="s2">&quot;You attempted to run python/pip directly. Instead:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;1. Delegate Python tasks to the python-expert agent</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;2. Use &#39;uv run script.py&#39; to run Python scripts</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;3. Use &#39;uvx package-name&#39; to run package CLIs</span><span class="se">\n</span><span class="s2">&quot;</span>
+</code></pre></div>
+
+<p>Tests confirm two user-visible details:</p>
+<ul>
+<li>Allowed commands such as <code>uv run</code>, <code>uvx</code>, <code>git status</code>, and <code>ls</code> produce no stdout at all</li>
+<li>The script fails open on malformed input or internal exceptions</li>
+</ul>
+<h3 id="git-protectionpy"><code>git-protection.py</code></h3>
+<p><code>git-protection.py</code> protects the repository against commits and pushes in the wrong place. It blocks:</p>
+<ul>
+<li><code>git commit</code> on <code>main</code> or <code>master</code></li>
+<li><code>git push</code> on <code>main</code> or <code>master</code></li>
+<li>Commits or pushes on branches whose PR is already merged</li>
+<li>Commits in detached HEAD state</li>
+</ul>
+<p>It allows <code>git commit --amend</code> when the branch is ahead of its remote.</p>
+<p>This hook is stricter than <code>rule-enforcer.py</code>:</p>
+<ul>
+<li>It fails closed on internal errors</li>
+<li>It checks GitHub PR merge state when possible</li>
+<li>It falls back to local merge checks when needed</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> If you adopt this config as-is, direct commits and pushes to protected or already-merged branches are intentionally blocked by the hook layer, not just by convention.</p>
+</blockquote>
+<h3 id="session-start-checksh"><code>session-start-check.sh</code></h3>
+<p><code>session-start-check.sh</code> is the dependency-reporting hook. It checks for:</p>
+<ul>
+<li>Critical: <code>uv</code></li>
+<li>Optional or situational: <code>gh</code>, <code>jq</code>, <code>gawk</code>, <code>prek</code>, <code>mcpl</code></li>
+<li>Required review plugins: <code>pr-review-toolkit</code>, <code>superpowers</code>, <code>feature-dev</code></li>
+</ul>
+<p>If something is missing, it prints a <code>MISSING_TOOLS_REPORT:</code> block with installation guidance and still exits <code>0</code>, so it informs rather than blocks.</p>
+<h3 id="my-notifiersh"><code>my-notifier.sh</code></h3>
+<p><code>my-notifier.sh</code> is the desktop-notification interface. It:</p>
+<ul>
+<li>Requires <code>jq</code> and <code>notify-send</code></li>
+<li>Reads stdin JSON</li>
+<li>Extracts <code>.message</code></li>
+<li>Sends <code>notify-send --wait "Claude: &lt;message&gt;"</code></li>
+</ul>
+<p>If the message is missing or the tools are absent, it exits non-zero.</p>
+<h3 id="statusline"><code>statusLine</code></h3>
+<p><code>settings.json</code> also configures a status-line command: <code>bash ~/.claude/statusline.sh</code>.</p>
+<p>That script reads JSON from stdin and builds a one-line status string from fields such as:</p>
+<ul>
+<li><code>.model.display_name</code></li>
+<li><code>.workspace.current_dir</code></li>
+<li><code>.context_window.used_percentage</code></li>
+<li><code>.cost.total_lines_added</code></li>
+<li><code>.cost.total_lines_removed</code></li>
+</ul>
+<p>This is a JSON-based interface too, even though it is not a hook.</p>
+<blockquote>
+<p><strong>Note:</strong> The file also contains a maintenance reminder: when you add or change script entries, keep <code>permissions.allow</code> and <code>allowedTools</code> in sync.</p>
+</blockquote>
+<h2 id="review-json-files">Review JSON files</h2>
+<p>The repo’s review commands use local JSON files as a first-class interface. These files live under <code>/tmp/claude/</code>, and the implementations explicitly create the directory with <code>0700</code> permissions.</p>
+<h3 id="fetched-review-file">Fetched review file</h3>
+<p><code>reviews fetch</code> writes a file like:</p>
+<ul>
+<li><code>/tmp/claude/pr-123-reviews.json</code></li>
+</ul>
+<p>Key top-level fields:</p>
+<ul>
+<li><code>metadata.owner</code></li>
+<li><code>metadata.repo</code></li>
+<li><code>metadata.pr_number</code></li>
+<li><code>metadata.json_path</code></li>
+<li><code>human</code></li>
+<li><code>qodo</code></li>
+<li><code>coderabbit</code></li>
+</ul>
+<p>Key per-comment fields:</p>
+<ul>
+<li><code>thread_id</code></li>
+<li><code>node_id</code></li>
+<li><code>comment_id</code></li>
+<li><code>author</code></li>
+<li><code>path</code></li>
+<li><code>line</code></li>
+<li><code>body</code></li>
+<li><code>replies</code></li>
+<li><code>source</code></li>
+<li><code>priority</code></li>
+<li><code>status</code></li>
+<li><code>reply</code></li>
+</ul>
+<p>Optional per-comment fields:</p>
+<ul>
+<li><code>skip_reason</code></li>
+<li><code>original_status</code></li>
+<li><code>is_auto_skipped</code></li>
+<li><code>posted_at</code></li>
+<li><code>resolved_at</code></li>
+<li><code>type</code></li>
+</ul>
+<h3 id="pending-review-file">Pending review file</h3>
+<p><code>reviews pending-fetch</code> writes a file like:</p>
+<ul>
+<li><code>/tmp/claude/pr-owner-repo-123-pending-review.json</code></li>
+</ul>
+<p>Key top-level fields:</p>
+<ul>
+<li><code>metadata.owner</code></li>
+<li><code>metadata.repo</code></li>
+<li><code>metadata.pr_number</code></li>
+<li><code>metadata.review_id</code></li>
+<li><code>metadata.username</code></li>
+<li><code>metadata.json_path</code></li>
+<li><code>comments</code></li>
+<li><code>diff</code></li>
+</ul>
+<p>Key per-comment fields:</p>
+<ul>
+<li><code>id</code></li>
+<li><code>path</code></li>
+<li><code>line</code></li>
+<li><code>side</code></li>
+<li><code>body</code></li>
+<li><code>diff_hunk</code></li>
+<li><code>refined_body</code></li>
+<li><code>status</code></li>
+</ul>
+<p>The <code>diff</code> field is intentionally capped at 50,000 characters so the file remains manageable.</p>
+<h2 id="plugin-metadata-files">Plugin metadata files</h2>
+<p>The plugin layer uses two JSON metadata formats.</p>
+<h3 id="per-plugin-pluginjson">Per-plugin <code>plugin.json</code></h3>
+<p>Each plugin defines:</p>
+<ul>
+<li><code>name</code></li>
+<li><code>version</code></li>
+<li><code>description</code></li>
+<li><code>author</code></li>
+<li><code>repository</code></li>
+<li><code>license</code></li>
+<li><code>keywords</code></li>
+</ul>
+<p>That is the metadata Claude Code and marketplace tooling can display.</p>
+<h3 id="root-marketplace-manifest">Root marketplace manifest</h3>
+<p><code>.claude-plugin/marketplace.json</code> is the index for this repository’s plugin marketplace. It names the marketplace and points each plugin name at its source directory.</p>
+<p>For end users, that means the canonical public plugin names are:</p>
+<ul>
+<li><code>myk-github</code></li>
+<li><code>myk-review</code></li>
+<li><code>myk-acpx</code></li>
+</ul>
+<h2 id="automation-and-validation-surfaces">Automation and validation surfaces</h2>
+<p>This repository does not check in a GitHub Actions workflow or another CI pipeline definition. The automation surfaces you can inspect in-tree are local.</p>
+<h3 id="toxtoml"><code>tox.toml</code></h3>
+<p>The test runner configuration is intentionally small:</p>
+<div class="highlight"><pre><span></span><code><span class="n">skipsdist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">envlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;unittests&quot;</span><span class="p">]</span>
+
+<span class="k">[env.unittests]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Run pytest tests&quot;</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">]</span>
+<span class="n">commands</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--group&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">]]</span>
+</code></pre></div>
+
+<p>That means the supported local test entrypoint is:</p>
+<ul>
+<li><code>tox</code> via <code>uv</code></li>
+<li>Or the equivalent direct <code>uv run --group tests pytest tests</code></li>
+</ul>
+<h3 id="pre-commit-configyaml"><code>.pre-commit-config.yaml</code></h3>
+<p>The pre-commit configuration exposes another important interface surface. It includes hooks for:</p>
+<ul>
+<li>File sanity checks from <code>pre-commit-hooks</code></li>
+<li><code>flake8</code></li>
+<li><code>detect-secrets</code></li>
+<li><code>ruff</code></li>
+<li><code>ruff-format</code></li>
+<li><code>gitleaks</code></li>
+<li><code>mypy</code></li>
+<li><code>markdownlint</code></li>
+</ul>
+<p>Because <code>rule-enforcer.py</code> blocks direct <code>pre-commit</code> commands, this configuration is meant to be run through <code>prek</code> rather than <code>pre-commit</code>.</p>
+<blockquote>
+<p><strong>Note:</strong> There is no checked-in <code>.github/workflows/</code> directory in this repository. If you are looking for automation behavior, the in-repo interfaces to inspect are <code>tox.toml</code>, <code>.pre-commit-config.yaml</code>, the release commands, and the Claude Code hooks in <code>settings.json</code>.</p>
+</blockquote>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="mcp-usage.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">MCP Usage</span>
+                </a>
+
+
+                <a href="slash-command-reference.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Slash Command Reference</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#interface-map">Interface Map</a></li>
+<li><a href="#myk-claude-tools-cli">myk-claude-tools CLI</a><ul>
+<li><a href="#shared-invocation-patterns">Shared invocation patterns</a></li>
+</ul>
+</li>
+<li><a href="#pr-commands">pr commands</a></li>
+<li><a href="#reviews-commands">reviews commands</a><ul>
+<li><a href="#reviews-fetch">reviews fetch</a></li>
+<li><a href="#status-values-and-reply-behavior">Status values and reply behavior</a></li>
+<li><a href="#reviews-pending-fetch-and-reviews-pending-update">reviews pending-fetch and reviews pending-update</a></li>
+</ul>
+</li>
+<li><a href="#db-commands">db commands</a><ul>
+<li><a href="#available-subcommands">Available subcommands</a></li>
+<li><a href="#important-safety-rules">Important safety rules</a></li>
+<li><a href="#actual-stdin-contract-for-find-similar">Actual stdin contract for find-similar</a></li>
+<li><a href="#database-tables">Database tables</a></li>
+</ul>
+</li>
+<li><a href="#release-commands">release commands</a><ul>
+<li><a href="#release-info">release info</a></li>
+<li><a href="#release-detect-versions">release detect-versions</a></li>
+<li><a href="#release-bump-version">release bump-version</a></li>
+<li><a href="#release-create">release create</a></li>
+</ul>
+</li>
+<li><a href="#coderabbit-commands">coderabbit commands</a></li>
+<li><a href="#slash-commands-and-plugin-interfaces">Slash commands and plugin interfaces</a><ul>
+<li><a href="#myk-github">myk-github</a></li>
+<li><a href="#myk-review">myk-review</a></li>
+<li><a href="#myk-acpx">myk-acpx</a></li>
+</ul>
+</li>
+<li><a href="#hooks-and-settingsjson">Hooks and settings.json</a><ul>
+<li><a href="#hook-events-and-contracts">Hook events and contracts</a></li>
+<li><a href="#rule-enforcerpy">rule-enforcer.py</a></li>
+<li><a href="#git-protectionpy">git-protection.py</a></li>
+<li><a href="#session-start-checksh">session-start-check.sh</a></li>
+<li><a href="#my-notifiersh">my-notifier.sh</a></li>
+<li><a href="#statusline">statusLine</a></li>
+</ul>
+</li>
+<li><a href="#review-json-files">Review JSON files</a><ul>
+<li><a href="#fetched-review-file">Fetched review file</a></li>
+<li><a href="#pending-review-file">Pending review file</a></li>
+</ul>
+</li>
+<li><a href="#plugin-metadata-files">Plugin metadata files</a><ul>
+<li><a href="#per-plugin-pluginjson">Per-plugin plugin.json</a></li>
+<li><a href="#root-marketplace-manifest">Root marketplace manifest</a></li>
+</ul>
+</li>
+<li><a href="#automation-and-validation-surfaces">Automation and validation surfaces</a><ul>
+<li><a href="#toxtoml">tox.toml</a></li>
+<li><a href="#pre-commit-configyaml">.pre-commit-config.yaml</a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

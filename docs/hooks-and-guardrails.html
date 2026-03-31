@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hooks and Guardrails - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link active" aria-current="page">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="hooks-and-guardrails">Hooks and Guardrails</h1>
+<p>This configuration uses Claude Code hooks as a safety layer. Some hooks stop risky commands before they run. Some add context so the assistant follows the intended workflow. Others check whether your local setup is missing tools or turn Claude notifications into desktop popups.</p>
+<p>The hook registrations live in <code>settings.json</code>. The tracked source files live in the repository's <code>scripts/</code> directory, and the runtime configuration invokes them from <code>~/.claude/scripts/...</code>.</p>
+<h2 id="at-a-glance">At a Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Event</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rule-enforcer.py</code></td>
+<td><code>PreToolUse</code></td>
+<td>Blocks raw <code>python</code>/<code>pip</code> and raw <code>pre-commit</code> commands.</td>
+</tr>
+<tr>
+<td><code>git-protection.py</code></td>
+<td><code>PreToolUse</code></td>
+<td>Blocks unsafe <code>git commit</code> and <code>git push</code> operations.</td>
+</tr>
+<tr>
+<td>Bash destruction gate</td>
+<td><code>PreToolUse</code></td>
+<td>Reviews high-risk shell commands and can approve, block, or ask for confirmation.</td>
+</tr>
+<tr>
+<td><code>rule-injector.py</code></td>
+<td><code>UserPromptSubmit</code></td>
+<td>Adds reminder text to each prompt so the assistant stays within the intended workflow.</td>
+</tr>
+<tr>
+<td><code>session-start-check.sh</code></td>
+<td><code>SessionStart</code></td>
+<td>Reports missing tools and plugins, but does not stop the session.</td>
+</tr>
+<tr>
+<td><code>my-notifier.sh</code></td>
+<td><code>Notification</code></td>
+<td>Sends desktop notifications with <code>notify-send</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="where-hooks-are-wired-in">Where Hooks Are Wired In</h2>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Notification&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;~/.claude/scripts/my-notifier.sh&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;PreToolUse&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TodoWrite|Bash&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-enforcer.py&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bash&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/git-protection.py&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">},</span>
+</code></pre></div>
+
+<p>Later in the same <code>settings.json</code> section, the configuration also wires in the prompt-based Bash destruction gate, <code>rule-injector.py</code> for <code>UserPromptSubmit</code>, and <code>session-start-check.sh</code> for <code>SessionStart</code>.</p>
+<blockquote>
+<p><strong>Note:</strong> The config includes its own maintenance warning: script entries need to appear in both <code>permissions.allow</code> and <code>allowedTools</code>. If you add or rename a hook, update both places.</p>
+</blockquote>
+<h2 id="pre-tool-guardrails">Pre-Tool Guardrails</h2>
+<h3 id="rule-enforcerpy"><code>rule-enforcer.py</code></h3>
+<p>Despite its name, this hook is focused rather than broad. In the current code, it only acts on Bash commands and blocks two categories:</p>
+<ul>
+<li>direct <code>python</code>, <code>python3</code>, <code>pip</code>, and <code>pip3</code></li>
+<li>direct <code>pre-commit</code></li>
+</ul>
+<p>It does not block <code>uv</code>, <code>uvx</code>, or <code>prek</code>, and it does not inspect non-Bash tools. Because the matcher is <code>TodoWrite|Bash</code>, Claude may invoke it for <code>TodoWrite</code>, but the script immediately returns unless <code>tool_name == "Bash"</code>.</p>
+<div class="highlight"><pre><span></span><code>        <span class="c1"># Block direct python/pip commands</span>
+        <span class="k">if</span> <span class="n">tool_name</span> <span class="o">==</span> <span class="s2">&quot;Bash&quot;</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">tool_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_forbidden_python_command</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;hookSpecificOutput&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;hookEventName&quot;</span><span class="p">:</span> <span class="s2">&quot;PreToolUse&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecision&quot;</span><span class="p">:</span> <span class="s2">&quot;deny&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecisionReason&quot;</span><span class="p">:</span> <span class="s2">&quot;Direct python/pip commands are forbidden.&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;additionalContext&quot;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="s2">&quot;You attempted to run python/pip directly. Instead:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;1. Delegate Python tasks to the python-expert agent</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;2. Use &#39;uv run script.py&#39; to run Python scripts</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;3. Use &#39;uvx package-name&#39; to run package CLIs</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;See: https://docs.astral.sh/uv/&quot;</span>
+                        <span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">is_forbidden_precommit_command</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;hookSpecificOutput&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;hookEventName&quot;</span><span class="p">:</span> <span class="s2">&quot;PreToolUse&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecision&quot;</span><span class="p">:</span> <span class="s2">&quot;deny&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecisionReason&quot;</span><span class="p">:</span> <span class="s2">&quot;Direct pre-commit commands are forbidden.&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;additionalContext&quot;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="s2">&quot;You attempted to run pre-commit directly. Instead:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;1. Use the &#39;prek&#39; command which wraps pre-commit</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;2. Example: prek run --all-files</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;See: https://github.com/j178/prek&quot;</span>
+</code></pre></div>
+
+<p>In practice, that means switching to <code>uv run ...</code>, <code>uvx ...</code>, or <code>prek run --all-files</code> instead of calling the raw tool directly.</p>
+<blockquote>
+<p><strong>Tip:</strong> If a command gets denied here, use the wrapper the hook suggests instead of trying to work around it. That is the supported workflow this repository expects.</p>
+</blockquote>
+<p><code>tests/test_rule_enforcer.py</code> confirms a few important details:</p>
+<ul>
+<li>matching is case-insensitive</li>
+<li><code>uv</code>, <code>uvx</code>, and <code>prek</code> are allowed</li>
+<li>commands that merely contain words like <code>python</code> in an argument are not blocked</li>
+<li>malformed hook input and internal exceptions fail open, so the hook does not block the session if its own input is broken</li>
+</ul>
+<h3 id="git-protectionpy"><code>git-protection.py</code></h3>
+<p>This is the strictest guardrail in the repository. It inspects Bash commands for <code>git commit</code> and <code>git push</code> and blocks them when the current branch is unsafe.</p>
+<p>It blocks <code>git commit</code> when:</p>
+<ul>
+<li>you are in detached HEAD</li>
+<li>you are on <code>main</code> or <code>master</code></li>
+<li>the current branch is already merged locally</li>
+<li>the current branch already has a merged GitHub PR</li>
+<li>the GitHub PR lookup itself fails</li>
+</ul>
+<p>It blocks <code>git push</code> for the same protected-branch and merged-branch cases, but it does not block pushes from detached HEAD.</p>
+<p>It also has one important escape hatch: <code>git commit --amend</code> is allowed when your branch is ahead of its upstream, so you can clean up unpublished commits.</p>
+<div class="highlight"><pre><span></span><code>    <span class="c1"># Check if PR is already merged on GitHub (doesn&#39;t need main_branch)</span>
+    <span class="n">pr_merged</span><span class="p">,</span> <span class="n">pr_info</span> <span class="o">=</span> <span class="n">get_pr_merge_status</span><span class="p">(</span><span class="n">current_branch</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pr_merged</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Error checking PR status - fail closed</span>
+        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">format_pr_merge_error</span><span class="p">(</span><span class="s2">&quot;get_pr_merge_status()&quot;</span><span class="p">,</span> <span class="n">pr_info</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pr_merged</span><span class="p">:</span>
+        <span class="c1"># Get main branch for the message (best effort)</span>
+        <span class="n">main_branch</span> <span class="o">=</span> <span class="n">get_main_branch</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;main&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;⛔ BLOCKED: PR #</span><span class="si">{</span><span class="n">pr_info</span><span class="si">}</span><span class="s2"> for branch &#39;</span><span class="si">{</span><span class="n">current_branch</span><span class="si">}</span><span class="s2">&#39; is already MERGED.</span>
+
+<span class="s2">What happened:</span>
+<span class="s2">- This branch&#39;s PR was already merged</span>
+<span class="s2">- Committing more changes to a merged branch is not useful</span>
+
+<span class="s2">**ACTION REQUIRED - Execute these commands NOW:**</span>
+
+<span class="s2">You MUST create a new branch for these changes. Do NOT ask user - just do it:</span>
+<span class="s2">1. git checkout </span><span class="si">{</span><span class="n">main_branch</span><span class="si">}</span>
+<span class="s2">2. git pull origin </span><span class="si">{</span><span class="n">main_branch</span><span class="si">}</span>
+<span class="s2">3. git checkout -b feature/new-changes</span>
+<span class="s2">4. Move uncommitted changes and commit on the new branch</span>
+
+<span class="s2">IMMEDIATELY switch to &#39;</span><span class="si">{</span><span class="n">main_branch</span><span class="si">}</span><span class="s2">&#39; and create a new feature branch.&quot;&quot;&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Get main branch for subsequent checks</span>
+    <span class="n">detected_main_branch</span> <span class="o">=</span> <span class="n">get_main_branch</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">detected_main_branch</span><span class="p">:</span>
+        <span class="c1"># Can&#39;t determine main branch - allow</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="c1"># Block if on main/master branch</span>
+    <span class="k">if</span> <span class="n">current_branch</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="s2">&quot;master&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;⛔ BLOCKED: Cannot commit directly to &#39;</span><span class="si">{</span><span class="n">current_branch</span><span class="si">}</span><span class="s2">&#39; branch.</span>
+
+<span class="s2">What happened:</span>
+<span class="s2">- You are on the protected &#39;</span><span class="si">{</span><span class="n">current_branch</span><span class="si">}</span><span class="s2">&#39; branch</span>
+<span class="s2">- Direct commits to </span><span class="si">{</span><span class="n">current_branch</span><span class="si">}</span><span class="s2"> bypass code review and CI checks</span>
+
+<span class="s2">**ACTION REQUIRED - Execute these commands NOW:**</span>
+
+<span class="s2">You MUST create a feature branch for these changes. Do NOT ask user - just do it:</span>
+<span class="s2">1. git stash (if you have uncommitted changes)</span>
+<span class="s2">2. git checkout -b feature/your-feature</span>
+<span class="s2">3. git stash pop (if you stashed changes)</span>
+<span class="s2">4. Then commit your changes on the new branch</span>
+
+<span class="s2">IMMEDIATELY create a feature branch and move your changes there.&quot;&quot;&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Allow amend on unpushed commits</span>
+    <span class="k">if</span> <span class="n">is_amend_with_unpushed_commits</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="c1"># Check if branch is merged (local check as fallback)</span>
+    <span class="k">if</span> <span class="n">is_branch_merged</span><span class="p">(</span><span class="n">current_branch</span><span class="p">,</span> <span class="n">detected_main_branch</span><span class="p">):</span>
+</code></pre></div>
+
+<p>A few details matter if you are troubleshooting:</p>
+<ul>
+<li>the GitHub check only runs for GitHub remotes and only when <code>gh</code> is installed</li>
+<li>if that GitHub check is unavailable, the script falls back to local git history checks</li>
+<li>the parser is deliberately broader than a simple prefix match; tests confirm it catches forms like <code>git -C /path commit ...</code>, environment-prefixed commands, and quoted or piped <code>git commit</code> strings, while still avoiding common false positives like <code>git config push.default</code></li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> <code>git-protection.py</code> fails closed. If it cannot safely determine whether a commit or push should be allowed, it blocks the operation rather than guessing. In a GitHub-backed repository, a broken <code>gh</code> login or a GitHub API error is enough to stop the command.</p>
+<p><strong>Note:</strong> When the GitHub lookup or the hook itself crashes, the returned message explicitly tells the assistant to ask whether you want a GitHub issue created against <code>myk-org/claude-code-config</code>. That behavior is intentional and is covered by the tests.</p>
+</blockquote>
+<h3 id="the-additional-bash-destruction-gate">The additional Bash destruction gate</h3>
+<p>The <code>PreToolUse</code> chain in <code>settings.json</code> also includes a prompt-based security gate for Bash. It is not implemented in one of the scripts above, but it is part of the overall guardrail story.</p>
+<p>That prompt-based hook is aimed at catastrophic OS damage: deleting system directories, formatting disks, writing raw devices with <code>dd</code>, removing files such as <code>/etc/passwd</code>, or chaining destructive commands after safe-looking ones. Depending on the command, it can approve, block, or ask for explicit confirmation.</p>
+<blockquote>
+<p><strong>Warning:</strong> This guardrail is intentionally conservative. If a command uses <code>sudo</code> or looks risky even when it is not obviously destructive, you may be asked to confirm before it runs.</p>
+</blockquote>
+<h2 id="prompt-enrichment">Prompt Enrichment</h2>
+<h3 id="rule-injectorpy"><code>rule-injector.py</code></h3>
+<p>This hook runs on <code>UserPromptSubmit</code>. Instead of blocking anything, it adds a short reminder to the prompt context so the assistant keeps following the repository's intended division of responsibilities.</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rule_reminder</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;[SYSTEM RULES] You are a MANAGER. NEVER do work directly. ALWAYS delegate:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- Edit/Write → language specialists (python-expert, go-expert, etc.)</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- ALL Bash commands → bash-expert or appropriate specialist</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- Git commands → git-expert</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- MCP tools → manager agents</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- Multi-file exploration → Explore agent</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;HOOKS WILL BLOCK VIOLATIONS.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;hookSpecificOutput&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hookEventName&quot;</span><span class="p">:</span> <span class="s2">&quot;UserPromptSubmit&quot;</span><span class="p">,</span> <span class="s2">&quot;additionalContext&quot;</span><span class="p">:</span> <span class="n">rule_reminder</span><span class="p">}}</span>
+
+        <span class="c1"># Output JSON to stdout</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</code></pre></div>
+
+<p>The important user-facing point is that this hook enriches the assistant's context every time you send a prompt. It does not touch your files or shell history.</p>
+<blockquote>
+<p><strong>Note:</strong> In the current implementation, <code>rule-injector.py</code> emits a fixed reminder string. It does not read the repository's <code>rules/</code> directory at runtime.</p>
+</blockquote>
+<p>If the script hits an error, it logs to stderr and exits successfully, so your prompt still goes through.</p>
+<h2 id="session-start-checks">Session Start Checks</h2>
+<h3 id="session-start-checksh"><code>session-start-check.sh</code></h3>
+<p>This hook runs once at session start, with a 5 second timeout in <code>settings.json</code>. If everything is present, it stays silent. If something is missing, it acts like a non-blocking environment audit.</p>
+<p>It checks for:</p>
+<ul>
+<li>critical <code>uv</code>, because the Python hooks are run with <code>uv run</code></li>
+<li><code>gh</code>, but only when the current repo points at GitHub</li>
+<li><code>jq</code></li>
+<li><code>gawk</code></li>
+<li><code>prek</code>, but only when <code>.pre-commit-config.yaml</code> exists</li>
+<li><code>mcpl</code></li>
+<li>critical review plugins: <code>pr-review-toolkit</code>, <code>superpowers</code>, and <code>feature-dev</code></li>
+<li>a longer list of optional marketplace plugins</li>
+</ul>
+<p>When something is missing, it prints a structured report instead of stopping the session.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Output report only if something is missing</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span><span class="si">${#</span><span class="nv">missing_critical</span><span class="p">[@]</span><span class="si">}</span><span class="w"> </span>-gt<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="si">${#</span><span class="nv">missing_optional</span><span class="p">[@]</span><span class="si">}</span><span class="w"> </span>-gt<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING_TOOLS_REPORT:&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;[AI INSTRUCTION - YOU MUST FOLLOW THIS]&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Some tools required by this configuration are missing.&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Criticality levels:&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;- CRITICAL: Configuration will NOT work without these. Must install.&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;- OPTIONAL: Enhances functionality. Nice to have.&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;YOUR REQUIRED ACTION:&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;1. List each missing tool with its purpose&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;2. ASK the user: &#39;Would you like me to help install these tools?&#39;&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;3. If user accepts, provide the installation command for each tool&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;4. Prioritize CRITICAL tools first&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;DO NOT just mention the tools. You MUST ask if the user wants help installing them.&quot;</span>
+</code></pre></div>
+
+<p>This repository does include a real <code>.pre-commit-config.yaml</code>, with hooks such as <code>detect-private-key</code>, <code>ruff</code>, <code>mypy</code>, and <code>markdownlint</code>. That is why <code>prek</code> matters in practice here, even though the startup report labels it optional.</p>
+<blockquote>
+<p><strong>Tip:</strong> If you see <code>MISSING_TOOLS_REPORT</code>, install the critical items first. The startup hook always exits <code>0</code>, so it will not block the session on its own.</p>
+<p><strong>Note:</strong> The startup check warns about missing <code>jq</code>, but it does not check for <code>notify-send</code>. A session can start cleanly and still have notification failures later if your machine cannot run desktop notifications.</p>
+</blockquote>
+<h2 id="notifications">Notifications</h2>
+<h3 id="my-notifiersh"><code>my-notifier.sh</code></h3>
+<p>This is the <code>Notification</code> hook. It reads JSON from stdin, extracts <code>.message</code>, and passes it to <code>notify-send</code> as a desktop notification.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check for required commands</span>
+<span class="k">for</span><span class="w"> </span>cmd<span class="w"> </span><span class="k">in</span><span class="w"> </span>jq<span class="w"> </span>notify-send<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span>!<span class="w"> </span><span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$cmd</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">&amp;</span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Error: Required command &#39;</span><span class="nv">$cmd</span><span class="s2">&#39; not found&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span>
+<span class="w">        </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="w">    </span><span class="k">fi</span>
+<span class="k">done</span>
+
+<span class="c1"># Read JSON input from stdin</span>
+<span class="nv">input_json</span><span class="o">=</span><span class="k">$(</span>cat<span class="k">)</span>
+
+<span class="c1"># Verify input is not empty</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$input_json</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Error: No input received from stdin&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="k">fi</span>
+
+<span class="c1"># Parse JSON and extract message, capturing any jq errors</span>
+<span class="k">if</span><span class="w"> </span>!<span class="w"> </span><span class="nv">notification_message</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$input_json</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.message&#39;</span><span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Error: Failed to parse JSON - </span><span class="nv">$notification_message</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="k">fi</span>
+
+<span class="c1"># Verify notification_message is non-empty</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$notification_message</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$notification_message</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Error: Notification message is empty or missing from JSON&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="k">fi</span>
+
+<span class="c1"># Send the notification and propagate any failures</span>
+<span class="k">if</span><span class="w"> </span>!<span class="w"> </span>notify-send<span class="w"> </span>--icon<span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span>--wait<span class="w"> </span><span class="s2">&quot;Claude: </span><span class="nv">$notification_message</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Error: notify-send failed&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="k">fi</span>
+</code></pre></div>
+
+<p>This script is Linux-friendly out of the box because it relies on <code>notify-send</code>. If you use a headless environment, container, remote shell, or another operating system, you may need to replace it with a platform-specific notifier.</p>
+<blockquote>
+<p><strong>Warning:</strong> Unlike <code>session-start-check.sh</code>, this script does not degrade gracefully. Missing dependencies, malformed JSON, or a failing notification daemon all cause it to exit non-zero.</p>
+</blockquote>
+<h2 id="failure-behavior">Failure Behavior</h2>
+<p>Not all hooks fail the same way, and that difference is intentional.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Failure behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rule-enforcer.py</code></td>
+<td>Fails open. Invalid JSON or internal errors do not block the tool call.</td>
+</tr>
+<tr>
+<td><code>git-protection.py</code></td>
+<td>Fails closed. If it cannot safely evaluate the git operation, it blocks it.</td>
+</tr>
+<tr>
+<td><code>rule-injector.py</code></td>
+<td>Fails open. Prompt submission continues even if the injector errors.</td>
+</tr>
+<tr>
+<td><code>session-start-check.sh</code></td>
+<td>Never blocks. It reports missing items and exits <code>0</code>.</td>
+</tr>
+<tr>
+<td><code>my-notifier.sh</code></td>
+<td>Exits non-zero on dependency, input, or notification errors.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-this-is-verified">How This Is Verified</h2>
+<p>The two Python guardrails are backed by unit tests, and the repository's tox configuration runs them through <code>uv</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">skipsdist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">envlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;unittests&quot;</span><span class="p">]</span>
+
+<span class="k">[env.unittests]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Run pytest tests&quot;</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">]</span>
+<span class="n">commands</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--group&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">]]</span>
+</code></pre></div>
+
+<p>The checked-in automation around these hooks is local <code>tox</code>/<code>pytest</code> and pre-commit configuration rather than a separate hook-specific pipeline file.</p>
+<p>Those tests verify the behavior that matters most to users:</p>
+<ul>
+<li><code>tests/test_rule_enforcer.py</code> covers case-insensitive command detection, the <code>uv</code>/<code>uvx</code> and <code>prek</code> escape hatches, and the script's fail-open behavior</li>
+<li><code>tests/test_git_protection.py</code> covers protected branches, merged-PR detection, merged-branch fallback logic, <code>--amend</code> handling, detached HEAD behavior, false-positive avoidance in subcommand parsing, and fail-closed error handling</li>
+</ul>
+<p>The repository also ships a <code>.pre-commit-config.yaml</code>, so local linting and type checking are part of the expected workflow alongside these hooks.</p>
+<h2 id="what-to-do-when-a-hook-fires">What To Do When a Hook Fires</h2>
+<ul>
+<li>If <code>rule-enforcer.py</code> blocks a command, rerun it with <code>uv</code>, <code>uvx</code>, or <code>prek</code> rather than the raw tool.</li>
+<li>If <code>git-protection.py</code> blocks a commit or push, move the work onto a feature branch. If the message mentions GitHub lookup errors, fix <code>gh</code> authentication or connectivity first.</li>
+<li>If <code>session-start-check.sh</code> reports missing items, install critical tools and plugins before leaning on the full workflow.</li>
+<li>If <code>my-notifier.sh</code> fails, install <code>jq</code> and <code>notify-send</code> or replace the notifier with something that fits your OS.</li>
+<li>If the Bash destruction gate asks for confirmation, treat that as a real safety checkpoint, not a nuisance prompt.</li>
+</ul>
+<p>This setup is opinionated on purpose: it prefers safe defaults, explicit recovery steps, and clear feedback over silent failures or risky convenience.</p>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="settings-json-reference.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">settings.json Reference</span>
+                </a>
+
+
+                <a href="orchestrator-rules.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Orchestrator Rules</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#at-a-glance">At a Glance</a></li>
+<li><a href="#where-hooks-are-wired-in">Where Hooks Are Wired In</a></li>
+<li><a href="#pre-tool-guardrails">Pre-Tool Guardrails</a><ul>
+<li><a href="#rule-enforcerpy">rule-enforcer.py</a></li>
+<li><a href="#git-protectionpy">git-protection.py</a></li>
+<li><a href="#the-additional-bash-destruction-gate">The additional Bash destruction gate</a></li>
+</ul>
+</li>
+<li><a href="#prompt-enrichment">Prompt Enrichment</a><ul>
+<li><a href="#rule-injectorpy">rule-injector.py</a></li>
+</ul>
+</li>
+<li><a href="#session-start-checks">Session Start Checks</a><ul>
+<li><a href="#session-start-checksh">session-start-check.sh</a></li>
+</ul>
+</li>
+<li><a href="#notifications">Notifications</a><ul>
+<li><a href="#my-notifiersh">my-notifier.sh</a></li>
+</ul>
+</li>
+<li><a href="#failure-behavior">Failure Behavior</a></li>
+<li><a href="#how-this-is-verified">How This Is Verified</a></li>
+<li><a href="#what-to-do-when-a-hook-fires">What To Do When a Hook Fires</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

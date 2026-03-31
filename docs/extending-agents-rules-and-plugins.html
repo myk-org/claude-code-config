@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extending Agents, Rules, and Plugins - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link active" aria-current="page">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="extending-agents-rules-and-plugins">Extending Agents, Rules, and Plugins</h1>
+<p>This repository is easy to extend once you know the pattern: add the primary file, whitelist it, update the companion metadata, and run the local checks. The details differ by extension type, but the workflow is consistent.</p>
+<h2 id="the-safe-workflow">The Safe Workflow</h2>
+<ol>
+<li>Add or remove the main file.</li>
+<li>Update <code>.gitignore</code> so Git will track the change.</li>
+<li>Update the related routing, hook, or marketplace metadata.</li>
+<li>Add or update tests when you change guardrails or release logic.</li>
+<li>Run the local validation commands before you commit.</li>
+</ol>
+<h2 id="start-with-gitignore">Start With <code>.gitignore</code></h2>
+<p>This repo is intentionally deny-by-default. New files are ignored until you explicitly allow them.</p>
+<p>From <code>.gitignore</code>:</p>
+<div class="highlight"><pre><span></span><code># Ignore everything by default
+# This config integrates into ~/.claude so we must be explicit about what we track
+*
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> If you add a file under <code>agents/</code>, <code>rules/</code>, <code>scripts/</code>, <code>plugins/</code>, or <code>tests/</code> and do not add a matching <code>!path/to/file</code> entry in <code>.gitignore</code>, the file will not be tracked.</p>
+</blockquote>
+<p>Use the existing sections as your template:</p>
+<ul>
+<li><code># agents/</code></li>
+<li><code># rules/</code></li>
+<li><code># scripts/</code></li>
+<li><code># plugins/...</code></li>
+<li><code># tests/</code></li>
+</ul>
+<p>Keep new entries in the same style and ordering as the existing block you are editing.</p>
+<h2 id="add-or-remove-agents">Add or Remove Agents</h2>
+<p>Custom agents live in <code>agents/</code>. Built-in agents do not.</p>
+<p>An existing agent file looks like this:</p>
+<div class="highlight"><pre><span></span><code>---
+name: technical-documentation-writer
+description: MUST BE USED when you need comprehensive, user-focused technical documentation for projects, features, or systems.
+<span class="gu">tools: Read, Write, Edit, Glob, Grep</span>
+<span class="gu">---</span>
+</code></pre></div>
+
+<p><code>rules/10-agent-routing.md</code> makes the distinction explicit:</p>
+<div class="highlight"><pre><span></span><code><span class="gu">### Built-in vs Custom Agents</span>
+
+<span class="gs">**Built-in agents**</span> are provided by Claude Code itself and do NOT require definition files in <span class="sb">`agents/`</span>:
+
+<span class="k">-</span><span class="w"> </span><span class="sb">`claude-code-guide`</span> - Has current Claude Code documentation built into Claude Code
+<span class="k">-</span><span class="w"> </span><span class="sb">`general-purpose`</span> - Default fallback agent when no specialist matches
+
+<span class="gs">**Custom agents**</span> are defined in this repository&#39;s <span class="sb">`agents/`</span> directory and require definition files:
+</code></pre></div>
+
+<h3 id="to-add-an-agent">To add an agent</h3>
+<ol>
+<li>Create <code>agents/&lt;agent-name&gt;.md</code>.</li>
+<li>Add frontmatter that matches the existing agent files: <code>name</code>, <code>description</code>, and <code>tools</code>.</li>
+<li>Add <code>!agents/&lt;agent-name&gt;.md</code> to <code>.gitignore</code>.</li>
+<li>Update <code>rules/10-agent-routing.md</code> so the orchestrator knows when to use the new agent.</li>
+<li>Update <code>rules/50-agent-bug-reporting.md</code> so agent-configuration bugs stay reportable.</li>
+</ol>
+<p>The bug-reporting rule contains an explicit allowlist of repository-defined agents:</p>
+<div class="highlight"><pre><span></span><code><span class="gu">## Agents Covered by This Rule</span>
+
+This rule applies ONLY to agents defined in this repository (<span class="sb">`agents/`</span> directory):
+
+<span class="k">-</span><span class="w"> </span>api-documenter
+<span class="k">-</span><span class="w"> </span>bash-expert
+<span class="k">-</span><span class="w"> </span>debugger
+<span class="k">-</span><span class="w"> </span>docs-fetcher
+<span class="k">-</span><span class="w"> </span>docker-expert
+<span class="k">-</span><span class="w"> </span>frontend-expert
+<span class="k">-</span><span class="w"> </span>git-expert
+<span class="k">-</span><span class="w"> </span>github-expert
+<span class="k">-</span><span class="w"> </span>go-expert
+<span class="k">-</span><span class="w"> </span>java-expert
+<span class="k">-</span><span class="w"> </span>jenkins-expert
+<span class="k">-</span><span class="w"> </span>kubernetes-expert
+<span class="k">-</span><span class="w"> </span>python-expert
+<span class="k">-</span><span class="w"> </span>technical-documentation-writer
+<span class="k">-</span><span class="w"> </span>test-automator
+<span class="k">-</span><span class="w"> </span>test-runner
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> Adding an agent file without updating <code>rules/50-agent-bug-reporting.md</code> leaves that agent outside the repository's bug-reporting workflow.</p>
+</blockquote>
+<h3 id="to-remove-an-agent">To remove an agent</h3>
+<ol>
+<li>Delete <code>agents/&lt;agent-name&gt;.md</code>.</li>
+<li>Remove its <code>!agents/&lt;agent-name&gt;.md</code> entry from <code>.gitignore</code>.</li>
+<li>Remove its routing entry from <code>rules/10-agent-routing.md</code>.</li>
+<li>Remove it from <code>rules/50-agent-bug-reporting.md</code>.</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> If the agent name appears anywhere else in rules or command prompts, clean those up in the same change. Stale agent names are easy to miss because they are just text.</p>
+</blockquote>
+<h2 id="add-or-remove-rules">Add or Remove Rules</h2>
+<p>Repository rules live in <code>rules/</code> as numbered Markdown files. The current set uses prefixes such as <code>00-</code>, <code>05-</code>, <code>10-</code>, <code>15-</code>, <code>20-</code>, <code>25-</code>, <code>30-</code>, <code>40-</code>, and <code>50-</code>.</p>
+<h3 id="to-add-a-rule">To add a rule</h3>
+<ol>
+<li>Create <code>rules/NN-your-topic.md</code>.</li>
+<li>Pick the prefix based on load order and topic grouping, not just the next number.</li>
+<li>Add <code>!rules/NN-your-topic.md</code> to <code>.gitignore</code>.</li>
+<li>If the rule changes routing, bug-reporting, slash-command behavior, or task flow, update the related rule files too.</li>
+</ol>
+<h3 id="to-remove-a-rule">To remove a rule</h3>
+<ol>
+<li>Delete <code>rules/NN-your-topic.md</code>.</li>
+<li>Remove its whitelist line from <code>.gitignore</code>.</li>
+<li>Remove references to it from other rules, scripts, or command prompts.</li>
+</ol>
+<p><code>settings.json</code> wires rules into the prompt pipeline through the <code>UserPromptSubmit</code> hook:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UserPromptSubmit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-injector.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> Rule files and hook behavior should agree with each other. If you change a rule that describes enforcement, make sure the related hook scripts still match the documented behavior.</p>
+</blockquote>
+<h2 id="add-or-remove-scripts">Add or Remove Scripts</h2>
+<p>Scripts live in <code>scripts/</code>. In this repo, they are not just files on disk; they are often part of the hook and permission model.</p>
+<p><code>settings.json</code> includes an important reminder:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;_scriptsNote&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.&quot;</span>
+</code></pre></div>
+
+<p>It also shows how scripts are hooked into Claude Code events:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;PreToolUse&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TodoWrite|Bash&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-enforcer.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">],</span>
+<span class="nt">&quot;UserPromptSubmit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-injector.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">],</span>
+<span class="nt">&quot;SessionStart&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;~/.claude/scripts/session-start-check.sh&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;timeout&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<h3 id="to-add-a-script">To add a script</h3>
+<ol>
+<li>Create the file under <code>scripts/</code>.</li>
+<li>Add a matching <code>!scripts/&lt;file&gt;</code> line to <code>.gitignore</code>.</li>
+<li>If the orchestrator needs permission to run it, add the script entry to both <code>permissions.allow</code> and <code>allowedTools</code> in <code>settings.json</code>.</li>
+<li>If it should run automatically, register it under the appropriate hook in <code>settings.json</code>.</li>
+<li>Add or update tests under <code>tests/</code>, and whitelist any new test files in <code>.gitignore</code>.</li>
+</ol>
+<p>If you are writing a hook script, follow the same stdin/stdout protocol used by <code>scripts/rule-injector.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;hookSpecificOutput&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hookEventName&quot;</span><span class="p">:</span> <span class="s2">&quot;UserPromptSubmit&quot;</span><span class="p">,</span> <span class="s2">&quot;additionalContext&quot;</span><span class="p">:</span> <span class="n">rule_reminder</span><span class="p">}}</span>
+
+<span class="c1"># Output JSON to stdout</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</code></pre></div>
+
+<h3 id="to-remove-a-script">To remove a script</h3>
+<ol>
+<li>Delete the script file.</li>
+<li>Remove its <code>.gitignore</code> whitelist entry.</li>
+<li>Remove any matching entries from both <code>permissions.allow</code> and <code>allowedTools</code>.</li>
+<li>Remove any hook registrations that call it.</li>
+<li>Remove or update its tests.</li>
+</ol>
+<blockquote>
+<p><strong>Warning:</strong> Updating a script file without updating <code>settings.json</code> is only half the change. The repo treats hook registration and tool allowlists as part of the script contract.</p>
+</blockquote>
+<h2 id="add-slash-commands-to-a-plugin">Add Slash Commands to a Plugin</h2>
+<p>Each plugin has two important parts:</p>
+<ul>
+<li>A manifest at <code>plugins/&lt;plugin&gt;/.claude-plugin/plugin.json</code></li>
+<li>One Markdown file per command at <code>plugins/&lt;plugin&gt;/commands/*.md</code></li>
+</ul>
+<p>An existing plugin manifest looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-github&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.4.3&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GitHub operations for Claude Code - PR reviews, releases, review handling, and CodeRabbit rate limits&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;author&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-org&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;repository&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://github.com/myk-org/claude-code-config&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;license&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MIT&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;keywords&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;github&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pr-review&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;refine-review&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;release&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;code-review&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;coderabbit&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;rate-limit&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>An existing command file looks like this:</p>
+<div class="highlight"><pre><span></span><code>---
+description: Review a GitHub PR and post inline comments on selected findings
+argument-hint: [PR_NUMBER|PR_URL]
+<span class="gu">allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task</span>
+<span class="gu">---</span>
+</code></pre></div>
+
+<h3 id="to-add-a-command-to-an-existing-plugin">To add a command to an existing plugin</h3>
+<ol>
+<li>Create <code>plugins/&lt;plugin&gt;/commands/&lt;command-name&gt;.md</code>.</li>
+<li>Add frontmatter that matches the existing command files: <code>description</code>, <code>argument-hint</code>, and <code>allowed-tools</code>.</li>
+<li>Write the command body in the same style as the existing command prompts.</li>
+<li>Add a matching whitelist entry in <code>.gitignore</code>.</li>
+</ol>
+<p>The slash-command rule is strict about execution mode:</p>
+<div class="highlight"><pre><span></span><code>1. **EXECUTE IT DIRECTLY YOURSELF** - NEVER delegate to any agent
+2. **ALL internal operations run DIRECTLY** - scripts, bash commands, everything
+3. **Slash command prompt takes FULL CONTROL** - its instructions override general CLAUDE.md rules
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> When you write a command file, write it as the command's own workflow. Do not assume the normal routing rules apply unless the command itself says to call an agent.</p>
+<p><strong>Warning:</strong> Keep command frontmatter minimal. Existing commands use <code>description</code>, <code>argument-hint</code>, and <code>allowed-tools</code>. Do not add extra keys unless you know Claude Code supports them for command files.</p>
+</blockquote>
+<h2 id="add-or-remove-a-plugin">Add or Remove a Plugin</h2>
+<h3 id="to-add-a-plugin">To add a plugin</h3>
+<ol>
+<li>Create <code>plugins/&lt;plugin&gt;/</code>.</li>
+<li>Add <code>plugins/&lt;plugin&gt;/.claude-plugin/plugin.json</code>.</li>
+<li>Add <code>plugins/&lt;plugin&gt;/commands/</code> and at least one command file.</li>
+<li>Add the full whitelist block to <code>.gitignore</code> for the plugin directory, manifest, commands directory, and each tracked command file.</li>
+<li>If this plugin should be enabled in the checked-in config, add it to <code>settings.json</code> under <code>enabledPlugins</code>.</li>
+<li>Add it to <code>.claude-plugin/marketplace.json</code> if it should be installable from this repo's marketplace.</li>
+</ol>
+<p>The existing <code>enabledPlugins</code> block includes the repository's own plugins:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;enabledPlugins&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;myk-review@myk-org&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;myk-github@myk-org&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;myk-acpx@myk-org&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="to-remove-a-plugin">To remove a plugin</h3>
+<ol>
+<li>Delete the plugin directory.</li>
+<li>Remove its whitelist block from <code>.gitignore</code>.</li>
+<li>Remove its entry from <code>settings.json</code> <code>enabledPlugins</code> if present.</li>
+<li>Remove its object from <code>.claude-plugin/marketplace.json</code>.</li>
+<li>Remove references to its commands anywhere else in the repo.</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> You do not need to list commands inside <code>plugin.json</code>. In this repo, command discovery comes from the files under <code>plugins/&lt;plugin&gt;/commands/</code>.</p>
+</blockquote>
+<h2 id="add-or-remove-marketplace-entries">Add or Remove Marketplace Entries</h2>
+<p>The repo's marketplace manifest lives at <code>.claude-plugin/marketplace.json</code>. Each entry includes a plugin <code>name</code>, <code>source</code>, <code>description</code>, and <code>version</code>.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-org&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;owner&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-org&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;plugins&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-github&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;./plugins/myk-github&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GitHub operations - PR reviews, releases, review handling, CodeRabbit rate limits&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.7.2&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;myk-review&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;./plugins/myk-review&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Local code review and review database operations&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.7.2&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="to-add-a-marketplace-entry">To add a marketplace entry</h3>
+<ol>
+<li>Add a new object under <code>plugins</code>.</li>
+<li>Point <code>source</code> at the plugin directory, for example <code>./plugins/my-plugin</code>.</li>
+<li>Use a short description that matches the manifest and command set.</li>
+<li>Set the version you want to publish.</li>
+</ol>
+<h3 id="to-remove-a-marketplace-entry">To remove a marketplace entry</h3>
+<ol>
+<li>Remove the plugin object from <code>.claude-plugin/marketplace.json</code>.</li>
+<li>Remove the plugin itself if it is no longer part of the repo.</li>
+<li>Remove any <code>enabledPlugins</code> entry if the checked-in config enables it.</li>
+</ol>
+<blockquote>
+<p><strong>Note:</strong> The release tooling in <code>myk_claude_tools/release/detect_versions.py</code> only scans <code>pyproject.toml</code>, <code>package.json</code>, <code>setup.cfg</code>, <code>Cargo.toml</code>, <code>build.gradle</code>, <code>build.gradle.kts</code>, and Python <code>__version__</code> files such as <code>__init__.py</code> and <code>version.py</code>. It does not automatically update <code>plugins/*/.claude-plugin/plugin.json</code> or <code>.claude-plugin/marketplace.json</code>, so plugin and marketplace version metadata must be maintained separately.</p>
+</blockquote>
+<h2 id="validate-the-change">Validate the Change</h2>
+<p>The repo's local validation lives in <code>tox.toml</code>, <code>pyproject.toml</code>, and <code>.pre-commit-config.yaml</code>.</p>
+<p><code>tox.toml</code> runs pytest through <code>uv</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[env.unittests]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Run pytest tests&quot;</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">]</span>
+<span class="n">commands</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--group&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">]]</span>
+</code></pre></div>
+
+<p>Use these checks from the repository root:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>tests<span class="w"> </span>pytest<span class="w"> </span>tests
+uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>tests<span class="w"> </span>pytest<span class="w"> </span>tests/test_rule_enforcer.py<span class="w"> </span>tests/test_git_protection.py
+uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>tests<span class="w"> </span>pytest<span class="w"> </span>tests/test_detect_versions.py<span class="w"> </span>tests/test_bump_version.py
+prek<span class="w"> </span>run<span class="w"> </span>--all-files
+</code></pre></div>
+
+<p>What those checks cover:</p>
+<ul>
+<li><code>uv run --group tests pytest tests</code> runs the full unit test suite.</li>
+<li><code>tests/test_rule_enforcer.py</code> and <code>tests/test_git_protection.py</code> are the important targeted tests when you change hook or guardrail scripts.</li>
+<li><code>tests/test_detect_versions.py</code> and <code>tests/test_bump_version.py</code> are the targeted tests when you change release or version-detection logic.</li>
+<li><code>prek run --all-files</code> runs the hooks defined in <code>.pre-commit-config.yaml</code>, including <code>flake8</code>, <code>detect-secrets</code>, <code>ruff</code>, <code>gitleaks</code>, <code>mypy</code>, and <code>markdownlint</code>.</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> Use <code>prek</code>, not <code>pre-commit</code>. <code>scripts/rule-enforcer.py</code> explicitly blocks direct <code>pre-commit</code> commands and tells the caller to use <code>prek</code> instead.</p>
+</blockquote>
+<p><code>pyproject.toml</code> is the source of truth for Ruff and Mypy settings, so if you add Python code or release tooling, treat lint and type checks as part of the change, not as optional cleanup.</p>
+<p>If you keep the whitelist, routing, bug-reporting coverage, hooks, and marketplace metadata in sync, new extensions behave like the rest of the repository instead of becoming one-off exceptions.</p>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="automation-and-ci.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Automation and CI</span>
+                </a>
+
+
+                <a href="maintaining-release-and-versioning.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Maintaining Releases and Versioning</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#the-safe-workflow">The Safe Workflow</a></li>
+<li><a href="#start-with-gitignore">Start With .gitignore</a></li>
+<li><a href="#add-or-remove-agents">Add or Remove Agents</a><ul>
+<li><a href="#to-add-an-agent">To add an agent</a></li>
+<li><a href="#to-remove-an-agent">To remove an agent</a></li>
+</ul>
+</li>
+<li><a href="#add-or-remove-rules">Add or Remove Rules</a><ul>
+<li><a href="#to-add-a-rule">To add a rule</a></li>
+<li><a href="#to-remove-a-rule">To remove a rule</a></li>
+</ul>
+</li>
+<li><a href="#add-or-remove-scripts">Add or Remove Scripts</a><ul>
+<li><a href="#to-add-a-script">To add a script</a></li>
+<li><a href="#to-remove-a-script">To remove a script</a></li>
+</ul>
+</li>
+<li><a href="#add-slash-commands-to-a-plugin">Add Slash Commands to a Plugin</a><ul>
+<li><a href="#to-add-a-command-to-an-existing-plugin">To add a command to an existing plugin</a></li>
+</ul>
+</li>
+<li><a href="#add-or-remove-a-plugin">Add or Remove a Plugin</a><ul>
+<li><a href="#to-add-a-plugin">To add a plugin</a></li>
+<li><a href="#to-remove-a-plugin">To remove a plugin</a></li>
+</ul>
+</li>
+<li><a href="#add-or-remove-marketplace-entries">Add or Remove Marketplace Entries</a><ul>
+<li><a href="#to-add-a-marketplace-entry">To add a marketplace entry</a></li>
+<li><a href="#to-remove-a-marketplace-entry">To remove a marketplace entry</a></li>
+</ul>
+</li>
+<li><a href="#validate-the-change">Validate the Change</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

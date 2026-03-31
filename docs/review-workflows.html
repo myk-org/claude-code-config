@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Workflows - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link active" aria-current="page">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="review-workflows">Review Workflows</h1>
+<p>This project gives you a complete review loop inside Claude Code: you can review local changes before you push, review a GitHub PR and post selected findings, process comments from multiple review sources on an open PR, refine your own draft review before submitting it, and store the outcome so future review rounds get smarter.</p>
+<table>
+<thead>
+<tr>
+<th>If you want to...</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Review uncommitted or branch-to-branch changes</td>
+<td><code>/myk-review:local [branch]</code></td>
+</tr>
+<tr>
+<td>Review a GitHub PR and optionally post findings</td>
+<td><code>/myk-github:pr-review [PR number or URL]</code></td>
+</tr>
+<tr>
+<td>Process incoming human, Qodo, and CodeRabbit comments on a PR</td>
+<td><code>/myk-github:review-handler [--autorabbit] [review URL]</code></td>
+</tr>
+<tr>
+<td>Polish your own draft review before submitting it</td>
+<td><code>/myk-github:refine-review &lt;PR_URL&gt;</code></td>
+</tr>
+<tr>
+<td>Inspect stored review history and patterns</td>
+<td><code>/myk-review:query-db ...</code> or <code>myk-claude-tools db ...</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> The shipped configuration enables both review plugins:</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;enabledPlugins&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;pyright-lsp@claude-plugins-official&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;jdtls-lsp@claude-plugins-official&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;lua-lsp@claude-plugins-official&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;github@claude-plugins-official&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;myk-review@myk-org&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;myk-github@myk-org&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;code-simplifier@claude-plugins-official&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> GitHub-facing review commands check for <code>uv</code>, <code>myk-claude-tools</code>, and <code>gh</code> before they run.</p>
+</blockquote>
+<h2 id="local-diff-review">Local Diff Review</h2>
+<p>Use <code>/myk-review:local</code> when you want fast feedback without touching GitHub. It is the lightest-weight workflow in the repo.</p>
+<p>How it works:</p>
+<ul>
+<li><code>/myk-review:local</code> reviews your staged and unstaged changes with <code>git diff HEAD</code>.</li>
+<li><code>/myk-review:local &lt;branch&gt;</code> reviews your branch against another branch with <code>git diff "&lt;branch&gt;"...HEAD</code>.</li>
+<li>The diff is sent to three review agents in parallel, then their findings are merged and deduplicated before you see them.</li>
+</ul>
+<p>In practice, this is the best workflow for pre-push review or for checking a feature branch before you open a PR.</p>
+<blockquote>
+<p><strong>Tip:</strong> Use <code>/myk-review:local main</code> when you want “what changed since I branched?” and <code>/myk-review:local</code> when you want “what have I changed right now?”</p>
+</blockquote>
+<h2 id="github-pr-review">GitHub PR Review</h2>
+<p>Use <code>/myk-github:pr-review</code> when you want Claude to review a real PR and optionally post selected findings back to GitHub.</p>
+<p>This workflow does more than just fetch a diff. It also resolves the base repository context, which matters for fork-based PRs, and pulls the repository’s <code>CLAUDE.md</code> so the review agents can judge the PR in project context.</p>
+<p>The PR diff command produces a structured payload with metadata, the full diff, and the changed-file list:</p>
+<div class="highlight"><pre><span></span><code>    <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">owner</span><span class="p">,</span>
+            <span class="s2">&quot;repo&quot;</span><span class="p">:</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+            <span class="s2">&quot;pr_number&quot;</span><span class="p">:</span> <span class="n">pr_info</span><span class="o">.</span><span class="n">pr_number</span><span class="p">,</span>
+            <span class="s2">&quot;head_sha&quot;</span><span class="p">:</span> <span class="n">head_sha</span><span class="p">,</span>
+            <span class="s2">&quot;base_ref&quot;</span><span class="p">:</span> <span class="n">base_ref</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">pr_title</span><span class="p">,</span>
+            <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">pr_state</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;diff&quot;</span><span class="p">:</span> <span class="n">pr_diff</span><span class="p">,</span>
+        <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="n">files</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre></div>
+
+<p>That data is then analyzed by the three review agents. After you choose which findings to post, the tool sends them to GitHub as a single review with a summary body and inline comments:</p>
+<div class="highlight"><pre><span></span><code>    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;commit_id&quot;</span><span class="p">:</span> <span class="n">commit_sha</span><span class="p">,</span>
+        <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">review_body</span><span class="p">,</span>
+        <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="s2">&quot;COMMENT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;comments&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+                <span class="s2">&quot;line&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">line</span><span class="p">,</span>
+                <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">body</span><span class="p">,</span>
+                <span class="s2">&quot;side&quot;</span><span class="p">:</span> <span class="s2">&quot;RIGHT&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">comments</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+</code></pre></div>
+
+<p>What this means for you:</p>
+<ul>
+<li>You can run <code>/myk-github:pr-review</code> with no argument to auto-detect the current branch’s PR.</li>
+<li>You can also pass a PR number or full PR URL.</li>
+<li>You stay in control of what gets posted: all findings, none, or only selected ones.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> Inline comments can only be posted on lines that are part of the PR diff. If posting fails, the first things to check are the file path, the line number, and whether the PR head SHA changed since the review started.</p>
+</blockquote>
+<h2 id="multi-source-review-handling">Multi-Source Review Handling</h2>
+<p>Use <code>/myk-github:review-handler</code> when a PR already has reviewer feedback and you want to work through it systematically.</p>
+<p>This is the full review-processing workflow. It fetches unresolved review threads, categorizes them by source, lets you decide what to do with each item, applies fixes, posts replies, and stores the results for future analytics and auto-skip matching.</p>
+<p>Fetched review items are enriched with a source, priority, reply field, and status:</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">source</span> <span class="o">=</span> <span class="n">detect_source</span><span class="p">(</span><span class="n">author</span><span class="p">)</span>
+        <span class="n">priority</span> <span class="o">=</span> <span class="n">classify_priority</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="n">enriched</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">thread</span><span class="p">,</span>
+            <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+            <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
+            <span class="s2">&quot;reply&quot;</span><span class="p">:</span> <span class="n">thread</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reply&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">thread</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;pending&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+</code></pre></div>
+
+<p>The workflow groups review threads into three top-level buckets:</p>
+<ul>
+<li><code>human</code></li>
+<li><code>qodo</code></li>
+<li><code>coderabbit</code></li>
+</ul>
+<p>CodeRabbit also gets special handling because some of its comments are embedded in the review body instead of normal GitHub review threads:</p>
+<div class="highlight"><pre><span></span><code><span class="s2">&quot;&quot;&quot;Parse CodeRabbit review body comments (outside diff range, nitpick, and duplicate).</span>
+
+<span class="s2">CodeRabbit embeds certain comments directly in the review body text</span>
+<span class="s2">(not as inline threads). This module extracts those comments into</span>
+<span class="s2">structured data. Three kinds of body-embedded sections are supported:</span>
+
+<span class="s2">- **Outside diff range** comments (code outside the PR diff range)</span>
+<span class="s2">- **Nitpick** comments (minor suggestions)</span>
+<span class="s2">- **Duplicate** comments (comments repeated from previous reviews)</span>
+
+<span class="s2">The expected format is a blockquoted ``&lt;details&gt;`` section with nested</span>
+</code></pre></div>
+
+<p>That matters because <code>review-handler</code> is designed to give you one place to process:</p>
+<ul>
+<li>regular human review threads</li>
+<li>Qodo comments</li>
+<li>CodeRabbit inline threads</li>
+<li>CodeRabbit outside-diff, nitpick, and duplicate comments</li>
+</ul>
+<p>A typical flow looks like this:</p>
+<ol>
+<li>Fetch open review items from the current PR.</li>
+<li>Show everything to the user, including auto-skipped items.</li>
+<li>Decide what to address, what to skip, and why.</li>
+<li>Make code changes and run tests.</li>
+<li>Post replies to GitHub.</li>
+<li>Store the completed review result in the local database.</li>
+</ol>
+<blockquote>
+<p><strong>Note:</strong> Auto-skipped items are still shown in the review tables. The workflow treats auto-skip as a suggested default, not as a hidden deletion.</p>
+</blockquote>
+<p>If you use <code>--autorabbit</code>, CodeRabbit items are auto-approved for action while human and Qodo items still follow the normal decision flow.</p>
+<blockquote>
+<p><strong>Warning:</strong> <code>--autorabbit</code> is a polling loop. It keeps checking for new CodeRabbit comments until you stop it.</p>
+</blockquote>
+<h2 id="pending-review-refinement">Pending-Review Refinement</h2>
+<p>Use <code>/myk-github:refine-review &lt;PR_URL&gt;</code> when you already started a review in the GitHub UI and want help rewriting your draft comments before you submit them.</p>
+<p>This workflow is intentionally different from <code>review-handler</code>:</p>
+<ul>
+<li>It does not fetch all unresolved review feedback on the PR.</li>
+<li>It fetches only your own <code>PENDING</code> review.</li>
+<li>It is meant for editing your draft review comments, not responding to other reviewers.</li>
+</ul>
+<p>The update command expects a JSON structure like this:</p>
+<div class="highlight"><pre><span></span><code><span class="n">Expected</span> <span class="n">JSON</span> <span class="n">structure</span><span class="p">:</span>
+  <span class="p">{</span>
+    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;repo&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;pr_number&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span>
+      <span class="s2">&quot;review_id&quot;</span><span class="p">:</span> <span class="mi">456</span><span class="p">,</span>
+      <span class="s2">&quot;submit_action&quot;</span><span class="p">:</span> <span class="s2">&quot;COMMENT&quot;</span><span class="p">,</span>        <span class="c1"># optional</span>
+      <span class="s2">&quot;submit_summary&quot;</span><span class="p">:</span> <span class="s2">&quot;Summary text&quot;</span>    <span class="c1"># optional</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;comments&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">789</span><span class="p">,</span>
+        <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/main.py&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;line&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+        <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="s2">&quot;original comment&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;refined_body&quot;</span><span class="p">:</span> <span class="s2">&quot;refined version&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;accepted&quot;</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+
+<span class="n">Status</span> <span class="n">handling</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">accepted</span><span class="p">:</span> <span class="n">Update</span> <span class="n">comment</span> <span class="n">body</span> <span class="k">with</span> <span class="n">refined_body</span>
+  <span class="o">-</span> <span class="n">Other</span> <span class="n">statuses</span><span class="p">:</span> <span class="n">Skip</span> <span class="p">(</span><span class="n">no</span> <span class="n">update</span><span class="p">)</span>
+</code></pre></div>
+
+<p>When <code>pending-fetch</code> builds the comment list, each comment starts in a neutral state with the original body preserved and a place for an accepted refinement:</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">comment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;line&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;line&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;side&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;side&quot;</span><span class="p">,</span> <span class="s2">&quot;RIGHT&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;diff_hunk&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;diff_hunk&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;refined_body&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;pending&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+</code></pre></div>
+
+<p>Only accepted comments with a changed <code>refined_body</code> are updated, and submission is guarded very deliberately:</p>
+<div class="highlight"><pre><span></span><code>    <span class="c1"># Optionally submit the review (requires both JSON submit_action AND --submit flag)</span>
+    <span class="n">submit_action</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submit_action&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">submit_action</span> <span class="ow">and</span> <span class="n">submit</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">submit_action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_SUBMIT_ACTIONS</span><span class="p">:</span>
+            <span class="n">print_stderr</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Error: Invalid submit_action &#39;</span><span class="si">{</span><span class="n">submit_action</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Must be one of: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">VALID_SUBMIT_ACTIONS</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">fail_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">print_stderr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping review submission due to </span><span class="si">{</span><span class="n">fail_count</span><span class="si">}</span><span class="s2"> failed update(s)&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">submit_summary</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;submit_summary&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">print_stderr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Submitting review with action: </span><span class="si">{</span><span class="n">submit_action</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">submit_action</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">submit</span><span class="p">:</span>
+        <span class="n">print_stderr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Note: submit_action=&#39;</span><span class="si">{</span><span class="n">submit_action</span><span class="si">}</span><span class="s2">&#39; set but --submit flag not passed. Skipping submission.&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>That gives you a safe review flow:</p>
+<ul>
+<li>refine everything</li>
+<li>accept only the edits you want</li>
+<li>optionally submit as <code>COMMENT</code>, <code>APPROVE</code>, or <code>REQUEST_CHANGES</code></li>
+<li>or leave the review pending and come back later</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> Submission requires both the metadata field <code>submit_action</code> and the CLI flag <code>--submit</code>. If one is missing, the review will not be submitted.</p>
+<p><strong>Warning:</strong> A <code>404</code> during pending-review update usually means the draft review was already submitted or deleted somewhere else.</p>
+</blockquote>
+<h2 id="auto-skip-behavior">Auto-Skip Behavior</h2>
+<p>One of the most useful features in this repo is automatic skipping of repeated, previously dismissed review comments.</p>
+<p>When the tool fetches new review items, it checks the review database for similar comments that were previously marked <code>skipped</code> or <code>not_addressed</code>, and in some cases <code>addressed</code> for body-comment types. If it finds a close enough match, it enriches the new item so it already carries the earlier decision and reason.</p>
+<p>Here is the core matching logic:</p>
+<div class="highlight"><pre><span></span><code>                    <span class="k">if</span> <span class="n">candidates</span><span class="p">:</span>
+                        <span class="n">best</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+                        <span class="k">for</span> <span class="n">prev</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+                            <span class="n">prev_body</span> <span class="o">=</span> <span class="p">(</span><span class="n">prev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">prev_body</span><span class="p">:</span>
+                                <span class="k">continue</span>
+                            <span class="n">score</span> <span class="o">=</span> <span class="n">similarity</span><span class="p">(</span><span class="n">thread_body</span><span class="p">,</span> <span class="n">prev_body</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;=</span> <span class="mf">0.6</span> <span class="ow">and</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+                                <span class="n">best</span> <span class="o">=</span> <span class="n">prev</span>
+                                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
+                                <span class="k">if</span> <span class="n">best_score</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                                    <span class="k">break</span>
+
+                        <span class="k">if</span> <span class="n">best</span><span class="p">:</span>
+                            <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_reason&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">best</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reply&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+                                <span class="n">original_status</span> <span class="o">=</span> <span class="n">best</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;skipped&quot;</span><span class="p">)</span>
+                                <span class="n">enriched</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;skipped&quot;</span>
+                                <span class="n">enriched</span><span class="p">[</span><span class="s2">&quot;skip_reason&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reason</span>
+                                <span class="n">enriched</span><span class="p">[</span><span class="s2">&quot;original_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_status</span>  <span class="c1"># Display-only, not persisted to DB</span>
+                                <span class="n">enriched</span><span class="p">[</span><span class="s2">&quot;reply&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Auto-skipped (</span><span class="si">{</span><span class="n">original_status</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span>
+                                <span class="n">enriched</span><span class="p">[</span><span class="s2">&quot;is_auto_skipped&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+
+<p>A few practical details matter here:</p>
+<ul>
+<li>Matching is based on exact path first, with a <code>comment_id</code> fallback for pathless body comments.</li>
+<li>The similarity threshold is <code>0.6</code>.</li>
+<li>The similarity function is Jaccard-style word overlap, not exact string equality.</li>
+<li>The original reason is carried forward so you can see why the new item was auto-skipped.</li>
+</ul>
+<p>The database query is intentionally conservative about what counts as safe auto-skip input:</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">Retrieves</span> <span class="n">comments</span> <span class="n">that</span> <span class="n">were</span> <span class="n">dismissed</span> <span class="n">during</span> <span class="n">review</span> <span class="n">processing</span><span class="p">:</span>
+        <span class="o">-</span> <span class="err">``</span><span class="n">not_addressed</span><span class="err">``</span> <span class="ow">and</span> <span class="err">``</span><span class="n">skipped</span><span class="err">``</span> <span class="n">comments</span> <span class="n">are</span> <span class="n">always</span> <span class="n">included</span> <span class="p">(</span><span class="nb">any</span> <span class="nb">type</span><span class="p">)</span><span class="o">.</span>
+        <span class="o">-</span> <span class="err">``</span><span class="n">addressed</span><span class="err">``</span> <span class="n">comments</span> <span class="n">are</span> <span class="n">only</span> <span class="n">included</span> <span class="n">when</span> <span class="n">their</span> <span class="nb">type</span> <span class="ow">is</span>
+          <span class="err">``</span><span class="n">outside_diff_comment</span><span class="err">``</span><span class="p">,</span> <span class="err">``</span><span class="n">nitpick_comment</span><span class="err">``</span><span class="p">,</span> <span class="ow">or</span>
+          <span class="err">``</span><span class="n">duplicate_comment</span><span class="err">``</span><span class="o">.</span>  <span class="n">These</span> <span class="n">types</span> <span class="n">lack</span> <span class="n">a</span> <span class="n">GitHub</span> <span class="n">review</span> <span class="n">thread</span>
+          <span class="n">that</span> <span class="n">can</span> <span class="n">be</span> <span class="n">resolved</span><span class="p">,</span> <span class="n">so</span> <span class="n">the</span> <span class="n">database</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">only</span> <span class="n">mechanism</span> <span class="n">to</span>
+          <span class="n">auto</span><span class="o">-</span><span class="n">skip</span> <span class="n">them</span> <span class="n">on</span> <span class="n">subsequent</span> <span class="n">fetches</span><span class="o">.</span>  <span class="n">Normal</span>
+          <span class="n">inline</span> <span class="n">thread</span> <span class="n">comments</span> <span class="n">rely</span> <span class="n">on</span> <span class="n">GitHub</span><span class="s1">&#39;s ``isResolved`` filter in</span>
+          <span class="n">the</span> <span class="n">GraphQL</span> <span class="n">query</span><span class="p">,</span> <span class="n">so</span> <span class="n">including</span> <span class="n">them</span> <span class="n">here</span> <span class="n">could</span> <span class="n">incorrectly</span>
+          <span class="n">auto</span><span class="o">-</span><span class="n">skip</span> <span class="n">a</span> <span class="n">similar</span> <span class="n">new</span> <span class="n">finding</span> <span class="ow">in</span> <span class="n">a</span> <span class="n">different</span> <span class="n">PR</span><span class="o">.</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Tip:</strong> Auto-skip gets better over time only if you store completed review results. If you skip <code>reviews store</code>, future review rounds lose that memory.</p>
+</blockquote>
+<h2 id="reply-posting-and-thread-resolution">Reply Posting And Thread Resolution</h2>
+<p><code>myk-claude-tools reviews post &lt;json_path&gt;</code> is the command that actually replies on GitHub after statuses and messages have been set.</p>
+<p>It handles two different kinds of review feedback:</p>
+<ul>
+<li>normal GitHub review threads that have a resolvable thread ID</li>
+<li>body-only comments such as CodeRabbit outside-diff, nitpick, and duplicate comments</li>
+</ul>
+<p>The resolution policy is intentionally different for human and AI reviewers:</p>
+<div class="highlight"><pre><span></span><code>            <span class="c1"># Outside-diff and nitpick comments have no GitHub thread to post to or resolve.</span>
+            <span class="c1"># They are tracked via the review database only.</span>
+            <span class="n">comment_type</span> <span class="o">=</span> <span class="n">thread_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">comment_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;outside_diff_comment&quot;</span><span class="p">,</span> <span class="s2">&quot;nitpick_comment&quot;</span><span class="p">,</span> <span class="s2">&quot;duplicate_comment&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;pending&quot;</span><span class="p">:</span>
+                    <span class="n">pending_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">eprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] (</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">comment_type</span><span class="si">}</span><span class="s2"> status is pending&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;addressed&quot;</span><span class="p">,</span> <span class="s2">&quot;not_addressed&quot;</span><span class="p">,</span> <span class="s2">&quot;skipped&quot;</span><span class="p">,</span> <span class="s2">&quot;failed&quot;</span><span class="p">):</span>
+                    <span class="c1"># Skip if already posted (idempotency)</span>
+                    <span class="k">if</span> <span class="n">posted_at</span><span class="p">:</span>
+                        <span class="n">already_posted_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">eprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] (</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">comment_type</span><span class="si">}</span><span class="s2"> already posted at </span><span class="si">{</span><span class="n">posted_at</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">continue</span>
+
+                    <span class="c1"># Skip auto-skipped entries — they were already replied to in a previous cycle</span>
+                    <span class="k">if</span> <span class="n">thread_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_auto_skipped&quot;</span><span class="p">):</span>
+                        <span class="n">already_posted_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">eprint</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Skipping </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] (</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">comment_type</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot; auto-skipped (already replied in previous cycle)&quot;</span>
+                        <span class="p">)</span>
+                        <span class="k">continue</span>
+<span class="o">...</span>
+            <span class="c1"># Determine if we should resolve this thread (MUST be before resolve_only_retry check)</span>
+            <span class="n">should_resolve</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">category</span> <span class="o">==</span> <span class="s2">&quot;human&quot;</span> <span class="ow">and</span> <span class="n">status</span> <span class="o">!=</span> <span class="s2">&quot;addressed&quot;</span><span class="p">:</span>
+                <span class="n">should_resolve</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+
+<p>What that means in practice:</p>
+<ul>
+<li><code>addressed</code> replies resolve normal threads.</li>
+<li><code>not_addressed</code> and <code>skipped</code> still post a reply.</li>
+<li>Human <code>not_addressed</code> and <code>skipped</code> threads stay open so the human reviewer can follow up.</li>
+<li>Qodo and CodeRabbit threads resolve after reply.</li>
+<li>Outside-diff, nitpick, and duplicate comments are collected into consolidated PR comments per reviewer instead of thread replies.</li>
+</ul>
+<p>If something fails, the command is designed to be rerun safely. Already-posted entries are skipped, and partially processed entries can retry the missing step.</p>
+<blockquote>
+<p><strong>Note:</strong> If a post fails, rerun the exact <code>myk-claude-tools reviews post &lt;json_path&gt;</code> command the tool prints. The workflow is intentionally idempotent enough to retry without reposting everything.</p>
+</blockquote>
+<h2 id="review-result-storage-and-analytics">Review Result Storage And Analytics</h2>
+<p>After replies are posted, <code>myk-claude-tools reviews store &lt;json_path&gt;</code> persists the finished review to SQLite so the repo can support analytics and future auto-skip matching.</p>
+<p>The storage path is inside the project, not in a global database:</p>
+<div class="highlight"><pre><span></span><code>    <span class="c1"># Get project root and database path</span>
+    <span class="n">project_root</span> <span class="o">=</span> <span class="n">get_project_root</span><span class="p">()</span>
+
+    <span class="c1"># Get current commit SHA (anchored to repo root for correctness)</span>
+    <span class="n">commit_sha</span> <span class="o">=</span> <span class="n">get_current_commit_sha</span><span class="p">(</span><span class="n">cwd</span><span class="o">=</span><span class="n">project_root</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Storing reviews for </span><span class="si">{</span><span class="n">owner</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">pr_number</span><span class="si">}</span><span class="s2"> (commit: </span><span class="si">{</span><span class="n">commit_sha</span><span class="p">[:</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">)...&quot;</span><span class="p">)</span>
+
+    <span class="n">db_path</span> <span class="o">=</span> <span class="n">project_root</span> <span class="o">/</span> <span class="s2">&quot;.claude&quot;</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;reviews.db&quot;</span>
+</code></pre></div>
+
+<p>A few important storage behaviors are worth knowing:</p>
+<ul>
+<li>The current <code>HEAD</code> SHA is stored with each review record.</li>
+<li>Review history is append-only, so multiple review passes on the same PR build history instead of overwriting each other.</li>
+<li>Per-comment data includes source, author, path, line, body, priority, status, reply, timestamps, and comment type.</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> <code>reviews store</code> deletes the JSON file after successful storage. Treat the JSON as a working file, not a permanent artifact.</p>
+</blockquote>
+<p>Once the data is stored, you can query it either through <code>/myk-review:query-db</code> or directly with the CLI.</p>
+<p>Useful commands:</p>
+<ul>
+<li><code>myk-claude-tools db stats --by-source</code></li>
+<li><code>myk-claude-tools db stats --by-reviewer</code></li>
+<li><code>myk-claude-tools db patterns --min 2</code></li>
+<li><code>myk-claude-tools db dismissed --owner &lt;owner&gt; --repo &lt;repo&gt;</code></li>
+<li><code>myk-claude-tools db query "SELECT status, COUNT(*) AS cnt FROM comments GROUP BY status"</code></li>
+<li><code>echo '{"path":"src/main.py","body":"Consider adding error handling"}' | myk-claude-tools db find-similar --owner &lt;owner&gt; --repo &lt;repo&gt; --json</code></li>
+</ul>
+<p>Raw SQL queries are intentionally locked down to read-only entry points:</p>
+<div class="highlight"><pre><span></span><code>        <span class="c1"># Safety check: only allow SELECT/CTE statements</span>
+        <span class="n">sql_stripped</span> <span class="o">=</span> <span class="n">sql</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="o">...</span>
+        <span class="c1"># Block multiple statements (semicolon separating statements, not in strings/comments)</span>
+        <span class="n">sql_stmt_check</span> <span class="o">=</span> <span class="n">_strip_sql_strings</span><span class="p">(</span><span class="n">sql_for_checks</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;;&quot;</span> <span class="ow">in</span> <span class="n">sql_stmt_check</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Multiple SQL statements are not allowed&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Allow SELECT and WITH (CTE) as read-only entrypoints</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sql_upper</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;SELECT&quot;</span><span class="p">,</span> <span class="s2">&quot;WITH&quot;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only SELECT/CTE queries are allowed for safety&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>That makes the analytics side safe for exploration while still giving you useful ways to answer questions like:</p>
+<ul>
+<li>Which review source has the highest addressed rate?</li>
+<li>Which reviewer keeps raising the same suggestion?</li>
+<li>Which comments were skipped, and why?</li>
+<li>Has this “new” CodeRabbit comment already been dismissed in an earlier cycle?</li>
+</ul>
+<h2 id="recommended-flow">Recommended Flow</h2>
+<p>For most teams, the smoothest path looks like this:</p>
+<ol>
+<li>Use <code>/myk-review:local</code> before pushing or opening a PR.</li>
+<li>Use <code>/myk-github:pr-review</code> when you want Claude-generated PR findings and optional inline GitHub comments.</li>
+<li>Use <code>/myk-github:review-handler</code> after human, Qodo, or CodeRabbit feedback arrives.</li>
+<li>Use <code>/myk-github:refine-review</code> only for your own draft GitHub review comments.</li>
+<li>Always store completed review runs so auto-skip and analytics keep getting better.</li>
+</ol>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="daily-workflow.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Daily Workflow</span>
+                </a>
+
+
+                <a href="release-workflow.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Release Workflow</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#local-diff-review">Local Diff Review</a></li>
+<li><a href="#github-pr-review">GitHub PR Review</a></li>
+<li><a href="#multi-source-review-handling">Multi-Source Review Handling</a></li>
+<li><a href="#pending-review-refinement">Pending-Review Refinement</a></li>
+<li><a href="#auto-skip-behavior">Auto-Skip Behavior</a></li>
+<li><a href="#reply-posting-and-thread-resolution">Reply Posting And Thread Resolution</a></li>
+<li><a href="#review-result-storage-and-analytics">Review Result Storage And Analytics</a></li>
+<li><a href="#recommended-flow">Recommended Flow</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

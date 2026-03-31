@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release CLI Reference - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link active" aria-current="page">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="release-cli-reference">Release CLI Reference</h1>
+<p><code>myk-claude-tools release</code> is the release-focused command group in this repository. It gives you four building blocks:</p>
+<ul>
+<li><code>info</code> checks whether the repository is ready for a release and lists commits since the last matching tag</li>
+<li><code>detect-versions</code> finds version files the tool knows how to update</li>
+<li><code>bump-version</code> rewrites those files to a new version</li>
+<li><code>create</code> publishes the GitHub release from a changelog file</li>
+</ul>
+<p>The CLI is installed as the <code>myk-claude-tools</code> command and requires Python 3.10+:</p>
+<div class="highlight"><pre><span></span><code><span class="n">requires-python</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&gt;=3.10&quot;</span>
+<span class="c1"># ... other project metadata ...</span>
+<span class="k">[project.scripts]</span>
+<span class="n">myk-claude-tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myk_claude_tools.cli:main&quot;</span>
+</code></pre></div>
+
+<h2 id="at-a-glance">At A Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+<th>External tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>release info</code></td>
+<td>Validates branch state, working tree, and remote sync, then returns tags and commits</td>
+<td><code>git</code>, <code>gh</code></td>
+</tr>
+<tr>
+<td><code>release detect-versions</code></td>
+<td>Scans the current directory for known version files</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>release bump-version</code></td>
+<td>Updates detected version files to a new version</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>release create</code></td>
+<td>Creates a GitHub release from a changelog file</td>
+<td><code>gh</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> All four commands print JSON to stdout. <code>release info</code>, <code>release bump-version</code>, and <code>release create</code> exit with status code <code>1</code> on failure. <code>release detect-versions</code> reports “nothing found” with <code>"count": 0</code> instead of failing.</p>
+</blockquote>
+<h2 id="myk-claude-tools-release-info"><code>myk-claude-tools release info</code></h2>
+<p>Use <code>release info</code> first. It tells you whether the current checkout is in a releasable state, and if it is, it returns the last tag and the commits that would be included in the release.</p>
+<p>Syntax: <code>myk-claude-tools release info [--repo OWNER/REPO] [--target BRANCH] [--tag-match GLOB]</code></p>
+<p>Example commands used by the project release workflow:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools release info --target &lt;branch&gt;
+
+myk-claude-tools release info --target &lt;branch&gt; --tag-match &lt;pattern&gt;
+
+myk-claude-tools release info
+</code></pre></div>
+
+<h3 id="inputs">Inputs</h3>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--repo OWNER/REPO</code></td>
+<td>No</td>
+<td>Repository in <code>owner/repo</code> format. If omitted, the command asks <code>gh</code> for the current repository.</td>
+</tr>
+<tr>
+<td><code>--target BRANCH</code></td>
+<td>No</td>
+<td>Branch that must match the current checkout for release validation to pass.</td>
+</tr>
+<tr>
+<td><code>--tag-match GLOB</code></td>
+<td>No</td>
+<td>Glob used to filter tags, such as <code>v2.10.*</code>. This is a glob, not a regular expression.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-target-branch-selection-works">How target branch selection works</h3>
+<ul>
+<li>If you pass <code>--target</code>, that branch becomes the release target.</li>
+<li>If you do not pass <code>--target</code> and your current branch looks like <code>v2.10</code>, that branch becomes the target automatically.</li>
+<li>In that auto-detected version-branch case, <code>tag_match</code> also defaults to <code>v2.10.*</code> unless you already provided <code>--tag-match</code>.</li>
+<li>Otherwise, the target branch is the repository default branch from GitHub, with a fallback to <code>main</code>.</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> The version-branch shortcut is designed for branch names in the <code>vMAJOR.MINOR</code> format, such as <code>v2.10</code>.</p>
+</blockquote>
+<h3 id="what-it-validates">What it validates</h3>
+<p>Before it gathers tags or commits, <code>release info</code> checks all of the following:</p>
+<ul>
+<li>You are on the effective target branch.</li>
+<li>The working tree is clean, including both staged and unstaged changes.</li>
+<li><code>git fetch origin &lt;target&gt;</code> succeeds.</li>
+<li>The local branch has no unpushed commits relative to <code>origin/&lt;target&gt;</code>.</li>
+<li>The local branch is not behind <code>origin/&lt;target&gt;</code>.</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> Remote sync checks are always done against <code>origin/&lt;target&gt;</code>. If your release flow uses another remote, this command will not follow it automatically.</p>
+<p><strong>Warning:</strong> If any validation fails, <code>release info</code> does not return partial history. In that case, <code>last_tag</code> is <code>null</code>, <code>all_tags</code> and <code>commits</code> are empty, <code>commit_count</code> is <code>0</code>, and <code>is_first_release</code> is <code>null</code>.</p>
+<p><strong>Tip:</strong> <code>all_tags</code> is limited to the 10 most recent matching tags, and <code>commits</code> is limited to 100 entries. This command is meant for release preparation, not full-history export.</p>
+</blockquote>
+<h3 id="success-json">Success JSON</h3>
+<p>Top-level fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metadata</code></td>
+<td>object</td>
+<td>Repository metadata: <code>owner</code>, <code>repo</code>, <code>current_branch</code>, and <code>default_branch</code>.</td>
+</tr>
+<tr>
+<td><code>validations</code></td>
+<td>object</td>
+<td>Detailed validation results.</td>
+</tr>
+<tr>
+<td><code>last_tag</code></td>
+<td><code>string \| null</code></td>
+<td>Most recent matching tag, or <code>null</code> if none was found.</td>
+</tr>
+<tr>
+<td><code>all_tags</code></td>
+<td><code>string[]</code></td>
+<td>Recent matching tags, sorted by version, newest first.</td>
+</tr>
+<tr>
+<td><code>commits</code></td>
+<td><code>object[]</code></td>
+<td>Commits since <code>last_tag</code>, or from <code>HEAD</code> if this is the first release. Each item contains <code>hash</code>, <code>short_hash</code>, <code>subject</code>, <code>body</code>, <code>author</code>, and <code>date</code>.</td>
+</tr>
+<tr>
+<td><code>commit_count</code></td>
+<td><code>number</code></td>
+<td>Number of commit objects returned.</td>
+</tr>
+<tr>
+<td><code>is_first_release</code></td>
+<td><code>boolean \| null</code></td>
+<td><code>true</code> if no matching tag exists, <code>false</code> otherwise, and <code>null</code> when validation failed before history collection.</td>
+</tr>
+<tr>
+<td><code>target_branch</code></td>
+<td><code>string</code></td>
+<td>The effective target branch after applying defaults and auto-detection.</td>
+</tr>
+<tr>
+<td><code>tag_match</code></td>
+<td><code>string \| null</code></td>
+<td>The effective tag filter, whether explicit or auto-detected.</td>
+</tr>
+</tbody>
+</table>
+<p><code>validations</code> fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>on_target_branch</code></td>
+<td><code>boolean</code></td>
+<td>Whether <code>current_branch</code> matches the effective target branch.</td>
+</tr>
+<tr>
+<td><code>default_branch</code></td>
+<td><code>string</code></td>
+<td>Repository default branch.</td>
+</tr>
+<tr>
+<td><code>current_branch</code></td>
+<td><code>string</code></td>
+<td>Current local branch name.</td>
+</tr>
+<tr>
+<td><code>working_tree_clean</code></td>
+<td><code>boolean</code></td>
+<td>Whether both staged and unstaged changes are absent.</td>
+</tr>
+<tr>
+<td><code>dirty_files</code></td>
+<td><code>string</code></td>
+<td>Up to the first 10 <code>git status --porcelain</code> lines when the tree is dirty; empty string when clean.</td>
+</tr>
+<tr>
+<td><code>fetch_successful</code></td>
+<td><code>boolean</code></td>
+<td>Whether <code>git fetch origin &lt;target&gt;</code> succeeded.</td>
+</tr>
+<tr>
+<td><code>synced_with_remote</code></td>
+<td><code>boolean</code></td>
+<td>Whether the local target branch is neither ahead of nor behind <code>origin/&lt;target&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>unpushed_commits</code></td>
+<td><code>number</code></td>
+<td>Number of commits local is ahead of <code>origin/&lt;target&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>behind_remote</code></td>
+<td><code>number</code></td>
+<td>Number of commits local is behind <code>origin/&lt;target&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>all_passed</code></td>
+<td><code>boolean</code></td>
+<td>Final release-readiness result.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="failure-json">Failure JSON</h3>
+<p>On failure, <code>release info</code> returns a bare error object:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>error</code></td>
+<td><code>string</code></td>
+<td>Reason the command failed, such as missing <code>git</code> or <code>gh</code>, an invalid repository format, an invalid target branch, or an invalid tag-match pattern.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Tip:</strong> <code>release info</code> is the only release command that fails with <code>{"error": "..."}</code> instead of <code>{"status": "failed", "error": "..."}</code>. If you are scripting the CLI, handle it separately.</p>
+</blockquote>
+<h2 id="myk-claude-tools-release-detect-versions"><code>myk-claude-tools release detect-versions</code></h2>
+<p>Use <code>release detect-versions</code> to see which files the CLI can version-bump automatically in the current directory.</p>
+<p>Syntax: <code>myk-claude-tools release detect-versions</code></p>
+<p>Example from the project workflow:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools release detect-versions
+</code></pre></div>
+
+<h3 id="what-it-scans">What it scans</h3>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>What it reads</th>
+<th>Output <code>type</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pyproject.toml</code></td>
+<td><code>project.version</code></td>
+<td><code>pyproject</code></td>
+</tr>
+<tr>
+<td><code>package.json</code></td>
+<td>Top-level <code>version</code></td>
+<td><code>package_json</code></td>
+</tr>
+<tr>
+<td><code>setup.cfg</code></td>
+<td><code>[metadata] version</code> only</td>
+<td><code>setup_cfg</code></td>
+</tr>
+<tr>
+<td><code>Cargo.toml</code></td>
+<td><code>[package] version</code></td>
+<td><code>cargo</code></td>
+</tr>
+<tr>
+<td><code>build.gradle</code></td>
+<td><code>version</code> assignment</td>
+<td><code>gradle</code></td>
+</tr>
+<tr>
+<td><code>build.gradle.kts</code></td>
+<td><code>version</code> assignment</td>
+<td><code>gradle</code></td>
+</tr>
+<tr>
+<td><code>__init__.py</code></td>
+<td><code>__version__ = "..."</code></td>
+<td><code>python_version</code></td>
+</tr>
+<tr>
+<td><code>version.py</code></td>
+<td><code>__version__ = "..."</code></td>
+<td><code>python_version</code></td>
+</tr>
+</tbody>
+</table>
+<p>A few important details:</p>
+<ul>
+<li>Recursive scanning is only used for <code>__init__.py</code> and <code>version.py</code>.</li>
+<li><code>setup.cfg</code> is only detected when the version is static. Dynamic forms like <code>attr:</code> and <code>file:</code> are skipped.</li>
+<li>The command skips hidden directories and common generated or dependency directories such as <code>.git</code>, <code>.venv</code>, <code>node_modules</code>, <code>dist</code>, <code>build</code>, <code>target</code>, and cache folders.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> Run <code>detect-versions</code> from the repository root. The returned <code>version_files[].path</code> values are repo-relative paths, and they are the exact values you should feed back into <code>release bump-version --files</code>.</p>
+<p><strong>Note:</strong> Malformed or unsupported files are skipped rather than causing the whole command to fail. If nothing matches, you get <code>"count": 0</code>.</p>
+</blockquote>
+<h3 id="json-output">JSON output</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>version_files</code></td>
+<td><code>object[]</code></td>
+<td>Detected files. Each item contains <code>path</code>, <code>current_version</code>, and <code>type</code>.</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td><code>number</code></td>
+<td>Number of detected version files.</td>
+</tr>
+</tbody>
+</table>
+<p>Each <code>version_files[]</code> item contains:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td><code>string</code></td>
+<td>Repo-relative path such as <code>pyproject.toml</code> or <code>mypackage/__init__.py</code>.</td>
+</tr>
+<tr>
+<td><code>current_version</code></td>
+<td><code>string</code></td>
+<td>The version string currently found in that file.</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>string</code></td>
+<td>One of <code>pyproject</code>, <code>package_json</code>, <code>setup_cfg</code>, <code>cargo</code>, <code>gradle</code>, or <code>python_version</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="myk-claude-tools-release-bump-version"><code>myk-claude-tools release bump-version</code></h2>
+<p>Use <code>release bump-version</code> to rewrite version strings in the files discovered by <code>release detect-versions</code>.</p>
+<p>Syntax: <code>myk-claude-tools release bump-version VERSION [--files PATH]...</code></p>
+<p>Example from the project workflow:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools release bump-version &lt;VERSION&gt; --files &lt;file1&gt; --files &lt;file2&gt;
+</code></pre></div>
+
+<h3 id="inputs_1">Inputs</h3>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VERSION</code></td>
+<td>Yes</td>
+<td>New version string, such as <code>1.2.0</code>. It must be non-empty, single-line, and must not start with <code>v</code> or <code>V</code>.</td>
+</tr>
+<tr>
+<td><code>--files PATH</code></td>
+<td>No</td>
+<td>Repeatable filter. Limits the update to specific files returned by <code>release detect-versions</code>. If omitted, all detected version files are updated.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Warning:</strong> Pass the bare version number, such as <code>1.2.0</code>, not <code>v1.2.0</code>. The command rejects a leading <code>v</code> or <code>V</code>.</p>
+<p><strong>Warning:</strong> If you use <code>--files</code>, every listed file must match the output of <code>release detect-versions</code>. One bad path makes the whole command fail before any file is rewritten.</p>
+</blockquote>
+<h3 id="what-gets-updated">What gets updated</h3>
+<table>
+<thead>
+<tr>
+<th>Detected <code>type</code></th>
+<th>Update behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pyproject</code></td>
+<td>Rewrites <code>version</code> inside the <code>[project]</code> section only.</td>
+</tr>
+<tr>
+<td><code>package_json</code></td>
+<td>Rewrites the top-level <code>version</code> field.</td>
+</tr>
+<tr>
+<td><code>setup_cfg</code></td>
+<td>Rewrites <code>version</code> inside <code>[metadata]</code> only. Dynamic <code>attr:</code> and <code>file:</code> versions are skipped.</td>
+</tr>
+<tr>
+<td><code>cargo</code></td>
+<td>Rewrites <code>version</code> inside <code>[package]</code> only.</td>
+</tr>
+<tr>
+<td><code>gradle</code></td>
+<td>Rewrites the first matching <code>version</code> assignment.</td>
+</tr>
+<tr>
+<td><code>python_version</code></td>
+<td>Rewrites the first matching <code>__version__ = "..."</code> assignment.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="behavior">Behavior</h3>
+<ul>
+<li>The command uses the same file-detection logic as <code>release detect-versions</code>.</li>
+<li>It only updates files that are already recognized by that detector.</li>
+<li>Rewrites are done atomically, so a file is written through a temporary file and then replaced.</li>
+<li>The command does not run <code>git add</code>, <code>git commit</code>, or any other Git operation.</li>
+<li>A run can succeed even when some files are skipped. It only fails when zero files were updated, or when input validation fails.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> For automation, treat <code>updated[]</code> as the source of truth for what actually changed. <code>skipped[]</code> tells you which files were ignored and why.</p>
+</blockquote>
+<h3 id="json-output_1">JSON output</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Appears when</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>Always</td>
+<td><code>string</code></td>
+<td><code>success</code> or <code>failed</code>.</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>Success</td>
+<td><code>string</code></td>
+<td>The new version that was written.</td>
+</tr>
+<tr>
+<td><code>updated</code></td>
+<td>Success</td>
+<td><code>object[]</code></td>
+<td>Files that were updated. Each item contains <code>path</code>, <code>old_version</code>, and <code>new_version</code>.</td>
+</tr>
+<tr>
+<td><code>skipped</code></td>
+<td>Success or some failures</td>
+<td><code>object[]</code></td>
+<td>Files that were not updated. Each item contains <code>path</code> and <code>reason</code>.</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>Failure</td>
+<td><code>string</code></td>
+<td>Why the command failed, such as an invalid version string, no detected version files, unmatched <code>--files</code>, or no files updated.</td>
+</tr>
+</tbody>
+</table>
+<p><code>updated[]</code> items:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td><code>string</code></td>
+<td>Updated file path.</td>
+</tr>
+<tr>
+<td><code>old_version</code></td>
+<td><code>string</code></td>
+<td>Version found before the rewrite.</td>
+</tr>
+<tr>
+<td><code>new_version</code></td>
+<td><code>string</code></td>
+<td>Version written to the file.</td>
+</tr>
+</tbody>
+</table>
+<p><code>skipped[]</code> items:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td><code>string</code></td>
+<td>Skipped file path.</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td><code>string</code></td>
+<td>Reason the file was skipped, such as an unrecognized pattern or I/O error.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="myk-claude-tools-release-create"><code>myk-claude-tools release create</code></h2>
+<p>Use <code>release create</code> to publish the GitHub release once you have a final tag and a changelog file.</p>
+<p>Syntax: <code>myk-claude-tools release create OWNER/REPO TAG CHANGELOG_FILE [--prerelease] [--draft] [--target BRANCH] [--title TEXT]</code></p>
+<p>Example from the project workflow:</p>
+<div class="highlight"><pre><span></span><code>CHANGELOG_FILE=$(mktemp /tmp/claude-release-XXXXXX.md)
+trap &quot;rm -f $CHANGELOG_FILE&quot; EXIT
+
+cat &gt; &quot;$CHANGELOG_FILE&quot; &lt;&lt; &#39;EOF&#39;
+&lt;changelog content from Phase 3&gt;
+EOF
+
+myk-claude-tools release create {owner}/{repo} {tag} &quot;$CHANGELOG_FILE&quot; [--prerelease] [--draft] [--target {target_branch}]
+</code></pre></div>
+
+<h3 id="inputs_2">Inputs</h3>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OWNER/REPO</code></td>
+<td>Yes</td>
+<td>Repository in <code>owner/repo</code> format.</td>
+</tr>
+<tr>
+<td><code>TAG</code></td>
+<td>Yes</td>
+<td>Release tag, usually something like <code>v1.2.0</code>.</td>
+</tr>
+<tr>
+<td><code>CHANGELOG_FILE</code></td>
+<td>Yes</td>
+<td>Path to a file containing the release notes. The file must already exist.</td>
+</tr>
+<tr>
+<td><code>--prerelease</code></td>
+<td>No</td>
+<td>Marks the release as a prerelease.</td>
+</tr>
+<tr>
+<td><code>--draft</code></td>
+<td>No</td>
+<td>Creates the release as a draft.</td>
+</tr>
+<tr>
+<td><code>--target BRANCH</code></td>
+<td>No</td>
+<td>Target branch passed through to GitHub.</td>
+</tr>
+<tr>
+<td><code>--title TEXT</code></td>
+<td>No</td>
+<td>Release title. If omitted or blank, the tag is used as the title.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="behavior_1">Behavior</h3>
+<ul>
+<li>The command validates that <code>OWNER/REPO</code> looks like <code>owner/repo</code>.</li>
+<li>It validates that <code>CHANGELOG_FILE</code> exists before calling <code>gh</code>.</li>
+<li>It runs <code>gh release create</code> with a 300-second timeout.</li>
+<li>If <code>gh</code> prints a release URL, that URL is returned. If not, the CLI constructs the standard GitHub release URL from the repo and tag.</li>
+<li>The success payload echoes <code>prerelease</code> and <code>draft</code>, but it does not echo <code>target</code> or <code>title</code>.</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> <code>release create</code> has real side effects. It creates a GitHub release in the repository named by <code>OWNER/REPO</code> using your current <code>gh</code> authentication and GitHub context.</p>
+<p><strong>Note:</strong> A tag that does not look like <code>vX.Y.Z</code> or <code>vX.Y.Z-suffix</code> only triggers a warning on stderr. The command still attempts to create the release.</p>
+<p><strong>Tip:</strong> <code>release create</code> is independent. If you already have a tag and a changelog file, you can use it without running the other release commands first.</p>
+</blockquote>
+<h3 id="json-output_2">JSON output</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Appears when</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>Always</td>
+<td><code>string</code></td>
+<td><code>success</code> or <code>failed</code>.</td>
+</tr>
+<tr>
+<td><code>tag</code></td>
+<td>Success</td>
+<td><code>string</code></td>
+<td>Tag used for the release.</td>
+</tr>
+<tr>
+<td><code>url</code></td>
+<td>Success</td>
+<td><code>string</code></td>
+<td>GitHub release URL, either extracted from <code>gh</code> output or constructed by the CLI.</td>
+</tr>
+<tr>
+<td><code>prerelease</code></td>
+<td>Success</td>
+<td><code>boolean</code></td>
+<td>Whether the release was created as a prerelease.</td>
+</tr>
+<tr>
+<td><code>draft</code></td>
+<td>Success</td>
+<td><code>boolean</code></td>
+<td>Whether the release was created as a draft.</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>Failure</td>
+<td><code>string</code></td>
+<td>Why the command failed, such as a missing <code>gh</code> installation, invalid repo format, missing changelog file, or <code>gh release create</code> failure.</td>
+</tr>
+</tbody>
+</table>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="pr-cli-reference.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">PR CLI Reference</span>
+                </a>
+
+
+                <a href="database-cli-reference.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Database CLI Reference</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#at-a-glance">At A Glance</a></li>
+<li><a href="#myk-claude-tools-release-info">myk-claude-tools release info</a><ul>
+<li><a href="#inputs">Inputs</a></li>
+<li><a href="#how-target-branch-selection-works">How target branch selection works</a></li>
+<li><a href="#what-it-validates">What it validates</a></li>
+<li><a href="#success-json">Success JSON</a></li>
+<li><a href="#failure-json">Failure JSON</a></li>
+</ul>
+</li>
+<li><a href="#myk-claude-tools-release-detect-versions">myk-claude-tools release detect-versions</a><ul>
+<li><a href="#what-it-scans">What it scans</a></li>
+<li><a href="#json-output">JSON output</a></li>
+</ul>
+</li>
+<li><a href="#myk-claude-tools-release-bump-version">myk-claude-tools release bump-version</a><ul>
+<li><a href="#inputs_1">Inputs</a></li>
+<li><a href="#what-gets-updated">What gets updated</a></li>
+<li><a href="#behavior">Behavior</a></li>
+<li><a href="#json-output_1">JSON output</a></li>
+</ul>
+</li>
+<li><a href="#myk-claude-tools-release-create">myk-claude-tools release create</a><ul>
+<li><a href="#inputs_2">Inputs</a></li>
+<li><a href="#behavior_1">Behavior</a></li>
+<li><a href="#json-output_2">JSON output</a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

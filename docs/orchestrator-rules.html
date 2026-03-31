@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orchestrator Rules - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link active" aria-current="page">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="orchestrator-rules">Orchestrator Rules</h1>
+<p><code>rules/</code> is the policy layer of <code>claude-code-config</code>. These files define how the orchestrator should behave: when to delegate work, when to create an issue first, how to choose the right specialist, how to use MCP tools, when slash commands override the normal rules, and how to report bugs in agent definitions.</p>
+<p>For most users, the core idea is simple: the orchestrator manages work; specialists execute it. The rest of the rule set adds guardrails around that model.</p>
+<blockquote>
+<p><strong>Note:</strong> The detailed policies live in <code>rules/*.md</code>, but the runtime behavior is implemented through <code>settings.json</code> hooks and the scripts in <code>scripts/</code>. Some rules are hard-enforced, while others are guidance the orchestrator is expected to follow.</p>
+</blockquote>
+<h2 id="rule-files-at-a-glance">Rule Files At A Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Rule file</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rules/00-orchestrator-core.md</code></td>
+<td>Defines the orchestrator/specialist split and the default delegation model</td>
+</tr>
+<tr>
+<td><code>rules/05-issue-first-workflow.md</code></td>
+<td>Requires issue creation and issue branches before non-trivial implementation work</td>
+</tr>
+<tr>
+<td><code>rules/10-agent-routing.md</code></td>
+<td>Maps tasks to the right agent and clarifies built-in vs custom agents</td>
+</tr>
+<tr>
+<td><code>rules/15-mcp-launchpad.md</code></td>
+<td>Standardizes MCP discovery and tool execution through <code>mcpl</code></td>
+</tr>
+<tr>
+<td><code>rules/20-code-review-loop.md</code></td>
+<td>Requires parallel code review and testing after changes</td>
+</tr>
+<tr>
+<td><code>rules/25-task-system.md</code></td>
+<td>Explains when to use persistent tasks and how to manage them</td>
+</tr>
+<tr>
+<td><code>rules/30-slash-commands.md</code></td>
+<td>Explains why slash commands run directly and temporarily suspend normal delegation rules</td>
+</tr>
+<tr>
+<td><code>rules/40-critical-rules.md</code></td>
+<td>Covers mandatory parallelism, temp files, <code>uv</code>, and external repo exploration</td>
+</tr>
+<tr>
+<td><code>rules/50-agent-bug-reporting.md</code></td>
+<td>Defines how to report bugs in custom agent instructions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-the-runtime-pieces-fit-together">How The Runtime Pieces Fit Together</h2>
+<p>The rule files are supported by Claude Code hooks in <code>settings.json</code>. Those hooks inject reminders, run startup checks, and block selected commands before they execute.</p>
+<p>From <code>settings.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nt">&quot;PreToolUse&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TodoWrite|Bash&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-enforcer.py&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bash&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/git-protection.py&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">      </span><span class="c1">// ... prompt-based Bash safety hook omitted for brevity ...</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;UserPromptSubmit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-injector.py&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+</code></pre></div>
+
+<p>In everyday use, that means:</p>
+<ul>
+<li><code>UserPromptSubmit</code> adds a reminder before the request is handled.</li>
+<li><code>PreToolUse</code> runs <code>scripts/rule-enforcer.py</code> and <code>scripts/git-protection.py</code> on matching Bash activity.</li>
+<li>A separate prompt-based safety hook screens catastrophic shell commands.</li>
+<li><code>SessionStart</code> runs <code>scripts/session-start-check.sh</code> to report missing prerequisites.</li>
+</ul>
+<p>The injected reminder is currently a fixed string inside <code>scripts/rule-injector.py</code>:</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">rule_reminder</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;[SYSTEM RULES] You are a MANAGER. NEVER do work directly. ALWAYS delegate:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- Edit/Write → language specialists (python-expert, go-expert, etc.)</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- ALL Bash commands → bash-expert or appropriate specialist</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- Git commands → git-expert</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- MCP tools → manager agents</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- Multi-file exploration → Explore agent</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;HOOKS WILL BLOCK VIOLATIONS.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;hookSpecificOutput&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hookEventName&quot;</span><span class="p">:</span> <span class="s2">&quot;UserPromptSubmit&quot;</span><span class="p">,</span> <span class="s2">&quot;additionalContext&quot;</span><span class="p">:</span> <span class="n">rule_reminder</span><span class="p">}}</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> Editing a file in <code>rules/</code> does not automatically change that injected reminder. If you want the runtime reminder to change, update <code>scripts/rule-injector.py</code> as well.</p>
+</blockquote>
+<p>The main hard block for Python and pre-commit commands is intentionally narrow:</p>
+<div class="highlight"><pre><span></span><code>        <span class="c1"># Block direct python/pip commands</span>
+        <span class="k">if</span> <span class="n">tool_name</span> <span class="o">==</span> <span class="s2">&quot;Bash&quot;</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">tool_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_forbidden_python_command</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;hookSpecificOutput&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;hookEventName&quot;</span><span class="p">:</span> <span class="s2">&quot;PreToolUse&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecision&quot;</span><span class="p">:</span> <span class="s2">&quot;deny&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;permissionDecisionReason&quot;</span><span class="p">:</span> <span class="s2">&quot;Direct python/pip commands are forbidden.&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;additionalContext&quot;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="s2">&quot;You attempted to run python/pip directly. Instead:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;1. Delegate Python tasks to the python-expert agent</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;2. Use &#39;uv run script.py&#39; to run Python scripts</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;3. Use &#39;uvx package-name&#39; to run package CLIs</span><span class="se">\n</span><span class="s2">&quot;</span>
+</code></pre></div>
+
+<p><code>scripts/git-protection.py</code> adds another layer by blocking <code>git commit</code> and <code>git push</code> on protected or already-merged branches.</p>
+<blockquote>
+<p><strong>Warning:</strong> The Markdown rules are broader than the hard denials in <code>scripts/</code>. The code blocks some behaviors, but the full orchestration model still depends on the rule text, agent routing, and Claude Code permissions.</p>
+</blockquote>
+<h2 id="delegation-comes-first">Delegation Comes First</h2>
+<p><code>rules/00-orchestrator-core.md</code> defines the operating model for the whole repository:</p>
+<ul>
+<li>The orchestrator reads, plans, asks questions, and routes work.</li>
+<li>Specialist agents do the direct editing, shell work, testing, and Git/GitHub operations in their own domain.</li>
+<li>Specialist agents explicitly ignore the orchestrator-only rules.</li>
+<li>The orchestrator may use <code>mcpl</code> directly for MCP discovery.</li>
+<li>Slash commands are a special execution mode and are handled separately.</li>
+</ul>
+<p>This is the rule to keep in mind whenever a task could go more than one way. If the work involves editing files, running substantive shell commands, or using domain-specific tooling, it should usually go to the appropriate specialist.</p>
+<h2 id="issue-first-workflow">Issue-First Workflow</h2>
+<p><code>rules/05-issue-first-workflow.md</code> adds a lightweight delivery process before non-trivial code changes.</p>
+<p>Use it for:</p>
+<ul>
+<li>New features and enhancements</li>
+<li>Bug fixes that require code changes</li>
+<li>Refactors</li>
+<li>Multi-file changes</li>
+<li>Work that benefits from tracking and documentation</li>
+</ul>
+<p>Skip it for:</p>
+<ul>
+<li>Tiny fixes</li>
+<li>Read-only questions or research</li>
+<li>Cases where the user explicitly says to do it directly</li>
+<li>Urgent hotfixes</li>
+</ul>
+<p>The intended sequence is:</p>
+<ol>
+<li>Create a GitHub issue through <code>github-expert</code>.</li>
+<li>Ask whether the user wants to work on it now.</li>
+<li>Create an issue branch from <code>origin/main</code>.</li>
+<li>Complete the work and keep the issue updated.</li>
+<li>Close the issue when the deliverables are done.</li>
+</ol>
+<p>The branch naming rule is consistent and easy to scan: <code>feat/issue-&lt;number&gt;-&lt;short-description&gt;</code>, <code>fix/issue-&lt;number&gt;-&lt;short-description&gt;</code>, and similar variants for <code>refactor</code> and <code>docs</code>.</p>
+<blockquote>
+<p><strong>Tip:</strong> This workflow is most useful when the work will take multiple steps or multiple files. For quick, obvious fixes, the rule deliberately allows you to skip it.</p>
+</blockquote>
+<h2 id="agent-routing">Agent Routing</h2>
+<p><code>rules/10-agent-routing.md</code> maps work to the right specialist and emphasizes a simple rule: route by intent, not by the tool being used.</p>
+<p>A few examples from the routing table are especially important:</p>
+<ul>
+<li>Python work goes to <code>python-expert</code>.</li>
+<li>Frontend work goes to <code>frontend-expert</code>.</li>
+<li>Shell scripting goes to <code>bash-expert</code>.</li>
+<li>Local Git work goes to <code>git-expert</code>.</li>
+<li>GitHub issues, PRs, releases, and workflows go to <code>github-expert</code>.</li>
+<li>Markdown documentation goes to <code>technical-documentation-writer</code>.</li>
+</ul>
+<p>The file also distinguishes between two kinds of documentation agents:</p>
+<ul>
+<li><code>claude-code-guide</code> for Claude Code, hooks, settings, slash commands, MCP setup, Agent SDK, and Claude API docs</li>
+<li><code>docs-fetcher</code> for external libraries and frameworks</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> “Run Python tests” is still a Python task, even though a shell command may be involved. The routing rule prefers domain ownership over tool ownership.</p>
+<p><strong>Warning:</strong> <code>rules/10-agent-routing.md</code> explicitly says the orchestrator should not fetch documentation directly. Use the appropriate documentation agent instead.</p>
+</blockquote>
+<h2 id="mcp-discovery-with-mcpl">MCP Discovery With <code>mcpl</code></h2>
+<p><code>rules/15-mcp-launchpad.md</code> standardizes MCP access around the <code>mcpl</code> CLI. The rule is clear: discover first, then inspect, then call.</p>
+<p>From <code>rules/15-mcp-launchpad.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gu">## mcpl Commands</span>
+
+| Command                                      | Purpose                                             |
+|----------------------------------------------|-----------------------------------------------------|
+| <span class="sb">`mcpl search &quot;&lt;query&gt;&quot;`</span>                      | Search all tools (shows required params, 5 results) |
+| <span class="sb">`mcpl search &quot;&lt;query&gt;&quot; --limit N`</span>            | Search with more results                            |
+| <span class="sb">`mcpl list`</span>                                  | List all MCP servers                                |
+| <span class="sb">`mcpl list &lt;server&gt;`</span>                         | List tools for a server (shows required params)     |
+| <span class="sb">`mcpl inspect &lt;server&gt; &lt;tool&gt;`</span>               | Get full schema                                     |
+| <span class="sb">`mcpl inspect &lt;server&gt; &lt;tool&gt; --example`</span>     | Get schema + example call                           |
+| <span class="sb">`mcpl call &lt;server&gt; &lt;tool&gt; &#39;{}&#39;`</span>             | Execute tool (no arguments)                         |
+| <span class="sb">`mcpl call &lt;server&gt; &lt;tool&gt; &#39;{&quot;param&quot;: &quot;v&quot;}&#39;`</span> | Execute tool with arguments                         |
+| <span class="sb">`mcpl verify`</span>                                | Test all server connections                         |
+</code></pre></div>
+
+<p>In practice:</p>
+<ul>
+<li>The orchestrator uses <code>mcpl</code> for discovery.</li>
+<li>Agents use the full <code>mcpl</code> flow when they need to execute MCP tools.</li>
+<li><code>mcpl verify</code> is the first troubleshooting step when a server is not responding.</li>
+</ul>
+<h2 id="tasks-for-multi-phase-work">Tasks For Multi-Phase Work</h2>
+<p><code>rules/25-task-system.md</code> makes task tracking explicit and practical.</p>
+<p>Use tasks when work is:</p>
+<ul>
+<li>Multi-step</li>
+<li>Easy to interrupt</li>
+<li>Worth resuming later</li>
+<li>Organized into visible phases</li>
+<li>Waiting on user approval at checkpoints</li>
+</ul>
+<p>Do not use tasks for:</p>
+<ul>
+<li>Simple one-off actions</li>
+<li>Trivial fixes</li>
+<li>Internal steps that the user does not need to track</li>
+<li>Agent-only work</li>
+</ul>
+<p>Two details in this rule are especially user-friendly:</p>
+<ul>
+<li>Tasks persist on disk in <code>~/.claude/tasks/&lt;session-uuid&gt;/</code>, so they survive across sessions.</li>
+<li>Cleanup is mandatory. Before finishing a task-driven workflow, the orchestrator is expected to check for <code>pending</code> or <code>in_progress</code> tasks and close them out.</li>
+</ul>
+<p>Naming is also standardized:</p>
+<ul>
+<li><code>subject</code> should be short and imperative, such as <code>Run tests</code>.</li>
+<li><code>activeForm</code> should read naturally in progress UIs, such as <code>Running tests</code>.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> Slash commands with multiple phases are one of the best places to use tasks. The rule file explicitly recommends them for workflows that involve dependencies, approvals, and cleanup.</p>
+</blockquote>
+<h2 id="slash-commands-override-the-normal-rules">Slash Commands Override The Normal Rules</h2>
+<p><code>rules/30-slash-commands.md</code> introduces the main exception to the normal delegation model.</p>
+<p>When a slash command is invoked:</p>
+<ul>
+<li>The orchestrator executes the slash command directly.</li>
+<li>The slash command’s own instructions override the general orchestration rules for the duration of the command.</li>
+<li>Internal operations run directly unless the command itself says to use an agent.</li>
+<li>The slash command itself should never be delegated as a whole.</li>
+</ul>
+<p>A concrete example is <code>plugins/myk-github/commands/review-handler.md</code>, which declares its own tool access in frontmatter:</p>
+<div class="highlight"><pre><span></span><code>---
+description: Process ALL review sources (human, Qodo, CodeRabbit) from current PR
+argument-hint: [--autorabbit] [REVIEW_URL]
+<span class="gu">allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task, Agent</span>
+<span class="gu">---</span>
+</code></pre></div>
+
+<p>That frontmatter is why slash commands can run direct tool-based workflows that would normally be delegated in regular orchestrator mode.</p>
+<blockquote>
+<p><strong>Note:</strong> If a slash command says to use an agent at a specific step, follow the slash command. The command prompt is in charge while that command is running.</p>
+</blockquote>
+<h2 id="critical-operational-rules">Critical Operational Rules</h2>
+<p><code>rules/40-critical-rules.md</code> collects several cross-cutting rules that make the whole setup behave predictably.</p>
+<h3 id="parallelism">Parallelism</h3>
+<p>Parallel execution is mandatory whenever there is no real dependency between operations. The rule asks the orchestrator to check for parallelism before every response and to group independent work into one turn whenever possible.</p>
+<p>This matters most for:</p>
+<ul>
+<li>Spawning multiple review agents</li>
+<li>Running independent lookups</li>
+<li>Handling unrelated subtasks at the same phase of a workflow</li>
+</ul>
+<h3 id="temp-files">Temp Files</h3>
+<p>Temporary files belong in <code>/tmp/claude/</code>, not in the project tree. This keeps the repo clean and avoids accidental commits of scratch files.</p>
+<p>One concrete example appears in <code>plugins/myk-github/commands/pr-review.md</code>, which writes its review comment JSON to <code>/tmp/claude/pr-review-comments.json</code> before posting it.</p>
+<blockquote>
+<p><strong>Warning:</strong> If a workflow needs scratch files, do not leave them in the repository directory. <code>rules/40-critical-rules.md</code> treats <code>/tmp/claude/</code> as the only safe default.</p>
+</blockquote>
+<h3 id="python-execution-with-uv">Python Execution With <code>uv</code></h3>
+<p>The rule file requires <code>uv</code> or <code>uvx</code> instead of direct <code>python</code>, <code>pip</code>, or <code>pre-commit</code> commands. That guidance is reinforced by <code>scripts/rule-enforcer.py</code>, which denies direct <code>python</code>/<code>pip</code>/<code>pre-commit</code> Bash commands and points users to <code>uv</code>, <code>uvx</code>, and <code>prek</code>.</p>
+<h3 id="external-repository-exploration">External Repository Exploration</h3>
+<p>When this configuration needs to inspect a different Git repository, <code>rules/40-critical-rules.md</code> prefers a shallow local clone into <code>/tmp/claude/</code> over browsing files through web fetches. The goal is speed, better file access, and fewer accidental project-directory side effects.</p>
+<h2 id="agent-bug-reporting">Agent Bug Reporting</h2>
+<p><code>rules/50-agent-bug-reporting.md</code> is specifically about bugs in the custom agent definitions shipped by this repository.</p>
+<p>The workflow is intentionally cautious:</p>
+<ol>
+<li>Confirm that the bug is in a custom agent from <code>agents/</code>, not in a built-in Claude Code agent, user code, or an external tool.</li>
+<li>Ask the user whether to create a GitHub issue.</li>
+<li>If the user says yes, delegate issue creation to <code>github-expert</code>.</li>
+<li>Continue with the original task after the issue decision is handled.</li>
+</ol>
+<p>The title format is standardized as <code>bug(agents): [agent-name] - brief description</code>.</p>
+<p>This rule is not for routine coding bugs or runtime failures. It exists so the repository can improve its agent instructions when those instructions produce incorrect or misleading behavior.</p>
+<blockquote>
+<p><strong>Note:</strong> Built-in Claude Code agents are explicitly out of scope for this rule. It only applies to custom agents defined in this repository.</p>
+</blockquote>
+<h2 id="related-review-rule">Related Review Rule</h2>
+<p>Although this page focuses on orchestration behavior, <code>rules/20-code-review-loop.md</code> sits alongside these rules and matters in day-to-day use.</p>
+<p>After any code change, it requires:</p>
+<ul>
+<li>All three review agents to run in parallel</li>
+<li>Findings to be merged and deduplicated</li>
+<li>Tests to run after review is clean</li>
+<li>The loop to repeat until both review and tests pass</li>
+</ul>
+<p><code>scripts/session-start-check.sh</code> treats the three review plugins as critical prerequisites: <code>pr-review-toolkit</code>, <code>superpowers</code>, and <code>feature-dev</code>.</p>
+<h2 id="setup-and-verification">Setup And Verification</h2>
+<p>This repository verifies the runtime pieces locally rather than through an in-repo GitHub Actions workflow.</p>
+<p>A few practical points matter here:</p>
+<ul>
+<li><code>scripts/session-start-check.sh</code> runs at session start and checks for tools such as <code>uv</code>, <code>gh</code>, <code>jq</code>, <code>gawk</code>, <code>prek</code>, and <code>mcpl</code>, plus required review plugins.</li>
+<li>The startup check is advisory, not blocking: it reports problems but exits successfully.</li>
+<li><code>tests/test_rule_enforcer.py</code> and <code>tests/test_git_protection.py</code> cover the main enforcement hooks.</li>
+<li><code>tox.toml</code> runs the test suite through <code>uv</code>.</li>
+</ul>
+<p>From <code>tox.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">skipsdist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">envlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;unittests&quot;</span><span class="p">]</span>
+
+<span class="k">[env.unittests]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Run pytest tests&quot;</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">]</span>
+<span class="n">commands</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--group&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">]]</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> No <code>.github/</code> workflow is present in this repository, so the rule and hook behavior shown here is validated through local hooks and local tests, not an in-repo CI pipeline.</p>
+<p><strong>Tip:</strong> If setup problems appear at session start, install <code>uv</code> first. It is the foundation for the Python-based hooks and the local test runner.</p>
+</blockquote>
+<h2 id="if-you-extend-this-configuration">If You Extend This Configuration</h2>
+<p>Two repository conventions are easy to miss:</p>
+<ul>
+<li><code>rules/</code>, <code>scripts/</code>, <code>agents/</code>, and <code>plugins/</code> are tracked through a whitelist-style <code>.gitignore</code>. New shared files in those directories must be whitelisted there or they will remain ignored.</li>
+<li>New hook scripts should be added to both <code>permissions.allow</code> and <code>allowedTools</code> in <code>settings.json</code>.</li>
+</ul>
+<p>That keeps the orchestrator rules understandable at the policy level and predictable at runtime.</p>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="hooks-and-guardrails.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Hooks and Guardrails</span>
+                </a>
+
+
+                <a href="specialist-agents.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Specialist Agents</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#rule-files-at-a-glance">Rule Files At A Glance</a></li>
+<li><a href="#how-the-runtime-pieces-fit-together">How The Runtime Pieces Fit Together</a></li>
+<li><a href="#delegation-comes-first">Delegation Comes First</a></li>
+<li><a href="#issue-first-workflow">Issue-First Workflow</a></li>
+<li><a href="#agent-routing">Agent Routing</a></li>
+<li><a href="#mcp-discovery-with-mcpl">MCP Discovery With mcpl</a></li>
+<li><a href="#tasks-for-multi-phase-work">Tasks For Multi-Phase Work</a></li>
+<li><a href="#slash-commands-override-the-normal-rules">Slash Commands Override The Normal Rules</a></li>
+<li><a href="#critical-operational-rules">Critical Operational Rules</a><ul>
+<li><a href="#parallelism">Parallelism</a></li>
+<li><a href="#temp-files">Temp Files</a></li>
+<li><a href="#python-execution-with-uv">Python Execution With uv</a></li>
+<li><a href="#external-repository-exploration">External Repository Exploration</a></li>
+</ul>
+</li>
+<li><a href="#agent-bug-reporting">Agent Bug Reporting</a></li>
+<li><a href="#related-review-rule">Related Review Rule</a></li>
+<li><a href="#setup-and-verification">Setup And Verification</a></li>
+<li><a href="#if-you-extend-this-configuration">If You Extend This Configuration</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

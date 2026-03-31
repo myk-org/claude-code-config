@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release Workflow - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link active" aria-current="page">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="release-workflow">Release Workflow</h1>
+<p>Releases in this repository are driven by two layers:</p>
+<ul>
+<li><code>/myk-github:release</code> gives you the guided, end-to-end workflow.</li>
+<li><code>myk-claude-tools release ...</code> provides the underlying CLI steps for validation, version detection, version bumping, and GitHub release creation.</li>
+</ul>
+<p>The CLI is installed as <code>myk-claude-tools</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[project.scripts]</span>
+<span class="n">myk-claude-tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myk_claude_tools.cli:main&quot;</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> This repository does not define a separate checked-in release pipeline in GitHub Actions. Release prep and publishing are driven by the plugin workflow, <code>git</code>, <code>gh</code>, and the <code>myk-claude-tools</code> CLI.</p>
+</blockquote>
+<h2 id="what-to-use">What to use</h2>
+<p>For most releases, start with the guided slash command:</p>
+<div class="highlight"><pre><span></span><code>/myk-github:release
+/myk-github:release --dry-run
+/myk-github:release --prerelease
+/myk-github:release --draft
+</code></pre></div>
+
+<p>If you want to run the steps yourself, the CLI exposes these subcommands:</p>
+<ul>
+<li><code>myk-claude-tools release info</code></li>
+<li><code>myk-claude-tools release detect-versions</code></li>
+<li><code>myk-claude-tools release bump-version</code></li>
+<li><code>myk-claude-tools release create</code></li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> <code>/myk-github:release --dry-run</code> appears in the plugin workflow, but there is no matching <code>--dry-run</code> flag in the checked-in <code>myk-claude-tools release ...</code> CLI commands. Treat it as a workflow-level preview mode, not a standalone CLI option.</p>
+</blockquote>
+<h2 id="1-validate-the-repository">1. Validate the repository</h2>
+<p>The workflow starts with <code>myk-claude-tools release info</code>. This is the safety check that decides whether the repository is in a releasable state.</p>
+<p>Use it like this:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>release<span class="w"> </span>info
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>info<span class="w"> </span>--target<span class="w"> </span>&lt;branch&gt;
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>info<span class="w"> </span>--target<span class="w"> </span>&lt;branch&gt;<span class="w"> </span>--tag-match<span class="w"> </span>&lt;pattern&gt;
+</code></pre></div>
+
+<p>It validates three things before doing the more expensive release analysis:</p>
+<ul>
+<li>You are on the correct target branch.</li>
+<li>Your working tree is clean.</li>
+<li>Your local branch is fully synced with the remote.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_perform_validations</span><span class="p">(</span><span class="n">default_branch</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_branch</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_branch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Validations</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform release prerequisite validations.&quot;&quot;&quot;</span>
+    <span class="c1"># 1. Default Branch Check</span>
+    <span class="n">effective_target</span> <span class="o">=</span> <span class="n">target_branch</span> <span class="ow">or</span> <span class="n">default_branch</span>
+    <span class="n">on_target_branch</span> <span class="o">=</span> <span class="n">current_branch</span> <span class="o">==</span> <span class="n">effective_target</span>
+
+    <span class="c1"># 2. Clean Working Tree Check</span>
+    <span class="n">working_tree_clean</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">dirty_files</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="n">diff_code</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_run_command</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;diff&quot;</span><span class="p">,</span> <span class="s2">&quot;--quiet&quot;</span><span class="p">])</span>
+    <span class="n">cached_code</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_run_command</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;diff&quot;</span><span class="p">,</span> <span class="s2">&quot;--cached&quot;</span><span class="p">,</span> <span class="s2">&quot;--quiet&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">diff_code</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">cached_code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">working_tree_clean</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">status_output</span> <span class="o">=</span> <span class="n">_run_command</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;--porcelain&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">status_output</span><span class="p">:</span>
+            <span class="n">dirty_files</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_output</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)[:</span><span class="mi">10</span><span class="p">])</span>
+
+    <span class="c1"># 3. Remote Sync Check</span>
+    <span class="n">fetch_code</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_run_command</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;fetch&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">effective_target</span><span class="p">,</span> <span class="s2">&quot;--quiet&quot;</span><span class="p">])</span>
+    <span class="n">fetch_successful</span> <span class="o">=</span> <span class="n">fetch_code</span> <span class="o">==</span> <span class="mi">0</span>
+</code></pre></div>
+
+<p>When validation succeeds, the command prints structured JSON that includes repo metadata, validation results, the last tag, the recent matching tags, and the commit list:</p>
+<div class="highlight"><pre><span></span><code><span class="k">return</span> <span class="p">{</span>
+    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+    <span class="s2">&quot;validations&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">validations</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+    <span class="s2">&quot;last_tag&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_tag</span><span class="p">,</span>
+    <span class="s2">&quot;all_tags&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_tags</span><span class="p">,</span>
+    <span class="s2">&quot;commits&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commits</span><span class="p">],</span>
+    <span class="s2">&quot;commit_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">commit_count</span><span class="p">,</span>
+    <span class="s2">&quot;is_first_release&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_first_release</span><span class="p">,</span>
+    <span class="s2">&quot;target_branch&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_branch</span><span class="p">,</span>
+    <span class="s2">&quot;tag_match&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag_match</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> If validation fails, <code>release info</code> returns no commit list. That does not mean there is nothing to release. It means you need to fix the branch state first.</p>
+</blockquote>
+<h3 id="version-branch-auto-detection">Version-branch auto-detection</h3>
+<p>If you are on a maintenance branch named like <code>v2.10</code>, the tool auto-detects that branch as the release target and scopes tag lookup to the same release line.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_detect_version_branch</span><span class="p">(</span><span class="n">current_branch</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Auto-detect version branch and infer tag match pattern.</span>
+
+<span class="sd">    If the current branch matches vMAJOR.MINOR (e.g., v2.10), returns</span>
+<span class="sd">    the branch as the target and a glob pattern to scope tag discovery.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">_VERSION_BRANCH_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">current_branch</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">version_prefix</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">current_branch</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;v</span><span class="si">{</span><span class="n">version_prefix</span><span class="si">}</span><span class="s2">.*&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+</code></pre></div>
+
+<p>That means a branch such as <code>v2.10</code> automatically uses <code>v2.10.*</code> when looking for the most recent relevant tag.</p>
+<blockquote>
+<p><strong>Tip:</strong> If your branch naming does not follow <code>vMAJOR.MINOR</code>, pass <code>--target</code> and <code>--tag-match</code> explicitly.</p>
+</blockquote>
+<h2 id="2-analyze-commits-and-choose-the-bump">2. Analyze commits and choose the bump</h2>
+<p><code>myk-claude-tools release info</code> returns raw commit data. The guided slash command is the part that interprets those commits into a proposed version bump and changelog.</p>
+<p>The release workflow definition is explicit about that step:</p>
+<div class="highlight"><pre><span></span><code><span class="gu">### Phase 3: Changelog Analysis</span>
+
+Parse commits from Phase 1 output and categorize by conventional commit type:
+
+<span class="k">-</span><span class="w"> </span>Breaking Changes (MAJOR)
+<span class="k">-</span><span class="w"> </span>Features (MINOR)
+<span class="k">-</span><span class="w"> </span>Bug Fixes, Docs, Maintenance (PATCH)
+
+Determine version bump and generate changelog.
+</code></pre></div>
+
+<p>In practice, that means:</p>
+<ul>
+<li>The CLI gathers commit history since the last matching tag.</li>
+<li>The slash command groups those commits into breaking changes, features, and patch-level changes.</li>
+<li>The workflow then proposes <code>major</code>, <code>minor</code>, or <code>patch</code>.</li>
+</ul>
+<p>If the repository has no matching tag yet, the tool treats it as a first release and works from the full history.</p>
+<blockquote>
+<p><strong>Note:</strong> Commit analysis is a workflow responsibility. The checked-in CLI does not have a separate <code>analyze</code> or <code>recommend-version</code> subcommand.</p>
+<p><strong>Note:</strong> The commit collection helper reads up to 100 commits from the release range. If your next release spans more than that, review the result before relying on the generated changelog.</p>
+</blockquote>
+<h2 id="3-detect-which-version-files-can-be-updated">3. Detect which version files can be updated</h2>
+<p>Next, the workflow runs:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>release<span class="w"> </span>detect-versions
+</code></pre></div>
+
+<p>This command prints JSON with the detected files and a total count:</p>
+<div class="highlight"><pre><span></span><code><span class="n">results</span> <span class="o">=</span> <span class="n">detect_version_files</span><span class="p">()</span>
+<span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;version_files&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">],</span>
+    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">),</span>
+<span class="p">}</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</code></pre></div>
+
+<p>The supported root-level version files are defined directly in code:</p>
+<div class="highlight"><pre><span></span><code><span class="n">_ROOT_SCANNERS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Path</span><span class="p">],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">,</span> <span class="n">_parse_pyproject_toml</span><span class="p">,</span> <span class="s2">&quot;pyproject&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;package.json&quot;</span><span class="p">,</span> <span class="n">_parse_package_json</span><span class="p">,</span> <span class="s2">&quot;package_json&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;setup.cfg&quot;</span><span class="p">,</span> <span class="n">_parse_setup_cfg</span><span class="p">,</span> <span class="s2">&quot;setup_cfg&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Cargo.toml&quot;</span><span class="p">,</span> <span class="n">_parse_cargo_toml</span><span class="p">,</span> <span class="s2">&quot;cargo&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;build.gradle&quot;</span><span class="p">,</span> <span class="n">_parse_gradle</span><span class="p">,</span> <span class="s2">&quot;gradle&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;build.gradle.kts&quot;</span><span class="p">,</span> <span class="n">_parse_gradle</span><span class="p">,</span> <span class="s2">&quot;gradle&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>The detector also searches for Python <code>__version__</code> assignments in files named <code>__init__.py</code> and <code>version.py</code>, while skipping common generated or environment directories such as <code>.venv</code>, <code>node_modules</code>, <code>dist</code>, <code>build</code>, and <code>target</code>.</p>
+<p>Supported version sources are:</p>
+<ul>
+<li><code>pyproject.toml</code> via <code>project.version</code></li>
+<li><code>package.json</code> via top-level <code>version</code></li>
+<li><code>setup.cfg</code> via static <code>[metadata] version</code></li>
+<li><code>Cargo.toml</code> via <code>[package] version</code></li>
+<li><code>build.gradle</code> and <code>build.gradle.kts</code> via <code>version</code></li>
+<li><code>__init__.py</code> and <code>version.py</code> via <code>__version__</code></li>
+</ul>
+<p>This repository itself uses <code>pyproject.toml</code> for the CLI package version:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[project]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;myk-claude-tools&quot;</span>
+<span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;1.7.2&quot;</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;CLI utilities for Claude Code plugins&quot;</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> <code>setup.cfg</code> values that use <code>attr:</code> or <code>file:</code> are intentionally skipped. Only static version values are detected and bumped.</p>
+<p><strong>Note:</strong> Automatic version detection does not scan <code>.claude-plugin/plugin.json</code>. In this repository, files such as <code>plugins/myk-github/.claude-plugin/plugin.json</code> contain their own version field, but they are not part of the supported detection list above.</p>
+</blockquote>
+<h2 id="4-review-the-proposal-before-anything-is-changed">4. Review the proposal before anything is changed</h2>
+<p>If version files are found, the guided workflow shows you:</p>
+<ul>
+<li>The proposed new version</li>
+<li>The files it plans to update</li>
+<li>A changelog preview</li>
+</ul>
+<p>You can then accept the proposal, override the bump type, exclude a file, or cancel.</p>
+<div class="highlight"><pre><span></span><code><span class="gu">### Phase 4: User Approval</span>
+
+Display the proposed release information. If version files were detected in Phase 2,
+include them in the approval prompt.
+
+<span class="k">-</span><span class="w"> </span>&#39;yes&#39; -- Proceed with proposed version and all listed files
+<span class="k">-</span><span class="w"> </span>&#39;major/minor/patch&#39; -- Override the version bump type
+<span class="k">-</span><span class="w"> </span>&#39;exclude N&#39; -- Exclude file by number from the version bump (e.g., &#39;exclude 2&#39;)
+<span class="k">-</span><span class="w"> </span>&#39;no&#39; -- Cancel the release
+</code></pre></div>
+
+<p>This approval step is important because version detection is intentionally conservative. The tool can find multiple valid version files, but you still control which ones actually get updated for the release.</p>
+<h2 id="5-bump-version-files">5. Bump version files</h2>
+<p>When you confirm the version, the workflow runs <code>myk-claude-tools release bump-version</code>.</p>
+<p>Typical usage looks like this:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>release<span class="w"> </span>bump-version<span class="w"> </span>&lt;VERSION&gt;
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>bump-version<span class="w"> </span>&lt;VERSION&gt;<span class="w"> </span>--files<span class="w"> </span>&lt;file1&gt;<span class="w"> </span>--files<span class="w"> </span>&lt;file2&gt;
+</code></pre></div>
+
+<p>A few rules matter here:</p>
+<ul>
+<li>Pass <code>1.2.0</code>, not <code>v1.2.0</code>.</li>
+<li><code>--files</code> can be repeated to limit the update to a subset of detected files.</li>
+<li>Every file passed to <code>--files</code> must match a detected version file.</li>
+<li>The CLI rewrites files only. It does not create branches, commits, or PRs by itself.</li>
+</ul>
+<p>The version string is validated strictly:</p>
+<div class="highlight"><pre><span></span><code><span class="n">new_version</span> <span class="o">=</span> <span class="n">new_version</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">new_version</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">ch</span> <span class="ow">in</span> <span class="n">new_version</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">)):</span>
+    <span class="k">return</span> <span class="n">BumpResult</span><span class="p">(</span>
+        <span class="n">status</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+        <span class="n">error</span><span class="o">=</span><span class="s2">&quot;Invalid version: must be a non-empty single-line string.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">if</span> <span class="n">new_version</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">new_version</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;V&quot;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">BumpResult</span><span class="p">(</span>
+        <span class="n">status</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+        <span class="n">error</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Invalid version: &#39;</span><span class="si">{</span><span class="n">new_version</span><span class="si">}</span><span class="s2">&#39; should not start with &#39;v&#39;. Use &#39;</span><span class="si">{</span><span class="n">new_version</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2">&#39; instead.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+
+<p>If you use <code>--files</code>, the filter must match exactly:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">normalized_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+    <span class="n">filtered</span> <span class="o">=</span> <span class="p">[</span><span class="n">vf</span> <span class="k">for</span> <span class="n">vf</span> <span class="ow">in</span> <span class="n">detected</span> <span class="k">if</span> <span class="n">vf</span><span class="o">.</span><span class="n">path</span> <span class="ow">in</span> <span class="n">normalized_files</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">filtered</span><span class="p">:</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="p">[</span><span class="n">vf</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">vf</span> <span class="ow">in</span> <span class="n">detected</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">BumpResult</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+            <span class="n">error</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;None of the specified files were found in detected version files. Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">matched_paths</span> <span class="o">=</span> <span class="p">{</span><span class="n">vf</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">vf</span> <span class="ow">in</span> <span class="n">filtered</span><span class="p">}</span>
+    <span class="n">unmatched</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">normalized_files</span> <span class="k">if</span> <span class="n">f</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">matched_paths</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">unmatched</span><span class="p">:</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="p">[</span><span class="n">vf</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">vf</span> <span class="ow">in</span> <span class="n">detected</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">BumpResult</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+            <span class="n">error</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Some specified files were not found in detected version files.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; Unmatched: </span><span class="si">{</span><span class="n">unmatched</span><span class="si">}</span><span class="s2">. Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+    <span class="n">detected</span> <span class="o">=</span> <span class="n">filtered</span>
+</code></pre></div>
+
+<p>The result JSON distinguishes between <code>updated</code> files and <code>skipped</code> files, which lets the workflow stage only successful updates and tell you about anything that was skipped.</p>
+<blockquote>
+<p><strong>Tip:</strong> Use <code>--files</code> when you want to keep automatic detection but narrow the actual bump to a smaller set of version files.</p>
+</blockquote>
+<h2 id="6-prepare-the-release-with-a-pr">6. Prepare the release with a PR</h2>
+<p>If version files were updated, the guided workflow does not release directly from that local state. It creates a dedicated bump branch, commits the updated files, opens a PR, merges it, and then syncs the target branch before creating the GitHub release.</p>
+<p>The documented flow is:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">BUMP_BRANCH</span><span class="o">=</span><span class="s2">&quot;chore/bump-version-&lt;VERSION&gt;-</span><span class="k">$(</span>date<span class="w"> </span>+%s<span class="k">)</span><span class="s2">&quot;</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BUMP_BRANCH</span><span class="s2">&quot;</span>
+git<span class="w"> </span>add<span class="w"> </span>&lt;updated-files&gt;
+
+uv<span class="w"> </span>lock
+git<span class="w"> </span>add<span class="w"> </span>uv.lock
+
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;chore: bump version to &lt;VERSION&gt;&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BUMP_BRANCH</span><span class="s2">&quot;</span>
+
+<span class="nv">PR_URL</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>create<span class="w"> </span>--title<span class="w"> </span><span class="s2">&quot;chore: bump version to &lt;VERSION&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--body<span class="w"> </span><span class="s2">&quot;Bump version to &lt;VERSION&gt;&quot;</span><span class="w"> </span>--base<span class="w"> </span>&lt;target_branch&gt;<span class="k">)</span>
+
+gh<span class="w"> </span>pr<span class="w"> </span>merge<span class="w"> </span>--merge<span class="w"> </span>--admin<span class="w"> </span>--delete-branch
+</code></pre></div>
+
+<p>A few practical details are worth knowing:</p>
+<ul>
+<li>The timestamp suffix on <code>BUMP_BRANCH</code> avoids collisions with earlier bump attempts.</li>
+<li><code>uv lock</code> is only relevant when <code>uv.lock</code> exists at the repo root.</li>
+<li>After merge, the workflow switches back to the target branch and pulls the latest changes before continuing.</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> The workflow attempts <code>gh pr merge --merge --admin --delete-branch</code>. If you do not have admin privileges, expect the documented fallback: merge the PR manually, then confirm before the release continues.</p>
+</blockquote>
+<h2 id="7-create-the-github-release">7. Create the GitHub release</h2>
+<p>Once the branch is current and the changelog is ready, the workflow writes the release notes to a temporary file and calls <code>release create</code>.</p>
+<p>The workflow’s handoff looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">CHANGELOG_FILE</span><span class="o">=</span><span class="k">$(</span>mktemp<span class="w"> </span>/tmp/claude-release-XXXXXX.md<span class="k">)</span>
+<span class="nb">trap</span><span class="w"> </span><span class="s2">&quot;rm -f </span><span class="nv">$CHANGELOG_FILE</span><span class="s2">&quot;</span><span class="w"> </span>EXIT
+
+cat<span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CHANGELOG_FILE</span><span class="s2">&quot;</span><span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<span class="s">&lt;changelog content from Phase 3&gt;</span>
+<span class="s">EOF</span>
+
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>create<span class="w"> </span><span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span><span class="w"> </span><span class="o">{</span>tag<span class="o">}</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CHANGELOG_FILE</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">[</span>--prerelease<span class="o">]</span><span class="w"> </span><span class="o">[</span>--draft<span class="o">]</span><span class="w"> </span><span class="o">[</span>--target<span class="w"> </span><span class="o">{</span>target_branch<span class="o">}]</span>
+</code></pre></div>
+
+<p>You can also run the CLI directly if you already have a changelog file:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>release<span class="w"> </span>create<span class="w"> </span>&lt;owner/repo&gt;<span class="w"> </span>&lt;tag&gt;<span class="w"> </span>&lt;changelog-file&gt;
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>create<span class="w"> </span>&lt;owner/repo&gt;<span class="w"> </span>&lt;tag&gt;<span class="w"> </span>&lt;changelog-file&gt;<span class="w"> </span>--prerelease
+myk-claude-tools<span class="w"> </span>release<span class="w"> </span>create<span class="w"> </span>&lt;owner/repo&gt;<span class="w"> </span>&lt;tag&gt;<span class="w"> </span>&lt;changelog-file&gt;<span class="w"> </span>--draft<span class="w"> </span>--target<span class="w"> </span>&lt;branch&gt;
+</code></pre></div>
+
+<p>The CLI forwards the main release flags directly to <code>gh release create</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;gh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;release&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;create&quot;</span><span class="p">,</span>
+    <span class="n">tag</span><span class="p">,</span>
+    <span class="s2">&quot;--repo&quot;</span><span class="p">,</span>
+    <span class="n">owner_repo</span><span class="p">,</span>
+    <span class="s2">&quot;--notes-file&quot;</span><span class="p">,</span>
+    <span class="n">changelog_file</span><span class="p">,</span>
+    <span class="s2">&quot;--title&quot;</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="n">title</span> <span class="ow">and</span> <span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">else</span> <span class="n">tag</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="k">if</span> <span class="n">target</span><span class="p">:</span>
+    <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--target&quot;</span><span class="p">,</span> <span class="n">target</span><span class="p">])</span>
+
+<span class="k">if</span> <span class="n">prerelease</span><span class="p">:</span>
+    <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--prerelease&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">draft</span><span class="p">:</span>
+    <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--draft&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The command expects:</p>
+<ul>
+<li>A repository in <code>owner/repo</code> format</li>
+<li>A release tag</li>
+<li>An existing changelog file</li>
+<li>Optional <code>--prerelease</code>, <code>--draft</code>, <code>--target</code>, and <code>--title</code> flags</li>
+</ul>
+<p>It also checks whether the tag looks like semantic versioning:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_is_semver_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if tag follows semantic versioning format (vX.Y.Z).&quot;&quot;&quot;</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$&quot;</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> Non-semver tags are warned about, not blocked. <code>release create</code> can still proceed if the tag does not match <code>vX.Y.Z</code>.</p>
+</blockquote>
+<h2 id="end-to-end-summary">End-to-end summary</h2>
+<p>A typical guided release looks like this:</p>
+<ol>
+<li>Run <code>/myk-github:release</code>.</li>
+<li>The workflow calls <code>myk-claude-tools release info</code> to validate the repo and collect commits since the last matching tag.</li>
+<li>It analyzes those commits to propose a <code>major</code>, <code>minor</code>, or <code>patch</code> bump and drafts the changelog.</li>
+<li>It calls <code>myk-claude-tools release detect-versions</code> to discover bumpable version files.</li>
+<li>It asks you to approve the proposed version, exclude files, override the bump type, or cancel.</li>
+<li>If files need updating, it runs <code>myk-claude-tools release bump-version ...</code>, creates a PR, merges it, and syncs the target branch.</li>
+<li>It writes the changelog to a temporary file and calls <code>myk-claude-tools release create ...</code>.</li>
+<li>GitHub creates the release, optionally as a prerelease or draft.</li>
+</ol>
+<p>That split is intentional:</p>
+<ul>
+<li>The CLI handles validation, JSON output, version-file discovery, version rewriting, and GitHub release creation.</li>
+<li>The slash command handles the interactive decisions, commit interpretation, changelog planning, and PR orchestration.</li>
+</ul>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="review-workflows.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Review Workflows</span>
+                </a>
+
+
+                <a href="multi-agent-acpx-guide.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Multi-Agent ACPX Guide</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#what-to-use">What to use</a></li>
+<li><a href="#1-validate-the-repository">1. Validate the repository</a><ul>
+<li><a href="#version-branch-auto-detection">Version-branch auto-detection</a></li>
+</ul>
+</li>
+<li><a href="#2-analyze-commits-and-choose-the-bump">2. Analyze commits and choose the bump</a></li>
+<li><a href="#3-detect-which-version-files-can-be-updated">3. Detect which version files can be updated</a></li>
+<li><a href="#4-review-the-proposal-before-anything-is-changed">4. Review the proposal before anything is changed</a></li>
+<li><a href="#5-bump-version-files">5. Bump version files</a></li>
+<li><a href="#6-prepare-the-release-with-a-pr">6. Prepare the release with a PR</a></li>
+<li><a href="#7-create-the-github-release">7. Create the GitHub release</a></li>
+<li><a href="#end-to-end-summary">End-to-end summary</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

@@ -71,9 +71,9 @@ gh api repos/<owner>/<repo>/pages --jq '.source' 2>/dev/null
 - If **configured with a different path**: inform the user and ask how to proceed.
 
 **Track whether GitHub Pages is confirmed to serve from `docs/` on the target branch**
-(either pre-existing or newly set up) — this is needed for Phase 5.
+(either pre-existing or newly set up) — this is needed for Phase 6.
 If Pages is configured but serves from a different path and the user chose not to change it,
-treat it as not configured for Phase 5 purposes.
+treat it as not configured for Phase 6 purposes.
 
 ### Phase 2: Generate Documentation
 
@@ -138,11 +138,38 @@ rm -rf <output_dir>/<project>-<branch>-<provider>-<model>
 
 If the nested subdirectory does not exist after download, the project name or parameters may not match what was used during generation — surface the error to the user.
 
-### Phase 5: GitHub Pages Post-Setup (conditional)
+### Phase 5: Security Scan
+
+After downloading and flattening, scan ALL generated docs for leaked sensitive content before proceeding.
+
+**This phase is MANDATORY — never skip it.**
+
+Run Grep searches across all files in `<output_dir>/` for these patterns:
+
+| Category | Grep Patterns | Notes |
+|----------|--------------|-------|
+| Private IPs | `192\.168\.`, `10\.\d+\.\d+\.\d+`, `172\.(1[6-9]\|2[0-9]\|3[01])\.` | Internal network addresses |
+| Localhost | `localhost`, `127\.0\.0\.1`, `0\.0\.0\.0` | Local-only URLs |
+| Home paths | `/home/\w+`, `/Users/\w+` | User-specific filesystem paths |
+| Email addresses | `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com\|org\|io\|net\|dev)` | Real email addresses (ignore `user@example.com` patterns) |
+| API key prefixes | `sk-`, `ghp_`, `gho_`, `github_pat_`, `xoxb-`, `xoxp-` | Known secret prefixes |
+| Crypto keys | `BEGIN.*PRIVATE`, `ssh-rsa`, `ssh-ed25519` | Leaked private/public keys |
+| Sensitive keywords | `password\s*[:=]`, `secret\s*[:=]`, `token\s*[:=]`, `api[_-]key\s*[:=]` | Hardcoded credentials (skip if in code examples showing placeholder values) |
+| Env file refs | `\.env`, `credentials\.json`, `\.pem` | References to sensitive files |
+
+**How to handle findings:**
+
+- **No findings** → Report clean scan to user, proceed to Phase 6.
+- **Findings detected** → Present ALL findings to the user with file, line number, and matched content. Ask the user how to proceed:
+  - **Fix** → Edit the docs to redact/remove sensitive content, then re-scan.
+  - **Ignore** → User confirms false positives, proceed to Phase 6.
+  - **Abort** → Stop the workflow.
+
+### Phase 6: GitHub Pages Post-Setup (conditional)
 
 **This phase runs ONLY if GitHub Pages is confirmed to serve from `docs/` on the target branch** (determined in Phase 1).
 
-#### 5a. Display Docs Site Link
+#### 6a. Display Docs Site Link
 
 Show the user the live documentation URL.
 
@@ -154,7 +181,7 @@ Extract `<owner>` and `<repo>` from the repository URL, then construct the URL:
 
 Display the URL to the user.
 
-#### 5b. Offer README Simplification
+#### 6b. Offer README Simplification
 
 Ask the user if they want to simplify the project README to keep it minimal and point to the new docs site:
 
@@ -162,7 +189,7 @@ Ask the user if they want to simplify the project README to keep it minimal and 
 
 - **Yes** → Read the current `README.md` in the repository root. Create a simplified version that keeps ONLY:
   - Project title + one-line description
-  - Link to the docs site prominently (use the URL from Phase 5a)
+  - Link to the docs site prominently (use the URL from Phase 6a)
   - Quick start (e.g., docker run or install command, 5 lines max)
   - CLI install + 3-line usage example
   - "See the [full documentation](<docs_site_url>) for everything else"
@@ -173,7 +200,7 @@ Ask the user if they want to simplify the project README to keep it minimal and 
   If no `README.md` exists, skip this step.
 - **No** → Skip and continue to summary.
 
-### Phase 6: Summary
+### Phase 7: Summary
 
 Display:
 
@@ -208,3 +235,4 @@ Display:
 | Leaving nested download folder | Flatten after download — move files to output root |
 | Downloading before creating branch | Always create a docs branch before downloading |
 | Showing docs link without Pages serving docs/ | Only show docs URL if GitHub Pages serves from `docs/` on target branch |
+| Skipping security scan | Always scan docs for leaked private data before committing |
