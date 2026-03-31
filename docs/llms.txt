@@ -1,0 +1,53 @@
+# claude-code-config
+
+> A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.
+
+## Overview
+
+- [Overview](overview.md): Introduces what this repository installs and maintains: Claude Code settings, hook scripts, orchestrator rules, specialist agents, plugins, skills, and the bundled CLI.
+- [Architecture](architecture.md): Explains the orchestrator-versus-specialist model, slash-command execution mode, rule enforcement, task tracking, and the mandatory review loop.
+- [Repository Structure](repository-structure.md): Maps the major directories and shows how agents, rules, scripts, plugins, skills, the Python package, and tests fit together.
+
+## Getting Started
+
+- [System Requirements](requirements.md): Lists runtime prerequisites inferred from the code and hooks, including Python 3.10+, uv, gh, jq, gawk, prek, mcpl, required review plugins, and optional acpx support.
+- [Installation](installation.md): Shows how to install the configuration into a Claude Code home directory, wire up the repo's settings and scripts, install the bundled CLI, and enable the bundled plugins.
+- [First-Run Checks](first-run-checks.md): Explains the session-start validation flow, how missing tools and critical plugins are detected, and how to confirm the configuration is active.
+- [Personal CLAUDE.md](personal-claude-md.md): Shows how to use the included CLAUDE.md template for personal preferences and targeted overrides without changing shared repository files.
+
+## Configuration
+
+- [settings.json Reference](settings-json-reference.md): Documents permissions, allowed tools, hooks, enabled plugins, environment flags, status-line configuration, and the duplicated allowlist entries that must stay in sync.
+- [Hooks and Guardrails](hooks-and-guardrails.md): Covers the behavior of rule-enforcer.py, git-protection.py, rule-injector.py, session-start-check.sh, and my-notifier.sh, including what each one blocks, warns about, or enriches.
+- [Orchestrator Rules](orchestrator-rules.md): Summarizes the rule files that govern delegation, issue-first workflow, agent routing, MCP discovery, task usage, slash-command handling, parallelism, temp files, and bug reporting.
+- [Specialist Agents](specialist-agents.md): Profiles the bundled agents, their scope boundaries, notable instructions, and how shared base-agent rules differ from orchestrator rules.
+- [Skills and Templates](skills-and-templates.md): Documents the bundled skills and templates, including browser automation, docsfy-based documentation generation, and the personal Claude configuration template.
+
+## Usage Guides
+
+- [Daily Workflow](daily-workflow.md): A task-oriented guide to how a configured Claude session is expected to operate from request intake through delegation, review, testing, and completion.
+- [Review Workflows](review-workflows.md): Covers local diff review, GitHub PR review, multi-source review handling, pending-review refinement, reply posting, auto-skip behavior, and review result storage.
+- [Release Workflow](release-workflow.md): Explains release validation, commit analysis, version-file detection, version bumping, PR-based release prep, and GitHub release creation.
+- [Multi-Agent ACPX Guide](multi-agent-acpx-guide.md): Shows how the acpx plugin works in exec, fix, and peer modes, including session handling, dirty-worktree safeguards, and parallel multi-agent runs.
+- [MCP Usage](mcp-usage.md): Explains how this configuration expects users and agents to discover and use MCP tools through mcpl rather than direct tool guessing.
+
+## Reference
+
+- [CLI and Interface Reference](cli-and-interface-reference.md): Documents the project's public interfaces, which are CLI-, slash-command-, hook-, and JSON-based rather than a standalone HTTP API.
+- [Slash Command Reference](slash-command-reference.md): Reference for all bundled slash commands, their arguments, allowed tools, and the workflows they trigger across the myk-github, myk-review, and myk-acpx plugins.
+- [Reviews CLI Reference](reviews-cli-reference.md): Reference for myk-claude-tools reviews commands such as fetch, post, pending-fetch, pending-update, and store.
+- [PR CLI Reference](pr-cli-reference.md): Reference for PR-oriented commands that fetch diffs, load CLAUDE.md content, and post structured review comments.
+- [Release CLI Reference](release-cli-reference.md): Reference for release info, create, detect-versions, and bump-version commands, including their inputs and JSON outputs.
+- [Database CLI Reference](database-cli-reference.md): Reference for analytics commands that query the review database, find dismissed patterns, and compare similar comments.
+- [CodeRabbit CLI Reference](coderabbit-cli-reference.md): Reference for CodeRabbit rate-limit detection and re-trigger commands used by the GitHub review workflows.
+- [Data Formats and Schema](data-formats-and-schema.md): Documents temporary JSON artifacts, hook payload expectations, plugin and marketplace metadata, and the SQLite review database schema.
+
+## Development
+
+- [Development Environment](development-environment.md): Explains the Python package setup, dependency groups, local development flow, and repository conventions such as the whitelist-style .gitignore.
+- [Testing and Quality](testing-and-quality.md): Covers pytest, tox, ruff, mypy, flake8, markdownlint, secret scanning, and the behavioral guarantees encoded in the test suite.
+- [Automation and CI](automation-and-ci.md): Explains the project's automation story, including pre-commit.ci settings, CodeRabbit and Qodo Merge integration, and the fact that no repository-local CI workflow is checked in.
+- [Extending Agents, Rules, and Plugins](extending-agents-rules-and-plugins.md): Shows how to add or remove agents, rules, scripts, slash commands, and marketplace entries while keeping whitelist and bug-reporting coverage in sync.
+- [Maintaining Releases and Versioning](maintaining-release-and-versioning.md): Documents how the repo versions the CLI and plugins, detects version files, and uses release helpers to prepare and publish new versions.
+- [Troubleshooting](troubleshooting.md): Collects common operational failures such as blocked hooks, missing tools, gh auth problems, CodeRabbit parsing edge cases, acpx session failures, and stale task or temp-file state.
+- [License](license.md): Summarizes the project's MIT license and what it permits for reuse, modification, and redistribution.

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing and Quality - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link active" aria-current="page">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="testing-and-quality">Testing and Quality</h1>
+<p>This repository uses a local-first quality model. Unit tests run with <code>pytest</code>, <code>tox</code> provides a thin wrapper around that suite, and repository-wide checks run through pre-commit hooks. On top of that, the Claude Code configuration in this repo wires in runtime guardrails such as <code>rule-enforcer.py</code> and <code>git-protection.py</code>.</p>
+<p>The result is a mix of fast automated checks and explicit policy tests. The Python test suite focuses on the <code>myk_claude_tools</code> CLI, hook scripts, release helpers, review automation, and the SQLite analytics layer.</p>
+<h2 id="quick-start">Quick Start</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run the unit tests directly</span>
+uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>tests<span class="w"> </span>pytest<span class="w"> </span>tests
+
+<span class="c1"># Run a focused test module while you work</span>
+uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>tests<span class="w"> </span>pytest<span class="w"> </span>tests/test_git_protection.py
+
+<span class="c1"># Run the same suite through tox</span>
+tox
+
+<span class="c1"># Run formatting, typing, linting, Markdown, and secret scans</span>
+prek<span class="w"> </span>run<span class="w"> </span>--all-files
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> <code>pyproject.toml</code> declares <code>requires-python = "&gt;=3.10"</code>, and most commands in this repository use <code>uv</code> because both <code>tox.toml</code> and the runtime hook policy are built around it.</p>
+<p><strong>Tip:</strong> In the Claude Code environment configured by this repo, <code>scripts/rule-enforcer.py</code> intentionally blocks direct <code>python</code>, <code>pip</code>, and <code>pre-commit</code> commands. Use <code>uv</code>, <code>uvx</code>, and <code>prek</code> there instead.</p>
+</blockquote>
+<h2 id="quality-stack-at-a-glance">Quality Stack at a Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Source of truth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit tests</td>
+<td><code>tox.toml</code>, <code>tests/</code></td>
+<td>Runs the Python test suite with <code>pytest</code></td>
+</tr>
+<tr>
+<td>Linting and formatting</td>
+<td><code>pyproject.toml</code>, <code>.pre-commit-config.yaml</code></td>
+<td>Ruff lint + Ruff format</td>
+</tr>
+<tr>
+<td>Type checking</td>
+<td><code>pyproject.toml</code>, <code>.pre-commit-config.yaml</code></td>
+<td>mypy</td>
+</tr>
+<tr>
+<td>Extra Python bug check</td>
+<td><code>.flake8</code>, <code>.pre-commit-config.yaml</code></td>
+<td>Flake8 <code>M511</code> via <code>flake8-mutable</code></td>
+</tr>
+<tr>
+<td>Markdown quality</td>
+<td><code>.markdownlint.yaml</code>, <code>.pre-commit-config.yaml</code></td>
+<td>markdownlint</td>
+</tr>
+<tr>
+<td>Secret scanning</td>
+<td><code>.pre-commit-config.yaml</code></td>
+<td><code>detect-secrets</code>, <code>gitleaks</code>, and <code>detect-private-key</code></td>
+</tr>
+<tr>
+<td>Runtime guardrails</td>
+<td><code>settings.json</code>, <code>scripts/</code></td>
+<td>Blocks unsafe commands and protected-branch writes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pytest-and-tox">Pytest and tox</h2>
+<p><code>pytest</code> is the actual test runner. <code>tox</code> is configured as a lightweight wrapper around it, not as a build matrix or packaging pipeline. The checked-in tox config has a single environment named <code>unittests</code>, and <code>skipsdist = true</code> tells tox not to build the package first.</p>
+<p>From <code>tox.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">skipsdist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">envlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;unittests&quot;</span><span class="p">]</span>
+
+<span class="k">[env.unittests]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Run pytest tests&quot;</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">]</span>
+<span class="n">commands</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--group&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">]]</span>
+</code></pre></div>
+
+<p>From <code>pyproject.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[dependency-groups]</span>
+<span class="n">tests</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;pytest&gt;=9.0.2&quot;</span><span class="p">]</span>
+</code></pre></div>
+
+<p>What this means in practice:</p>
+<ul>
+<li>If you want the fastest path, run <code>uv run --group tests pytest tests</code>.</li>
+<li>If you prefer tox, <code>tox</code> runs the same suite through the <code>unittests</code> environment.</li>
+<li>The test suite is designed to be fast and deterministic, with heavy use of mocked Git, GitHub CLI, GraphQL, subprocess, and SQLite interactions.</li>
+</ul>
+<h2 id="ruff-mypy-and-flake8">Ruff, mypy, and Flake8</h2>
+<h3 id="ruff">Ruff</h3>
+<p>Ruff is the main Python linter and formatter. The repository enables autofix-friendly behavior, grouped output, and preview mode.</p>
+<p>From <code>pyproject.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[tool.ruff]</span>
+<span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">line-length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">120</span>
+<span class="n">fix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">output-format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;grouped&quot;</span>
+
+<span class="k">[tool.ruff.lint]</span>
+<span class="n">select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;F&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;W&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;I&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;UP&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PLC0415&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ARG&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;RUF059&quot;</span><span class="p">]</span>
+
+<span class="k">[tool.ruff.lint.per-file-ignores]</span>
+<span class="s2">&quot;myk_claude_tools/*/commands.py&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;PLC0415&quot;</span><span class="p">]</span>
+</code></pre></div>
+
+<p>What to expect:</p>
+<ul>
+<li><code>120</code> characters is the Python line-length target.</li>
+<li><code>fix = true</code> means Ruff is configured for autofix-friendly runs.</li>
+<li>The selected rules cover core linting, import ordering, bug-prone patterns, Python modernization, unused arguments, and a few repository-specific checks.</li>
+<li><code>PLC0415</code> is ignored for <code>commands.py</code> files because the CLI command modules intentionally use lazy imports for faster startup.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> Because <code>preview = true</code> is enabled, keeping Ruff reasonably up to date matters. Very old Ruff versions may not match the repository’s expected behavior.</p>
+</blockquote>
+<h3 id="mypy">mypy</h3>
+<p>Mypy is configured more strictly than its defaults, especially around untyped or partially typed functions.</p>
+<p>From <code>pyproject.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[tool.mypy]</span>
+<span class="n">check_untyped_defs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">disallow_any_generics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="n">disallow_incomplete_defs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">disallow_untyped_defs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">no_implicit_optional</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">show_error_codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">warn_unused_ignores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">strict_equality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">extra_checks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">warn_unused_configs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">warn_redundant_casts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</code></pre></div>
+
+<p>In plain English, that means:</p>
+<ul>
+<li>New Python code is expected to be typed, not left as “we’ll add types later.”</li>
+<li>Even when a function is untyped, mypy still checks its body.</li>
+<li>Implicit <code>Optional</code> behavior is not allowed.</li>
+<li>Redundant casts, unused ignores, and unused config are treated as real issues.</li>
+</ul>
+<h3 id="flake8">Flake8</h3>
+<p>Flake8 is deliberately narrow here. It is not duplicating Ruff’s full lint surface. Instead, it is reserved for <code>M511</code>, provided by <code>flake8-mutable</code>, to catch mutable default argument bugs.</p>
+<p>From <code>.flake8</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[flake8]</span>
+<span class="na">select</span><span class="o">=</span><span class="s">M511</span>
+
+<span class="na">exclude</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="na">doc,</span>
+<span class="w">    </span><span class="na">.tox,</span>
+<span class="w">    </span><span class="na">.git,</span>
+<span class="w">    </span><span class="na">.yml,</span>
+<span class="w">    </span><span class="na">Pipfile.*,</span>
+<span class="w">    </span><span class="na">docs/*,</span>
+<span class="w">    </span><span class="na">.cache/*</span>
+</code></pre></div>
+
+<p>That is why you will see both Ruff and Flake8 in the hook stack: Ruff does the heavy lifting, and Flake8 adds one focused rule the project still wants enforced.</p>
+<h2 id="markdown-quality">Markdown Quality</h2>
+<p>The repository contains a lot of Markdown: plugin commands, agent definitions, rules, and user-facing docs. <code>markdownlint</code> is part of the default hook set, with a small adjustment to keep documentation writing practical.</p>
+<p>From <code>.markdownlint.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">MD013</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">line_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">180</span>
+<span class="w">  </span><span class="nt">code_blocks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">tables</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
+
+<p>This means:</p>
+<ul>
+<li>All default markdownlint rules are on.</li>
+<li>Long prose lines are allowed up to <code>180</code> characters.</li>
+<li>Code fences and tables are exempt from the line-length rule, which avoids awkward wrapping of examples and comparison tables.</li>
+</ul>
+<h2 id="secret-scanning-and-repository-hygiene">Secret Scanning and Repository Hygiene</h2>
+<p>Secret scanning is not a one-tool checkbox here. The pre-commit stack combines several layers:</p>
+<ul>
+<li><code>detect-private-key</code> from <code>pre-commit-hooks</code> catches obvious key material.</li>
+<li><code>detect-secrets</code> looks for likely secret patterns and high-risk text.</li>
+<li><code>gitleaks</code> adds a second secret-scanning engine with different signatures.</li>
+<li>Generic hygiene hooks also catch merge conflicts, large files, mixed line endings, debug statements, trailing whitespace, and TOML syntax errors.</li>
+</ul>
+<p>From <code>.pre-commit-config.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">repos</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/pre-commit/pre-commit-hooks</span>
+<span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v6.0.0</span>
+<span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">check-added-large-files</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">check-merge-conflict</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detect-private-key</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">debug-statements</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trailing-whitespace</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">end-of-file-fixer</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">check-toml</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/Yelp/detect-secrets</span>
+<span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1.5.0</span>
+<span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">detect-secrets</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/gitleaks/gitleaks</span>
+<span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v8.30.0</span>
+<span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gitleaks</span>
+</code></pre></div>
+
+<p>The project also handles test-only false positives carefully. Instead of weakening secret scanners globally, tests allowlist specific fake SHA-looking values inline when needed.</p>
+<p>From <code>tests/test_store_reviews_to_db.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="s2">&quot;abc1234567890abcdef&quot;</span>  <span class="c1"># pragma: allowlist secret</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> This is a good pattern to copy. If a test needs a fake token, hash, or key-shaped string, allowlist that exact line instead of broadly disabling the scanner.</p>
+</blockquote>
+<h2 id="pre-commit-workflow">Pre-commit Workflow</h2>
+<p>The checked-in hook stack is the main “one command” quality gate. In addition to the hooks above, it also runs Ruff, Ruff format, mypy, Flake8, and markdownlint.</p>
+<p>Relevant parts of <code>.pre-commit-config.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">ci</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autofix_prs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">autoupdate_commit_msg</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ci:</span><span class="nv"> </span><span class="s">[pre-commit.ci]</span><span class="nv"> </span><span class="s">pre-commit</span><span class="nv"> </span><span class="s">autoupdate&quot;</span>
+
+<span class="nt">repos</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/astral-sh/ruff-pre-commit</span>
+<span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v0.14.14</span>
+<span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ruff</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ruff-format</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/pre-commit/mirrors-mypy</span>
+<span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1.19.1</span>
+<span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mypy</span>
+<span class="w">        </span><span class="nt">additional_dependencies</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytest</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/igorshubovych/markdownlint-cli</span>
+<span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v0.44.0</span>
+<span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">markdownlint</span>
+<span class="w">        </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">--config</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">.markdownlint.yaml</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">markdown</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p>Two practical takeaways:</p>
+<ul>
+<li>The project expects contributors to fix issues locally rather than relying on automatic bot-generated fix PRs.</li>
+<li>The hook stack is intentionally broad. If <code>prek run --all-files</code> passes, you have exercised the linting, formatting, typing, Markdown, and secret-scanning layers in one go.</li>
+</ul>
+<h2 id="hook-enforced-quality-in-the-claude-code-environment">Hook-Enforced Quality in the Claude Code Environment</h2>
+<p>This repository does not rely only on conventional lint and test tools. It also encodes runtime guardrails in Claude Code hook scripts, and those scripts are heavily tested.</p>
+<p>From <code>settings.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;PreToolUse&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TodoWrite|Bash&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-enforcer.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bash&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/git-protection.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<h3 id="rule-enforcerpy"><code>rule-enforcer.py</code></h3>
+<p><code>rule-enforcer.py</code> keeps the environment consistent by steering Python and pre-commit execution toward the approved toolchain.</p>
+<p>From <code>scripts/rule-enforcer.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_forbidden_python_command</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># Allow uv/uvx commands</span>
+    <span class="k">if</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;uv &quot;</span><span class="p">,</span> <span class="s2">&quot;uvx &quot;</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Block direct python/pip</span>
+    <span class="n">forbidden</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;python &quot;</span><span class="p">,</span> <span class="s2">&quot;python3 &quot;</span><span class="p">,</span> <span class="s2">&quot;pip &quot;</span><span class="p">,</span> <span class="s2">&quot;pip3 &quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">forbidden</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Tests around this script verify that it:</p>
+<ul>
+<li>Blocks direct <code>python</code>, <code>python3</code>, <code>pip</code>, <code>pip3</code>, and <code>pre-commit</code> commands.</li>
+<li>Allows <code>uv</code>, <code>uvx</code>, and <code>prek</code>.</li>
+<li>Handles whitespace and mixed case correctly.</li>
+<li>Fails open on malformed hook input so a broken hook payload does not brick the entire session.</li>
+</ul>
+<h3 id="git-protectionpy"><code>git-protection.py</code></h3>
+<p><code>git-protection.py</code> protects branch hygiene. It blocks commits and pushes in cases that are easy to regret later.</p>
+<p>From <code>scripts/git-protection.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Allow amend on unpushed commits</span>
+<span class="k">if</span> <span class="n">is_amend_with_unpushed_commits</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+</code></pre></div>
+
+<p>The tests around <code>git-protection.py</code> lock down behavior such as:</p>
+<ul>
+<li>Rejecting commits on <code>main</code> or <code>master</code>.</li>
+<li>Rejecting commits and pushes to branches that are already merged.</li>
+<li>Rejecting work on branches whose pull requests are already merged.</li>
+<li>Allowing <code>git commit --amend</code> when the branch is ahead of its remote.</li>
+<li>Handling detached HEAD, orphan branches, and GitHub API errors explicitly.</li>
+<li>Failing closed when it cannot safely decide, so an unsafe commit or push does not slip through.</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> These hook scripts are part of the quality story in this repo. Passing <code>pytest</code> alone does not mean you have exercised the runtime guardrails unless the relevant hook tests are also green.</p>
+</blockquote>
+<h2 id="what-the-test-suite-actually-guarantees">What the Test Suite Actually Guarantees</h2>
+<p>The tests in <code>tests/</code> are not generic smoke tests. They encode concrete policies and edge cases for the project’s most important moving parts.</p>
+<h3 id="review-automation-is-expected-to-be-safe-and-repeatable">Review automation is expected to be safe and repeatable</h3>
+<p>The review pipeline tests cover fetching, parsing, replying, storing, and querying review data. That includes:</p>
+<ul>
+<li>GitHub GraphQL and REST pagination behavior.</li>
+<li>Parsing CodeRabbit outside-diff, nitpick, and duplicate comments.</li>
+<li>Posting replies idempotently, so already-posted entries are not posted again.</li>
+<li>Retrying a failed resolve without double-posting a reply.</li>
+<li>Grouping body-only comments into consolidated PR comments and chunking them to stay below GitHub size limits.</li>
+<li>Different resolution rules for human versus AI-generated review comments.</li>
+</ul>
+<p>From <code>myk_claude_tools/reviews/post.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Determine if we should resolve this thread (MUST be before resolve_only_retry check)</span>
+<span class="n">should_resolve</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">if</span> <span class="n">category</span> <span class="o">==</span> <span class="s2">&quot;human&quot;</span> <span class="ow">and</span> <span class="n">status</span> <span class="o">!=</span> <span class="s2">&quot;addressed&quot;</span><span class="p">:</span>
+    <span class="n">should_resolve</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+
+<p>That one branch summarizes a real project policy: human review threads stay open unless they were actually addressed, while AI-originated review items can be auto-resolved after the reply policy is applied.</p>
+<h3 id="review-database-access-is-deliberately-conservative">Review database access is deliberately conservative</h3>
+<p>The SQLite layer is tested for append-only storage, schema migration, and read-only analytics access. The database helper does not allow arbitrary write SQL through its query interface.</p>
+<p>From <code>myk_claude_tools/db/query.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="ow">not</span> <span class="n">sql_upper</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;SELECT&quot;</span><span class="p">,</span> <span class="s2">&quot;WITH&quot;</span><span class="p">)):</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only SELECT/CTE queries are allowed for safety&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Tests also verify that the query layer rejects:</p>
+<ul>
+<li><code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>, <code>ALTER</code>, <code>ATTACH</code>, and <code>PRAGMA</code></li>
+<li>Multi-statement SQL</li>
+<li>Dangerous keywords hidden inside otherwise “read-like” queries</li>
+</ul>
+<p>The storage layer is also tested to create <code>.claude/data/</code> with <code>0700</code> permissions, migrate older databases forward, and append new review snapshots instead of rewriting earlier ones.</p>
+<h3 id="version-tooling-is-section-aware-and-atomic">Version tooling is section-aware and atomic</h3>
+<p>The release helpers are also well-covered. The tests check that version detection and bumping:</p>
+<ul>
+<li>Find versions in <code>pyproject.toml</code>, <code>package.json</code>, <code>setup.cfg</code>, <code>Cargo.toml</code>, Gradle files, and Python <code>__version__</code> files</li>
+<li>Skip excluded directories such as <code>.venv</code>, <code>node_modules</code>, <code>.tox</code>, and build caches</li>
+<li>Only update the correct section, not every <code>version</code> key in a file</li>
+<li>Reject invalid version strings</li>
+<li>Fail safely when a requested file filter does not match</li>
+<li>Use atomic writes so partial edits do not leak into the repository on error</li>
+</ul>
+<p>These are especially useful guarantees if you use the repository’s release helpers as part of a scripted workflow.</p>
+<h3 id="hook-behavior-is-tested-as-behavior-not-just-as-syntax">Hook behavior is tested as behavior, not just as syntax</h3>
+<p>The hook test modules do more than import the scripts and call one happy path. They cover:</p>
+<ul>
+<li>Regex-based Git subcommand detection, including false-positive cases</li>
+<li>JSON hook I/O behavior</li>
+<li>Whitespace and case handling</li>
+<li>Timeout and subprocess failure paths</li>
+<li>The intentional difference between fail-open and fail-closed hooks</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> Most of these tests are unit tests with mocked subprocess and GitHub responses. That is intentional. The goal is to make policy-heavy behavior easy to test without depending on live GitHub state or a specific local Git history.</p>
+<p><strong>Tip:</strong> If you want the exact contract for a subsystem, the clearest starting points are <code>tests/test_rule_enforcer.py</code>, <code>tests/test_git_protection.py</code>, <code>tests/test_post_review_replies.py</code>, <code>tests/test_store_reviews_to_db.py</code>, and <code>tests/test_review_db.py</code>.</p>
+</blockquote>
+<h2 id="cicd-status">CI/CD Status</h2>
+<blockquote>
+<p><strong>Warning:</strong> No <code>.github/workflows/</code> directory is committed in this repository.</p>
+</blockquote>
+<p>From the repository contents, the quality gates you can verify are:</p>
+<ul>
+<li><code>pytest</code> for unit tests</li>
+<li><code>tox</code> as a wrapper around the unit test suite</li>
+<li>pre-commit hooks for linting, typing, formatting, Markdown, and secret scanning</li>
+<li>Claude Code hook scripts for runtime enforcement</li>
+</ul>
+<p><code>.pre-commit-config.yaml</code> does include a <code>ci:</code> section, but the source tree itself does not define a checked-in GitHub Actions pipeline. In practice, this means the repository is local-first: contributors are expected to run the checks themselves and keep them green before sharing changes.</p>
+<h2 id="recommended-workflow">Recommended Workflow</h2>
+<p>A practical workflow for contributors is:</p>
+<ol>
+<li>Run a targeted <code>pytest</code> module while you work, such as <code>uv run --group tests pytest tests/test_post_review_replies.py</code>.</li>
+<li>Run the full test suite with <code>uv run --group tests pytest tests</code>.</li>
+<li>Run <code>prek run --all-files</code> before committing.</li>
+<li>If you use tox, make sure <code>tox</code> stays green as a second path through the same unit-test suite.</li>
+</ol>
+<p>That combination covers the repository’s two main quality layers: tested behavior and repository-wide hygiene.</p>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="development-environment.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Development Environment</span>
+                </a>
+
+
+                <a href="automation-and-ci.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Automation and CI</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#quality-stack-at-a-glance">Quality Stack at a Glance</a></li>
+<li><a href="#pytest-and-tox">Pytest and tox</a></li>
+<li><a href="#ruff-mypy-and-flake8">Ruff, mypy, and Flake8</a><ul>
+<li><a href="#ruff">Ruff</a></li>
+<li><a href="#mypy">mypy</a></li>
+<li><a href="#flake8">Flake8</a></li>
+</ul>
+</li>
+<li><a href="#markdown-quality">Markdown Quality</a></li>
+<li><a href="#secret-scanning-and-repository-hygiene">Secret Scanning and Repository Hygiene</a></li>
+<li><a href="#pre-commit-workflow">Pre-commit Workflow</a></li>
+<li><a href="#hook-enforced-quality-in-the-claude-code-environment">Hook-Enforced Quality in the Claude Code Environment</a><ul>
+<li><a href="#rule-enforcerpy">rule-enforcer.py</a></li>
+<li><a href="#git-protectionpy">git-protection.py</a></li>
+</ul>
+</li>
+<li><a href="#what-the-test-suite-actually-guarantees">What the Test Suite Actually Guarantees</a><ul>
+<li><a href="#review-automation-is-expected-to-be-safe-and-repeatable">Review automation is expected to be safe and repeatable</a></li>
+<li><a href="#review-database-access-is-deliberately-conservative">Review database access is deliberately conservative</a></li>
+<li><a href="#version-tooling-is-section-aware-and-atomic">Version tooling is section-aware and atomic</a></li>
+<li><a href="#hook-behavior-is-tested-as-behavior-not-just-as-syntax">Hook behavior is tested as behavior, not just as syntax</a></li>
+</ul>
+</li>
+<li><a href="#cicd-status">CI/CD Status</a></li>
+<li><a href="#recommended-workflow">Recommended Workflow</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

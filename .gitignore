@@ -156,3 +156,11 @@
 !myk_claude_tools/reviews/post.py
 !myk_claude_tools/reviews/coderabbit_parser.py
 !myk_claude_tools/reviews/store.py
+
+# docs/ (generated documentation site)
+!docs/
+!docs/*
+!docs/assets/
+!docs/assets/*
+!docs/plans/
+!docs/plans/*

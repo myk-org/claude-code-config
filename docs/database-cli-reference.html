@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database CLI Reference - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link active" aria-current="page">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="database-cli-reference">Database CLI Reference</h1>
+<p>The database CLI lets you inspect the local review history stored in the review database. Use it to answer practical questions like:</p>
+<ul>
+<li>Which review sources produce the most actionable comments?</li>
+<li>Which skipped or not-addressed comments keep repeating?</li>
+<li>Has this comment already been dismissed before?</li>
+<li>What does the raw review data look like?</li>
+</ul>
+<p>You can run these queries in two ways:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>stats<span class="w"> </span>--by-source
+/myk-review:query-db<span class="w"> </span>stats<span class="w"> </span>--by-source
+</code></pre></div>
+
+<p>All command examples on this page come from the project’s actual CLI definitions, plugin command, or tests.</p>
+<h2 id="at-a-glance">At a glance</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stats</code></td>
+<td>Addressed-rate reports by source or reviewer</td>
+</tr>
+<tr>
+<td><code>patterns</code></td>
+<td>Recurring skipped or not-addressed comment patterns</td>
+</tr>
+<tr>
+<td><code>dismissed</code></td>
+<td>Repo-specific dismissed history and reasons</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td>One-off read-only SQL queries</td>
+</tr>
+<tr>
+<td><code>find-similar</code></td>
+<td>Comparing a new comment to previously dismissed comments</td>
+</tr>
+</tbody>
+</table>
+<h2 id="before-you-start">Before you start</h2>
+<p>If you want to run the CLI directly, install the <code>myk-claude-tools</code> console script:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>myk-claude-tools
+myk-claude-tools<span class="w"> </span>--version
+</code></pre></div>
+
+<blockquote>
+<p><strong>Note:</strong> By default, the CLI looks for the database at <code>&lt;git-root&gt;/.claude/data/reviews.db</code>, where <code>&lt;git-root&gt;</code> is the Git repository root of your current working directory.</p>
+<p><strong>Tip:</strong> Every <code>db</code> subcommand accepts <code>--db-path</code>, so you can point at a different database file when needed.</p>
+</blockquote>
+<p>These analytics commands query an existing database. Review data is stored separately after a completed review flow is written to disk.</p>
+<p>A minimal stored review payload looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;owner&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;test-owner&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;repo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;test-repo&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;pr_number&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;human&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;body&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;human comment&quot;</span><span class="p">}],</span>
+<span class="w">  </span><span class="nt">&quot;qodo&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;body&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;qodo comment&quot;</span><span class="p">}],</span>
+<span class="w">  </span><span class="nt">&quot;coderabbit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;body&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;coderabbit comment&quot;</span><span class="p">}]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The database is append-only: each stored review run creates a new row in <code>reviews</code>, then inserts its comments into <code>comments</code>.</p>
+<blockquote>
+<p><strong>Note:</strong> If the same PR is stored more than once, the database keeps multiple <code>reviews</code> rows for that PR. That is useful for history, but it also means custom queries may need <code>DISTINCT</code>, grouping, or a “latest review” filter.</p>
+</blockquote>
+<h2 id="common-options">Common options</h2>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Available on</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--json</code></td>
+<td>All <code>db</code> subcommands</td>
+<td>Returns JSON instead of a formatted table</td>
+</tr>
+<tr>
+<td><code>--db-path</code></td>
+<td>All <code>db</code> subcommands</td>
+<td>Uses a specific database file</td>
+</tr>
+<tr>
+<td><code>--owner</code>, <code>--repo</code></td>
+<td><code>dismissed</code>, <code>find-similar</code></td>
+<td>Scopes the command to one repository</td>
+</tr>
+<tr>
+<td><code>--min</code></td>
+<td><code>patterns</code></td>
+<td>Sets the minimum number of repeated matches to report</td>
+</tr>
+<tr>
+<td><code>--threshold</code></td>
+<td><code>find-similar</code></td>
+<td>Sets the minimum similarity score from <code>0.0</code> to <code>1.0</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Tip:</strong> Table output truncates long values for readability. Use <code>--json</code> if you need the full comment body or want to pipe the result into another tool.</p>
+</blockquote>
+<h2 id="command-reference">Command reference</h2>
+<h3 id="stats"><code>stats</code></h3>
+<p>Use <code>stats</code> to measure how often comments are addressed, skipped, or left unaddressed.</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>stats
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>stats<span class="w"> </span>--by-reviewer
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>stats<span class="w"> </span>--by-source<span class="w"> </span>--json
+</code></pre></div>
+
+<p>What it does:</p>
+<ul>
+<li><code>--by-source</code> groups by comment source such as <code>human</code>, <code>qodo</code>, and <code>coderabbit</code></li>
+<li><code>--by-reviewer</code> groups by the individual <code>author</code></li>
+<li>Source-based output includes an <code>addressed_rate</code> percentage</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> If you do not pass either <code>--by-source</code> or <code>--by-reviewer</code>, <code>stats</code> defaults to source-based output.</p>
+<p><strong>Warning:</strong> <code>--by-source</code> and <code>--by-reviewer</code> are mutually exclusive. Passing both returns an error.</p>
+</blockquote>
+<h3 id="patterns"><code>patterns</code></h3>
+<p>Use <code>patterns</code> to find repeated comment clusters that may be worth turning into reviewer guidance or skip rules.</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>patterns
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>patterns<span class="w"> </span>--min<span class="w"> </span><span class="m">3</span>
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>patterns<span class="w"> </span>--json
+</code></pre></div>
+
+<p>What it returns:</p>
+<ul>
+<li><code>path</code>: the file path where the pattern appears</li>
+<li><code>occurrences</code>: how many similar comments were found</li>
+<li><code>reason</code>: the most common <code>reply</code> or <code>skip_reason</code> in that cluster</li>
+<li><code>body_sample</code>: the first comment body in the cluster</li>
+</ul>
+<p>How matching works:</p>
+<ul>
+<li>The command only looks at comments with status <code>not_addressed</code> or <code>skipped</code></li>
+<li>Comments are grouped by exact <code>path</code></li>
+<li>Within a path, comments are clustered when their body similarity is at least <code>0.6</code></li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> <code>patterns</code> works across the whole database. It is not scoped to one <code>owner</code> or <code>repo</code>.</p>
+</blockquote>
+<h3 id="dismissed"><code>dismissed</code></h3>
+<p>Use <code>dismissed</code> to list comments for a specific repository that were skipped, not addressed, or otherwise recorded as reusable dismissals.</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>dismissed<span class="w"> </span>--owner<span class="w"> </span>myk-org<span class="w"> </span>--repo<span class="w"> </span>claude-code-config
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>dismissed<span class="w"> </span>--owner<span class="w"> </span>myk-org<span class="w"> </span>--repo<span class="w"> </span>claude-code-config<span class="w"> </span>--json
+</code></pre></div>
+
+<p>In JSON mode, the command returns fields such as:</p>
+<ul>
+<li><code>path</code></li>
+<li><code>line</code></li>
+<li><code>body</code></li>
+<li><code>status</code></li>
+<li><code>reply</code></li>
+<li><code>skip_reason</code></li>
+<li><code>author</code></li>
+<li><code>type</code></li>
+<li><code>comment_id</code></li>
+</ul>
+<p>In table mode, the CLI shows a smaller set of columns:</p>
+<ul>
+<li><code>path</code></li>
+<li><code>line</code></li>
+<li><code>status</code></li>
+<li><code>reply</code></li>
+<li><code>author</code></li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> You may see some rows with status <code>addressed</code>. That is intentional for <code>outside_diff_comment</code>, <code>nitpick_comment</code>, and <code>duplicate_comment</code>, because those body-comment types do not rely on a normal GitHub review thread for later skipping.</p>
+</blockquote>
+<h3 id="query"><code>query</code></h3>
+<p>Use <code>query</code> when you want raw SQL access to the database.</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;SELECT * FROM comments WHERE status = &#39;skipped&#39;&quot;</span>
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;SELECT status, COUNT(*) as cnt FROM comments GROUP BY status&quot;</span>
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;SELECT * FROM comments LIMIT 5&quot;</span><span class="w"> </span>--json
+myk-claude-tools<span class="w"> </span>db<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;SELECT COUNT(*) as count FROM comments&quot;</span><span class="w"> </span>--json
+</code></pre></div>
+
+<p>A practical example from the plugin command is:</p>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;SELECT * FROM comments WHERE status = &#39;skipped&#39; ORDER BY id DESC LIMIT 10&quot;</span>
+</code></pre></div>
+
+<p>This command is useful when you want exact control over:</p>
+<ul>
+<li>filtering by status, source, author, or path</li>
+<li>counting rows</li>
+<li>grouping and sorting</li>
+<li>inspecting raw rows behind <code>stats</code>, <code>patterns</code>, or <code>dismissed</code></li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> The query interface is read-only. Only <code>SELECT</code> and <code>WITH</code> statements are allowed. Multiple statements are blocked, and mutating keywords such as <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>, <code>ALTER</code>, <code>CREATE</code>, <code>ATTACH</code>, <code>DETACH</code>, and <code>PRAGMA</code> are rejected.</p>
+</blockquote>
+<h3 id="find-similar"><code>find-similar</code></h3>
+<p>Use <code>find-similar</code> to compare a new comment against previously dismissed comments in the same repository and file path.</p>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;{&quot;path&quot;: &quot;foo.py&quot;, &quot;body&quot;: &quot;Add error handling...&quot;}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>find-similar<span class="w"> </span>--owner<span class="w"> </span>myk-org<span class="w"> </span>--repo<span class="w"> </span>claude-code-config<span class="w"> </span>--json
+</code></pre></div>
+
+<p>The CLI reads JSON from standard input. The input must be a single JSON object with both <code>path</code> and <code>body</code>.</p>
+<p>Actual input shape used by the test suite:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;path/to/file.py&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;body&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Add skip option&quot;</span><span class="p">}</span>
+</code></pre></div>
+
+<p>How matching works:</p>
+<ul>
+<li>Repository must match <code>--owner</code> and <code>--repo</code></li>
+<li>File path must match exactly</li>
+<li>Only comments with status <code>not_addressed</code> or <code>skipped</code> are considered</li>
+<li>Similarity is based on case-insensitive word overlap, not semantic meaning</li>
+<li>The default threshold is <code>0.6</code></li>
+<li>Valid threshold values are <code>0.0</code> through <code>1.0</code></li>
+</ul>
+<p>If a match is found, JSON output includes the matched row plus a <code>similarity</code> score. In text mode, the CLI prints:</p>
+<ul>
+<li>the similarity score</li>
+<li>the matched <code>path:line</code></li>
+<li>the matched status</li>
+<li>the matched reason</li>
+<li>the first 100 characters of the original body</li>
+</ul>
+<blockquote>
+<p><strong>Warning:</strong> Pass a single JSON object, not a JSON array. The CLI reads <code>path</code> and <code>body</code> directly from the top-level input object.</p>
+</blockquote>
+<h2 id="slash-command-wrapper">Slash command wrapper</h2>
+<p>Inside Claude Code, the <code>myk-review</code> plugin exposes the same database queries through <code>/myk-review:query-db</code>.</p>
+<div class="highlight"><pre><span></span><code>/myk-review:query-db<span class="w"> </span>stats<span class="w"> </span>--by-source
+/myk-review:query-db<span class="w"> </span>stats<span class="w"> </span>--by-reviewer
+/myk-review:query-db<span class="w"> </span>patterns<span class="w"> </span>--min<span class="w"> </span><span class="m">2</span>
+/myk-review:query-db<span class="w"> </span>dismissed<span class="w"> </span>--owner<span class="w"> </span>X<span class="w"> </span>--repo<span class="w"> </span>Y
+/myk-review:query-db<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;SELECT * FROM comments WHERE status=&#39;skipped&#39; LIMIT 10&quot;</span>
+/myk-review:query-db<span class="w"> </span>find-similar<span class="w"> </span>&lt;<span class="w"> </span>comments.json
+</code></pre></div>
+
+<p>Use the slash command when you are already working inside Claude Code and want the same analytics without leaving the chat.</p>
+<h2 id="database-schema">Database schema</h2>
+<p>The review database has two main tables:</p>
+<ul>
+<li><code>reviews</code>: one row per stored review run</li>
+<li><code>comments</code>: one row per stored comment from <code>human</code>, <code>qodo</code>, or <code>coderabbit</code></li>
+</ul>
+<p>Actual schema snippet:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">reviews</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="n">AUTOINCREMENT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pr_number</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="k">owner</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">repo</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">commit_sha</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">created_at</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">comments</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="n">AUTOINCREMENT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">review_id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">reviews</span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<span class="w">    </span><span class="k">source</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">thread_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">node_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">comment_id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">,</span>
+<span class="w">    </span><span class="n">author</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">path</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">line</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">,</span>
+<span class="w">    </span><span class="n">body</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">priority</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">reply</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">skip_reason</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">posted_at</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="n">resolved_at</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+<span class="w">    </span><span class="k">type</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">);</span>
+</code></pre></div>
+
+<p>Relevant indexes from the same schema:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">idx_comments_review_id</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">comments</span><span class="p">(</span><span class="n">review_id</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">idx_comments_source</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">comments</span><span class="p">(</span><span class="k">source</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">idx_comments_status</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">comments</span><span class="p">(</span><span class="n">status</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">idx_reviews_pr</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">reviews</span><span class="p">(</span><span class="k">owner</span><span class="p">,</span><span class="w"> </span><span class="n">repo</span><span class="p">,</span><span class="w"> </span><span class="n">pr_number</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">idx_reviews_commit</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">reviews</span><span class="p">(</span><span class="n">commit_sha</span><span class="p">);</span>
+</code></pre></div>
+
+<p>The most useful fields for day-to-day analytics are:</p>
+<ul>
+<li><code>source</code>: where the comment came from</li>
+<li><code>author</code>: who wrote it</li>
+<li><code>path</code> and <code>line</code>: where it applies</li>
+<li><code>status</code>: <code>pending</code>, <code>addressed</code>, <code>skipped</code>, or <code>not_addressed</code></li>
+<li><code>reply</code> and <code>skip_reason</code>: why it was resolved, skipped, or not addressed</li>
+<li><code>type</code>: special body-comment categories such as <code>outside_diff_comment</code>, <code>nitpick_comment</code>, and <code>duplicate_comment</code></li>
+</ul>
+<h2 id="practical-query-recipes">Practical query recipes</h2>
+<h3 id="see-which-sources-are-most-actionable">See which sources are most actionable</h3>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>stats<span class="w"> </span>--by-source
+</code></pre></div>
+
+<p>Use this when you want a quick view of how often comments from each review source get addressed.</p>
+<h3 id="compare-reviewers">Compare reviewers</h3>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>stats<span class="w"> </span>--by-reviewer
+</code></pre></div>
+
+<p>This is useful when your database contains multiple human or AI reviewers and you want author-level totals.</p>
+<h3 id="find-repeated-skipped-guidance">Find repeated skipped guidance</h3>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>patterns<span class="w"> </span>--min<span class="w"> </span><span class="m">2</span>
+</code></pre></div>
+
+<p>Use this to surface repeated comment clusters that may be good candidates for future auto-skip rules or reviewer guidance.</p>
+<h3 id="pull-recent-skipped-rows-directly">Pull recent skipped rows directly</h3>
+<div class="highlight"><pre><span></span><code>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;SELECT * FROM comments WHERE status = &#39;skipped&#39; ORDER BY id DESC LIMIT 10&quot;</span>
+</code></pre></div>
+
+<p>This is the quickest way to inspect recent skipped rows without writing a separate script.</p>
+<h3 id="check-whether-a-comment-has-already-been-dismissed">Check whether a comment has already been dismissed</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;{&quot;path&quot;: &quot;foo.py&quot;, &quot;body&quot;: &quot;Add error handling...&quot;}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>myk-claude-tools<span class="w"> </span>db<span class="w"> </span>find-similar<span class="w"> </span>--owner<span class="w"> </span>myk-org<span class="w"> </span>--repo<span class="w"> </span>claude-code-config<span class="w"> </span>--json
+</code></pre></div>
+
+<p>Use this when you want to answer, “Have we seen and skipped something like this before?”</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<blockquote>
+<p><strong>Note:</strong> If the database file does not exist, the commands return no results rather than creating a new database.</p>
+<p><strong>Warning:</strong> Default database discovery depends on Git. If you run the CLI outside the repository you want to inspect, the default path may point at the wrong place or fail entirely.</p>
+<p><strong>Tip:</strong> If the table output looks cut off, rerun the same command with <code>--json</code>. The built-in formatter truncates long cell values for readability.</p>
+</blockquote>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="release-cli-reference.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Release CLI Reference</span>
+                </a>
+
+
+                <a href="coderabbit-cli-reference.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">CodeRabbit CLI Reference</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#at-a-glance">At a glance</a></li>
+<li><a href="#before-you-start">Before you start</a></li>
+<li><a href="#common-options">Common options</a></li>
+<li><a href="#command-reference">Command reference</a><ul>
+<li><a href="#stats">stats</a></li>
+<li><a href="#patterns">patterns</a></li>
+<li><a href="#dismissed">dismissed</a></li>
+<li><a href="#query">query</a></li>
+<li><a href="#find-similar">find-similar</a></li>
+</ul>
+</li>
+<li><a href="#slash-command-wrapper">Slash command wrapper</a></li>
+<li><a href="#database-schema">Database schema</a></li>
+<li><a href="#practical-query-recipes">Practical query recipes</a><ul>
+<li><a href="#see-which-sources-are-most-actionable">See which sources are most actionable</a></li>
+<li><a href="#compare-reviewers">Compare reviewers</a></li>
+<li><a href="#find-repeated-skipped-guidance">Find repeated skipped guidance</a></li>
+<li><a href="#pull-recent-skipped-rows-directly">Pull recent skipped rows directly</a></li>
+<li><a href="#check-whether-a-comment-has-already-been-dismissed">Check whether a comment has already been dismissed</a></li>
+</ul>
+</li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troubleshooting - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link active" aria-current="page">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="troubleshooting">Troubleshooting</h1>
+<p>Most problems in this repository come from one of six places: hook policy, missing prerequisites, GitHub CLI auth, <code>acpx</code> session state, review-state files, or stale task/temp data. Start with the quick checks below, then jump to the section that matches what you are seeing.</p>
+<h2 id="start-here">Start Here</h2>
+<p>Run the same basic checks the project itself expects:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>--version
+myk-claude-tools<span class="w"> </span>--version
+gh<span class="w"> </span>api<span class="w"> </span>user<span class="w"> </span>--jq<span class="w"> </span>.login
+acpx<span class="w"> </span>--version
+</code></pre></div>
+
+<p>If one of those fails, fix that first.</p>
+<ul>
+<li>If <code>uv --version</code> fails, Python-backed hooks and CLI flows will not work.</li>
+<li>If <code>myk-claude-tools --version</code> fails, the GitHub review and release commands cannot run.</li>
+<li>If <code>gh api user --jq .login</code> fails, PR, review, and release commands will usually fail too.</li>
+<li>If <code>acpx --version</code> fails, <code>/myk-acpx:prompt</code> cannot start.</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> <code>gh api user --jq .login</code> is the quickest way to tell whether a "GitHub problem" is really an auth problem.</p>
+</blockquote>
+<h2 id="hook-and-startup-failures">Hook and startup failures</h2>
+<p>This repo wires its behavior through <code>settings.json</code>. The important hook events are <code>PreToolUse</code>, <code>UserPromptSubmit</code>, and <code>SessionStart</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;PreToolUse&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TodoWrite|Bash&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-enforcer.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bash&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/git-protection.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">],</span>
+<span class="nt">&quot;UserPromptSubmit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-injector.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">],</span>
+<span class="nt">&quot;SessionStart&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;~/.claude/scripts/session-start-check.sh&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;timeout&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>If hook behavior looks inconsistent after you add or change an allowed script, check both permission lists. The repo keeps the same entries in <code>permissions.allow</code> and <code>allowedTools</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;_scriptsNote&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Script entries must be duplicated in both permissions.allow and allowedTools arrays. When adding new scripts, update BOTH locations.&quot;</span>
+</code></pre></div>
+
+<p>If you update only one list, Claude Code may still deny the tool use even though the hook script exists.</p>
+<h3 id="direct-pythonpip-commands-are-forbidden">"Direct python/pip commands are forbidden"</h3>
+<p>This is <code>scripts/rule-enforcer.py</code> doing exactly what it was written to do:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Block direct python/pip</span>
+<span class="n">forbidden</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;python &quot;</span><span class="p">,</span> <span class="s2">&quot;python3 &quot;</span><span class="p">,</span> <span class="s2">&quot;pip &quot;</span><span class="p">,</span> <span class="s2">&quot;pip3 &quot;</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">forbidden</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_forbidden_precommit_command</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if command uses pre-commit directly instead of prek.&quot;&quot;&quot;</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># Block direct pre-commit commands</span>
+    <span class="k">return</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;pre-commit &quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The same hook also tells you what to use instead:</p>
+<div class="highlight"><pre><span></span><code><span class="s2">&quot;You attempted to run python/pip directly. Instead:</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="s2">&quot;1. Delegate Python tasks to the python-expert agent</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="s2">&quot;2. Use &#39;uv run script.py&#39; to run Python scripts</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="s2">&quot;3. Use &#39;uvx package-name&#39; to run package CLIs</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+<span class="s2">&quot;You attempted to run pre-commit directly. Instead:</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="s2">&quot;1. Use the &#39;prek&#39; command which wraps pre-commit</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="s2">&quot;2. Example: prek run --all-files</span><span class="se">\n</span><span class="s2">&quot;</span>
+</code></pre></div>
+
+<p>Practical replacements that are already covered by tests in this repo:</p>
+<ul>
+<li>Use <code>uv run script.py</code> instead of <code>python script.py</code></li>
+<li>Use <code>uvx ruff check .</code> instead of installing a tool ad hoc with <code>pip</code></li>
+<li>Use <code>prek run --all-files</code> instead of <code>pre-commit run --all-files</code></li>
+</ul>
+<h3 id="session-start-says-tools-are-missing">"Session start says tools are missing"</h3>
+<p><code>scripts/session-start-check.sh</code> does a non-blocking dependency sweep. It treats <code>uv</code> and the three review plugins as critical, and several other tools as optional:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># CRITICAL: uv - Required for Python hooks</span>
+<span class="k">if</span><span class="w"> </span>!<span class="w"> </span><span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>uv<span class="w"> </span><span class="p">&amp;</span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span><span class="nv">missing_critical</span><span class="o">+=(</span><span class="s2">&quot;[CRITICAL] uv - Required for running Python hooks</span>
+<span class="s2">  Install: https://docs.astral.sh/uv/&quot;</span><span class="o">)</span>
+<span class="k">fi</span>
+
+<span class="c1"># OPTIONAL: gh - Only check if this is a GitHub repository</span>
+<span class="k">if</span><span class="w"> </span>git<span class="w"> </span>remote<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;github.com&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span>!<span class="w"> </span><span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>gh<span class="w"> </span><span class="p">&amp;</span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nv">missing_optional</span><span class="o">+=(</span><span class="s2">&quot;[OPTIONAL] gh - Required for GitHub operations (PRs, issues, releases)</span>
+<span class="s2">  Install: https://cli.github.com/&quot;</span><span class="o">)</span>
+<span class="w">  </span><span class="k">fi</span>
+<span class="k">fi</span>
+
+<span class="c1"># CRITICAL: Review plugins - Required for mandatory code review loop</span>
+<span class="nv">critical_marketplace_plugins</span><span class="o">=(</span>
+<span class="w">  </span>pr-review-toolkit
+<span class="w">  </span>superpowers
+<span class="w">  </span>feature-dev
+<span class="o">)</span>
+</code></pre></div>
+
+<p>If you see a <code>MISSING_TOOLS_REPORT</code>, prioritize fixes in this order:</p>
+<ul>
+<li><code>uv</code></li>
+<li>Missing review plugins: <code>pr-review-toolkit</code>, <code>superpowers</code>, <code>feature-dev</code></li>
+<li><code>gh</code> if you use GitHub-backed commands</li>
+<li><code>prek</code> if you run pre-commit checks locally</li>
+<li><code>mcpl</code>, <code>jq</code>, <code>gawk</code>, and optional marketplace plugins as needed</li>
+</ul>
+<p>The script also prints the exact plugin install pattern it expects, including:</p>
+<div class="highlight"><pre><span></span><code>/plugin marketplace add claude-plugins-official
+/plugin install pr-review-toolkit@claude-plugins-official
+/plugin install superpowers@claude-plugins-official
+/plugin install feature-dev@claude-plugins-official
+</code></pre></div>
+
+<h3 id="the-security-gate-blocked-my-bash-command">"The security gate blocked my Bash command"</h3>
+<p><code>settings.json</code> includes a second <code>PreToolUse</code> prompt that inspects destructive Bash. It can <code>approve</code>, <code>block</code>, or <code>ask</code>. That is expected for commands involving things like system directories, raw disk writes, filesystem formatting, or risky <code>sudo</code> deletes.</p>
+<p>If you get asked for confirmation on a command that feels safe, the command probably looks risky to the prompt because of chained operators, delete targets, or elevated permissions.</p>
+<blockquote>
+<p><strong>Warning:</strong> This prompt is intentionally conservative. If you are doing something destructive on purpose, expect it to stop and ask.</p>
+</blockquote>
+<h2 id="git-commits-and-pushes-are-blocked">Git commits and pushes are blocked</h2>
+<p><code>scripts/git-protection.py</code> intercepts <code>git commit</code> and <code>git push</code> and blocks a few categories of mistakes:</p>
+<ul>
+<li>Committing directly on <code>main</code> or <code>master</code></li>
+<li>Pushing directly on <code>main</code> or <code>master</code></li>
+<li>Committing on a branch whose PR is already merged</li>
+<li>Pushing on a branch whose PR is already merged</li>
+<li>Committing in detached <code>HEAD</code></li>
+</ul>
+<p>It also checks GitHub merge state when the remote is on GitHub. That lookup uses <code>gh</code>, so an auth or API failure can surface as a blocked commit or push.</p>
+<p>The important behavior to know is that this hook fails closed. If the GitHub lookup errors, the command is denied.</p>
+<blockquote>
+<p><strong>Warning:</strong> A broken <code>gh</code> session can look like a Git protection problem, even when your branch is otherwise fine.</p>
+</blockquote>
+<p>Two details that surprise people:</p>
+<ul>
+<li>Commits in detached <code>HEAD</code> are blocked, because the script warns that those commits can become orphaned.</li>
+<li>Pushes from detached <code>HEAD</code> are not automatically blocked, because the code treats an explicit detached push as potentially intentional.</li>
+</ul>
+<p>If you see a Git protection message that mentions a hook error, fix the <code>gh</code> problem first. The hook is not asking you to bypass it; it is telling you the merge-status check did not complete safely.</p>
+<h2 id="github-cli-auth-and-api-problems">GitHub CLI auth and API problems</h2>
+<p>The GitHub-backed flows in <code>myk_claude_tools</code> use both REST and GraphQL through <code>gh</code>. For example, <code>reviews pending-fetch</code> checks the authenticated user like this:</p>
+<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;api&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;--jq&quot;</span><span class="p">,</span> <span class="s2">&quot;.login&quot;</span><span class="p">],</span>
+    <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="o">...</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">stderr</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">print_stderr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: Could not get authenticated user: </span><span class="si">{</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+</code></pre></div>
+
+<p>If <code>gh</code> is not installed, several commands fail fast with messages like:</p>
+<ul>
+<li><code>Error: GitHub CLI (gh) not found. Install gh to fetch PR diff.</code></li>
+<li><code>Error: GitHub CLI (gh) not found. Install gh to fetch CLAUDE.md.</code></li>
+</ul>
+<p>If <code>gh</code> is installed but not authenticated, you will usually see one of these patterns instead:</p>
+<ul>
+<li><code>Error: Could not get authenticated user: ...</code></li>
+<li><code>Error: Could not determine authenticated user</code></li>
+<li><code>Warning: GraphQL query failed: ...</code></li>
+<li><code>Warning: API call to ... failed: ...</code></li>
+</ul>
+<p>The quickest way to narrow this down is:</p>
+<ol>
+<li>Run <code>gh api user --jq .login</code></li>
+<li>If that fails, fix GitHub CLI auth before retrying anything else</li>
+<li>Retry the original command only after the user lookup succeeds</li>
+</ol>
+<h3 id="no-pending-review-found">"No pending review found"</h3>
+<p><code>myk_claude_tools/reviews/pending_fetch.py</code> is used by <code>/myk-github:refine-review</code>. It expects you to already have a pending review on GitHub:</p>
+<ul>
+<li><code>Error: No pending review found for user '&lt;username&gt;' on PR #&lt;number&gt;</code></li>
+<li><code>Start a review on GitHub first by adding comments without submitting.</code></li>
+</ul>
+<p>That is not a bug. It means there is nothing pending for the tool to refine yet.</p>
+<h3 id="could-not-infer-pr-from-branch">"Could not infer PR from branch"</h3>
+<p><code>reviews fetch</code> can auto-detect the PR from the current branch, but it refuses to guess in detached <code>HEAD</code>:</p>
+<ul>
+<li><code>Error: Detached HEAD; cannot infer PR from branch. Check out a branch with an open PR.</code></li>
+</ul>
+<p>If you are on a detached commit, check out the branch that owns the PR or pass an explicit PR URL where the command supports it.</p>
+<h2 id="acpx-session-failures">acpx session failures</h2>
+<p><code>/myk-acpx:prompt</code> tries to use persistent sessions by default. The workflow in <code>plugins/myk-acpx/commands/prompt.md</code> is:</p>
+<div class="highlight"><pre><span></span><code>acpx<span class="w"> </span>&lt;agent&gt;<span class="w"> </span>sessions<span class="w"> </span>ensure
+acpx<span class="w"> </span>&lt;agent&gt;<span class="w"> </span>sessions<span class="w"> </span>new
+</code></pre></div>
+
+<p>If both fail, the command documentation is explicit about what to do next:</p>
+<div class="highlight"><pre><span></span><code>If the error contains &quot;Invalid params&quot; or &quot;session&quot; and &quot;not found&quot;, display:
+
+&quot;acpx session management failed for `&lt;agent&gt;`. This is a known issue — see:
+- &lt;https://github.com/openclaw/acpx/issues/152&gt;
+- &lt;https://github.com/openclaw/acpx/issues/161&gt;
+
+Falling back to one-shot mode (`--exec`).&quot;
+</code></pre></div>
+
+<p>If you hit session problems:</p>
+<ul>
+<li>Use <code>--exec</code> to bypass session persistence for that run</li>
+<li>Confirm <code>acpx --version</code> works</li>
+<li>Confirm the underlying agent CLI is installed separately</li>
+<li>Retry session mode later if you specifically need follow-up prompts in the same agent session</li>
+</ul>
+<p><code>--fix</code>, <code>--peer</code>, and <code>--exec</code> are also mutually exclusive in several combinations. If the command rejects your flags, treat that as input validation, not a runtime failure.</p>
+<blockquote>
+<p><strong>Tip:</strong> If you only need one answer and do not need conversation state, <code>--exec</code> is the most reliable mode.</p>
+</blockquote>
+<h2 id="coderabbit-problems">CodeRabbit problems</h2>
+<h3 id="rate-limit-handling-does-not-start-or-resume">Rate limit handling does not start or resume</h3>
+<p>The CodeRabbit helper looks for a specific summary comment and parses the cooldown from its body. The core behavior is in <code>myk_claude_tools/coderabbit/rate_limit.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">comment_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">body</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span>
+
+<span class="k">if</span> <span class="n">_RATE_LIMITED_MARKER</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">body</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;rate_limited&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}))</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+<span class="n">wait_seconds</span> <span class="o">=</span> <span class="n">_parse_wait_seconds</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">wait_seconds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: Could not parse wait time from rate limit message.&quot;</span><span class="p">)</span>
+    <span class="n">snippet</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)[:</span><span class="mi">10</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comment snippet:</span><span class="se">\n</span><span class="si">{</span><span class="n">snippet</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;rate_limited&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;wait_seconds&quot;</span><span class="p">:</span> <span class="n">wait_seconds</span><span class="p">,</span> <span class="s2">&quot;comment_id&quot;</span><span class="p">:</span> <span class="n">comment_id</span><span class="p">}))</span>
+</code></pre></div>
+
+<p>Common meanings:</p>
+<ul>
+<li><code>No CodeRabbit summary comment found on this PR</code> means the handler could not find the comment it depends on</li>
+<li><code>Could not parse wait time from rate limit message</code> means the comment exists, but its text no longer matches the expected format</li>
+<li>A JSON response with <code>rate_limited: true</code> means the helper successfully parsed the cooldown and can trigger later</li>
+</ul>
+<p>The trigger flow also treats a replaced summary comment as success after two consecutive misses:</p>
+<div class="highlight"><pre><span></span><code><span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;no_comment&quot;</span><span class="p">:</span>
+    <span class="n">none_streak</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">none_streak</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Review started (comment replaced).&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Could not find comment. Retrying...&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>That is why the tool can say <code>Review started (comment replaced).</code> even though it no longer sees the original summary comment.</p>
+<h3 id="body-comments-seem-to-be-missing">Body comments seem to be missing</h3>
+<p>CodeRabbit findings are not always inline threads. <code>myk_claude_tools/reviews/coderabbit_parser.py</code> parses three body-embedded sections:</p>
+<div class="highlight"><pre><span></span><code><span class="n">_OUTSIDE_SECTION_START_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;&lt;summary&gt;\s*(?:\S+\s+)*?Outside diff range comments?\s*(?:\(\d+\))?\s*&lt;/summary&gt;\s*&lt;blockquote&gt;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_NITPICK_SECTION_START_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;&lt;summary&gt;\s*(?:\S+\s+)*?Nitpick comments?\s*(?:\(\d+\))?\s*&lt;/summary&gt;\s*&lt;blockquote&gt;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_DUPLICATE_SECTION_START_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;&lt;summary&gt;\s*(?:\S+\s+)*?Duplicate comments?\s*(?:\(\d+\))?\s*&lt;/summary&gt;\s*&lt;blockquote&gt;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>It also strips AI-only helper text before building the final comment body:</p>
+<div class="highlight"><pre><span></span><code><span class="n">_AI_PROMPT_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;&lt;details&gt;\s*\n?\s*&lt;summary&gt;\s*\S*\s*Prompt for AI Agents\s*&lt;/summary&gt;.*?&lt;/details&gt;&quot;</span><span class="p">,</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>The tests in <code>tests/test_coderabbit_parser.py</code> cover the edge cases that matter in practice:</p>
+<ul>
+<li>single-line references like <code>`42`</code></li>
+<li>file paths with spaces</li>
+<li>missing sections</li>
+<li>truncated HTML with unclosed tags, which intentionally returns an empty parse</li>
+<li>trailing <code>Prompt for AI Agents</code> blocks, which are intentionally removed</li>
+<li>mixed bodies that contain outside-diff, nitpick, and duplicate sections together</li>
+</ul>
+<p>If you expect a body-embedded comment and do not see it after fetch, compare the current CodeRabbit comment HTML to those parser expectations first.</p>
+<h3 id="outside-diff-comments-are-grouped-into-pr-comments">Outside-diff comments are grouped into PR comments</h3>
+<p>Outside-diff, nitpick, and duplicate items do not have normal GitHub review threads to reply to. <code>myk_claude_tools/reviews/post.py</code> groups them into one or more PR-level comments per reviewer:</p>
+<div class="highlight"><pre><span></span><code><span class="n">max_len</span> <span class="o">=</span> <span class="mi">55000</span>  <span class="c1"># Leave margin below GitHub&#39;s ~65KB limit</span>
+<span class="n">header_template</span> <span class="o">=</span> <span class="s2">&quot;@</span><span class="si">{reviewer}</span><span class="se">\n\n</span><span class="s2">The following review comments were reviewed and a decision was made:</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+</code></pre></div>
+
+<p>That means you should expect:</p>
+<ul>
+<li>a PR comment, not an inline thread reply</li>
+<li>one comment per reviewer, sometimes split into parts when large</li>
+<li>body-comment items to be tracked in the review database, even though there was no inline thread to resolve</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> If a CodeRabbit item was outside the diff, it is normal for it to show up as a consolidated PR comment instead of an inline thread resolution.</p>
+</blockquote>
+<h3 id="why-did-my-reply-post-but-the-human-thread-stay-open">"Why did my reply post but the human thread stay open?"</h3>
+<p>That is deliberate. In <code>myk_claude_tools/reviews/post.py</code>, human review threads are only resolved when the status is <code>addressed</code>. For human <code>skipped</code> or <code>not_addressed</code>, the tool replies but keeps the thread open. On rerun, you may see the exact text <code>reply already posted at ... (not resolving by policy)</code>.</p>
+<p>AI threads behave differently. Qodo and CodeRabbit replies are resolved after replying for the handled statuses.</p>
+<h2 id="review-json-temp-files-and-database-state">Review JSON, temp files, and database state</h2>
+<p>Review commands intentionally keep intermediate state on disk so they can retry safely.</p>
+<p><code>myk_claude_tools/reviews/fetch.py</code> writes review JSON under <code>$TMPDIR/claude</code> and sets restrictive permissions:</p>
+<div class="highlight"><pre><span></span><code><span class="n">tmp_base</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TMPDIR&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
+<span class="n">out_dir</span> <span class="o">=</span> <span class="n">tmp_base</span> <span class="o">/</span> <span class="s2">&quot;claude&quot;</span>
+<span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mo">0o700</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">out_dir</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o700</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">print_stderr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: unable to set permissions on </span><span class="si">{</span><span class="n">out_dir</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">json_path</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;pr-</span><span class="si">{</span><span class="n">pr_number</span><span class="si">}</span><span class="s2">-reviews.json&quot;</span>
+</code></pre></div>
+
+<p>That aligns with the repo rule in <code>rules/40-critical-rules.md</code>: temp files belong in <code>/tmp/claude/</code>, not in the project tree.</p>
+<p><code>reviews post</code> then updates the JSON with <code>posted_at</code> and <code>resolved_at</code>. This is what makes retries safe:</p>
+<ul>
+<li>If a reply posted but resolution failed, rerunning can do a resolve-only retry</li>
+<li>If both <code>posted_at</code> and <code>resolved_at</code> are already present, reruns skip that entry</li>
+<li>If posting fails, the tool prints <code>ACTION REQUIRED</code> and a retry command: <code>myk-claude-tools reviews post &lt;json_path&gt;</code></li>
+</ul>
+<p>After the whole flow is done, <code>reviews store</code> imports the finished JSON into SQLite at <code>&lt;project-root&gt;/.claude/data/reviews.db</code> and deletes the JSON on success.</p>
+<p>That means two things are normal:</p>
+<ul>
+<li>The JSON file disappearing after <code>myk-claude-tools reviews store</code></li>
+<li>The database directory being created with <code>0700</code></li>
+</ul>
+<p>It also means you should not delete the JSON too early if you still need <code>reviews post</code> to retry.</p>
+<blockquote>
+<p><strong>Note:</strong> Review tools honor <code>TMPDIR</code>. On systems with a custom temp directory, your files may be under <code>&lt;TMPDIR&gt;/claude</code> instead of <code>/tmp/claude</code>.</p>
+</blockquote>
+<h3 id="why-a-dismissed-comment-can-disappear-automatically-later">Why a dismissed comment can disappear automatically later</h3>
+<p><code>reviews fetch</code> can preload dismissed comments from the review database and mark matching items as auto-skipped. The exact display string comes from <code>fetch.py</code>:</p>
+<ul>
+<li><code>Auto-skipped (skipped): ...</code></li>
+<li><code>Auto-skipped (addressed): ...</code></li>
+</ul>
+<p>The database logic is intentionally conservative:</p>
+<ul>
+<li><code>not_addressed</code> and <code>skipped</code> comments are always treated as dismissed</li>
+<li><code>addressed</code> comments are only reused for body-comment types such as <code>outside_diff_comment</code>, <code>nitpick_comment</code>, and <code>duplicate_comment</code></li>
+</ul>
+<p>Regular inline thread comments rely on GitHub's own resolved-thread state instead of body-similarity matching. If an inline thread seems to "come back" in a later PR, that is usually why.</p>
+<h2 id="stale-task-state">Stale task state</h2>
+<p>Task state persists on disk at:</p>
+<p><code>~/.claude/tasks/&lt;session-uuid&gt;/</code></p>
+<p>The repo's task-system rule is explicit that stale tasks cause confusing progress indicators, clutter, and blocked-looking workflows. The documented cleanup pattern is:</p>
+<div class="highlight"><pre><span></span><code>TaskList
+TaskUpdate: taskId=&quot;5&quot;, status=&quot;completed&quot;
+TaskList
+</code></pre></div>
+
+<p>If your task panel looks wrong after a multi-phase workflow, do a cleanup pass:</p>
+<ul>
+<li>Run <code>TaskList</code></li>
+<li>Look for <code>pending</code> or <code>in_progress</code> items that should be closed</li>
+<li>Update them to <code>completed</code></li>
+<li>Run <code>TaskList</code> again to confirm the state is clean</li>
+</ul>
+<h2 id="local-validation-and-does-this-repo-expect-me-to-run-that-another-way">Local validation and "does this repo expect me to run that another way?"</h2>
+<p>The supported local test command comes from <code>tox.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[env.unittests]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Run pytest tests&quot;</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">]</span>
+<span class="n">commands</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--group&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">]]</span>
+</code></pre></div>
+
+<p>That matches the Python tooling defined in <code>pyproject.toml</code> and the hook stack in <code>.pre-commit-config.yaml</code>, which includes <code>ruff</code>, <code>ruff-format</code>, <code>flake8</code>, <code>mypy</code>, <code>markdownlint</code>, <code>gitleaks</code>, <code>detect-secrets</code>, and other hygiene checks.</p>
+<p>A short example from <code>.pre-commit-config.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/astral-sh/ruff-pre-commit</span>
+<span class="w">  </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v0.14.14</span>
+<span class="w">  </span><span class="nt">hooks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ruff</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ruff-format</span>
+</code></pre></div>
+
+<p>Two practical takeaways:</p>
+<ul>
+<li>Use <code>uv run --group tests pytest tests</code> for the test suite</li>
+<li>Use <code>prek</code>, not raw <code>pre-commit</code>, because the hook policy blocks direct <code>pre-commit ...</code></li>
+</ul>
+<p>The CodeRabbit config also enables several analyzers, including <code>ruff</code>, <code>pylint</code>, <code>eslint</code>, <code>shellcheck</code>, <code>yamllint</code>, <code>gitleaks</code>, <code>semgrep</code>, <code>actionlint</code>, and <code>hadolint</code>. If review feedback seems unfamiliar, it may be mirroring one of those configured tools.</p>
+<h2 id="quick-symptom-index">Quick symptom index</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Most likely cause</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Direct python/pip commands are forbidden</code></td>
+<td><code>rule-enforcer.py</code></td>
+<td>Switch to <code>uv run</code>, <code>uvx</code>, or <code>prek</code></td>
+</tr>
+<tr>
+<td><code>Direct pre-commit commands are forbidden</code></td>
+<td><code>rule-enforcer.py</code></td>
+<td>Run <code>prek run --all-files</code> instead</td>
+</tr>
+<tr>
+<td>Missing tools report on startup</td>
+<td><code>session-start-check.sh</code></td>
+<td>Install <code>uv</code> first, then required review plugins, then optional tools you actually use</td>
+</tr>
+<tr>
+<td>Commit or push blocked unexpectedly</td>
+<td><code>git-protection.py</code></td>
+<td>Check branch state, then verify <code>gh api user --jq .login</code> works</td>
+</tr>
+<tr>
+<td><code>Could not determine authenticated user</code></td>
+<td><code>gh</code> auth or API problem</td>
+<td>Fix GitHub CLI auth before rerunning review commands</td>
+</tr>
+<tr>
+<td><code>No pending review found</code></td>
+<td>No draft review exists yet</td>
+<td>Start a review on GitHub, add comments, leave it pending, then rerun</td>
+</tr>
+<tr>
+<td><code>Detached HEAD; cannot infer PR from branch</code></td>
+<td>Branch auto-detection cannot work</td>
+<td>Check out the PR branch or use an explicit PR URL if supported</td>
+</tr>
+<tr>
+<td><code>acpx</code> session errors mentioning invalid params or session not found</td>
+<td>Known upstream session issue</td>
+<td>Use <code>--exec</code> and retry later if you need persistent sessions</td>
+</tr>
+<tr>
+<td>CodeRabbit rate-limit handler cannot continue</td>
+<td>Missing summary comment or changed cooldown text</td>
+<td>Check for <code>No CodeRabbit summary comment found</code> or <code>Could not parse wait time...</code></td>
+</tr>
+<tr>
+<td>CodeRabbit outside-diff comment did not resolve inline</td>
+<td>It was a body comment, not a thread</td>
+<td>Look for the consolidated PR-level comment instead</td>
+</tr>
+<tr>
+<td>Review JSON disappeared after storage</td>
+<td>Normal <code>reviews store</code> behavior</td>
+<td>Check <code>.claude/data/reviews.db</code> instead</td>
+</tr>
+<tr>
+<td>Task UI shows stale progress</td>
+<td>Old tasks still marked open</td>
+<td>Run <code>TaskList</code>, then complete stale tasks</td>
+</tr>
+</tbody>
+</table>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="maintaining-release-and-versioning.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Maintaining Releases and Versioning</span>
+                </a>
+
+
+                <a href="license.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">License</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#start-here">Start Here</a></li>
+<li><a href="#hook-and-startup-failures">Hook and startup failures</a><ul>
+<li><a href="#direct-pythonpip-commands-are-forbidden">"Direct python/pip commands are forbidden"</a></li>
+<li><a href="#session-start-says-tools-are-missing">"Session start says tools are missing"</a></li>
+<li><a href="#the-security-gate-blocked-my-bash-command">"The security gate blocked my Bash command"</a></li>
+</ul>
+</li>
+<li><a href="#git-commits-and-pushes-are-blocked">Git commits and pushes are blocked</a></li>
+<li><a href="#github-cli-auth-and-api-problems">GitHub CLI auth and API problems</a><ul>
+<li><a href="#no-pending-review-found">"No pending review found"</a></li>
+<li><a href="#could-not-infer-pr-from-branch">"Could not infer PR from branch"</a></li>
+</ul>
+</li>
+<li><a href="#acpx-session-failures">acpx session failures</a></li>
+<li><a href="#coderabbit-problems">CodeRabbit problems</a><ul>
+<li><a href="#rate-limit-handling-does-not-start-or-resume">Rate limit handling does not start or resume</a></li>
+<li><a href="#body-comments-seem-to-be-missing">Body comments seem to be missing</a></li>
+<li><a href="#outside-diff-comments-are-grouped-into-pr-comments">Outside-diff comments are grouped into PR comments</a></li>
+<li><a href="#why-did-my-reply-post-but-the-human-thread-stay-open">"Why did my reply post but the human thread stay open?"</a></li>
+</ul>
+</li>
+<li><a href="#review-json-temp-files-and-database-state">Review JSON, temp files, and database state</a><ul>
+<li><a href="#why-a-dismissed-comment-can-disappear-automatically-later">Why a dismissed comment can disappear automatically later</a></li>
+</ul>
+</li>
+<li><a href="#stale-task-state">Stale task state</a></li>
+<li><a href="#local-validation-and-does-this-repo-expect-me-to-run-that-another-way">Local validation and "does this repo expect me to run that another way?"</a></li>
+<li><a href="#quick-symptom-index">Quick symptom index</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>

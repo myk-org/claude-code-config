@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - claude-code-config</title>
+    <meta name="description" content="A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="alternate" type="text/plain" title="LLM Documentation Index" href="llms.txt">
+    <link rel="alternate" type="text/plain" title="LLM Full Documentation" href="llms-full.txt">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">claude-code-config</a>
+            <p class="sidebar-tagline">A Claude Code configuration suite that combines orchestrator rules, specialist agents, hook scripts, plugins, and CLI automation for reviews, releases, and multi-agent workflows.</p>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search... (⌘K)" autocomplete="off" readonly>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Overview</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="overview.html"
+                           class="nav-link">
+                            Overview
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="architecture.html"
+                           class="nav-link active" aria-current="page">
+                            Architecture
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="repository-structure.html"
+                           class="nav-link">
+                            Repository Structure
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Getting Started</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="requirements.html"
+                           class="nav-link">
+                            System Requirements
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="installation.html"
+                           class="nav-link">
+                            Installation
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="first-run-checks.html"
+                           class="nav-link">
+                            First-Run Checks
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="personal-claude-md.html"
+                           class="nav-link">
+                            Personal CLAUDE.md
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Configuration</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="settings-json-reference.html"
+                           class="nav-link">
+                            settings.json Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="hooks-and-guardrails.html"
+                           class="nav-link">
+                            Hooks and Guardrails
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="orchestrator-rules.html"
+                           class="nav-link">
+                            Orchestrator Rules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="specialist-agents.html"
+                           class="nav-link">
+                            Specialist Agents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="skills-and-templates.html"
+                           class="nav-link">
+                            Skills and Templates
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Usage Guides</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="daily-workflow.html"
+                           class="nav-link">
+                            Daily Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="review-workflows.html"
+                           class="nav-link">
+                            Review Workflows
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-workflow.html"
+                           class="nav-link">
+                            Release Workflow
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="multi-agent-acpx-guide.html"
+                           class="nav-link">
+                            Multi-Agent ACPX Guide
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="mcp-usage.html"
+                           class="nav-link">
+                            MCP Usage
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Reference</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="cli-and-interface-reference.html"
+                           class="nav-link">
+                            CLI and Interface Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="slash-command-reference.html"
+                           class="nav-link">
+                            Slash Command Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="reviews-cli-reference.html"
+                           class="nav-link">
+                            Reviews CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="pr-cli-reference.html"
+                           class="nav-link">
+                            PR CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="release-cli-reference.html"
+                           class="nav-link">
+                            Release CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="database-cli-reference.html"
+                           class="nav-link">
+                            Database CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="coderabbit-cli-reference.html"
+                           class="nav-link">
+                            CodeRabbit CLI Reference
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="data-formats-and-schema.html"
+                           class="nav-link">
+                            Data Formats and Schema
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="nav-group">
+                <h3 class="nav-group-title">Development</h3>
+                <ul class="nav-group-pages">
+
+                    <li>
+                        <a href="development-environment.html"
+                           class="nav-link">
+                            Development Environment
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="testing-and-quality.html"
+                           class="nav-link">
+                            Testing and Quality
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="automation-and-ci.html"
+                           class="nav-link">
+                            Automation and CI
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="extending-agents-rules-and-plugins.html"
+                           class="nav-link">
+                            Extending Agents, Rules, and Plugins
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="maintaining-release-and-versioning.html"
+                           class="nav-link">
+                            Maintaining Releases and Versioning
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="troubleshooting.html"
+                           class="nav-link">
+                            Troubleshooting
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="license.html"
+                           class="nav-link">
+                            License
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="top-bar-title">claude-code-config</a>
+            </div>
+            <div class="top-bar-spacer"></div>
+            <div class="top-bar-right">
+                <button class="top-bar-search-btn" id="search-trigger" aria-label="Search">
+                    <kbd>&#8984;K</kbd> Search
+                </button>
+                <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener" class="docsfy-badge" title="Generated with docsfy">
+                    ⚡ docs<span class="brand-accent">fy</span>
+                </a>
+
+                <a href="https://github.com/myk-org/claude-code-config.git" target="_blank" rel="noopener noreferrer" class="top-bar-github" id="github-link" data-repo-url="https://github.com/myk-org/claude-code-config.git">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="github-stars" id="github-stars"></span>
+                </a>
+
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+
+            <article class="article">
+                <div class="article-body">
+                    <!-- SECURITY: |safe is intentional. Content is AI-generated markdown
+                         converted to HTML server-side by the markdown library, not
+                         user-supplied input. XSS risk is minimal and accepted since
+                         the AI generates the content, not end users. -->
+                    <h1 id="architecture">Architecture</h1>
+<p><code>claude-code-config</code> is built around one core separation: the main Claude instance orchestrates, and specialist agents execute. The orchestrator reads the request, chooses the workflow, routes work to the right expert, and keeps the overall process moving. Specialists handle the hands-on work in focused domains such as Python, Git, frontend, testing, or documentation.</p>
+<p>That split is what makes the repository predictable. It keeps the top-level conversation focused, makes parallel work practical, and gives the project a clear place to enforce safety rules, task tracking, and the required review loop.</p>
+<h2 id="at-a-glance">At A Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Orchestrator</td>
+<td>Read the request, ask questions, plan, route work, and run slash commands</td>
+</tr>
+<tr>
+<td>Specialist agents</td>
+<td>Do the actual implementation work in their domain</td>
+</tr>
+<tr>
+<td>Slash commands</td>
+<td>Run end-to-end workflows that can temporarily override normal delegation</td>
+</tr>
+<tr>
+<td>Hooks and permissions</td>
+<td>Enforce safety rules around Bash, Git, and tool usage</td>
+</tr>
+<tr>
+<td>Tasks</td>
+<td>Track long, multi-step workflows across phases and sessions</td>
+</tr>
+<tr>
+<td>Review loop</td>
+<td>Require parallel review and testing after code changes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="orchestrator-vs-specialist">Orchestrator vs Specialist</h2>
+<p>The orchestrator is intentionally narrow. It is supposed to coordinate, not do hands-on implementation. Specialists are the execution layer.</p>
+<div class="highlight"><pre><span></span><code><span class="k">&gt; </span><span class="ge">**If you are a SPECIALIST AGENT** (python-expert, git-expert, etc.):</span>
+<span class="k">&gt; </span><span class="ge">IGNORE all rules below. Do your work directly using Edit/Write/Bash.</span>
+<span class="k">&gt; </span><span class="ge">These rules are for the ORCHESTRATOR only.</span>
+
+❌ <span class="gs">**NEVER**</span> use: Edit, Write, NotebookEdit, Bash (except <span class="sb">`mcpl`</span>), direct MCP calls
+❌ <span class="gs">**NEVER**</span> delegate slash commands (<span class="sb">`/command`</span>) OR their internal operations - see slash command rules
+✅ <span class="gs">**ALWAYS**</span> delegate other work to specialist agents
+</code></pre></div>
+
+<p>In day-to-day use, that means the orchestrator should do things like:</p>
+<ul>
+<li>read files and gather context</li>
+<li>ask clarifying questions</li>
+<li>analyze and plan</li>
+<li>choose the right specialist</li>
+<li>coordinate multi-step workflows</li>
+<li>execute slash commands directly</li>
+</ul>
+<p>Work is routed by intent, not just by the tool involved. A few examples from <code>rules/10-agent-routing.md</code>:</p>
+<ul>
+<li>Python work goes to <code>python-expert</code></li>
+<li>local Git work goes to <code>git-expert</code></li>
+<li>GitHub PRs, issues, and releases go to <code>github-expert</code></li>
+<li>Markdown work goes to <code>technical-documentation-writer</code></li>
+<li>tests go to <code>test-automator</code></li>
+</ul>
+<p>The same routing file also distinguishes between built-in agents such as <code>claude-code-guide</code> and <code>general-purpose</code>, and custom agents defined in <code>agents/</code>.</p>
+<blockquote>
+<p><strong>Note:</strong> The split is deliberate. The orchestrator keeps the big picture. Specialists keep the domain-specific context.</p>
+</blockquote>
+<h2 id="slash-commands-run-in-a-different-mode">Slash Commands Run In A Different Mode</h2>
+<p>Slash commands are the biggest exception to the normal delegation model. In normal mode, the orchestrator should delegate implementation work. During a slash command, the orchestrator runs the command itself and follows that command's own instructions from start to finish.</p>
+<div class="highlight"><pre><span></span><code><span class="k">1.</span> <span class="gs">**EXECUTE IT DIRECTLY YOURSELF**</span> - NEVER delegate to any agent
+<span class="k">2.</span> <span class="gs">**ALL internal operations run DIRECTLY**</span> - scripts, bash commands, everything
+<span class="k">3.</span> <span class="gs">**Slash command prompt takes FULL CONTROL**</span> - its instructions override general CLAUDE.md rules
+<span class="k">4.</span> <span class="gs">**General delegation rules are SUSPENDED**</span> for the duration of the slash command
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> Slash commands are not just shortcuts. They temporarily change how execution works.</p>
+</blockquote>
+<p>You can see that direct-execution model in the command definitions themselves. For example, <code>plugins/myk-github/commands/review-handler.md</code> explicitly declares the tools it may use:</p>
+<div class="highlight"><pre><span></span><code>---
+description: Process ALL review sources (human, Qodo, CodeRabbit) from current PR
+argument-hint: [--autorabbit] [REVIEW_URL]
+<span class="gu">allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), AskUserQuestion, Task, Agent</span>
+<span class="gu">---</span>
+</code></pre></div>
+
+<p>That is why commands such as <code>/myk-github:review-handler</code> and <code>/myk-github:pr-review</code> can directly use <code>git</code>, <code>gh</code>, <code>uv</code>, <code>Task</code>, and <code>myk-claude-tools</code> while they run. The command definition becomes the active workflow.</p>
+<p>Several slash commands are powered by the local <code>myk-claude-tools</code> package. In <code>myk_claude_tools/cli.py</code>, the CLI registers <code>coderabbit</code>, <code>db</code>, <code>pr</code>, <code>release</code>, and <code>reviews</code> command groups, which the plugin commands then call.</p>
+<blockquote>
+<p><strong>Tip:</strong> Temporary working files belong in <code>/tmp/claude</code>. That rule appears in <code>rules/40-critical-rules.md</code>, and the CLI commands follow the same pattern when they write JSON artifacts.</p>
+</blockquote>
+<h2 id="enforcement-is-layered">Enforcement Is Layered</h2>
+<p>The project does not rely on a single enforcement mechanism. Instead, it uses three layers together:</p>
+<ol>
+<li>human-readable rules in <code>rules/</code></li>
+<li>runtime configuration in <code>settings.json</code></li>
+<li>hook scripts in <code>scripts/</code></li>
+</ol>
+<h3 id="prompt-time-guidance">Prompt-Time Guidance</h3>
+<p>On every user prompt, <code>scripts/rule-injector.py</code> injects a short reminder that keeps the orchestrator in manager mode:</p>
+<div class="highlight"><pre><span></span><code><span class="n">rule_reminder</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;[SYSTEM RULES] You are a MANAGER. NEVER do work directly. ALWAYS delegate:</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="s2">&quot;- Edit/Write → language specialists (python-expert, go-expert, etc.)</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="s2">&quot;- ALL Bash commands → bash-expert or appropriate specialist</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="s2">&quot;- Git commands → git-expert</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="s2">&quot;- MCP tools → manager agents</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="s2">&quot;- Multi-file exploration → Explore agent</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="s2">&quot;HOOKS WILL BLOCK VIOLATIONS.&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>This injected reminder is short on purpose. It reinforces the architecture at runtime without replacing the fuller policy described in <code>rules/</code>.</p>
+<h3 id="hook-registration-and-allowlists">Hook Registration And Allowlists</h3>
+<p><code>settings.json</code> is where the runtime guardrails are wired together. It defines tool allowlists and registers the hooks that run before tools and prompts.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;PreToolUse&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TodoWrite|Bash&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-enforcer.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bash&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/git-protection.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">],</span>
+<span class="nt">&quot;UserPromptSubmit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;matcher&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hooks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;command&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uv run ~/.claude/scripts/rule-injector.py&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>The same file also scopes direct <code>Read</code>, <code>Edit</code>, and <code>Write</code> permissions to <code>/tmp/claude/**</code> and allowlists specific command prefixes such as <code>mcpl</code>, <code>git -C</code>, <code>myk-claude-tools</code>, and the hook scripts themselves.</p>
+<p>It also includes a prompt-based Bash safety gate that asks for confirmation or blocks clearly destructive OS-level commands.</p>
+<blockquote>
+<p><strong>Tip:</strong> <code>settings.json</code> includes a maintenance note saying hook scripts must be listed in both <code>permissions.allow</code> and <code>allowedTools</code>. If you add a new script-based hook, update both places.</p>
+</blockquote>
+<h3 id="bash-policy-enforcement">Bash Policy Enforcement</h3>
+<p>The most concrete checked-in shell enforcement lives in <code>scripts/rule-enforcer.py</code>. It blocks direct Python and <code>pip</code> usage, allows <code>uv</code> and <code>uvx</code>, and blocks raw <code>pre-commit</code> so the wrapper tool is used instead.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Allow uv/uvx commands</span>
+<span class="k">if</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;uv &quot;</span><span class="p">,</span> <span class="s2">&quot;uvx &quot;</span><span class="p">)):</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+<span class="c1"># Block direct python/pip</span>
+<span class="n">forbidden</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;python &quot;</span><span class="p">,</span> <span class="s2">&quot;python3 &quot;</span><span class="p">,</span> <span class="s2">&quot;pip &quot;</span><span class="p">,</span> <span class="s2">&quot;pip3 &quot;</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">forbidden</span><span class="p">)</span>
+</code></pre></div>
+
+<p>When it blocks a command, the script tells the user what to do instead:</p>
+<ul>
+<li>use <code>uv run</code> for Python execution</li>
+<li>use <code>uvx</code> for package CLIs</li>
+<li>use <code>prek</code> instead of raw <code>pre-commit</code></li>
+</ul>
+<p>The behavior is backed by <code>tests/test_rule_enforcer.py</code>, which includes explicit cases for allowed <code>uv run</code>, allowed <code>uvx</code>, allowed <code>prek</code>, and denied direct <code>python</code>, <code>pip</code>, and <code>pre-commit</code> commands.</p>
+<h3 id="git-protection">Git Protection</h3>
+<p><code>scripts/git-protection.py</code> adds a stricter safety layer for version-control operations. It blocks <code>git commit</code> or <code>git push</code> when the branch is unsafe to use, including cases like:</p>
+<ul>
+<li>committing directly on <code>main</code> or <code>master</code></li>
+<li>committing on a branch whose PR is already merged</li>
+<li>committing on a branch already merged into the main branch</li>
+<li>committing in detached HEAD state</li>
+</ul>
+<p>The companion test suite in <code>tests/test_git_protection.py</code> covers those cases, along with GitHub PR detection via <code>gh</code>, amend behavior on unpushed commits, and edge cases around command parsing.</p>
+<h3 id="session-start-validation">Session Start Validation</h3>
+<p>Before work begins, <code>scripts/session-start-check.sh</code> checks whether critical tools are installed. Two items stand out:</p>
+<ul>
+<li><code>uv</code> is treated as critical because the hook system depends on it</li>
+<li>the three review plugins are treated as critical because the review loop depends on them</li>
+</ul>
+<p>The script makes that requirement explicit:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">critical_marketplace_plugins</span><span class="o">=(</span>
+<span class="w">  </span>pr-review-toolkit
+<span class="w">  </span>superpowers
+<span class="w">  </span>feature-dev
+<span class="o">)</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Warning:</strong> <code>pr-review-toolkit</code>, <code>superpowers</code>, and <code>feature-dev</code> are not optional if you want the full architecture to work as designed. They are required for the mandatory review loop.</p>
+</blockquote>
+<h2 id="task-tracking-is-for-real-workflows">Task Tracking Is For Real Workflows</h2>
+<p>The task system is not meant for every small action. It is there for workflows that are long enough, staged enough, or interruption-prone enough that progress should survive beyond the current turn.</p>
+<p><code>rules/25-task-system.md</code> defines tasks as persistent data on disk:</p>
+<div class="highlight"><pre><span></span><code>Tasks are saved to disk and persist across sessions:
+
+<span class="k">-</span><span class="w"> </span><span class="gs">**Location:**</span> <span class="sb">`~/.claude/tasks/&lt;session-uuid&gt;/`</span>
+<span class="k">-</span><span class="w"> </span><span class="gs">**Format:**</span> Each task is a JSON file (1.json, 2.json, etc.)
+<span class="k">-</span><span class="w"> </span><span class="gs">**Contents:**</span> Full task structure including subject, description, status, blockedBy
+</code></pre></div>
+
+<p>The same rule file also shows the expected shape of a task:</p>
+<div class="highlight"><pre><span></span><code>TaskCreate:
+  - subject: &quot;Run tests with coverage&quot;
+  - activeForm: &quot;Running tests&quot;
+  - description: &quot;Execute test suite and verify coverage thresholds&quot;
+</code></pre></div>
+
+<p>This is an orchestrator feature, not an agent feature. The rules explicitly say tasks are useful for:</p>
+<ul>
+<li>complex work that might be interrupted</li>
+<li>multi-step workflows with visible progress</li>
+<li>approval gates</li>
+<li>slash commands with dependent phases</li>
+</ul>
+<p>They also explicitly say tasks are <strong>not</strong> for:</p>
+<ul>
+<li>simple one-off actions</li>
+<li>agent work</li>
+<li>trivial fixes</li>
+<li>internal processing steps</li>
+</ul>
+<blockquote>
+<p><strong>Tip:</strong> If a workflow has phases, dependencies, or a chance of waiting on the user, create tasks and connect them with <code>blockedBy</code>. If it is simple and immediate, skip the task system.</p>
+</blockquote>
+<p>One more detail matters in practice: tasks must be cleaned up. The rules require a final <code>TaskList</code> and <code>TaskUpdate</code> pass so stale tasks do not linger between sessions. <code>plugins/myk-github/commands/review-handler.md</code> is called out as the reference example for a multi-phase task-aware workflow.</p>
+<h2 id="the-review-loop-is-mandatory">The Review Loop Is Mandatory</h2>
+<p>This repository treats code review as part of the architecture, not as an optional follow-up step. After any code change, the required path is:</p>
+<ol>
+<li>a specialist makes the change</li>
+<li>three review agents run in parallel</li>
+<li>findings are merged and deduplicated</li>
+<li>any issues are fixed and re-reviewed</li>
+<li><code>test-automator</code> runs</li>
+<li>only then is the work considered done</li>
+</ol>
+<p>The core rule is written directly in <code>rules/20-code-review-loop.md</code>:</p>
+<div class="highlight"><pre><span></span><code>1. Specialist writes/fixes code
+2. Send to ALL 3 review agents IN PARALLEL:
+   - `superpowers:code-reviewer`
+   - `pr-review-toolkit:code-reviewer`
+   - `feature-dev:code-reviewer`
+3. Merge findings from all 3 reviewers
+4. Has comments from ANY reviewer? ──YES──→ Fix code
+5. Run `test-automator`
+6. Tests pass? ──NO──→ Fix code
+</code></pre></div>
+
+<p>The same file also requires that all three reviewers be launched in the <strong>same assistant turn</strong>, not one after another.</p>
+<p>Those reviewers have distinct responsibilities:</p>
+<ul>
+<li><code>superpowers:code-reviewer</code> focuses on general code quality and maintainability</li>
+<li><code>pr-review-toolkit:code-reviewer</code> checks project guidelines and style adherence</li>
+<li><code>feature-dev:code-reviewer</code> focuses on bugs, logic errors, and security issues</li>
+</ul>
+<p>This is not just a theory document. Plugin commands repeat the same architecture. For example, <code>plugins/myk-review/commands/local.md</code> and <code>plugins/myk-github/commands/pr-review.md</code> both state that the three reviewers must be invoked in parallel.</p>
+<blockquote>
+<p><strong>Warning:</strong> The review loop is designed to repeat until reviewers are satisfied. A failing review does not end the workflow; it sends the work back around the loop.</p>
+</blockquote>
+<h3 id="testing-and-local-quality-gates">Testing And Local Quality Gates</h3>
+<p>The checked-in repository does not include a GitHub Actions workflow under <code>.github/workflows</code>. Instead, its quality gates are defined locally through hook scripts, <code>tox</code>, and pre-commit configuration.</p>
+<p><code>tox.toml</code> shows the expected unit-test entrypoint:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[env.unittests]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Run pytest tests&quot;</span>
+<span class="n">deps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">]</span>
+<span class="n">commands</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--group&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tests&quot;</span><span class="p">]]</span>
+</code></pre></div>
+
+<p><code>.pre-commit-config.yaml</code> adds additional local checks, including Ruff, Flake8, mypy, detect-secrets, gitleaks, and markdown linting.</p>
+<blockquote>
+<p><strong>Note:</strong> In this repository, quality assurance is mostly enforced through local automation and command workflows rather than a checked-in CI pipeline definition.</p>
+</blockquote>
+<h2 id="how-the-pieces-fit-together">How The Pieces Fit Together</h2>
+<p>A typical end-to-end flow looks like this:</p>
+<ol>
+<li>The orchestrator reads the request and decides whether it is normal delegated work or a slash-command workflow.</li>
+<li>For normal work, it routes by intent to the best specialist.</li>
+<li>For slash commands, it runs the command directly and follows that command's own rules.</li>
+<li>Hook scripts and allowlists keep Bash, Git, and prompt behavior inside safe boundaries.</li>
+<li>If the workflow is long or multi-phase, the orchestrator creates persistent tasks.</li>
+<li>Any code changes must pass the three-reviewer loop and automated tests before the workflow is considered complete.</li>
+</ol>
+<p>That combination is what gives <code>claude-code-config</code> its character: the orchestrator stays focused on coordination, specialists stay focused on execution, slash commands can run practical end-to-end workflows, and review plus testing are treated as part of the system design rather than an afterthought.</p>
+                </div>
+            </article>
+            <nav class="page-nav">
+
+                <a href="overview.html" class="page-nav-link page-nav-prev">
+                    <span class="page-nav-label">Previous</span>
+                    <span class="page-nav-title">Overview</span>
+                </a>
+
+
+                <a href="repository-structure.html" class="page-nav-link page-nav-next">
+                    <span class="page-nav-label">Next</span>
+                    <span class="page-nav-title">Repository Structure</span>
+                </a>
+
+            </nav>
+
+            <aside class="toc-sidebar">
+                <div class="toc-container">
+                    <h3>On this page</h3>
+                    <div class="toc">
+<ul>
+<li><a href="#at-a-glance">At A Glance</a></li>
+<li><a href="#orchestrator-vs-specialist">Orchestrator vs Specialist</a></li>
+<li><a href="#slash-commands-run-in-a-different-mode">Slash Commands Run In A Different Mode</a></li>
+<li><a href="#enforcement-is-layered">Enforcement Is Layered</a><ul>
+<li><a href="#prompt-time-guidance">Prompt-Time Guidance</a></li>
+<li><a href="#hook-registration-and-allowlists">Hook Registration And Allowlists</a></li>
+<li><a href="#bash-policy-enforcement">Bash Policy Enforcement</a></li>
+<li><a href="#git-protection">Git Protection</a></li>
+<li><a href="#session-start-validation">Session Start Validation</a></li>
+</ul>
+</li>
+<li><a href="#task-tracking-is-for-real-workflows">Task Tracking Is For Real Workflows</a></li>
+<li><a href="#the-review-loop-is-mandatory">The Review Loop Is Mandatory</a><ul>
+<li><a href="#testing-and-local-quality-gates">Testing And Local Quality Gates</a></li>
+</ul>
+</li>
+<li><a href="#how-the-pieces-fit-together">How The Pieces Fit Together</a></li>
+</ul>
+</div>
+
+                </div>
+            </aside>
+
+
+        </main>
+
+        <footer class="page-footer">
+            Generated with <a href="https://github.com/myk-org/docsfy" target="_blank" rel="noopener">docs<span class="brand-accent">fy</span></a>
+            <span class="footer-sep">·</span>
+            <span class="footer-llm">LLM-friendly: <a href="llms.txt">llms.txt</a> · <a href="llms-full.txt">llms-full.txt</a></span>
+        </footer>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <script src="assets/theme.js"></script>
+    <script src="assets/search.js"></script>
+    <script src="assets/copy.js"></script>
+    <script src="assets/callouts.js"></script>
+    <script src="assets/scrollspy.js"></script>
+    <script src="assets/codelabels.js"></script>
+    <script src="assets/github.js"></script>
+    <script>
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+            var expanded = sidebar.classList.contains('open');
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var sidebar = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // Restore scroll position
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) sidebar.scrollTop = parseInt(saved, 10);
+
+    // Save scroll position before navigating
+    sidebar.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', sidebar.scrollTop.toString());
+    });
+
+    // Also scroll active link into view if no saved position
+    if (!saved) {
+        var active = sidebar.querySelector('.nav-link.active');
+        if (active) {
+            active.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+})();
+</script>
+</body>
+</html>
