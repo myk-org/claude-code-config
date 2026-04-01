@@ -1,6 +1,6 @@
 ---
 description: Run a prompt via acpx to any supported coding agent
-argument-hint: <agent>[,agent2,...] [--fix | --peer | --exec] [--model <model>] <prompt>
+argument-hint: <agent[:model]>[,agent2[:model2],...] [--fix | --peer] <prompt>
 allowed-tools: Bash(acpx:*), Bash(git:*), AskUserQuestion, Agent, Edit, Write, Read, Glob, Grep
 ---
 
@@ -32,11 +32,11 @@ Run a prompt through [acpx](https://github.com/openclaw/acpx) to any ACP-compati
 - `/myk-acpx:prompt codex fix the tests`
 - `/myk-acpx:prompt cursor review this code`
 - `/myk-acpx:prompt gemini explain this function`
-- `/myk-acpx:prompt codex --exec summarize this repo`
-- `/myk-acpx:prompt codex --model o3-pro review the architecture`
+- `/myk-acpx:prompt codex:o3-pro review the architecture`
 - `/myk-acpx:prompt codex --fix fix the code quality issues`
+- `/myk-acpx:prompt codex:gpt-4o --fix fix the code quality issues`
 - `/myk-acpx:prompt gemini --peer review this code`
-- `/myk-acpx:prompt codex --peer --model o3-pro review the architecture`
+- `/myk-acpx:prompt cursor:gpt-4o,claude:sonnet --peer review the architecture`
 - `/myk-acpx:prompt cursor,codex review this code`
 - `/myk-acpx:prompt cursor,gemini,codex --peer review the architecture`
 
@@ -81,32 +81,29 @@ The underlying coding agent must be installed separately. acpx auto-downloads AC
 
 ### Step 2: Parse Arguments
 
-Parse `$ARGUMENTS` to extract the agent name and prompt:
+Parse `$ARGUMENTS` to extract the agent name(s) and prompt:
 
-1. The **first token** is the agent name (required). Multiple agents can be
-   specified as a comma-separated list (e.g., `cursor,codex`). Each name
-   must be one of the supported agents listed above.
-2. After the agent name, consume optional flags:
-   - `--exec` — one-shot mode (no session persistence, stateless)
+1. The **first token** is the agent specification (required). Format:
+   `agent[:model]` or comma-separated `agent1[:model1],agent2[:model2],...`
+   Each agent name must be one of the supported agents listed above.
+   The optional `:model` suffix selects a specific model for that agent.
+2. After the agent specification, consume optional flags:
    - `--fix` — enable fix mode (agent can modify files)
    - `--peer` — enable peer review loop (AI-to-AI debate)
-   - `--model <model>` — select a specific model (agent-dependent)
 3. Everything after flags is the prompt text.
+
+**Agent:model parsing:**
+
+Split the first token by commas to get individual agent specs. For each spec:
+
+- If it contains `:`, split on the FIRST `:` only — left side is agent name,
+  right side is model name (model names may contain colons, e.g., `openai:gpt-4o`)
+- If no `:`, the agent name is the full spec and no model override is used
 
 **Flag validation:**
 
-- If `--exec` appears more than once, abort with: "Duplicate --exec flag."
-- If `--model` appears more than once, abort with: "Duplicate --model flag."
-- If the input ends with `--model` and no following word, abort with:
-  "Missing model name after --model flag."
-- If the word after `--model` starts with `--`, abort with:
-  "Invalid model name. Model name cannot start with --."
 - `--fix` and `--peer` are **mutually exclusive**. If both are passed,
   abort with: "`--fix` and `--peer` cannot be used together."
-- `--fix` and `--exec` are **mutually exclusive**. If both are passed,
-  abort with: "`--fix` and `--exec` cannot be used together."
-- `--peer` and `--exec` are **mutually exclusive**. If both are passed,
-  abort with: "`--peer` and `--exec` cannot be used together."
 - Multiple agents and `--fix` are **mutually exclusive**. If more than one
   agent is specified with `--fix`, abort with:
   "`--fix` can only be used with a single agent."
@@ -114,22 +111,20 @@ Parse `$ARGUMENTS` to extract the agent name and prompt:
 - If `--peer` appears more than once, abort with: "Duplicate --peer flag."
 
 If no agent name is provided, abort with:
-"No agent specified. Usage: `/myk-acpx:prompt <agent> [--fix | --peer | --exec] [--model <model>] <prompt>`
+"No agent specified. Usage: `/myk-acpx:prompt <agent[:model]>[,agent2[:model2],...] [--fix | --peer] <prompt>`
 
 Supported agents: pi, openclaw, codex, claude, gemini, cursor, copilot, droid, iflow, kilocode, kimi, kiro, opencode, qwen"
 
-If the agent name is not recognized, abort with:
+If an agent name is not recognized, abort with:
 "Unknown agent: `<name>`. Each agent in a comma-separated list
 must be recognized. Supported agents: pi, openclaw, codex, claude,
 gemini, cursor, copilot, droid, iflow, kilocode, kimi, kiro,
 opencode, qwen"
 
 If no prompt is provided after the agent name, abort with:
-"No prompt provided. Usage: `/myk-acpx:prompt <agent> [--fix | --peer | --exec] [--model <model>] <prompt>`"
+"No prompt provided. Usage: `/myk-acpx:prompt <agent[:model]>[,agent2[:model2],...] [--fix | --peer] <prompt>`"
 
 ### Step 3: Session Management
-
-**If `--exec` was passed, skip this step** (exec mode is stateless).
 
 Ensure a session exists for the current directory:
 
@@ -151,11 +146,9 @@ If session creation also fails, check the error output:
 
   "acpx session management failed for `<agent>`. This is a known issue — see:
   - <https://github.com/openclaw/acpx/issues/152>
-  - <https://github.com/openclaw/acpx/issues/161>
+  - <https://github.com/openclaw/acpx/issues/161>"
 
-  Falling back to one-shot mode (`--exec`)."
-
-  Then proceed with exec mode for this invocation.
+  Display the error and abort.
 
 - For any other error, display the error and abort.
 
@@ -202,14 +195,10 @@ Follow this decision process:
 
 **If `--peer` was passed, skip Steps 5-8 and jump to Step 9 (Peer Review Loop).**
 
-Build and execute the acpx command:
+Build and execute the acpx command.
 
-**Exec mode (stateless):**
-
-```bash
-acpx --approve-reads --non-interactive-permissions fail <agent> exec '<prompt>'
-acpx --approve-reads --non-interactive-permissions fail <agent> exec --model <model> '<prompt>'
-```
+**Model handling:** If the agent spec includes a `:model` suffix (e.g., `codex:gpt-4o`),
+pass it to acpx with `--model <model>`. Otherwise, omit the `--model` flag.
 
 **Fix mode:**
 
@@ -218,7 +207,7 @@ acpx --approve-all <agent> '<prompt>'
 acpx --approve-all <agent> --model <model> '<prompt>'
 ```
 
-**Read-only prompt guard (non-fix modes):**
+**Read-only prompt guard (non-fix mode):**
 
 When `--fix` is NOT passed, append to the user's prompt:
 
@@ -247,13 +236,13 @@ acpx --approve-reads --non-interactive-permissions fail <agent> --model <model> 
 |------|------|-------------|
 | Default | `--approve-reads --non-interactive-permissions fail` | Agent can read files only, writes blocked |
 | Fix (`--fix`) | `--approve-all` | Agent can read and write files |
-| Peer (`--peer`) | `--approve-reads --non-interactive-permissions fail` | Agent reviews only, writes blocked |
 
 **Multi-agent execution:**
 
-When multiple agents are specified, run all agents **in parallel**:
+When multiple agents are specified (without `--peer`), run all agents **in parallel**:
 
 - Send the same prompt to each agent simultaneously
+- Each agent uses its own model override if specified via `:model`
 - Collect results from all agents
 - Display results grouped by agent:
 
@@ -264,8 +253,6 @@ When multiple agents are specified, run all agents **in parallel**:
 ## Results from <agent2>:
 <agent2 output>
 ```
-
-Each agent uses the same mode and flags (exec, session, model).
 
 **Shell safety:** Single-quote the prompt to prevent shell expansion. Replace any single quotes in the prompt with `'\''` before interpolation.
 
@@ -298,7 +285,7 @@ After successful execution, display:
 
 ```text
 Agent: <agent>
-Mode: [session | fix | exec (one-shot)]
+Mode: [session | fix]
 ```
 
 If in session mode, also show:
@@ -357,6 +344,9 @@ send the fixes back to the peer agent (Step 9c) for re-review. The loop
 ends ONLY when the peer agent confirms no remaining issues.
 
 #### 9a: Initial Agent Review
+
+Initialize a round counter at 1. Use the current counter value in the Step 9c
+response template (`Round {N}`), then increment the counter after sending.
 
 Before sending the peer framing prompt, check if `CLAUDE.md` exists
 in the project. If it does, include the CLAUDE.md convention block
@@ -417,7 +407,14 @@ If the command fails, abort the peer loop and report the error.
 Collect and merge findings from all agents, deduplicating where the same
 issue is raised by multiple agents.
 
-If the agent reports no findings, skip to Step 9e.
+**Multi-agent group context:** In the first round, each agent reviews
+independently (no group context yet). Their individual responses are
+collected for use in subsequent rounds.
+
+If ALL agents report no findings, skip to Step 9e.
+If only SOME agents report no findings, continue to Step 9b with the findings
+from agents that did report issues. Agents that reported no findings still
+participate in subsequent rounds via GROUP CONTEXT.
 
 #### 9b: Claude Acts on Findings
 
@@ -438,6 +435,10 @@ For each finding from the agent:
   support Claude's position, cite them explicitly
 - Claude should be open to changing its mind if the agent makes a good
   point in the next round
+
+**Multi-agent:** Merge and deduplicate findings from all agents. When the
+same issue is raised by multiple agents, keep the most actionable version
+and note which agents flagged it.
 
 **After completing all fixes and counter-arguments, proceed to Step 9c.
 This is MANDATORY — do NOT skip to the summary.**
@@ -469,6 +470,29 @@ Please re-review the code. Focus on:
 3. Report any NEW issues you find in the updated code.
 ```
 
+**Multi-agent group context:** When multiple peers are involved, each
+peer's response MUST include what ALL other peers said. Append a
+"GROUP CONTEXT" section to the response for each peer:
+
+```text
+GROUP CONTEXT — What other peers said in Round {N}:
+
+{For each OTHER peer (not the recipient):
+  "## {peer_name} (model: {model}) findings:
+  {summary of that peer's findings and positions}
+  "}
+
+Always include the model when the agent was invoked with a `:model` override.
+If no model was specified, omit the model parenthetical (e.g., `## cursor findings:`).
+```
+
+This enables a true group conversation where every peer has full
+visibility into the discussion. Each peer can agree, disagree, or
+build on other peers' findings.
+
+When sending to peer A, include findings from peers B, C, etc.
+When sending to peer B, include findings from peers A, C, etc.
+
 Execute via acpx (same command pattern). Do NOT display intermediate results.
 
 **Multi-agent:** Send the response to ALL agents in parallel. Each agent
@@ -491,6 +515,11 @@ Parse the agent's response:
 - Claude fixing all findings (fixes must be verified by the agent)
 - Claude agreeing with all findings (the agent must confirm the fixes are correct)
 - A single round completing (minimum: agent reviews → Claude fixes → agent re-reviews)
+
+**Multi-agent convergence:** When multiple peers are involved, convergence
+requires ALL peers to independently confirm no remaining issues. If peer A
+agrees but peer B still has findings, the loop continues. A single peer
+cannot end the loop for the group.
 
 **Claude's behavior across rounds:**
 
@@ -541,3 +570,15 @@ Items where the agent initially flagged but later agreed no change was needed.
 - **Dirty worktree warning** — If the workspace was already dirty before
   the peer review, note: "Workspace had pre-existing changes; resulting
   diffs may include edits not made during this peer review."
+
+**Multi-agent group summary:** When multiple peers participated, add a
+section showing the group dynamics:
+
+```text
+### Group Dynamics
+
+| Finding | Raised By | Agreed By | Resolution |
+|---------|-----------|-----------|------------|
+| Missing null check | cursor | claude, codex | All agreed, fixed |
+| Naming convention | codex | — | Only codex flagged, Claude disagreed, codex conceded |
+```

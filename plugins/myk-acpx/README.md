@@ -28,7 +28,7 @@ Run a prompt through acpx to any supported agent.
 **Syntax:**
 
 ```text
-/myk-acpx:prompt <agent>[,agent2,...] [--fix | --peer | --exec] [--model <model>] <prompt>
+/myk-acpx:prompt <agent[:model]>[,agent2[:model2],...] [--fix | --peer] <prompt>
 ```
 
 **Supported agents:** pi, openclaw, codex, claude, gemini, cursor, copilot, droid, iflow, kilocode, kimi, kiro, opencode, qwen
@@ -42,26 +42,26 @@ Run a prompt through acpx to any supported agent.
 # Review code with Gemini
 /myk-acpx:prompt gemini review this codebase for security issues
 
-# One-shot summary with Codex
-/myk-acpx:prompt codex --exec summarize this repo
-
 # Use a specific model
-/myk-acpx:prompt codex --model o3-pro review the architecture
+/myk-acpx:prompt codex:o3-pro review the architecture
 
 # Fix code with Codex (agent gets write access)
 /myk-acpx:prompt codex --fix fix the code quality issues
 
+# Fix with specific model
+/myk-acpx:prompt codex:gpt-4o --fix fix the code quality issues
+
 # AI-to-AI peer review with Gemini
 /myk-acpx:prompt gemini --peer review this code
 
-# Peer review with specific model
-/myk-acpx:prompt codex --peer --model o3-pro review the architecture
+# Multi-agent peer review (group conversation)
+/myk-acpx:prompt cursor,claude --peer review this code
 
-# Multi-agent review (parallel)
+# 3-way peer review with per-agent models
+/myk-acpx:prompt cursor:gpt-4o,gemini,codex:o3-pro --peer review the architecture
+
+# Multi-agent review (parallel, non-peer)
 /myk-acpx:prompt cursor,codex review this code
-
-# 3-way peer review debate
-/myk-acpx:prompt cursor,gemini,codex --peer review the architecture
 ```
 
 ## Modes
@@ -70,18 +70,19 @@ Run a prompt through acpx to any supported agent.
 |------|------|-------------|
 | Default | (none) | Agent reads and reviews, no file changes |
 | Fix | `--fix` | Agent can modify files directly, diff shown after |
-| Peer | `--peer` | AI-to-AI debate loop between Claude and the agent |
-| Exec | `--exec` | One-shot stateless execution, no session persistence |
+| Peer | `--peer` | AI-to-AI debate loop between Claude and the agent(s) |
 
-`--fix`, `--peer`, and `--exec` are mutually exclusive.
+`--fix` and `--peer` are mutually exclusive.
 
-Multiple agents can be specified as a comma-separated list. `--fix` requires a single agent; all other modes support multiple agents running in parallel.
+Multiple agents can be specified as a comma-separated list. `--fix` requires a single agent.
+In `--peer` mode with multiple agents, a group conversation is created
+where each peer sees all other peers' responses.
 
 ## Known Issues
 
 - Cursor persistent sessions may fail with acpx v0.3.x due to a `session/load` protocol mismatch
   ([#152](https://github.com/openclaw/acpx/issues/152),
   [#161](https://github.com/openclaw/acpx/issues/161)).
-  The command walks you through automatic fallback to one-shot mode when this occurs.
+  The command displays the error and aborts when this occurs.
   If you need the native Cursor CLI with persistent sessions and acpx session setup keeps failing,
   use the Cursor `agent` tool directly.
