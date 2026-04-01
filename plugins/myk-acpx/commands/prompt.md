@@ -291,7 +291,7 @@ Mode: [session | fix]
 If in session mode, also show:
 
 ```text
-Session active. Send follow-up prompts with: /myk-acpx:prompt <agent> <follow-up>
+Session active. Send follow-up prompts with: /myk-acpx:prompt <agent[:model]> <follow-up>
 ```
 
 ### Step 7: Read Diff (--fix mode only)
@@ -338,10 +338,11 @@ all participants agree on the code. When multiple agents are specified,
 each agent reviews independently in parallel, and Claude evaluates the
 merged findings.
 
-**CRITICAL RULE: Only the peer agent can end the loop.** Claude fixing
+**CRITICAL RULE: Only the peer agent(s) can end the loop.** Claude fixing
 code does NOT count as convergence. After EVERY fix round, Claude MUST
-send the fixes back to the peer agent (Step 9c) for re-review. The loop
-ends ONLY when the peer agent confirms no remaining issues.
+send the fixes back to the peer agent(s) (Step 9c) for re-review. The loop
+ends ONLY when each peer agent confirms no remaining issues. With multiple
+peers, ALL peer agents must agree before the loop exits.
 
 #### 9a: Initial Agent Review
 
@@ -418,7 +419,7 @@ participate in subsequent rounds via GROUP CONTEXT.
 
 #### 9b: Claude Acts on Findings
 
-For each finding from the agent:
+For each finding from the agent(s):
 
 1. **Evaluate the finding** — Does Claude agree it's a valid issue?
 2. **If Claude agrees** — Fix the code by delegating to the
@@ -500,12 +501,12 @@ re-reviews independently.
 
 #### 9d: Loop Until Convergence
 
-Parse the agent's response:
+Parse each agent's response:
 
 - **No findings and no remaining disagreements** — All AIs agree. Exit loop.
 - **New findings or continued disagreements** — Go to Step 9b.
 
-**Convergence criteria (checked ONLY from the peer agent's response in Step 9c):**
+**Convergence criteria (checked ONLY from each peer agent's response in Step 9c):**
 
 - All agents explicitly state no remaining issues, OR
 - All agents' responses contain no actionable findings (only acknowledgments)
@@ -523,7 +524,7 @@ cannot end the loop for the group.
 
 **Claude's behavior across rounds:**
 
-- Claude SHOULD change its mind when the agent provides a better argument
+- Claude SHOULD change its mind when a peer agent provides a better argument
 - Claude SHOULD NOT stubbornly hold a position just to "win"
 - If a disagreement persists for 3+ rounds on the same point, note it as
   "unresolved disagreement" and move on

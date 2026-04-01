@@ -446,6 +446,14 @@ pre-commit run --all-files
 
 ## Important Notes
 
+### Auto-Generated docs/ Directory
+
+**The `docs/` directory is auto-generated. NEVER edit files in `docs/` manually.**
+
+- Documentation is regenerated from source files (CLAUDE.md, README.md, plugin specs, etc.)
+- Manual edits will be overwritten on the next generation
+- If docs are stale after a change, regenerate them — do not hand-edit
+
 ### .gitignore Whitelist Pattern
 
 **Critical directories follow a gitignore-by-default pattern with explicit whitelisting:**
