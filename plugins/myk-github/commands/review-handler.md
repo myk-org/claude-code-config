@@ -271,6 +271,9 @@ to watch for new CodeRabbit comments.
 
 Wait 5 minutes before checking for new comments.
 
+**After waiting, ALWAYS proceed to 9b. NEVER exit the loop.
+If the wait is interrupted or errors, retry the wait. An error during waiting is NOT a reason to exit.**
+
 #### 9b: Check for Rate Limit
 
 Before fetching new reviews, check if CodeRabbit is rate-limited:
@@ -289,9 +292,12 @@ If `rate_limited` is `true`:
 myk-claude-tools coderabbit trigger <owner/repo> <pr_number> --wait <wait_seconds + 30>
 ```
 
-1. After the trigger completes, resume at Step 9c
+1. After the trigger completes (or if it errors), ALWAYS resume at Step 9c. NEVER exit the loop due to a trigger failure or timeout.
 
 If `rate_limited` is `false`, proceed to Step 9c.
+
+If the `coderabbit check` command fails (non-zero exit or malformed response),
+log the error and return to Step 9a. Do NOT exit the loop.
 
 #### 9c: Fetch New Reviews
 
@@ -308,15 +314,50 @@ Check if there are new CodeRabbit comments (comments without
 
 - If **new CodeRabbit comments found**: Run Phases 2-8 again with
   autorabbit behavior (auto-approve CodeRabbit, ask user for others).
-  After completing, return to Step 9a.
+  After completing (or if any phase errors), **MUST** return to Step 9a (NEVER exit).
 - If **no new CodeRabbit comments**: Display "No new CodeRabbit
-  comments. Checking again in 5 minutes..." and return to Step 9a.
+  comments. Checking again in 5 minutes..." and **MUST** return to Step 9a (NEVER exit).
 
-#### 9d: Exit
+**Both paths return to 9a. NEVER exit the loop. Only the user can stop it.**
 
-The polling loop has **no automatic exit condition**. It continues
-until the user stops it (Ctrl+C or explicit request). Each cycle
-displays a status update so the user knows the loop is active:
+#### 9d: NEVER EXIT (MANDATORY)
+
+**THE LOOP MUST NEVER STOP UNLESS THE USER EXPLICITLY REQUESTS IT.**
+
+There is NO automatic exit condition. The AI does NOT decide when the loop ends.
+The loop runs forever until the user intervenes.
+
+```text
+VIOLATION — The following rationalizations are FORBIDDEN reasons to exit the loop:
+
+  - "All comments have been addressed"
+  - "No new comments found for N cycles"
+  - "The loop seems complete"
+  - "Nothing left to process"
+  - "The review is done"
+  - "CodeRabbit has not posted anything new"
+  - "It appears the review cycle is finished"
+  - "The fetch command failed"
+  - "An error occurred during polling"
+  - "The API returned an error"
+  - "An error prevents continuing"
+  - Any variation of the AI deciding there is no more work to do
+```
+
+Even after 100 consecutive cycles with zero new comments, the loop continues.
+The absence of new comments is expected behavior, not a reason to stop.
+
+If any command in the loop fails, log the error, wait 5 minutes, and retry from 9a.
+Errors are recoverable — NEVER treat a command failure as a reason to exit.
+
+**ONLY these actions end the loop:**
+
+- The user presses `Ctrl+C`
+- The user sends an explicit message such as "stop", "exit", "done", or "quit"
+
+**Breaking the loop without user action is a HARD VIOLATION of this spec.**
+
+Each cycle displays a status update so the user knows the loop is active:
 
 ```text
 [autorabbit] Cycle {N} complete. Next check in 5 minutes...
