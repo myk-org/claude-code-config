@@ -41,7 +41,7 @@ Check if `--autorabbit` flag is present in `$ARGUMENTS`:
 - If `--autorabbit` is found, remove it from `$ARGUMENTS` and enable
   autorabbit mode. The remaining `$ARGUMENTS` (if any) are passed to
   `reviews fetch` as before. **Store the final fetch arguments** for
-  reuse in Phase 9c polling.
+  reuse in Phase 9b polling.
 - If `--autorabbit` is not found, proceed normally.
 
 ### Phase 1: Fetch Reviews
@@ -274,40 +274,20 @@ Wait 5 minutes before checking for new comments.
 **After waiting, ALWAYS proceed to 9b. NEVER exit the loop.
 If the wait is interrupted or errors, retry the wait. An error during waiting is NOT a reason to exit.**
 
-#### 9b: Check for Rate Limit
+#### 9b: Fetch New Reviews
 
-Before fetching new reviews, check if CodeRabbit is rate-limited:
-
-```bash
-myk-claude-tools coderabbit check <owner/repo> <pr_number>
-```
-
-If `rate_limited` is `true`:
-
-1. Read `wait_seconds` from the response
-1. Add 30-second buffer
-1. Run the trigger command:
+Use the `reviews poll` command which atomically handles rate limit
+checking, triggering, and fetching in a single command:
 
 ```bash
-myk-claude-tools coderabbit trigger <owner/repo> <pr_number> --wait <wait_seconds + 30>
+myk-claude-tools reviews poll [same arguments as Phase 1]
 ```
 
-1. After the trigger completes (or if it errors), ALWAYS resume at Step 9c. NEVER exit the loop due to a trigger failure or timeout.
+This command:
 
-If `rate_limited` is `false`, proceed to Step 9c.
-
-If the `coderabbit check` command fails (non-zero exit or malformed response),
-log the error and return to Step 9a. Do NOT exit the loop.
-
-#### 9c: Fetch New Reviews
-
-Use the same arguments that were passed to `reviews fetch` in Phase 1
-(review URL if provided, otherwise auto-detect). This ensures the
-polling loop stays scoped to the same PR.
-
-```bash
-myk-claude-tools reviews fetch [same arguments as Phase 1]
-```
+1. Checks if CodeRabbit is rate limited
+2. If rate limited: waits the required time + 30s buffer, triggers re-review, polls until review starts
+3. Fetches all reviews (same output format as `reviews fetch`)
 
 Check if there are new CodeRabbit comments (comments without
 `posted_at` timestamps, not auto-skipped).
@@ -320,7 +300,7 @@ Check if there are new CodeRabbit comments (comments without
 
 **Both paths return to 9a. NEVER exit the loop. Only the user can stop it.**
 
-#### 9d: NEVER EXIT (MANDATORY)
+#### 9c: NEVER EXIT (MANDATORY)
 
 **THE LOOP MUST NEVER STOP UNLESS THE USER EXPLICITLY REQUESTS IT.**
 
@@ -364,5 +344,5 @@ Each cycle displays a status update so the user knows the loop is active:
 [autorabbit] Checking for new CodeRabbit comments...
 [autorabbit] Found {N} new comments — processing...
 [autorabbit] No new comments. Next check in 5 minutes...
-[autorabbit] CodeRabbit rate-limited. Waiting {N} seconds...
+[autorabbit] CodeRabbit rate-limited. Handling automatically via reviews poll...
 ```

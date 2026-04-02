@@ -68,6 +68,8 @@
 !tests/test_get_all_reviews.py
 !tests/test_post_review_replies.py
 !tests/test_review_db.py
+!tests/test_reviews_commands.py
+!tests/test_reviews_poll.py
 !tests/test_rule_enforcer.py
 !tests/test_store_reviews_to_db.py
 !tests/test_bump_version.py
@@ -153,6 +155,7 @@
 !myk_claude_tools/reviews/fetch.py
 !myk_claude_tools/reviews/pending_fetch.py
 !myk_claude_tools/reviews/pending_update.py
+!myk_claude_tools/reviews/poll.py
 !myk_claude_tools/reviews/post.py
 !myk_claude_tools/reviews/coderabbit_parser.py
 !myk_claude_tools/reviews/store.py

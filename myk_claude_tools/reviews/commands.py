@@ -29,6 +29,26 @@ def reviews_fetch(review_url: str) -> None:
     sys.exit(exit_code)
 
 
+@reviews.command("poll")
+@click.argument("review_url", required=False, default="")
+def reviews_poll(review_url: str) -> None:
+    """Poll for reviews with automatic CodeRabbit rate limit handling.
+
+    Atomically combines rate limit check, trigger, and fetch into a single
+    command. If CodeRabbit is rate limited, waits and triggers re-review
+    before fetching.
+
+    Same output format as 'reviews fetch'.
+
+    REVIEW_URL: Optional specific review URL for context
+    (e.g., #pullrequestreview-XXX or #discussion_rXXX)
+    """
+    from myk_claude_tools.reviews.poll import run
+
+    exit_code = run(review_url)
+    sys.exit(exit_code)
+
+
 @reviews.command("post")
 @click.argument("json_path")
 def reviews_post(json_path: str) -> None:
