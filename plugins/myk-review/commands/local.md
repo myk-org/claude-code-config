@@ -6,6 +6,12 @@ allowed-tools: Bash(git:*), Task, AskUserQuestion
 
 # Local Code Review Command
 
+> **Bug Reporting Policy:** If you encounter ANY error, unexpected behavior, or reproducible bug
+> while executing this command — DO NOT work around it silently. Ask the user:
+> "Should I create a GitHub issue for this?" Route to:
+> `myk-org/claude-code-config` for plugin/command spec or `myk-claude-tools` CLI issues.
+> Do not silently skip steps or apply manual fixes that hide the root cause.
+
 Review uncommitted changes or changes compared to a specified branch.
 
 **MANDATORY: This command MUST use 3 review agents in parallel via Task tool.**

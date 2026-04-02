@@ -6,6 +6,13 @@ allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), As
 
 # GitHub Review Handler
 
+> **Bug Reporting Policy:** If you encounter ANY error, unexpected behavior, or reproducible bug
+> while executing this command — DO NOT work around it silently. Ask the user:
+> "Should I create a GitHub issue for this?" Route to:
+> `myk-org/claude-code-config` for plugin/command spec or `myk-claude-tools` CLI issues.
+> Do not silently skip steps or apply manual fixes that hide the root cause.
+> Documented retry loops (e.g., autorabbit polling) are not bugs — only report reproducible failures.
+
 Unified handler that processes ALL review sources from the current branch's GitHub PR.
 
 ## Prerequisites Check (MANDATORY)

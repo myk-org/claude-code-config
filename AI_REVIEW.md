@@ -361,6 +361,23 @@ This repository also serves as a Claude Code plugin marketplace. Users can insta
 2. **Rules are auto-loaded** on next prompt (via `rule-injector.py`)
 3. **Test changes** in a new conversation
 
+### Bug Reporting Policy for Plugins
+
+**Every plugin command MUST include a bug reporting policy blockquote.**
+
+When creating a new plugin or adding a new command, add the following blockquote right after
+the command's `#` heading:
+
+```text
+> **Bug Reporting Policy:** If you encounter ANY error, unexpected behavior, or reproducible bug
+> while executing this command — DO NOT work around it silently. Ask the user:
+> "Should I create a GitHub issue for this?" Route to the appropriate repository.
+> Do not silently skip steps or apply manual fixes that hide the root cause.
+```
+
+Customize the routing to mention only relevant repositories (e.g., `myk-org/claude-code-config` for
+plugin issues, the CLI tool's repo for CLI issues). Do not include repos unrelated to the command.
+
 ### Adding a Slash Command (Plugin)
 
 **Slash commands are now defined as plugins.** See `plugins/README.md` for the complete guide.

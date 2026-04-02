@@ -10,6 +10,28 @@ description: Use when the user asks to generate documentation with docsfy, creat
 Generate AI-powered documentation for a Git repository using the docsfy CLI.
 The CLI connects to a docsfy server that clones the repo, plans documentation structure, and generates pages using AI.
 
+## Bug Reporting Policy (MANDATORY)
+
+**DO NOT work around issues. Report them so they get fixed.**
+
+When you encounter ANY error, unexpected behavior, or reproducible bug during this workflow:
+
+1. **Determine the source:**
+   - **CLI issue** (docsfy command fails, returns wrong data, unexpected behavior) → report to `https://github.com/myk-org/docsfy`
+   - **Skill issue** (wrong instructions, missing step, workflow logic error) → report to `https://github.com/myk-org/claude-code-config`
+
+2. **Ask the user:** "I encountered [issue]. Should I create a GitHub issue for this in [repo]?"
+
+3. **NEVER work around the issue silently.** Do not:
+   - Retry with arbitrary parameter changes hoping it works (documented retry loops like polling are fine)
+   - Skip the failing step and continue
+   - Apply a manual fix that hides the root cause
+   - Say "this is a known limitation" without filing an issue
+
+4. **After filing** (or if user declines), then proceed with the best available path.
+
+The goal is to fix bugs at the source, not accumulate workarounds.
+
 ## Prerequisites (MANDATORY - check before anything else)
 
 ### 1. docsfy CLI installed
@@ -41,17 +63,110 @@ If health check fails, inform the user that the docsfy server is not reachable a
 | Parameter | Required | How to get |
 |-----------|----------|------------|
 | Repository URL | Yes | Ask user or infer from current repo's git remote |
-| AI Provider | Yes | Ask user (options: `claude`, `gemini`, `cursor`) |
-| AI Model | Yes | Ask user — provider-specific model name |
+| AI Provider | Yes | From `docsfy models --json` → `providers` array |
+| AI Model | Yes | From `docsfy models --json` → `known_models.<provider>` array |
 | Branch | No | Default: `main` |
 | Output directory | No | Default: `docs/` |
-| Force regeneration | No | Default: no |
+| Force regeneration | No | Only offered when re-generating an existing project |
 
-**MANDATORY: Use `AskUserQuestion` to collect ALL parameters.**
-Never skip a question. Present provider as options (`claude`, `gemini`, `cursor`),
-then ask the user to type the model name (models are free-form strings — no predefined list).
-Also ask about branch, output directory, and force regeneration.
-Combine related questions into a single `AskUserQuestion` call where possible.
+**MANDATORY: Use `AskUserQuestion` to collect ALL parameters. Never skip a question.**
+
+#### Step 1: Fetch existing projects and available models
+
+Run both commands (can be parallel):
+
+```bash
+docsfy list --json
+docsfy models --json
+```
+
+**From `docsfy list --json`** — check if the current repository + branch has been generated before.
+Match by comparing BOTH:
+
+- The current repo's git remote URL against `repo_url`
+- The current git branch against `branch`
+
+If multiple entries match (same repo, same branch, different provider/model), prefer the one
+with the most recent `last_generated` timestamp.
+
+Only consider entries with `status` equal to `ready`. Ignore failed, aborted, or in-progress entries.
+
+**URL normalization:** Remote URLs may differ in format (SSH `git@github.com:org/repo.git`
+vs HTTPS `https://github.com/org/repo.git`). Normalize both to `owner/repo` form before
+comparing (strip protocol, host, `.git` suffix).
+Key fields per entry:
+
+```json
+{
+  "name": "project-name",
+  "branch": "main",
+  "ai_provider": "cursor",
+  "ai_model": "gpt-5.4-xhigh-fast",
+  "repo_url": "https://github.com/org/repo.git",
+  "status": "ready",
+  "last_generated": "2026-04-01 20:53:36"
+}
+```
+
+**From `docsfy models --json`** — get available providers and models (same as before):
+
+```json
+{
+  "providers": ["claude", "gemini", "cursor"],
+  "default_provider": "cursor",
+  "default_model": "gpt-5.4-xhigh-fast",
+  "known_models": {
+    "claude": ["claude-opus-4-6[1m]"],
+    "cursor": ["composer-2-fast"]
+  }
+}
+```
+
+Extract `providers` for provider selection and `known_models` for model selection.
+Note: not all providers may have entries in `known_models` (e.g., `gemini` above has no models listed).
+
+**Fallback behavior:**
+
+- If `docsfy models` fails or returns empty/malformed JSON → fall back to hardcoded
+  providers (`claude`, `gemini`, `cursor`) and free-form model input.
+- If `docsfy list` fails → treat as no previous generation (lose smart defaults
+  but still use `models` data for provider/model selection).
+- If both fail → hardcoded providers + free-form model + no smart defaults.
+
+#### Step 2: Ask for parameters
+
+Model is collected in Round 2 because it depends on the provider selected in Round 1.
+
+**If a previous generation exists for this repo + branch:**
+
+Show the user what was used before and present smart defaults:
+
+**Round 1** — Present:
+
+- Provider: show previous `ai_provider` as first option "(Previously used)", then other providers
+- Repository URL: pre-fill from current repo
+- Branch: pre-fill from current branch
+- Output directory: default `docs/`
+- Force regeneration: **always offer `--force`** since this is a re-generation of an existing project.
+  Show when it was last generated: "Last generated: {last_generated}"
+
+**Round 2** — After provider is selected, present models from `known_models.<selected_provider>`.
+If the user kept the same provider as before, show the previous `ai_model` as first option "(Previously used)".
+Mark `default_model` as "(Recommended)" if it appears in the list and is different from the previous model.
+If `known_models` does not contain the selected provider or the array is empty,
+fall back to free-form model input.
+
+**If NO previous generation exists:**
+
+**Round 1** — Ask for provider (from `providers` array), repository URL, branch,
+output directory. Do NOT offer `--force` (it does nothing for new generations).
+
+**Round 2** — After provider is selected, present that provider's models from
+`known_models.<selected_provider>` as `AskUserQuestion` options.
+If the provider matches `default_provider` and `default_model` appears in the list,
+mark it as "(Recommended)" in the AskUserQuestion options.
+If `known_models` does not contain the selected provider or the array is empty,
+fall back to free-form model input.
 
 ### GitHub Pages Setup (GitHub repos only)
 
@@ -284,6 +399,8 @@ Display:
 | `docsfy list` | List all projects |
 | `docsfy abort <name>` | Abort active generation |
 | `docsfy health` | Check server connectivity |
+| `docsfy list --json` | List all previously generated projects |
+| `docsfy models --json` | List all providers and their available models |
 | `docsfy config show` | Show server profiles |
 | `docsfy config init` | Set up a new server profile |
 
@@ -291,7 +408,7 @@ Display:
 
 | Mistake | Fix |
 |---------|-----|
-| Hardcoding provider/model | Always ask the user |
+| Hardcoding provider/model | Use `docsfy models --json` to get providers and models; free-form only on failure |
 | Skipping health check | Server must be reachable before generating |
 | Using local files instead of repo URL | docsfy works with Git repository URLs |
 | Forgetting `--watch` flag | Always use `--watch` for real-time progress |
@@ -300,4 +417,5 @@ Display:
 | Downloading before creating branch | Always create a docs branch before downloading |
 | Showing docs link without Pages serving docs/ | Only show docs URL if GitHub Pages serves from `docs/` on target branch |
 | Skipping security scan | Always scan docs for leaked private data before committing |
-| Not asking about force regeneration | Always include force regeneration in AskUserQuestion |
+| Skipping --force when re-running existing project | When a prior generation exists for this repo+branch, always offer --force |
+| Offering --force for new projects | Only offer --force when a matching `docsfy list` entry exists for this repo+branch |

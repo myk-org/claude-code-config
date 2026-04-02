@@ -6,6 +6,13 @@ allowed-tools: Bash(acpx:*), Bash(git:*), AskUserQuestion, Agent, Edit, Write, R
 
 # acpx Multi-Agent Prompt Command
 
+> **Bug Reporting Policy:** If you encounter ANY error, unexpected behavior, or reproducible bug
+> while executing this command — DO NOT work around it silently. Ask the user:
+> "Should I create a GitHub issue for this?" Route to:
+> `myk-org/claude-code-config` for plugin/command spec issues,
+> `openclaw/acpx` for acpx CLI issues.
+> Do not silently skip steps or apply manual fixes that hide the root cause.
+
 Run a prompt through [acpx](https://github.com/openclaw/acpx) to any ACP-compatible coding agent.
 
 ## Supported Agents

@@ -6,6 +6,12 @@ allowed-tools: Bash(myk-claude-tools:*), Bash(uv:*), Bash(git:*), Bash(gh:*), As
 
 # GitHub Release Command
 
+> **Bug Reporting Policy:** If you encounter ANY error, unexpected behavior, or reproducible bug
+> while executing this command — DO NOT work around it silently. Ask the user:
+> "Should I create a GitHub issue for this?" Route to:
+> `myk-org/claude-code-config` for plugin/command spec or `myk-claude-tools` CLI issues.
+> Do not silently skip steps or apply manual fixes that hide the root cause.
+
 Creates a GitHub release with automatic changelog generation based on conventional commits.
 Optionally detects and updates version files before creating the release.
 

@@ -95,6 +95,11 @@ allowed-tools: Bash(tool:*), AskUserQuestion
 ---
 ```
 
+### Bug Reporting Policy
+
+**Bug Reporting Policy:** Every command MUST include a bug reporting blockquote after the `#` heading.
+See `CLAUDE.md` "Bug Reporting Policy for Plugins" for the template.
+
 ### Adding a Plugin to This Repository
 
 1. Create plugin directory under `plugins/`
