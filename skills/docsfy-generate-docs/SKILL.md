@@ -47,7 +47,11 @@ If health check fails, inform the user that the docsfy server is not reachable a
 | Output directory | No | Default: `docs/` |
 | Force regeneration | No | Default: no |
 
-Use `AskUserQuestion` to collect provider, model, and any missing parameters.
+**MANDATORY: Use `AskUserQuestion` to collect ALL parameters.**
+Never skip a question. Present provider as options (`claude`, `gemini`, `cursor`),
+then ask the user to type the model name (models are free-form strings — no predefined list).
+Also ask about branch, output directory, and force regeneration.
+Combine related questions into a single `AskUserQuestion` call where possible.
 
 ### GitHub Pages Setup (GitHub repos only)
 
@@ -77,14 +81,18 @@ treat it as not configured for Phase 6 purposes.
 
 ### Phase 2: Generate Documentation
 
+Run the generation command using **`Bash(run_in_background=true)`** since it is a long-running blocking operation:
+
 ```bash
 docsfy generate <repo_url> --branch <branch> --provider <provider> --model <model> --watch [--force]
 ```
 
 - Always use `--watch` for real-time WebSocket progress
 - Add `--force` only if user requested force regeneration
+- **Use `run_in_background=true`** on the Bash tool so the main conversation is not blocked.
+  You will be notified when the command completes.
 
-Monitor output until generation completes with status `ready`, `error`, or `aborted`.
+When the background command completes, check the output for status `ready`, `error`, or `aborted`.
 
 If generation fails, show the error and ask the user how to proceed.
 
@@ -129,11 +137,26 @@ docsfy download <project_name> --branch <branch> --provider <provider> --model <
 
 The download creates a nested subdirectory: `<output_dir>/<project>-<branch>-<provider>-<model>/`. Verify it exists, then flatten so all files are directly under `<output_dir>/`:
 
+**IMPORTANT: Clear existing content first to prevent silent mv failures (see issue #207).**
+
 ```bash
-ls <output_dir>/<project>-<branch>-<provider>-<model>/
-mv <output_dir>/<project>-<branch>-<provider>-<model>/* <output_dir>/ || true
-mv <output_dir>/<project>-<branch>-<provider>-<model>/.* <output_dir>/ 2>/dev/null || true
-rm -rf <output_dir>/<project>-<branch>-<provider>-<model>
+NESTED_DIR="<output_dir>/<project>-<branch>-<provider>-<model>"
+OUTPUT_DIR="<output_dir>"
+
+# Verify nested dir exists
+if [ ! -d "$NESTED_DIR" ]; then
+    echo "Error: Expected directory $NESTED_DIR not found"
+    exit 1
+fi
+
+# Clear old content in output dir (preserve the nested dir itself)
+find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 ! -path "$NESTED_DIR" -exec rm -rf {} +
+
+# Move new content (use dotglob to handle hidden files safely)
+shopt -s dotglob
+mv "$NESTED_DIR"/* "$OUTPUT_DIR"/
+shopt -u dotglob
+rm -rf "$NESTED_DIR"
 ```
 
 If the nested subdirectory does not exist after download, the project name or parameters may not match what was used during generation — surface the error to the user.
@@ -183,11 +206,25 @@ Display the URL to the user.
 
 #### 6b. Offer README Simplification
 
-Ask the user if they want to simplify the project README to keep it minimal and point to the new docs site:
+**Before asking, check if the README is already simplified.**
+
+Read `README.md` in the repository root. Consider it "already simplified" if ALL of these are true:
+
+- It contains a link to the docs site URL (from Phase 6a)
+- It is shorter than 80 lines
+- It does NOT contain detailed API documentation, configuration guides, or multi-section reference content
+  - Specifically: it does NOT have sections like `## API Reference`, `## Configuration`,
+    or `## Detailed Usage` with more than 3 subsections each
+
+If unsure whether the README is already simplified, ask the user rather than deciding autonomously.
+
+If already simplified: display "README already points to docs site — no changes needed." and skip.
+
+If NOT simplified (or no README exists), ask the user:
 
 > GitHub Pages is serving your docs. Would you like to simplify the project README to point to the docs site?
 
-- **Yes** → Read the current `README.md` in the repository root. Create a simplified version that keeps ONLY:
+- **Yes** → Create a simplified version that keeps ONLY:
   - Project title + one-line description
   - Link to the docs site prominently (use the URL from Phase 6a)
   - Quick start (e.g., docker run or install command, 5 lines max)
@@ -196,11 +233,37 @@ Ask the user if they want to simplify the project README to keep it minimal and 
   - License section
 
   Remove all other detailed content (API docs, configuration guides, detailed usage, etc.).
+- **No** → Skip and continue.
 
-  If no `README.md` exists, skip this step.
-- **No** → Skip and continue to summary.
+### Phase 7: Commit, Push, and PR (optional)
 
-### Phase 7: Summary
+Ask the user via `AskUserQuestion` if they want to commit, push, and create a PR for the docs changes:
+
+Options:
+
+- **Yes (Recommended)** — Commit all docs changes, push the branch, and create a PR
+- **Commit only** — Commit locally but do not push
+- **No** — Leave changes uncommitted
+
+If **Yes**:
+
+1. Stage all files in `<output_dir>/` and `README.md` (if simplified)
+2. Commit with message: `docs: generate documentation with docsfy (<provider>/<model>)`
+3. Push the branch: `git push -u origin docs/docsfy-<project_name>`
+4. Create PR against the repository's default branch:
+   `gh pr create --title "docs: add generated documentation" --body "Generated with docsfy using <provider>/<model>" --base $(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')`
+5. Display the PR URL
+
+If **Commit only**:
+
+1. Stage and commit (same as above, steps 1-2)
+2. Display: "Changes committed locally. Push when ready with: `git push -u origin docs/docsfy-<project_name>`"
+
+If **No**:
+
+- Display: "Changes are on branch `docs/docsfy-<project_name>`. Commit when ready."
+
+### Phase 8: Summary
 
 Display:
 
@@ -209,6 +272,7 @@ Display:
 - Output directory where docs were extracted
 - Docs site URL (if GitHub Pages is configured)
 - Whether README was simplified (if applicable)
+- Commit/push/PR status (if applicable)
 
 ## Quick Reference
 
@@ -236,3 +300,4 @@ Display:
 | Downloading before creating branch | Always create a docs branch before downloading |
 | Showing docs link without Pages serving docs/ | Only show docs URL if GitHub Pages serves from `docs/` on target branch |
 | Skipping security scan | Always scan docs for leaked private data before committing |
+| Not asking about force regeneration | Always include force regeneration in AskUserQuestion |
