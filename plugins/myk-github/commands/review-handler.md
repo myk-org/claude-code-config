@@ -94,15 +94,18 @@ Returns JSON with:
 
 ### Phase 2: User Decision Collection
 
-**`--autorabbit` mode:** If autorabbit mode is active:
-
-- **CodeRabbit comments**: Automatically set to "yes" (address all).
-  Do NOT ask the user. Present the CodeRabbit table for visibility
-  but mark all items as auto-approved.
-- **Human and Qodo comments**: Follow the normal user decision flow
-  below (present table, ask user via AskUserQuestion).
-- If there are ONLY CodeRabbit comments (no human or Qodo), skip the
-  user decision step entirely and proceed to Phase 3.
+> **CRITICAL — AUTORABBIT MODE CHECK (do this FIRST, before anything else):**
+>
+> If autorabbit mode is ON (set in Phase 0):
+>
+> 1. **CodeRabbit comments → ALL auto-approved.** Do NOT use AskUserQuestion
+>    for CodeRabbit. Do NOT ask the user. Set every CodeRabbit item to "yes"
+>    automatically. Display the table for visibility only.
+> 2. **Human/Qodo comments** → follow the normal decision flow below.
+> 3. **If there are ONLY CodeRabbit comments** (no human, no Qodo) →
+>    skip this entire phase and go directly to Phase 3.
+>
+> **In autorabbit mode, the user is NEVER asked about CodeRabbit items.**
 
 **Normal mode (no `--autorabbit`):** Follow the full decision flow below.
 
