@@ -1,3 +1,3 @@
 """myk-claude-tools: CLI utilities for Claude Code plugins."""
 
-__version__ = "1.9.3"
+__version__ = "1.9.4"
