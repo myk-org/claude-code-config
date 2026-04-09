@@ -41,24 +41,42 @@ If not found, prompt to install: `uv tool install myk-claude-tools`
 
 ## Workflow
 
-### Phase 0: Parse Arguments
+> **CRITICAL — BEFORE ANY CLI COMMAND:**
+> `--autorabbit` is a **command-level flag**, NOT a CLI argument.
+> **NEVER** pass `--autorabbit` to `myk-claude-tools`. The CLI will reject it.
+> You MUST strip it from `$ARGUMENTS` first. See Phase 0 below.
 
-Check if `--autorabbit` flag is present in `$ARGUMENTS`:
+### Phase 0: Parse Arguments (MANDATORY — DO NOT SKIP)
 
-- If `--autorabbit` is found, remove it from `$ARGUMENTS` and enable
-  autorabbit mode. The remaining `$ARGUMENTS` (if any) are passed to
-  `reviews fetch` as before. **Store the final fetch arguments** for
-  reuse in Phase 9b polling.
-- If `--autorabbit` is not found, proceed normally.
+**Before calling ANY `myk-claude-tools` command**, parse `$ARGUMENTS`:
+
+1. Check if `--autorabbit` is present in `$ARGUMENTS`
+2. If YES: **Remove** `--autorabbit` from `$ARGUMENTS` and set autorabbit mode = ON
+3. Store the cleaned `$ARGUMENTS` (without `--autorabbit`) for all subsequent CLI calls
+4. If NO: proceed normally
+
+**Example:** If `$ARGUMENTS` = `--autorabbit`, then after parsing:
+
+- autorabbit mode = ON
+- cleaned arguments = (empty)
+- CLI call = `myk-claude-tools reviews fetch` (NO `--autorabbit` flag)
+
+**Example:** If `$ARGUMENTS` = `--autorabbit https://github.com/org/repo/pull/123#pullrequestreview-456`, then after parsing:
+
+- autorabbit mode = ON
+- cleaned arguments = `https://github.com/org/repo/pull/123#pullrequestreview-456`
+- CLI call = `myk-claude-tools reviews fetch https://github.com/...`
 
 ### Phase 1: Fetch Reviews
 
 The `reviews fetch` command auto-detects the PR from the current branch.
 
-If a specific review URL is provided in `$ARGUMENTS`:
+**Use the cleaned arguments from Phase 0 — NEVER pass `--autorabbit` to the CLI.**
+
+If a specific review URL is in the cleaned arguments:
 
 ```bash
-myk-claude-tools reviews fetch $ARGUMENTS
+myk-claude-tools reviews fetch <cleaned_arguments>
 ```
 
 Otherwise (auto-detect from current branch):
