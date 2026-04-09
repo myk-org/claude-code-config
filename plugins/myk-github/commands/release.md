@@ -127,34 +127,25 @@ myk-claude-tools release bump-version <VERSION> --files <file1> --files <file2>
 
 Where `<VERSION>` is the version number without `v` prefix (e.g., `1.2.0`, not `v1.2.0`).
 
-Parse the JSON output from bump-version. Only `git add` the files listed in the
+Parse the JSON output from bump-version. Only stage the files listed in the
 `updated[]` array. If `skipped[]` is non-empty, inform the user which files were
 skipped and why before proceeding.
 
-Then create a branch and stage files:
+Then create a branch, stage files, sync lockfile, commit, and push — **all in one sequence**:
 
 ```bash
 BUMP_BRANCH="chore/bump-version-<VERSION>-$(date +%s)"
 git checkout -b "$BUMP_BRANCH"
 git add <updated-files>
-```
-
-**MANDATORY: Sync uv.lock if it exists.** This step MUST NOT be skipped — failing to sync causes
-a dirty `uv.lock` after the release merge, requiring a separate fix commit.
-
-```bash
-if [ -f uv.lock ]; then
-    uv lock
-    git add uv.lock
-fi
-```
-
-Commit and push:
-
-```bash
+# MANDATORY: sync uv.lock when pyproject.toml is bumped
+if [ -f uv.lock ]; then uv lock && git add uv.lock; fi
 git commit -m "chore: bump version to <VERSION>"
 git push -u origin "$BUMP_BRANCH"
 ```
+
+> **DO NOT split this block.** The `uv lock` step syncs the lockfile after
+> `pyproject.toml` version changes. Skipping it leaves a dirty `uv.lock`
+> after the release merge.
 
 Note: The timestamp suffix prevents conflicts with previous bump attempts.
 
